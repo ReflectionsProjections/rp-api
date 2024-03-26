@@ -1,11 +1,23 @@
-import express from 'express'
+import express from "express";
+import { Config } from "./config";
+import { connectToDatabase } from "./utilities";
+import { StatusCodes } from "http-status-codes";
 
-const app = express()
+import authRouter from "./services/auth/auth-router";
 
-app.get('/hello', (_, res) => {
-    return res.send('Hello Vite + TypeScript!');
-})
+const app = express();
 
-app.listen(3000, () =>
-    console.log('Server is listening on port 3000...')
-)
+app.use("/auth", authRouter);
+
+app.get("/status", (_, res) => {
+    return res.status(StatusCodes.OK).send("API is alive!");
+});
+
+app.use("/", (_, res) => {
+    return res.status(StatusCodes.NOT_FOUND).send("No endpoint here!");
+});
+
+app.listen(Config.DEFAULT_APP_PORT, async () => {
+    await connectToDatabase();
+    console.log("Server is listening on port 3000...");
+});

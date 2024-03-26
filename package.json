@@ -3,20 +3,25 @@
     "private": true,
     "version": "0.0.0",
     "scripts": {
-        "dev": "nodemon -w src/ -x tsx src/app.ts",
-        "start": "NODE_ENV=production tsx src/app.ts",
+        "dev": "ENV=DEVELOPMENT nodemon -w src/ -x tsx src/app.ts",
+        "start": "ENV=PRODUCTION tsx src/app.ts",
         "lint": "yarn prettier . --write",
         "kill": "kill -9 $(lsof -t -i :3000)"
     },
     "devDependencies": {
-        "@types/express": "^4.17.15",
+        "@types/dotenv": "^8.2.0",
+        "@types/express": "^4.17.21",
         "@types/node": "^20.9.3",
         "nodemon": "^3.0.1",
         "prettier": "3.2.5"
     },
     "dependencies": {
+        "dotenv": "^16.4.5",
         "express": "^4.19.1",
+        "http-status-codes": "^2.3.0",
+        "mongoose": "^8.2.3",
         "tsx": "^4.5.0",
-        "typescript": "^5.3.2"
+        "typescript": "^5.3.2",
+        "zod": "^3.22.4"
     }
 }
