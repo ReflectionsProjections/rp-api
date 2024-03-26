@@ -7,8 +7,8 @@ import { createId } from "@paralleldrive/cuid2";
 const authRouter = Router();
 
 authRouter.get("/", async (req, res) => {
-    const result = (await Database.ROLES.find());
-    const mappedResult = result.map(item => item.toObject())
+    const result = await Database.ROLES.find();
+    const mappedResult = result.map((item) => item.toObject());
     return res.status(StatusCodes.OK).send(mappedResult);
 });
 
@@ -17,7 +17,7 @@ authRouter.post("/", async (_, res, next) => {
         userId: createId(),
         roles: [Role.Enum.USER],
     };
-    
+
     try {
         const result = (await Database.ROLES.create(user)).toObject();
         return res.status(StatusCodes.CREATED).send(result);

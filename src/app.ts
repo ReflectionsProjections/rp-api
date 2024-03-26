@@ -1,11 +1,12 @@
-import express, { NextFunction } from "express";
-import { Request, Response } from 'express';
+import express from "express";
 import { StatusCodes } from "http-status-codes";
 import { Config } from "./config";
 import { connectToDatabase } from "./utilities";
 
-import bodyParser from "body-parser";
 import morgan from "morgan";
+import bodyParser from "body-parser";
+import errorHandler from "./middleware/error-handler";
+
 import authRouter from "./services/auth/auth-router";
 
 const app = express();
@@ -30,10 +31,7 @@ app.use("/", (_, res) => {
     return res.status(StatusCodes.NOT_FOUND).send("No endpoint here!");
 });
 
-app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-  console.error("IN HERE", err.stack);
-  return res.status(500).send('Something broke!');
-});
+app.use(errorHandler);
 
 app.listen(Config.DEFAULT_APP_PORT, async () => {
     await connectToDatabase();
