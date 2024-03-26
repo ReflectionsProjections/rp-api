@@ -1,6 +1,9 @@
 #Env files
 *.env
 
+#Build Folder
+build/
+
 # Logs
 logs
 *.log

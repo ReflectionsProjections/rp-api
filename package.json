@@ -6,7 +6,8 @@
         "dev": "ENV=DEVELOPMENT nodemon -w src/ -x tsx src/app.ts",
         "start": "ENV=PRODUCTION tsx src/app.ts",
         "lint": "yarn prettier . --write",
-        "kill": "kill -9 $(lsof -t -i :3000)"
+        "kill": "kill -9 $(lsof -t -i :3000)",
+        "build": "tsc"
     },
     "devDependencies": {
         "@types/dotenv": "^8.2.0",

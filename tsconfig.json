@@ -6,15 +6,15 @@
     "compilerOptions": {
         "target": "ESNext",
         "useDefineForClassFields": true,
-        "module": "NodeNext",
+        "module": "CommonJS",
         "lib": ["ESNext", "DOM"],
-        "moduleResolution": "NodeNext",
+        "moduleResolution": "node",
         "strict": true,
         "resolveJsonModule": true,
         "isolatedModules": true,
         "esModuleInterop": true,
-        "noEmit": true,
-        "noUnusedLocals": true
+        "noUnusedLocals": true,
+        "outDir": "./build/",
     },
-    "include": ["src"]
+    "include": ["./src/"],
 }
