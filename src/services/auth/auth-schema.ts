@@ -4,12 +4,12 @@ import { z } from "zod";
 export const Role = z.enum(["USER", "ADMIN", "CORPORATE"]);
 
 export const RoleInfo = z.object({
-    email: z.coerce.string().email(),
+    userId: z.coerce.string().cuid2(),
     roles: z.array(Role),
 });
 
 export const RoleSchema = new Schema({
-    email: {
+    userId: {
         type: String,
         required: true,
         unique: true,

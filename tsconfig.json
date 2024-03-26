@@ -14,7 +14,7 @@
         "isolatedModules": true,
         "esModuleInterop": true,
         "noUnusedLocals": true,
-        "outDir": "./build/",
+        "outDir": "./build/"
     },
-    "include": ["./src/"],
+    "include": ["./src/"]
 }
