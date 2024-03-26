@@ -22,5 +22,5 @@ function initializeModel(
 
 // Example usage
 export const Database = {
-    ROLES: initializeModel("role", RoleSchema, RoleInfo),
+    ROLES: initializeModel("roles", RoleSchema, RoleInfo),
 };
