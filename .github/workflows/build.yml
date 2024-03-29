@@ -19,6 +19,6 @@ jobs:
               with:
                 node-version: '18.x'
             - name: Install dependencies
-              run: npm install
+              run: yarn
             - name: Run Prettier
               run: npx prettier --write .
