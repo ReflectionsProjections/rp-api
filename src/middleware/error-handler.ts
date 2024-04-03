@@ -1,10 +1,10 @@
 import { Request, Response } from "express";
-//NextFunction
+// NextFunction
 // TODO: Fix this function
 function errorHandler(
     err: Error,
     _req: Request,
-    res: Response,
+    res: Response
     // _next: NextFunction
 ) {
     console.error("IN HERE", err.stack);
