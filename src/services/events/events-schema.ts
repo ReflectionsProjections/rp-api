@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import { Schema } from "mongoose";
 import { z } from "zod";
 
-export const EventInfo= z.object({
+export const EventInfo = z.object({
     eventId: z.coerce.string().cuid2(),
     name: z.string(),
     date: z.string().transform((str) => new Date(str)),
@@ -22,15 +22,15 @@ export const EventSchema = new Schema({
     },
     date: {
         type: Date,
-        required: true
+        required: true,
     },
     start_time: {
         type: Date,
-        required: true
+        required: true,
     },
     end_time: {
         type: Date,
-        required: true
-    }
+        required: true,
+    },
 });
-export const Event = mongoose.model('Event', EventSchema);
+export const Event = mongoose.model("Event", EventSchema);

@@ -22,7 +22,7 @@ app.use("/", morgan("dev"));
 app.use("/", bodyParser.json());
 
 app.use("/auth", authRouter);
-app.use('/api', eventRouter);
+app.use("/api", eventRouter);
 
 app.get("/status", (_, res) => {
     console.log(StatusCodes.OK);
