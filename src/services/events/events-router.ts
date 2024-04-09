@@ -1,6 +1,5 @@
 import { Router } from "express";
 import { StatusCodes } from "http-status-codes";
-import { createId } from "@paralleldrive/cuid2";
 import { Event, EventInfo } from "./events-schema";
 
 const authRouter = Router();
