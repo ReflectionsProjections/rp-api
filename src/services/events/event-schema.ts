@@ -17,8 +17,7 @@ const EventValidator = z.object({
         })
     ),
     virtual: z.boolean(),
-    upgrade: z.boolean().default(false),
-    downgrade: z.boolean().default(false),
+    points: z.number().min(0).default(0),
     imageUrl: z.string().nullable().optional(),
     visible: z.boolean().default(false),
 });
@@ -40,8 +39,7 @@ const EventSchema = new mongoose.Schema({
     attendees: [{ type: mongoose.Schema.Types.ObjectId, ref: "Attendee" }],
     location: [LocationSchema],
     virtual: { type: Boolean, required: true },
-    upgrade: { type: Boolean, default: false },
-    downgrade: { type: Boolean, default: false },
+    points: { type: Number, default: 0 },
     imageUrl: { type: String, default: null },
     visible: { type: Boolean, default: false },
 });
