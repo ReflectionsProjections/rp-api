@@ -5,6 +5,10 @@ import {
     AttendeeSchema,
     AttendeeValidator,
 } from "./services/attendees/attendee-schema";
+import {
+    RegistrationSchema,
+    RegistrationValidator,
+} from "./services/registration/registration-schema";
 
 mongoose.set("toObject", { versionKey: false });
 
@@ -39,4 +43,9 @@ export const Database = {
     ROLES: initializeModel("roles", RoleSchema, RoleInfo),
     EVENTS: initializeModel("events", EventSchema, EventValidator),
     ATTENDEES: initializeModel("attendees", AttendeeSchema, AttendeeValidator),
+    REGISTRATION: initializeModel(
+        "registration",
+        RegistrationSchema,
+        RegistrationValidator
+    ),
 };
