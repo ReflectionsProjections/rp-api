@@ -1,7 +1,5 @@
 import { Router } from "express";
-import { Database } from "../../database";
 import { StatusCodes } from "http-status-codes";
-import { createId } from "@paralleldrive/cuid2";
 import { Event, EventValidator } from "./events-schema";
 
 const eventRouter = Router();
