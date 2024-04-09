@@ -23,6 +23,7 @@ const AttendeeValidator = z.object({
     interest_mech_puzzle: z.array(z.string()).nullable().optional(),
     priority_expiry: z.date().nullable().optional(),
     has_resume: z.boolean().optional(),
+    points: z.number().min(0).default(0), //
 });
 
 // Mongoose schema for attendee
@@ -47,6 +48,7 @@ const AttendeeSchema = new mongoose.Schema({
     interest_mech_puzzle: [{ type: String }],
     priority_expiry: { type: Date, default: null },
     has_resume: { type: Boolean, default: false },
+    points: { type: Number, default: 0 },
 });
 
 export { AttendeeSchema, AttendeeValidator };

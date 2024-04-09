@@ -9,6 +9,10 @@ import {
     SubscriptionSchemaValidator,
     SubscriptionSchema,
 } from "./services/subscription/subscription-schema";
+import {
+    RegistrationSchema,
+    RegistrationValidator,
+} from "./services/registration/registration-schema";
 
 mongoose.set("toObject", { versionKey: false });
 
@@ -48,4 +52,9 @@ export const Database = {
         SubscriptionSchemaValidator
     ),
     ATTENDEES: initializeModel("attendees", AttendeeSchema, AttendeeValidator),
+    REGISTRATION: initializeModel(
+        "registration",
+        RegistrationSchema,
+        RegistrationValidator
+    ),
 };

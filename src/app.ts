@@ -13,6 +13,7 @@ import subscriptionRouter from "./services/subscription/subscription-router";
 
 import attendeeRouter from "./services/attendees/attendee-router";
 import eventRouter from "./services/events/event-router";
+import registrationRouter from "./services/registration/registration-router";
 
 const app = express();
 
@@ -31,6 +32,7 @@ app.use("/", bodyParser.json());
 app.use("/attendee", attendeeRouter);
 app.use("/auth", authRouter);
 app.use("/event", eventRouter);
+app.use("/registration", registrationRouter);
 
 app.get("/status", (_, res) => {
     return res.status(StatusCodes.OK).send("API is alive!");
