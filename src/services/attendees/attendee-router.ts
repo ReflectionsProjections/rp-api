@@ -1,25 +1,23 @@
 import { Router } from "express";
 import { StatusCodes } from "http-status-codes";
 import { AttendeeValidator } from "./attendee-schema";
-import { AttendeeModel } from "./attendee-schema";
+import { Database } from "../../database";
 
 const attendeeRouter = Router();
 
 // Create a new attendee
 attendeeRouter.post("/", async (req, res) => {
     try {
-        const { name, email } = AttendeeValidator.parse(req.body);
-        console.log("Name:", name);
-        console.log("Email:", email);
-
-        // Save attendee to the database
-        const attendee = new AttendeeModel({ name, email });
+        const attendeeData = AttendeeValidator.parse(req.body);
+        const attendee = new Database.ATTENDEES(attendeeData);
         await attendee.save();
 
-        res.status(201).send("Attendee created successfully.");
+        return res.status(StatusCodes.CREATED).json(attendeeData);
     } catch (error) {
         console.error("Error:", error);
-        res.status(400).send("Error creating attendee.");
+        return res
+            .status(StatusCodes.INTERNAL_SERVER_ERROR)
+            .send("Error creating attendee.");
     }
 });
 
@@ -29,7 +27,7 @@ attendeeRouter.get("/:email", async (req, res) => {
         const { email } = req.params;
 
         // Check if the user exists in the database
-        const userExists = await AttendeeModel.exists({ email });
+        const userExists = await Database.ATTENDEES.exists({ email });
 
         if (!userExists) {
             return res
@@ -37,7 +35,11 @@ attendeeRouter.get("/:email", async (req, res) => {
                 .send("User with that email does not exist.");
         }
 
-        return res.status(StatusCodes.OK).send("User exists.");
+        const user = await Database.ATTENDEES.findOne({
+            email,
+        });
+
+        return res.status(StatusCodes.OK).json(user);
     } catch (error) {
         console.error("Error:", error);
         return res

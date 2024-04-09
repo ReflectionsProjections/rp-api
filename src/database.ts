@@ -1,4 +1,8 @@
 import mongoose, { Schema } from "mongoose";
+import {
+    AttendeeSchema,
+    AttendeeValidator,
+} from "./services/attendees/attendee-schema";
 import { RoleValidator, RoleSchema } from "./services/auth/auth-schema";
 import { EventSchema, EventValidator } from "./services/events/events-schema";
 import {
@@ -43,4 +47,5 @@ export const Database = {
         SubscriptionSchema,
         SubscriptionSchemaValidator
     ),
+    ATTENDEES: initializeModel("attendees", AttendeeSchema, AttendeeValidator),
 };
