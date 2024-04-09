@@ -1,12 +1,12 @@
-import mongoose from "mongoose";
+// import mongoose from "mongoose";
 import { Schema } from "mongoose";
 import { z } from "zod";
 
 export const EventValidator = z.object({
     eventId: z.coerce.string().cuid2(),
     name: z.string(),
-    startTime: z.coerce.string().datetime(),
-    endTime: z.coerce.string().datetime(),
+    startTime: z.coerce.date(),
+    endTime: z.coerce.date(),
 });
 
 export const EventSchema = new Schema({
@@ -28,4 +28,4 @@ export const EventSchema = new Schema({
         required: true,
     },
 });
-export const Event = mongoose.model("Event", EventSchema);
+// export const Event = mongoose.model("Event", EventSchema);
