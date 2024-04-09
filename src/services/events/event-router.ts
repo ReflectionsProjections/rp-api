@@ -6,84 +6,76 @@ import { Database } from "../../database";
 const eventRouter = Router();
 
 // Create a new event
-eventRouter.post("/", async (req, res) => {
+eventRouter.post("/", async (req, res, next) => {
     try {
         const eventData = EventValidator.parse(req.body);
         const event = new Database.EVENTS(eventData);
         await event.save();
         return res.status(StatusCodes.CREATED).json(event);
     } catch (error) {
-        console.error("Error:", error);
-        return res
-            .status(StatusCodes.BAD_REQUEST)
-            .send("Error creating event.");
+        next(error);
     }
 });
 
 // Get all events
-eventRouter.get("/", async (req, res) => {
+eventRouter.get("/", async (req, res, next) => {
     try {
         const events = await Database.EVENTS.find();
         return res.status(StatusCodes.OK).json(events);
     } catch (error) {
-        console.error("Error:", error);
-        return res
-            .status(StatusCodes.INTERNAL_SERVER_ERROR)
-            .send("Internal server error.");
+        next(error);
     }
 });
 
 // Get event by ID
-eventRouter.get("/:id", async (req, res) => {
+eventRouter.get("/:id", async (req, res, next) => {
     try {
-        const event = await Database.EVENTS.findById(req.params.id);
+        const event = await Database.EVENTS.findOneAndUpdate(
+            { _id: req.params.id },
+            { new: true }
+        );
+
         if (!event) {
-            return res.status(StatusCodes.NOT_FOUND).send("Event not found.");
+            return { error: "DoesNotExist" };
         }
+
         return res.status(StatusCodes.OK).json(event);
     } catch (error) {
-        console.error("Error:", error);
-        return res
-            .status(StatusCodes.INTERNAL_SERVER_ERROR)
-            .send("Internal server error.");
+        next(error);
     }
 });
 
 // Update event
-eventRouter.patch("/:id", async (req, res) => {
+eventRouter.patch("/:id", async (req, res, next) => {
     try {
-        const event = await Database.EVENTS.findByIdAndUpdate(
-            req.params.id,
+        const event = await Database.EVENTS.findOneAndUpdate(
+            { _id: req.params.id },
             req.body,
             { new: true }
         );
 
         if (!event) {
-            return res.status(StatusCodes.NOT_FOUND).send("Event not found.");
+            return { error: "DoesNotExist" };
         }
 
         return res.status(StatusCodes.OK).json(event);
     } catch (error) {
-        console.error("Error:", error);
-        return res
-            .status(StatusCodes.INTERNAL_SERVER_ERROR)
-            .send("Internal server error.");
+        next(error);
     }
 });
 
 // Delete event
-eventRouter.delete("/:id", async (req, res) => {
+eventRouter.delete("/:id", async (req, res, next) => {
     try {
         const event = await Database.EVENTS.findByIdAndDelete(req.params.id);
+
         if (!event) {
-            return res.status(StatusCodes.NOT_FOUND).send("Event not found.");
+            return { error: "DoesNotExist" };
         }
-        return res.status(StatusCodes.NO_CONTENT).send();
+
+        return res.status(StatusCodes.OK).json(event);
     } catch (error) {
-        console.error("Error:", error);
-        return res
-            .status(StatusCodes.INTERNAL_SERVER_ERROR)
-            .send("Internal server error.");
+        next(error);
     }
 });
 

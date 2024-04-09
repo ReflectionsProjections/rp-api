@@ -6,7 +6,7 @@ import { Database } from "../../database";
 const attendeeRouter = Router();
 
 // Create a new attendee
-attendeeRouter.post("/", async (req, res) => {
+attendeeRouter.post("/", async (req, res, next) => {
     try {
         const attendeeData = AttendeeValidator.parse(req.body);
         const attendee = new Database.ATTENDEES(attendeeData);
@@ -14,15 +14,12 @@ attendeeRouter.post("/", async (req, res) => {
 
         return res.status(StatusCodes.CREATED).json(attendeeData);
     } catch (error) {
-        console.error("Error:", error);
-        return res
-            .status(StatusCodes.INTERNAL_SERVER_ERROR)
-            .send("Error creating attendee.");
+        next(error);
     }
 });
 
 // Check if a user email exists
-attendeeRouter.get("/:email", async (req, res) => {
+attendeeRouter.get("/:email", async (req, res, next) => {
     try {
         const { email } = req.params;
 
@@ -30,9 +27,7 @@ attendeeRouter.get("/:email", async (req, res) => {
         const userExists = await Database.ATTENDEES.exists({ email });
 
         if (!userExists) {
-            return res
-                .status(StatusCodes.NOT_FOUND)
-                .send("User with that email does not exist.");
+            return { error: "DoesNotExist" };
         }
 
         const user = await Database.ATTENDEES.findOne({
@@ -41,10 +36,7 @@ attendeeRouter.get("/:email", async (req, res) => {
 
         return res.status(StatusCodes.OK).json(user);
     } catch (error) {
-        console.error("Error:", error);
-        return res
-            .status(StatusCodes.INTERNAL_SERVER_ERROR)
-            .send("Internal server error.");
+        next(error);
     }
 });
 
