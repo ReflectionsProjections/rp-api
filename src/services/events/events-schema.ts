@@ -6,7 +6,7 @@ export const EventValidator = z.object({
     eventId: z.coerce.string().cuid2(),
     name: z.string(),
     start_time: z.coerce.string().datetime(),
-    end_time: z.coerce.string().datetime()
+    end_time: z.coerce.string().datetime(),
 });
 
 export const EventSchema = new Schema({

@@ -1,6 +1,6 @@
 import mongoose, { Schema } from "mongoose";
 import { RoleInfo, RoleSchema } from "./services/auth/auth-schema";
-import {EventSchema, EventValidator} from "./services/events/events-schema"
+import { EventSchema, EventValidator } from "./services/events/events-schema";
 
 mongoose.set("toObject", { versionKey: false });
 
