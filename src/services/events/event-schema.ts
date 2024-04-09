@@ -46,5 +46,4 @@ const EventSchema = new mongoose.Schema({
     visible: { type: Boolean, default: false },
 });
 
-export const EventModel = mongoose.model("Event", EventSchema);
-export { EventValidator };
+export { EventSchema, EventValidator, LocationSchema };

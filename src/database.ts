@@ -1,5 +1,10 @@
 import mongoose, { Schema } from "mongoose";
 import { RoleInfo, RoleSchema } from "./services/auth/auth-schema";
+import { EventValidator, EventSchema } from "./services/events/event-schema";
+import {
+    AttendeeSchema,
+    AttendeeValidator,
+} from "./services/attendees/attendee-schema";
 
 mongoose.set("toObject", { versionKey: false });
 
@@ -32,4 +37,6 @@ function initializeModel(
 // Example usage
 export const Database = {
     ROLES: initializeModel("roles", RoleSchema, RoleInfo),
+    EVENTS: initializeModel("events", EventSchema, EventValidator),
+    ATTENDEES: initializeModel("attendees", AttendeeSchema, AttendeeValidator),
 };

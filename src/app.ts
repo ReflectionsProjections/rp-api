@@ -23,8 +23,8 @@ app.use("/", morgan("dev"));
 app.use("/", bodyParser.json());
 
 // API routes
-app.use("/auth", authRouter);
 app.use("/attendee", attendeeRouter);
+app.use("/auth", authRouter);
 app.use("/event", eventRouter);
 
 app.get("/status", (_, res) => {

@@ -49,5 +49,4 @@ const AttendeeSchema = new mongoose.Schema({
     has_resume: { type: Boolean, default: false },
 });
 
-export const AttendeeModel = mongoose.model("Attendee", AttendeeSchema);
-export { AttendeeValidator };
+export { AttendeeSchema, AttendeeValidator };
