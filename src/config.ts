@@ -6,7 +6,7 @@ import { getEnv } from "./utilities";
 
 export const Environment = z.enum(["PRODUCTION", "DEVELOPMENT", "TESTING"]);
 
-export const ListName = z.enum(["RP_INTEREST"]);
+export const MailingListName = z.enum(["RP_INTEREST"]);
 
 export const Config = {
     DEFAULT_APP_PORT: 3000,
