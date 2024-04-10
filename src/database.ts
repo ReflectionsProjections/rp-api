@@ -6,13 +6,13 @@ import {
 import { RoleValidator, RoleSchema } from "./services/auth/auth-schema";
 import { EventSchema, EventValidator } from "./services/events/events-schema";
 import {
-    SubscriptionSchemaValidator,
-    SubscriptionSchema,
-} from "./services/subscription/subscription-schema";
-import {
     RegistrationSchema,
     RegistrationValidator,
 } from "./services/registration/registration-schema";
+import {
+    SubscriptionSchemaValidator,
+    SubscriptionSchema,
+} from "./services/subscription/subscription-schema";
 
 mongoose.set("toObject", { versionKey: false });
 

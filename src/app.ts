@@ -8,12 +8,11 @@ import morgan from "morgan";
 import bodyParser from "body-parser";
 import errorHandler from "./middleware/error-handler";
 
-import authRouter from "./services/auth/auth-router";
-import subscriptionRouter from "./services/subscription/subscription-router";
-
 import attendeeRouter from "./services/attendees/attendee-router";
+import authRouter from "./services/auth/auth-router";
 import eventRouter from "./services/events/event-router";
 import registrationRouter from "./services/registration/registration-router";
+import subscriptionRouter from "./services/subscription/subscription-router";
 
 const app = express();
 
@@ -33,6 +32,7 @@ app.use("/attendee", attendeeRouter);
 app.use("/auth", authRouter);
 app.use("/event", eventRouter);
 app.use("/registration", registrationRouter);
+app.use("/subscription", subscriptionRouter);
 
 app.get("/status", (_, res) => {
     return res.status(StatusCodes.OK).send("API is alive!");
