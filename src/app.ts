@@ -35,6 +35,6 @@ app.use(errorHandler);
 
 app.listen(Config.DEFAULT_APP_PORT, async () => {
     await connectToDatabase();
-    process.send?.('ready');
+    process.send?.("ready");
     console.log("Server is listening on port 3000...");
 });
