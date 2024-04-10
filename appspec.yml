@@ -13,6 +13,9 @@ hooks:
       timeout: 300
       runas: root
   ApplicationStart:
+    - location: scripts/install_dependencies.sh
+      timeout: 300
+      runas: root
     - location: scripts/reload_server.sh
       timeout: 300
       runas: root
