@@ -8,9 +8,6 @@ import bodyParser from "body-parser";
 import errorHandler from "./middleware/error-handler";
 
 import authRouter from "./services/auth/auth-router";
-import attendeeRouter from "./services/attendees/attendee-router";
-import eventRouter from "./services/events/event-router";
-import registrationRouter from "./services/registration/registration-router";
 import subscriptionRouter from "./services/subscription/subscription-router";
 
 const app = express();
@@ -25,10 +22,7 @@ app.use("/", morgan("dev"));
 app.use("/", bodyParser.json());
 
 // API routes
-app.use("/attendee", attendeeRouter);
 app.use("/auth", authRouter);
-app.use("/event", eventRouter);
-app.use("/registration", registrationRouter);
 app.use("/subscription", subscriptionRouter);
 
 app.get("/status", (_, res) => {
