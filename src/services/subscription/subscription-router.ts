@@ -10,8 +10,8 @@ subscriptionRouter.post("/", async (req, res, next) => {
     try {
         const subscriptionData = SubscriptionValidator.parse(req.body);
         await Database.SUBSCRIPTION.findOneAndUpdate(
-            { email: subscriptionData.email },
             { mailingList: subscriptionData.mailingList },
+            { $push: { subscriptions: data.email } },
             { upsert: true, new: true }
         );
         return res.status(StatusCodes.CREATED).json(subscriptionData);
