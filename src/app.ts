@@ -9,6 +9,7 @@ import errorHandler from "./middleware/error-handler";
 
 import authRouter from "./services/auth/auth-router";
 import eventRouter from "./services/events/events-router";
+import subscriptionRouter from "./services/subscription/subscription-router";
 
 const app = express();
 
@@ -21,8 +22,10 @@ app.use("/", morgan("dev"));
 
 app.use("/", bodyParser.json());
 
+// API routes
 app.use("/auth", authRouter);
 app.use("/event", eventRouter);
+app.use("/subscription", subscriptionRouter);
 
 app.get("/status", (_, res) => {
     console.log(StatusCodes.OK);
@@ -37,5 +40,6 @@ app.use(errorHandler);
 
 app.listen(Config.DEFAULT_APP_PORT, async () => {
     await connectToDatabase();
+    process.send?.("ready");
     console.log("Server is listening on port 3000...");
 });
