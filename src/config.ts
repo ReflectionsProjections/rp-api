@@ -20,8 +20,11 @@ export const Config = {
     // REDIRECT_URI: "http://localhost:3000/auth/callback",
     AUTH_CALLBACK_URI_BASE: "http://localhost:3000/auth/callback/",
     // AUTH_CALLBACK_URI_BASE: "https://api.reflectionsprojections.org/auth/callback",
+
+    JWT_SIGNING_SECRET: getEnv("JWT_SIGNING_SECRET"),
+    JWT_EXPIRATION_TIME: "1 day",
 };
 
 export const DeviceRedirects: Record<string, string> = {
-    web: `https://www.reflectionsprojections.org/`,
+    web: "https://www.google.com/",
 };

@@ -1,9 +1,10 @@
 import { Router } from "express";
 import passport from "passport";
-import { DeviceRedirects } from "../../config";
+import { Config, DeviceRedirects } from "../../config";
 import { StatusCodes } from "http-status-codes";
-import { Strategy as GoogleStrategy } from "passport-google-oauth20";
-import { createGoogleStrategy } from "./auth-utils";
+import { Strategy as GoogleStrategy, Profile } from "passport-google-oauth20";
+import { createGoogleStrategy, getJwtPayloadFromDatabase } from "./auth-utils";
+import jsonwebtoken from "jsonwebtoken";
 
 const authStrategies: Record<string, GoogleStrategy> = {};
 
@@ -38,9 +39,23 @@ authRouter.get(
         passport.authenticate(req.params.DEVICE, {
             session: false,
         })(req, res, next),
-    function (req, res) {
-        const redirectUri = `${DeviceRedirects[req.params.DEVICE]}`;
-        return res.redirect(redirectUri);
+    async function (req, res, next) {
+        // Authentication failed - redirect to login
+        if (req.user == undefined) {
+            return res.redirect(`/auth/login/${req.params.DEVICE}`)
+        }
+        const userData = req.user as Profile;
+        const userId = `user${userData.id}`;
+        
+        // Generate the JWT, and redirect to JWT initialization
+        try {
+            const jwtPayload = (await getJwtPayloadFromDatabase(userId)).toObject();
+            const token = jsonwebtoken.sign(jwtPayload, Config.JWT_SIGNING_SECRET, { expiresIn: Config.JWT_EXPIRATION_TIME });
+            const redirectUri = `${DeviceRedirects[req.params.DEVICE]}/token=${token}`;
+            return res.redirect(redirectUri);
+        } catch (error) {
+            next(error);
+        }
     }
 );
 
