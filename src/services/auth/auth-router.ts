@@ -39,7 +39,7 @@ authRouter.get(
             session: false,
         })(req, res, next),
     function (req, res) {
-        const redirectUri = `${DeviceRedirects[req.params.DEVICE]}`
+        const redirectUri = `${DeviceRedirects[req.params.DEVICE]}`;
         return res.redirect(redirectUri);
     }
 );
