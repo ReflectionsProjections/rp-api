@@ -3,7 +3,7 @@ import { Schema } from "mongoose";
 import { z } from "zod";
 
 export const EventValidator = z.object({
-    eventId: z.coerce.string().cuid2(),
+    eventId: z.coerce.string(),
     name: z.string(),
     startTime: z.coerce.date(),
     endTime: z.coerce.date(),
@@ -34,4 +34,3 @@ export const EventSchema = new Schema({
         required: true,
     },
 });
-// export const Event = mongoose.model("Event", EventSchema);

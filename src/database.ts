@@ -33,5 +33,5 @@ function initializeModel(
 // Example usage
 export const Database = {
     ROLES: initializeModel("roles", RoleSchema, RoleInfo),
-    EVENT: initializeModel("events", EventSchema, EventValidator),
+    EVENTS: initializeModel("events", EventSchema, EventValidator),
 };
