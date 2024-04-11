@@ -3,8 +3,8 @@
     "private": true,
     "version": "0.0.0",
     "scripts": {
-        "dev": "ENV=DEVELOPMENT nodemon -w src/ -x tsx src/app.ts",
-        "start": "ENV=PRODUCTION tsx src/app.ts",
+        "dev": "nodemon -w src/ -x tsx src/app.ts",
+        "start": "tsx src/app.ts",
         "lint": "yarn prettier . --write",
         "kill": "kill -9 $(lsof -t -i :3000)",
         "build": "tsc"

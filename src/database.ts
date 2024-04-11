@@ -1,5 +1,9 @@
 import mongoose, { Schema } from "mongoose";
 import { RoleInfo, RoleSchema } from "./services/auth/auth-schema";
+import {
+    SubscriptionValidator,
+    SubscriptionSchema,
+} from "./services/subscription/subscription-schema";
 
 mongoose.set("toObject", { versionKey: false });
 
@@ -32,4 +36,9 @@ function initializeModel(
 // Example usage
 export const Database = {
     ROLES: initializeModel("roles", RoleSchema, RoleInfo),
+    SUBSCRIPTION: initializeModel(
+        "subscription",
+        SubscriptionSchema,
+        SubscriptionValidator
+    ),
 };

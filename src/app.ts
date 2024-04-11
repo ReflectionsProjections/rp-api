@@ -8,6 +8,7 @@ import bodyParser from "body-parser";
 import errorHandler from "./middleware/error-handler";
 
 import authRouter from "./services/auth/auth-router";
+import subscriptionRouter from "./services/subscription/subscription-router";
 
 const app = express();
 
@@ -20,7 +21,9 @@ app.use("/", morgan("dev"));
 
 app.use("/", bodyParser.json());
 
+// API routes
 app.use("/auth", authRouter);
+app.use("/subscription", subscriptionRouter);
 
 app.get("/status", (_, res) => {
     console.log(StatusCodes.OK);
