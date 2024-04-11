@@ -28,7 +28,6 @@ app.use("/event", eventRouter);
 app.use("/subscription", subscriptionRouter);
 
 app.get("/status", (_, res) => {
-    console.log(StatusCodes.OK);
     return res.status(StatusCodes.OK).send("API is alive!");
 });
 

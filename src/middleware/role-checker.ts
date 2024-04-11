@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import { JwtPayload, Role } from "../services/auth/auth-models";
+import { JwtPayloadValidator, Role } from "../services/auth/auth-models";
 import { z } from "zod";
 import jsonwebtoken from "jsonwebtoken";
 import { Config } from "../config";
@@ -21,12 +21,12 @@ export default function RoleChecker(
         }
 
         try {
-            console.log("in");
             const payloadData = jsonwebtoken.verify(
                 jwt,
                 Config.JWT_SIGNING_SECRET
             );
-            const payload = JwtPayload.parse(payloadData);
+
+            const payload = JwtPayloadValidator.parse(payloadData);
             res.locals.payload = payload;
 
             const error = new Error("InvalidRoles");
