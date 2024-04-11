@@ -51,7 +51,7 @@ authRouter.get(
         try {
             const jwtPayload = (await getJwtPayloadFromDatabase(userId)).toObject();
             const token = jsonwebtoken.sign(jwtPayload, Config.JWT_SIGNING_SECRET, { expiresIn: Config.JWT_EXPIRATION_TIME });
-            const redirectUri = DeviceRedirects[req.params.DEVICE] + `token=${token}`;
+            const redirectUri = DeviceRedirects[req.params.DEVICE] + `?token=${token}`;
             return res.redirect(redirectUri);
         } catch (error) {
             next(error);
@@ -60,7 +60,7 @@ authRouter.get(
 );
 
 authRouter.get("/dev/", (req, res) => {
-    return res.status(StatusCodes.OK).json({"Token": req.headers.authorization});
+    return res.status(StatusCodes.OK).json(req.query);
 })
 
 export default authRouter;
