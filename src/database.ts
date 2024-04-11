@@ -1,5 +1,5 @@
 import mongoose, { Schema } from "mongoose";
-import { RoleInfo, RoleSchema } from "./services/auth/auth-schema";
+import { RoleValidator, RoleSchema } from "./services/auth/auth-schema";
 import { EventSchema, EventValidator } from "./services/events/events-schema";
 import {
     SubscriptionValidator,
@@ -36,7 +36,7 @@ function initializeModel(
 
 // Example usage
 export const Database = {
-    ROLES: initializeModel("roles", RoleSchema, RoleInfo),
+    ROLES: initializeModel("roles", RoleSchema, RoleValidator),
     EVENTS: initializeModel("events", EventSchema, EventValidator),
     SUBSCRIPTION: initializeModel(
         "subscription",
