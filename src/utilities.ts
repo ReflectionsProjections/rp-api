@@ -13,7 +13,7 @@ function getDatabaseUrl() {
     const host = Config.DATABASE_HOST;
     let database;
     if (isProd()) {
-        return "";
+        database = `prod`;
     } else if (isDev()) {
         database = `dev-${username}`;
     }
