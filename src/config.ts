@@ -17,5 +17,11 @@ export const Config = {
     CLIENT_ID: getEnv("OAUTH_GOOGLE_CLIENT_ID"),
     CLIENT_SECRET: getEnv("OAUTH_GOOGLE_CLIENT_SECRET"),
 
-    REDIRECT_URI: "http://localhost:3000/auth/callback",
+    // REDIRECT_URI: "http://localhost:3000/auth/callback",
+    AUTH_CALLBACK_URI_BASE: "http://localhost:3000/auth/callback/",
+    // AUTH_CALLBACK_URI_BASE: "https://api.reflectionsprojections.org/auth/callback",
+};
+
+export const DeviceRedirects: Record<string, string> = {
+    web: `https://www.reflectionsprojections.org/`,
 };
