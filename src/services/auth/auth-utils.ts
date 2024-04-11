@@ -28,12 +28,14 @@ export function createGoogleStrategy(device: string) {
     );
 }
 
-
 export async function getJwtPayloadFromDatabase(userId: string) {
-    const payload = await Database.ROLES.findOne({userId: userId}).select(["userId", "roles"]);
+    const payload = await Database.ROLES.findOne({ userId: userId }).select([
+        "userId",
+        "roles",
+    ]);
     if (!payload) {
         throw new Error("NoUserFound");
     }
-    
+
     return payload;
 }
