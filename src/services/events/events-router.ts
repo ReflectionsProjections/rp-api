@@ -12,7 +12,7 @@ eventRouter.post("/events", async (req, res, next) => {
         const validatedData = EventValidator.parse(req.body);
         const event = new Database.EVENT(validatedData);
         await event.save();
-        return res.status(StatusCodes.CREATED).json(event);
+        return res.status(StatusCodes.CREATED).json(event.toObject());
     } catch (error) {
         next(error);
     }

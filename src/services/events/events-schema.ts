@@ -7,6 +7,7 @@ export const EventValidator = z.object({
     name: z.string(),
     startTime: z.coerce.date(),
     endTime: z.coerce.date(),
+    points: z.number().min(0),
 });
 
 export const EventSchema = new Schema({
@@ -25,6 +26,11 @@ export const EventSchema = new Schema({
     },
     endTime: {
         type: Date,
+        required: true,
+    },
+
+    points: {
+        type: Number,
         required: true,
     },
 });
