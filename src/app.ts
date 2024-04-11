@@ -8,6 +8,7 @@ import bodyParser from "body-parser";
 import errorHandler from "./middleware/error-handler";
 
 import authRouter from "./services/auth/auth-router";
+import eventRouter from "./services/events/events-router";
 import subscriptionRouter from "./services/subscription/subscription-router";
 
 const app = express();
@@ -23,6 +24,7 @@ app.use("/", bodyParser.json());
 
 // API routes
 app.use("/auth", authRouter);
+app.use("/event", eventRouter);
 app.use("/subscription", subscriptionRouter);
 
 app.get("/status", (_, res) => {

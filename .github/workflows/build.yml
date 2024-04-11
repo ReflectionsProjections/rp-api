@@ -3,21 +3,21 @@ name: Prettier on Push and PR
 on:
     push:
         branches:
-            - 'main'
-            - 'dev**'
+            - "main"
+            - "dev**"
     pull_request:
         branches:
-            - 'main'
+            - "main"
 
 jobs:
     prettier:
         runs-on: ubuntu-latest
-        
+
         steps:
             - uses: actions/checkout@v4
             - uses: actions/setup-node@v4
               with:
-                node-version: '18.x'
+                  node-version: "18.x"
             - name: Install dependencies
               run: yarn
             - name: Run Prettier
