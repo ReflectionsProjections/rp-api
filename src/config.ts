@@ -27,4 +27,5 @@ export const Config = {
 
 export const DeviceRedirects: Record<string, string> = {
     web: "https://www.google.com/",
+    dev: "http://127.0.0.1:3000/auth/dev/"
 };

@@ -9,7 +9,7 @@ export function createGoogleStrategy(device: string) {
         {
             clientID: Config.CLIENT_ID,
             clientSecret: Config.CLIENT_SECRET,
-            callbackURL: `${Config.AUTH_CALLBACK_URI_BASE}${device}`,
+            callbackURL: Config.AUTH_CALLBACK_URI_BASE + device,
         },
 
         // Strategy -> insert user into database if they don't exist
