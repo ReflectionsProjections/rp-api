@@ -1,7 +1,7 @@
 import { Schema } from "mongoose";
 import { z } from "zod";
+import { Role } from "./auth-models";
 
-export const Role = z.enum(["USER", "ADMIN", "CORPORATE"]);
 
 export const RoleValidator = z.object({
     userId: z.coerce.string().regex(/user[0-9]*/),

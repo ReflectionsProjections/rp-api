@@ -1,7 +1,6 @@
 // Create a function to generate GoogleStrategy instances
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import { Config } from "../../config";
-import { Role } from "./auth-schema";
 import { Database } from "../../database";
 
 export function createGoogleStrategy(device: string) {
@@ -17,11 +16,10 @@ export function createGoogleStrategy(device: string) {
             const userId = `user${profile.id}`;
             const name = profile.displayName;
             const email = profile._json.email;
-            const roles = [Role.Enum.USER];
 
             Database.ROLES.findOneAndUpdate(
                 { userId: userId },
-                { userId, name, email, roles },
+                { userId, name, email },
                 { upsert: true }
             )
                 .then(() => cb(null, profile))
