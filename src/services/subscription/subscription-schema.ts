@@ -5,13 +5,13 @@ import { MailingListName } from "../../config";
 // Zod schema for subscription
 const SubscriptionValidator = z.object({
     email: z.string().email(),
-    mailing_list_name: MailingListName,
+    mailingList: MailingListName,
 });
 
 // Mongoose schema for subscription
 const SubscriptionSchema = new mongoose.Schema({
     email: { type: String, required: true },
-    mailing_list_name: { type: String, required: true },
+    mailingList: { type: String, required: true },
 });
 
 export { SubscriptionValidator, SubscriptionSchema };

@@ -6,10 +6,14 @@ import { Database } from "../../database";
 const subscriptionRouter = Router();
 
 // Create a new subscription
-subscriptionRouter.post("/subscribe", async (req, res, next) => {
+subscriptionRouter.post("/", async (req, res, next) => {
     try {
         const subscriptionData = SubscriptionValidator.parse(req.body);
-        await Database.SUBSCRIPTION.create(subscriptionData);
+        await Database.SUBSCRIPTION.findOneAndUpdate(
+            { email: subscriptionData.email },
+            { mailingList: subscriptionData.mailingList },
+            { upsert: true, new: true }
+        );
         return res.status(StatusCodes.CREATED).json(subscriptionData);
     } catch (error) {
         next(error);
