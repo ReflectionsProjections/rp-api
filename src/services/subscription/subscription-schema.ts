@@ -19,8 +19,8 @@ const SubscriptionSchema = new mongoose.Schema({
     emailList: [{ type: String, required: true }],
 });
 
-export { 
+export {
     SubscriptionValidator,
     SubscriptionSchemaValidator,
-    SubscriptionSchema 
+    SubscriptionSchema,
 };
