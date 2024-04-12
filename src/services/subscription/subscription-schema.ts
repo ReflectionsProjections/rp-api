@@ -8,6 +8,7 @@ const SubscriptionValidator = z.object({
     mailingList: MailingListName,
 });
 
+// Zod schema for validating subscription lists
 const SubscriptionSchemaValidator = z.object({
     mailingList: MailingListName,
     subscriptions: z.array(z.string().email()),
