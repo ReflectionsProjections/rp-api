@@ -2,16 +2,21 @@ import mongoose from "mongoose";
 import { z } from "zod";
 import { MailingListName } from "../../config";
 
-// Zod schema for subscription
+// Zod schema for incoming user subscriptions
 const SubscriptionValidator = z.object({
     email: z.string().email(),
     mailingList: MailingListName,
 });
 
-// Mongoose schema for subscription
-const SubscriptionSchema = new mongoose.Schema({
-    email: { type: String, required: true },
-    mailingList: { type: String, required: true },
+const SubscriptionSchemaValidator = z.object({
+    mailingList: MailingListName,
+    emailList: z.array(z.string().email())
 });
 
-export { SubscriptionValidator, SubscriptionSchema };
+// Mongoose schema for subscription
+const SubscriptionSchema = new mongoose.Schema({
+    mailingList: { type: String, required: true },
+    emailList: [{ type: String, required: true }]
+});
+
+export { SubscriptionValidator, SubscriptionSchemaValidator, SubscriptionSchema };
