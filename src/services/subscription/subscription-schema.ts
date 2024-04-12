@@ -10,13 +10,13 @@ const SubscriptionValidator = z.object({
 
 const SubscriptionSchemaValidator = z.object({
     mailingList: MailingListName,
-    emailList: z.array(z.string().email()),
+    subscriptions: z.array(z.string().email()),
 });
 
 // Mongoose schema for subscription
 const SubscriptionSchema = new mongoose.Schema({
     mailingList: { type: String, required: true },
-    emailList: [{ type: String, required: true }],
+    subscriptions: [{ type: String, required: true }],
 });
 
 export {
