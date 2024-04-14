@@ -2,11 +2,12 @@ import { Router } from "express";
 import { StatusCodes } from "http-status-codes";
 import { SubscriptionValidator } from "./subscription-schema";
 import { Database } from "../../database";
+import corsMiddleware from "../../middleware/cors-middleware";
 
 const subscriptionRouter = Router();
 
 // Create a new subscription
-subscriptionRouter.post("/", async (req, res, next) => {
+subscriptionRouter.post("/", corsMiddleware, async (req, res, next) => {
     try {
         // Validate the incoming user subscription
         const subscriptionData = SubscriptionValidator.parse(req.body);
