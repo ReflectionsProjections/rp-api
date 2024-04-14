@@ -3,6 +3,7 @@ import { StatusCodes } from "http-status-codes";
 import { Config } from "./config";
 import { connectToDatabase } from "./utilities";
 
+import cors from "cors";
 import morgan from "morgan";
 import bodyParser from "body-parser";
 import errorHandler from "./middleware/error-handler";
@@ -16,6 +17,8 @@ const app = express();
 // to prevent server-side caching/returning status code 200
 // (we can remove this later)
 app.disable("etag");
+
+app.use(cors());
 
 // To display the logs every time
 app.use("/", morgan("dev"));
