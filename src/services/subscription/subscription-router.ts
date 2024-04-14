@@ -14,7 +14,7 @@ subscriptionRouter.post("/", async (req, res, next) => {
         // Upsert the user info into the corresponding Subscription collection
         await Database.SUBSCRIPTIONS.findOneAndUpdate(
             { mailingList: subscriptionData.mailingList },
-            { addToSet: { subscriptions: subscriptionData.email } },
+            { $addToSet: { subscriptions: subscriptionData.email } },
             { upsert: true, new: true }
         );
         return res.status(StatusCodes.CREATED).json(subscriptionData);
