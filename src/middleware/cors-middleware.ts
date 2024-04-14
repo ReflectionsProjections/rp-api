@@ -1,4 +1,4 @@
-import cors from "cors";
+// import cors from "cors";
 
 // // Allow CORS for Netlify deploy previews
 // const allowedOrigins = ["https://reflectionsprojections.org"];
@@ -22,4 +22,4 @@ import cors from "cors";
 //     },
 // });
 
-export default cors();
+// export default cors();
