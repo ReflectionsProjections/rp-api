@@ -16,12 +16,12 @@ const app = express();
 // (we can remove this later)
 app.disable("etag");
 const limiter = rateLimit({
-	windowMs: 15 * 60 * 1000, // 15 minutes
-	limit: 100, 
-    message: "Too many requests from this IP at this time, try again later!"
-})
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    limit: 100,
+    message: "Too many requests from this IP at this time, try again later!",
+});
 
-app.use(limiter)
+app.use(limiter);
 
 // To display the logs every time
 app.use("/", morgan("dev"));

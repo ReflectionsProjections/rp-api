@@ -12,10 +12,10 @@
     "devDependencies": {
         "@types/dotenv": "^8.2.0",
         "@types/express": "^4.17.21",
+        "@types/express-rate-limit": "^5.3.0",
         "@types/morgan": "^1.9.9",
         "@types/node": "^20.9.3",
         "@typescript-eslint/eslint-plugin": "^6.4.0",
-        "@types/express-rate-limit": "^5.3.0",
         "eslint": "8.2.0",
         "eslint-config-airbnb": "19.0.4",
         "eslint-config-prettier": "^9.1.0",
@@ -35,12 +35,12 @@
         "body-parser": "^1.20.2",
         "dotenv": "^16.4.5",
         "express": "^4.19.1",
+        "express-rate-limit": "^7.2.0",
         "http-status-codes": "^2.3.0",
         "mongoose": "^8.2.3",
         "morgan": "^1.10.0",
         "tsx": "^4.5.0",
         "typescript": "*",
-        "zod": "^3.22.4",
-        "express-rate-limit": "^5.3.0"
+        "zod": "^3.22.4"
     }
 }
