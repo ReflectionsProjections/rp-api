@@ -1,8 +1,8 @@
 import { Router } from "express";
-import { Database } from "../../database";
 import { StatusCodes } from "http-status-codes";
-import { Role } from "./auth-schema";
 import { createId } from "@paralleldrive/cuid2";
+import { Database } from "../../database";
+import { Role } from "./auth-schema";
 
 const authRouter = Router();
 

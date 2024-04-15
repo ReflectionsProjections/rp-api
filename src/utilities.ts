@@ -14,7 +14,8 @@ function getDatabaseUrl() {
     let database;
     if (isProd()) {
         return "";
-    } else if (isDev()) {
+    }
+    if (isDev()) {
         database = `dev-${username}`;
     }
 

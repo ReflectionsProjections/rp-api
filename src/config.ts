@@ -1,8 +1,9 @@
 import dotenv from "dotenv";
-dotenv.config();
 
 import { z } from "zod";
 import { getEnv } from "./utilities";
+
+dotenv.config();
 
 export const Environment = z.enum(["PRODUCTION", "DEVELOPMENT", "TESTING"]);
 
