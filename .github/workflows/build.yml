@@ -1,16 +1,10 @@
-name: Prettier on Push and PR
+name: Build
 
 on:
     push:
-        branches:
-            - "main"
-            - "dev**"
-    pull_request:
-        branches:
-            - "main"
 
 jobs:
-    prettier:
+    build:
         runs-on: ubuntu-latest
 
         steps:
@@ -20,5 +14,5 @@ jobs:
                   node-version: "18.x"
             - name: Install dependencies
               run: yarn
-            - name: Run Prettier
-              run: npx prettier --write .
+            - name: Build
+              run: yarn build
