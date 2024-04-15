@@ -4,7 +4,7 @@ import morgan from "morgan";
 import bodyParser from "body-parser";
 import { Config } from "./config";
 import { connectToDatabase } from "./utilities";
-import { rateLimit } from "express-rate-limit";
+import rateLimit from "express-rate-limit";
 
 import errorHandler from "./middleware/error-handler";
 
