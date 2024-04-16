@@ -1,13 +1,7 @@
-name: Lint on Push and PR
+name: Lint
 
 on:
   push:
-    branches:
-      - 'main'
-      - 'dev**'
-  pull_request:
-    branches:
-        - 'main'
 
 jobs:
     lint:
