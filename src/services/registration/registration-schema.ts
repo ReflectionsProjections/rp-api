@@ -26,7 +26,7 @@ const RegistrationValidator = z.object({
 
 // Mongoose schema for registration
 const RegistrationSchema = new mongoose.Schema({
-    userId: {type: String, required: true, unique: true },
+    userId: { type: String, required: true, unique: true },
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     studentInfo: {
