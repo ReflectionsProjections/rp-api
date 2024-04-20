@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { boolean, z } from "zod";
+import { z } from "zod";
 
 // Zod schema for registration
 const RegistrationValidator = z.object({
@@ -21,7 +21,7 @@ const RegistrationValidator = z.object({
     portfolio: z.string().nullable().optional(),
     job_interest: z.array(z.string()).nullable().optional(),
     interest_mech_puzzle: z.array(z.string()).nullable().optional(),
-    has_resume: z.boolean()
+    has_resume: z.boolean(),
 });
 
 // Mongoose schema for registration
@@ -43,7 +43,7 @@ const RegistrationSchema = new mongoose.Schema({
     hear_about_rp: [{ type: String }],
     portfolio: { type: String, default: null },
     job_interest: [{ type: String }],
-    interest_mech_puzzle: [{ type: String }],    
+    interest_mech_puzzle: [{ type: String }],
     has_resume: { type: Boolean, default: false },
 });
 
