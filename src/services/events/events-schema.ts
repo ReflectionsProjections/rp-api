@@ -1,9 +1,10 @@
 // import mongoose from "mongoose";
 import { Schema } from "mongoose";
 import { z } from "zod";
+import { v4 as uuidv4 } from "uuid";
 
 export const EventValidator = z.object({
-    eventId: z.coerce.string(),
+    eventId: z.coerce.string().optional(),
     name: z.string(),
     startTime: z.coerce.date(),
     endTime: z.coerce.date(),
@@ -15,6 +16,7 @@ export const EventSchema = new Schema({
         type: String,
         required: true,
         unique: true,
+        default: () => uuidv4(), // Automatically generate a UUID for each new event
     },
     name: {
         type: String,
