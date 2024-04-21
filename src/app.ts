@@ -11,6 +11,7 @@ import errorHandler from "./middleware/error-handler";
 import authRouter from "./services/auth/auth-router";
 import eventRouter from "./services/events/events-router";
 import subscriptionRouter from "./services/subscription/subscription-router";
+import registrationRouter from "./services/registration/registration-router";
 
 const app = express();
 
@@ -29,6 +30,7 @@ app.use("/", bodyParser.json());
 app.use("/auth", authRouter);
 app.use("/event", eventRouter);
 app.use("/subscription", subscriptionRouter);
+app.use("/registration", registrationRouter);
 
 app.get("/status", (_, res) => {
     return res.status(StatusCodes.OK).send("API is alive!");
