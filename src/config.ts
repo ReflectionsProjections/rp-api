@@ -19,8 +19,8 @@ export const Config = {
     CLIENT_ID: getEnv("OAUTH_GOOGLE_CLIENT_ID"),
     CLIENT_SECRET: getEnv("OAUTH_GOOGLE_CLIENT_SECRET"),
 
-    AUTH_CALLBACK_URI_BASE: "http://localhost:3000/auth/callback/",
-    // AUTH_CALLBACK_URI_BASE: "https://api.reflectionsprojections.org/auth/callback/",
+    // AUTH_CALLBACK_URI_BASE: "http://localhost:3000/auth/callback/",
+    AUTH_CALLBACK_URI_BASE: "https://api.reflectionsprojections.org/auth/callback/",
 
     JWT_SIGNING_SECRET: getEnv("JWT_SIGNING_SECRET"),
     JWT_EXPIRATION_TIME: "1 day",
