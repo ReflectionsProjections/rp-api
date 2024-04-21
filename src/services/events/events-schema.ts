@@ -9,6 +9,10 @@ export const EventValidator = z.object({
     startTime: z.coerce.date(),
     endTime: z.coerce.date(),
     points: z.number().min(0),
+    description: z.string(),
+    virtual: z.boolean(),
+    imageUrl: z.string().nullable().optional(),
+    visible: z.boolean().default(false),
 });
 
 export const EventSchema = new Schema({
@@ -16,7 +20,7 @@ export const EventSchema = new Schema({
         type: String,
         required: true,
         unique: true,
-        default: () => uuidv4(), // Automatically generate a UUID for each new event
+        default: () => uuidv4(),
     },
     name: {
         type: String,
@@ -30,9 +34,24 @@ export const EventSchema = new Schema({
         type: Date,
         required: true,
     },
-
     points: {
         type: Number,
         required: true,
+    },
+    description: {
+        type: String,
+        required: true,
+    },
+    virtual: {
+        type: Boolean,
+        required: true,
+    },
+    imageUrl: {
+        type: String,
+        default: null,
+    },
+    visible: {
+        type: Boolean,
+        default: false,
     },
 });
