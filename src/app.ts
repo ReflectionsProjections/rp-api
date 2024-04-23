@@ -8,8 +8,10 @@ import morgan from "morgan";
 import bodyParser from "body-parser";
 import errorHandler from "./middleware/error-handler";
 
+import attendeeRouter from "./services/attendees/attendee-router";
 import authRouter from "./services/auth/auth-router";
 import eventRouter from "./services/events/events-router";
+import registrationRouter from "./services/registration/registration-router";
 import s3Router from "./services/s3/s3-router";
 import subscriptionRouter from "./services/subscription/subscription-router";
 
