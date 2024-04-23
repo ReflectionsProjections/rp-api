@@ -13,7 +13,6 @@ import authRouter from "./services/auth/auth-router";
 import eventRouter from "./services/events/event-router";
 import registrationRouter from "./services/registration/registration-router";
 import subscriptionRouter from "./services/subscription/subscription-router";
-import registrationRouter from "./services/registration/registration-router";
 
 const app = express();
 
