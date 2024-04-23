@@ -1,28 +1,49 @@
 import mongoose from "mongoose";
-import { z } from "zod";
+import { boolean, z } from "zod";
 
 // Zod schema for registration
 const RegistrationValidator = z.object({
-    userId: z
-        .string()
-        .regex(/user[0-9]*/)
-        .optional(),
-    name: z.string().optional(),
+    userId: z.coerce.string().regex(/user[0-9]*/),
+    name: z.string(),
     email: z.string().email(),
-    events: z.array(z.string()).optional(),
-    dietary_restrictions: z.array(z.string()).optional(),
-    points: z.number().min(0).default(0).optional(),
-    hasSubmitted: z.boolean().default(false),
+    university: z.string().nonempty(),
+    graduation: z.string().nullable().optional(),
+    major: z.string().nullable().optional(),
+    dietaryRestrictions: z.string().array(),
+    age: z.number().nullable().optional(),
+    gender: z.string().nullable().optional(),
+    race: z.array(z.string()).nullable().optional(),
+    ethnicity: z.array(z.string()).nullable().optional(),
+    firstGen: z.string().nullable().optional(),
+    hearAboutRP: z.array(z.string()).nullable().optional(),
+    portfolio: z.string().nullable().optional(),
+    jobInterest: z.array(z.string()).nullable().optional(),
+    isInterestedMechMania: z.boolean(),
+    isInterestedPuzzleBang: z.boolean(),
+    hasResume: z.boolean().optional(),
+    hasSubmitted: z.boolean().optional(),
 });
 
 // Mongoose schema for registration
 const RegistrationSchema = new mongoose.Schema({
     userId: { type: String, required: true, unique: true },
-    name: { type: String },
+    name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
-    events: [{ type: mongoose.Schema.Types.ObjectId, ref: "Event" }],
-    dietary_restrictions: [{ type: String }],
-    points: { type: Number, default: 0 },
+    university: { type: String, required: true },
+    graduation: { type: String, default: null },
+    major: { type: String, default: null },
+    dietaryRstrictions: { type: String, required: true },
+    age: { type: Number, default: null },
+    gender: { type: String, default: null },
+    race: [{ type: String }],
+    ethnicity: [{ type: String }],
+    firstGen: { type: String, default: null },
+    hearAboutRP: [{ type: String }],
+    portfolio: { type: String, default: null },
+    jobInterest: [{ type: String }],
+    isInterestedMechMania: { type: String },
+    isInterestedPuzzleBang: { type: Boolean },
+    hasResume: { type: Boolean, default: false },
     hasSubmitted: { type: Boolean, default: false },
 });
 

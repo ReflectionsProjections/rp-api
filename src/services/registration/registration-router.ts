@@ -1,13 +1,9 @@
 import { Router } from "express";
 import { StatusCodes } from "http-status-codes";
-import {
-    RegistrationValidator,
-    RegistrationSchema,
-} from "./registration-schema";
+import { RegistrationValidator } from "./registration-schema";
 import { Database } from "../../database";
 import RoleChecker from "../../middleware/role-checker";
 import { Role } from "../auth/auth-models";
-import { RoleSchema, RoleValidator } from "../auth/auth-schema";
 
 const registrationRouter = Router();
 

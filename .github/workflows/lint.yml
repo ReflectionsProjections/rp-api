@@ -1,18 +1,19 @@
 name: Lint
 
 on:
-  push:
+    push:
 
 jobs:
     lint:
-      runs-on: ubuntu-latest
-        
-      steps:
-        - uses: actions/checkout@v4
-        - uses: actions/setup-node@v4
-          with:
-            node-version: '18.x'
-        - name: Install dependencies
-          run: yarn
-        - name: Run ESLint
-          run: npx eslint .
+        runs-on: ubuntu-latest
+
+        steps:
+            - uses: actions/checkout@v4
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: "18.x"
+                  cache: 'yarn'
+            - name: Install dependencies
+              run: yarn
+            - name: Run ESLint
+              run: npx eslint .
