@@ -1,4 +1,4 @@
-import { NextFunction, Request, Response } from "express";
+import { NextFunction, Request, Response, Router } from "express";
 import { JwtPayloadValidator, Role } from "../services/auth/auth-models";
 import { z } from "zod";
 import jsonwebtoken from "jsonwebtoken";
@@ -55,7 +55,7 @@ export default function RoleChecker(
             // Need to be a user to access user endpoints (app users)
             if (requiredRoles.includes(Role.Enum.USER)) {
                 if (userRoles.includes(Role.Enum.USER)) {
-                    next();
+                    return next();
                 }
             }
 

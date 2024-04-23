@@ -24,6 +24,13 @@ export const Config = {
 
     JWT_SIGNING_SECRET: getEnv("JWT_SIGNING_SECRET"),
     JWT_EXPIRATION_TIME: "1 day",
+
+    S3_ACCESS_KEY: getEnv("S3_ACCESS_KEY"),
+    S3_SECRET_KEY: getEnv("S3_SECRET_KEY"),
+    S3_BUCKET_NAME: getEnv("S3_BUCKET_NAME"),
+    S3_REGION: getEnv("S3_REGION"),
+    MAX_RESUME_SIZE_BYTES: 6144,
+    RESUME_URL_EXPIRY_SECONDS: 60,
 };
 
 export const DeviceRedirects: Record<string, string> = {
