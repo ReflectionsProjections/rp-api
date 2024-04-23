@@ -30,7 +30,7 @@ export const Config = {
     S3_SECRET_KEY: getEnv("S3_SECRET_KEY"),
     S3_BUCKET_NAME: getEnv("S3_BUCKET_NAME"),
     S3_REGION: getEnv("S3_REGION"),
-    MAX_RESUME_SIZE_BYTES: 6144,
+    MAX_RESUME_SIZE_BYTES: 6 * 1024 * 1024,
     RESUME_URL_EXPIRY_SECONDS: 60,
 };
 
