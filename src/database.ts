@@ -13,10 +13,6 @@ import {
     SubscriptionSchemaValidator,
     SubscriptionSchema,
 } from "./services/subscription/subscription-schema";
-import {
-    RegistrationSchema,
-    RegistrationValidator,
-} from "./services/registration/registration-schema";
 
 mongoose.set("toObject", { versionKey: false });
 
