@@ -1,4 +1,4 @@
-import { NextFunction, Request, Response, Router } from "express";
+import { NextFunction, Request, Response } from "express";
 import { JwtPayloadValidator, Role } from "../services/auth/auth-models";
 import { z } from "zod";
 import jsonwebtoken from "jsonwebtoken";
