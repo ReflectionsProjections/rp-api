@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { boolean, z } from "zod";
+import { z } from "zod";
 
 // Zod schema for registration
 const RegistrationValidator = z.object({

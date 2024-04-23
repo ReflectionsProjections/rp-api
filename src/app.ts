@@ -34,7 +34,6 @@ app.use("/auth", authRouter);
 app.use("/event", eventRouter);
 app.use("/registration", registrationRouter);
 app.use("/subscription", subscriptionRouter);
-app.use("/registration", registrationRouter);
 
 app.get("/status", (_, res) => {
     return res.status(StatusCodes.OK).send("API is alive!");
