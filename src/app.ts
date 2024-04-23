@@ -29,8 +29,10 @@ app.use("/", morgan("dev"));
 app.use("/", bodyParser.json());
 
 // API routes
+app.use("/attendee", attendeeRouter);
 app.use("/auth", authRouter);
 app.use("/event", eventRouter);
+app.use("/registration", registrationRouter);
 app.use("/s3", s3Router);
 app.use("/subscription", subscriptionRouter);
 
