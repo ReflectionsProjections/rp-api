@@ -3,9 +3,9 @@ import { StatusCodes } from "http-status-codes";
 import { EventValidator } from "./events-schema";
 import { Database } from "../../database";
 
-const eventRouter = Router();
+const eventsRouter = Router();
 
-eventRouter.post("/", async (req, res, next) => {
+eventsRouter.post("/", async (req, res, next) => {
     try {
         const validatedData = EventValidator.parse(req.body);
         const event = new Database.EVENTS(validatedData);
@@ -16,7 +16,7 @@ eventRouter.post("/", async (req, res, next) => {
     }
 });
 
-eventRouter.get("/:eventId", async (req, res, next) => {
+eventsRouter.get("/:eventId", async (req, res, next) => {
     try {
         const { eventId } = req.params;
         const event = await Database.EVENTS.findOne({ eventId: eventId });
@@ -30,7 +30,7 @@ eventRouter.get("/:eventId", async (req, res, next) => {
     }
 });
 
-eventRouter.get("/", async (req, res, next) => {
+eventsRouter.get("/", async (req, res, next) => {
     try {
         const events = await Database.EVENTS.find({});
 
@@ -43,4 +43,4 @@ eventRouter.get("/", async (req, res, next) => {
     }
 });
 
-export default eventRouter;
+export default eventsRouter;
