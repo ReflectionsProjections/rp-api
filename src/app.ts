@@ -4,7 +4,7 @@ import morgan from "morgan";
 import bodyParser from "body-parser";
 import { Config } from "./config";
 import { connectToDatabase } from "./utilities";
-import rateLimit from "express-rate-limit";
+import { rateLimiter } from "./middleware/rateLimiter";
 
 import errorHandler from "./middleware/error-handler";
 
@@ -15,13 +15,8 @@ const app = express();
 // to prevent server-side caching/returning status code 200
 // (we can remove this later)
 app.disable("etag");
-const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    limit: 100,
-    message: "Too many requests from this IP at this time, try again later!",
-});
 
-app.use(limiter);
+app.use(rateLimiter);
 
 // To display the logs every time
 app.use("/", morgan("dev"));

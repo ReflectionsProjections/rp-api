@@ -3,7 +3,7 @@
     "private": true,
     "version": "0.0.0",
     "scripts": {
-        "dev": "ENV=DEVELOPMENT nodemon -w src/ -x tsx src/app.ts",
+        "dev": "cross-env ENV=DEVELOPMENT nodemon -w src/ -x tsx src/app.ts",
         "start": "ENV=PRODUCTION tsx src/app.ts",
         "lint": "yarn prettier . --write",
         "kill": "kill -9 $(lsof -t -i :3000)",
@@ -16,6 +16,7 @@
         "@types/morgan": "^1.9.9",
         "@types/node": "^20.9.3",
         "@typescript-eslint/eslint-plugin": "^6.4.0",
+        "cross-env": "^7.0.3",
         "eslint": "8.2.0",
         "eslint-config-airbnb": "19.0.4",
         "eslint-config-prettier": "^9.1.0",
@@ -32,6 +33,7 @@
     },
     "dependencies": {
         "@paralleldrive/cuid2": "^2.2.2",
+        "axios": "^1.6.8",
         "body-parser": "^1.20.2",
         "dotenv": "^16.4.5",
         "express": "^4.19.1",
