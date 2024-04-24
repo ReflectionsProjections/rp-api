@@ -13,6 +13,10 @@ import {
     SubscriptionSchemaValidator,
     SubscriptionSchema,
 } from "./services/subscription/subscription-schema";
+import {
+    NotificationsSchema,
+    NotificationsValidator,
+} from "./services/notifications/notifications-schema";
 
 mongoose.set("toObject", { versionKey: false });
 
@@ -56,5 +60,10 @@ export const Database = {
         "registration",
         RegistrationSchema,
         RegistrationValidator
+    ),
+    NOTIFICATIONS: initializeModel(
+        "notifications",
+        NotificationsSchema,
+        NotificationsValidator
     ),
 };
