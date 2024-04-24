@@ -69,7 +69,7 @@ registrationRouter.post("/submit", RoleChecker([]), async (req, res, next) => {
 });
 
 // Retrieve registration fields both to repopulate registration info for a user
-registrationRouter.get("/get", RoleChecker([]), async (req, res, next) => {
+registrationRouter.get("/", RoleChecker([]), async (req, res, next) => {
     try {
         const registration = await Database.REGISTRATION.findOne({
             userId: res.locals.payload.userId,
