@@ -10,16 +10,18 @@ const notificationsRouter = Router();
 // Register user’s device identifier under their userId
 notificationsRouter.post(
     "/",
-    RoleChecker([Role.enum.USER], false),
+    RoleChecker([Role.enum.USER]),
     async (req, res, next) => {
         try {
             const notificationEnrollmentData = NotificationsValidator.parse(
                 req.body
             );
 
+            const payload = res.locals.payload;
+
             // Upsert the user-device mapping info
             await Database.NOTIFICATIONS.findOneAndUpdate(
-                { userId: notificationEnrollmentData.userId },
+                { userId: payload.userId },
                 { deviceId: notificationEnrollmentData.deviceId },
                 { upsert: true, new: true }
             );
