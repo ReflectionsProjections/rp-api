@@ -4,7 +4,7 @@ import {
     AttendeeValidator,
 } from "./services/attendees/attendee-schema";
 import { RoleValidator, RoleSchema } from "./services/auth/auth-schema";
-import { EventSchema, EventValidator } from "./services/events/events-schema";
+import { EventSchema, EventValidator } from "./services/events/event-schema";
 import {
     RegistrationSchema,
     RegistrationValidator,
