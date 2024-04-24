@@ -11,7 +11,7 @@ import errorHandler from "./middleware/error-handler";
 
 import attendeeRouter from "./services/attendees/attendee-router";
 import authRouter from "./services/auth/auth-router";
-import eventRouter from "./services/events/event-router";
+import eventsRouter from "./services/events/events-router";
 import notificationsRouter from "./services/notifications/notifications-router";
 import registrationRouter from "./services/registration/registration-router";
 import s3Router from "./services/s3/s3-router";
@@ -35,7 +35,7 @@ app.use("/", bodyParser.json());
 // API routes
 app.use("/attendee", attendeeRouter);
 app.use("/auth", authRouter);
-app.use("/event", eventRouter);
+app.use("/events", eventsRouter);
 app.use("/notifications", notificationsRouter);
 app.use("/registration", registrationRouter);
 app.use("/s3", s3Router);
