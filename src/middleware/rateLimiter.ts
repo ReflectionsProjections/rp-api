@@ -7,8 +7,12 @@ const limiter = rateLimit({
     message: "Too many requests from this IP at this time, try again later!",
 });
 
-export const rateLimiter = (req: Request, res: Response, next: NextFunction) => {
-    if (req.hostname === 'localhost' || req.hostname === '127.0.0.1') {
+export const rateLimiter = (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
+    if (req.hostname === "localhost" || req.hostname === "127.0.0.1") {
         next();
     } else {
         limiter(req, res, next);

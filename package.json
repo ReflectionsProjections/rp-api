@@ -3,7 +3,7 @@
     "private": true,
     "version": "0.0.0",
     "scripts": {
-        "dev": "cross-env ENV=DEVELOPMENT nodemon -w src/ -x tsx src/app.ts",
+        "dev": "ENV=DEVELOPMENT nodemon -w src/ -x tsx src/app.ts",
         "start": "ENV=PRODUCTION tsx src/app.ts",
         "lint": "yarn prettier . --write",
         "kill": "kill -9 $(lsof -t -i :3000)",
