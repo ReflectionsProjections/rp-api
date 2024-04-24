@@ -13,6 +13,10 @@ import {
     SubscriptionSchemaValidator,
     SubscriptionSchema,
 } from "./services/subscription/subscription-schema";
+import {
+    NotificationsSchema,
+    NotificationsValidator,
+} from "./services/notifications/notifications-schema";
 
 mongoose.set("toObject", { versionKey: false });
 
@@ -33,7 +37,7 @@ function initializeModel(
     });
 
     schema.set("toObject", {
-        transform: function (doc, ret) {
+        transform(doc, ret) {
             delete ret._id;
             delete ret.__v;
         },
@@ -56,5 +60,10 @@ export const Database = {
         "registration",
         RegistrationSchema,
         RegistrationValidator
+    ),
+    NOTIFICATIONS: initializeModel(
+        "notifications",
+        NotificationsSchema,
+        NotificationsValidator
     ),
 };
