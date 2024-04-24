@@ -1,11 +1,11 @@
-import { NextFunction, Request, Response } from "express";
-
+import { Request, Response } from "express";
+// NextFunction
 // TODO: Fix this function
 function errorHandler(
     err: Error,
     _req: Request,
-    res: Response,
-    next: NextFunction
+    res: Response
+    // _next: NextFunction
 ) {
     console.error("IN HERE", err.stack);
     return res.status(500).send("Something broke!");
