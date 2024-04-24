@@ -16,30 +16,15 @@ eventRouter.post("/", async (req, res, next) => {
     }
 });
 
-// eventRouter.get("/:eventId", async (req, res, next) => {
-//     try {
-//         const { eventId } = req.params; // Extract eventId from URL parameters
-//         const event = await Database.EVENTS.findOne({ eventId: eventId });
-//         if (!event) {
-//             return res.status(404).json({ message: "Event not found." });
-//         }
-//         return res.status(StatusCodes.OK).json(event.toObject());
-//     } catch (error) {
-//         next(error);
-//     }
-// });
-
 eventRouter.get("/:eventId", async (req, res, next) => {
     try {
-        const event = await Database.EVENTS.findOneAndUpdate({
-            eventId: req.params,
-        });
+        const { eventId } = req.params;
+        const event = await Database.EVENTS.findOne({ eventId: eventId });
 
         if (!event) {
-            return { error: "DoesNotExist" };
+            return { error: "Event not found" };
         }
-
-        return res.status(StatusCodes.OK).json(event);
+        return res.status(StatusCodes.OK).json(event.toObject());
     } catch (error) {
         next(error);
     }
