@@ -2,6 +2,7 @@ import express from "express";
 import { StatusCodes } from "http-status-codes";
 import { Config } from "./config";
 import { connectToDatabase } from "./utilities";
+import { rateLimiter } from "./middleware/rateLimiter";
 
 import cors from "cors";
 import morgan from "morgan";
@@ -20,6 +21,8 @@ const app = express();
 // to prevent server-side caching/returning status code 200
 // (we can remove this later)
 app.disable("etag");
+
+app.use(rateLimiter);
 
 app.use(cors());
 
@@ -40,9 +43,9 @@ app.get("/status", (_, res) => {
     return res.status(StatusCodes.OK).send("API is alive!");
 });
 
-app.use("/", (_, res) => {
-    return res.status(StatusCodes.NOT_FOUND).send("No endpoint here!");
-});
+app.use("/", (_, res) =>
+    res.status(StatusCodes.NOT_FOUND).send("No endpoint here!")
+);
 
 app.use(errorHandler);
 

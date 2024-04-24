@@ -37,7 +37,7 @@ function initializeModel(
     });
 
     schema.set("toObject", {
-        transform: function (doc, ret) {
+        transform(doc, ret) {
             delete ret._id;
             delete ret.__v;
         },
