@@ -2,8 +2,8 @@ import { Request, Response, NextFunction } from "express";
 import rateLimit from "express-rate-limit";
 
 const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 10000,
+    windowMs: 10 * 60 * 1000, // 10 minutes - 100 requests
+    max: 100,
     message: "Too many requests from this IP at this time, try again later!",
 });
 
