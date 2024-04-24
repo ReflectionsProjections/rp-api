@@ -9,9 +9,9 @@ export const EventValidator = z.object({
     endTime: z.coerce.date(),
     points: z.number().min(0),
     description: z.string(),
-    virtual: z.boolean(),
+    isVirtual: z.boolean(),
     imageUrl: z.string().nullable().optional(),
-    visible: z.boolean().default(false),
+    isVisible: z.boolean().default(false),
 });
 
 export const EventSchema = new Schema({
@@ -41,7 +41,7 @@ export const EventSchema = new Schema({
         type: String,
         required: true,
     },
-    virtual: {
+    isVirtual: {
         type: Boolean,
         required: true,
     },
@@ -49,7 +49,7 @@ export const EventSchema = new Schema({
         type: String,
         default: null,
     },
-    visible: {
+    isVisible: {
         type: Boolean,
         default: false,
     },
