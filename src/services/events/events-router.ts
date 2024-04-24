@@ -30,4 +30,17 @@ eventRouter.get("/:eventId", async (req, res, next) => {
     }
 });
 
+eventRouter.get("/", async (req, res, next) => {
+    try {
+        const events = await Database.EVENTS.find({});
+
+        if (!events) {
+            return { error: "No events" };
+        }
+        return res.status(StatusCodes.OK).json(events);
+    } catch (error) {
+        next(error);
+    }
+});
+
 export default eventRouter;
