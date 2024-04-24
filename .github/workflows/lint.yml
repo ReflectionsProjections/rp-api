@@ -2,15 +2,12 @@ name: Lint
 
 on:
     push:
-<<<<<<< HEAD
         branches:
             - "main"
             - "dev**"
     pull_request:
         branches:
             - "main"
-=======
->>>>>>> main
 
 jobs:
     lint:
@@ -21,15 +18,7 @@ jobs:
             - uses: actions/setup-node@v4
               with:
                   node-version: "18.x"
-<<<<<<< HEAD
             - name: Install dependencies
               run: yarn
             - name: Run ESLint
               run: npx eslint .
-=======
-                  cache: "yarn"
-            - name: Install dependencies
-              run: yarn
-            - name: Run ESLint
-              run: npx eslint .
->>>>>>> main

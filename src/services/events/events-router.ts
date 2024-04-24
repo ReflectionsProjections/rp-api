@@ -22,7 +22,9 @@ eventsRouter.get("/:EVENTID", async (req, res, next) => {
         const event = await Database.EVENTS.findOne({ eventId: eventId });
 
         if (!event) {
-            return res.status(StatusCodes.NOT_FOUND).json({ error: "DoesNotExist" });
+            return res
+                .status(StatusCodes.NOT_FOUND)
+                .json({ error: "DoesNotExist" });
         }
 
         return res.status(StatusCodes.OK).json(event.toObject());
@@ -44,14 +46,13 @@ eventsRouter.get("/", async (req, res, next) => {
 // Delete event
 eventsRouter.delete("/:EVENTID", async (req, res, next) => {
     const eventId = req.params.EVENTID;
-try {
-        await Database.EVENTS.findByIdAndDelete({eventId: eventId});
+    try {
+        await Database.EVENTS.findByIdAndDelete({ eventId: eventId });
 
         return res.sendStatus(StatusCodes.NO_CONTENT);
     } catch (error) {
         next(error);
     }
 });
-
 
 export default eventsRouter;
