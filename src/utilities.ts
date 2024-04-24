@@ -13,9 +13,8 @@ function getDatabaseUrl() {
     const host = Config.DATABASE_HOST;
     let database;
     if (isProd()) {
-        return "";
-    }
-    if (isDev()) {
+        database = `prod`;
+    } else if (isDev()) {
         database = `dev-${username}`;
     }
 
@@ -30,9 +29,10 @@ export function isDev() {
     return Config.ENV == Environment.enum.DEVELOPMENT;
 }
 
-export function getEnv(target: string) {
-    if (process.env[target] === undefined) {
-        throw new Error(`env value ${target} not found, exiting...`);
+export function getEnv(key: string): string {
+    const val = process.env[key];
+    if (val === undefined) {
+        throw new Error(`env value ${key} not found, exiting...`);
     }
-    return process.env[target];
+    return val;
 }
