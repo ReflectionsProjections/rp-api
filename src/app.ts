@@ -14,6 +14,7 @@ import authRouter from "./services/auth/auth-router";
 import eventRouter from "./services/events/event-router";
 import notificationsRouter from "./services/notifications/notifications-router";
 import registrationRouter from "./services/registration/registration-router";
+import s3Router from "./services/s3/s3-router";
 import subscriptionRouter from "./services/subscription/subscription-router";
 
 const app = express();
@@ -37,6 +38,7 @@ app.use("/auth", authRouter);
 app.use("/event", eventRouter);
 app.use("/notifications", notificationsRouter);
 app.use("/registration", registrationRouter);
+app.use("/s3", s3Router);
 app.use("/subscription", subscriptionRouter);
 
 app.get("/status", (_, res) => {

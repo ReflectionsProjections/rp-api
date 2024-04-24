@@ -14,7 +14,7 @@ export default function RoleChecker(
 
         if (jwt == undefined) {
             if (weakVerification) {
-                next();
+                return next();
             }
 
             return res.status(StatusCodes.BAD_REQUEST).json({ error: "NoJWT" });
@@ -33,29 +33,29 @@ export default function RoleChecker(
             const userRoles = payload.roles;
 
             if (weakVerification) {
-                next();
+                return next();
             }
 
             if (requiredRoles.length == 0) {
-                next();
+                return next();
             }
 
             // Admins (staff) can access any endpoint
             if (userRoles.includes(Role.Enum.ADMIN)) {
-                next();
+                return next();
             }
 
             // Corporate role can access corporate only endpoints
             if (requiredRoles.includes(Role.Enum.CORPORATE)) {
                 if (userRoles.includes(Role.Enum.CORPORATE)) {
-                    next();
+                    return next();
                 }
             }
 
             // Need to be a user to access user endpoints (app users)
             if (requiredRoles.includes(Role.Enum.USER)) {
                 if (userRoles.includes(Role.Enum.USER)) {
-                    next();
+                    return next();
                 }
             }
 

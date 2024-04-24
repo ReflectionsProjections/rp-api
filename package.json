@@ -34,9 +34,13 @@
         "prettier": "3.2.5"
     },
     "dependencies": {
+        "@aws-sdk/client-s3": "^3.496.0",
+        "@aws-sdk/s3-presigned-post": "^3.499.0",
+        "@aws-sdk/s3-request-presigner": "^3.496.0",
         "@paralleldrive/cuid2": "^2.2.2",
         "axios": "^1.6.8",
         "@types/cors": "^2.8.17",
+        "aws-sdk": "^2.1604.0",
         "body-parser": "^1.20.2",
         "cors": "^2.8.5",
         "dotenv": "^16.4.5",
