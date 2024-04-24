@@ -10,37 +10,48 @@ eventsRouter.post("/", async (req, res, next) => {
         const validatedData = EventValidator.parse(req.body);
         const event = new Database.EVENTS(validatedData);
         await event.save();
-        return res.status(StatusCodes.CREATED).json(event.toObject());
+        return res.sendStatus(StatusCodes.CREATED);
     } catch (error) {
         next(error);
     }
 });
 
-eventsRouter.get("/:eventId", async (req, res, next) => {
+eventsRouter.get("/:EVENTID", async (req, res, next) => {
+    const eventId = req.params.EVENTID;
     try {
-        const { eventId } = req.params;
         const event = await Database.EVENTS.findOne({ eventId: eventId });
 
         if (!event) {
-            return { error: "Event not found" };
+            return res.status(StatusCodes.NOT_FOUND).json({ error: "DoesNotExist" });
         }
+
         return res.status(StatusCodes.OK).json(event.toObject());
     } catch (error) {
         next(error);
     }
 });
 
+// Get all events
 eventsRouter.get("/", async (req, res, next) => {
     try {
-        const events = await Database.EVENTS.find({});
-
-        if (!events) {
-            return { error: "No events" };
-        }
+        const events = await Database.EVENTS.find();
         return res.status(StatusCodes.OK).json(events);
     } catch (error) {
         next(error);
     }
 });
+
+// Delete event
+eventsRouter.delete("/:EVENTID", async (req, res, next) => {
+    const eventId = req.params.EVENTID;
+try {
+        await Database.EVENTS.findByIdAndDelete({eventId: eventId});
+
+        return res.sendStatus(StatusCodes.NO_CONTENT);
+    } catch (error) {
+        next(error);
+    }
+});
+
 
 export default eventsRouter;

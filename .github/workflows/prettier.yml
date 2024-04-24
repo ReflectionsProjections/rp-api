@@ -1,10 +1,10 @@
-name: Build
+name: Prettier
 
 on:
     push:
 
 jobs:
-    build:
+    prettier:
         runs-on: ubuntu-latest
 
         steps:
@@ -15,5 +15,5 @@ jobs:
                   cache: "yarn"
             - name: Install dependencies
               run: yarn
-            - name: Build
-              run: yarn build
+            - name: Run Prettier
+              run: npx prettier --write .
