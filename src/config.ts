@@ -36,6 +36,6 @@ export const Config = {
 };
 
 export const DeviceRedirects: Record<string, string> = {
-    web: "https://localhost:5173/",
+    web: "http://localhost:5173/",
     dev: "https://api.reflectionsprojections.org/auth/dev/",
 };
