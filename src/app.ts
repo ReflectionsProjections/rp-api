@@ -4,7 +4,7 @@ import { Config } from "./config";
 import { connectToDatabase } from "./utilities";
 import { rateLimiter } from "./middleware/rateLimiter";
 
-import cors from "cors";
+import custom_cors from "./middleware/cors-middleware";
 import morgan from "morgan";
 import bodyParser from "body-parser";
 import errorHandler from "./middleware/error-handler";
@@ -25,7 +25,7 @@ app.disable("etag");
 
 app.use(rateLimiter);
 
-app.use(cors());
+app.use(custom_cors);
 
 // To display the logs every time
 app.use("/", morgan("dev"));
