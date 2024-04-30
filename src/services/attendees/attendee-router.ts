@@ -5,8 +5,9 @@ import { Database } from "../../database";
 import RoleChecker from "../../middleware/role-checker";
 import { Role } from "../auth/auth-models";
 import crypto from "crypto";
-import { getEnv } from "../../utilities";
 import dotenv from "dotenv";
+import { Config } from "../../config";
+import { generateQrHash } from "./attendees-utils";
 
 dotenv.config();
 
@@ -35,19 +36,7 @@ attendeeRouter.get(
         try {
             const userId = payload.userId;
             const expTime = Math.floor(Date.now() / 1000) + 20; // Current epoch time in seconds + 20 seconds
-            let hashStr = userId + "#" + expTime;
-            const hashIterations = Number(getEnv("QR_HASH_ITERATIONS"));
-            const hashSecret = getEnv("QR_HASH_SECRET");
-
-            const hmac = crypto.createHmac("sha256", hashSecret);
-            hashStr = hmac.update(hashStr).digest("hex");
-
-            for (let i = 0; i < hashIterations; i++) {
-                const hash = crypto.createHash("sha256");
-                hashStr = hash.update(hashSecret + "#" + hashStr).digest("hex");
-            }
-
-            const qrCodeString = `${hashStr}#${expTime}#${userId}`;
+            const qrCodeString = generateQrHash(userId, expTime);
             return res.status(StatusCodes.OK).json({ qrCode: qrCodeString });
         } catch (error) {
             next(error);

@@ -33,6 +33,9 @@ export const Config = {
     S3_REGION: getEnv("S3_REGION"),
     MAX_RESUME_SIZE_BYTES: 6 * 1024 * 1024,
     RESUME_URL_EXPIRY_SECONDS: 60,
+
+    QR_HASH_ITERATIONS: 10,
+    QR_HASH_SECRET: "b1b6ed1f56967c381a7a6d4daf011faa",
 };
 
 export const DeviceRedirects: Record<string, string> = {
