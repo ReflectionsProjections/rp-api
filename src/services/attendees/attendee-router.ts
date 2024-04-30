@@ -26,31 +26,34 @@ attendeeRouter.post("/", async (req, res, next) => {
 });
 
 // generates a unique QR code for each attendee
-// Role.Enum.USER
-attendeeRouter.get("/qr/", RoleChecker([]), async (req, res, next) => {
-    const payload = res.locals.payload;
+attendeeRouter.get(
+    "/qr/",
+    RoleChecker([Role.Enum.USER]),
+    async (req, res, next) => {
+        const payload = res.locals.payload;
 
-    try {
-        const userId = payload.userId;
-        const expTime = Math.floor(Date.now() / 1000) + 20; // Current epoch time in seconds + 20 seconds
-        let hashStr = userId + "#" + expTime;
-        const hashIterations = Number(getEnv("QR_HASH_ITERATIONS"));
-        const hashSecret = getEnv("QR_HASH_SECRET");
+        try {
+            const userId = payload.userId;
+            const expTime = Math.floor(Date.now() / 1000) + 20; // Current epoch time in seconds + 20 seconds
+            let hashStr = userId + "#" + expTime;
+            const hashIterations = Number(getEnv("QR_HASH_ITERATIONS"));
+            const hashSecret = getEnv("QR_HASH_SECRET");
 
-        const hmac = crypto.createHmac("sha256", hashSecret);
-        hashStr = hmac.update(hashStr).digest("hex");
+            const hmac = crypto.createHmac("sha256", hashSecret);
+            hashStr = hmac.update(hashStr).digest("hex");
 
-        for (let i = 0; i < hashIterations; i++) {
-            const hash = crypto.createHash("sha256");
-            hashStr = hash.update(hashSecret + "#" + hashStr).digest("hex");
+            for (let i = 0; i < hashIterations; i++) {
+                const hash = crypto.createHash("sha256");
+                hashStr = hash.update(hashSecret + "#" + hashStr).digest("hex");
+            }
+
+            const qrCodeString = `${hashStr}#${expTime}#${userId}`;
+            return res.status(StatusCodes.OK).json({ qrCode: qrCodeString });
+        } catch (error) {
+            next(error);
         }
-
-        const qrCodeString = `${hashStr}#${expTime}#${userId}`;
-        return res.status(StatusCodes.OK).json({ qrCode: qrCodeString });
-    } catch (error) {
-        next(error);
     }
-});
+);
 
 // Check if a user email exists
 attendeeRouter.get("/:email", async (req, res, next) => {
