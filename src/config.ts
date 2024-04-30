@@ -33,6 +33,11 @@ export const Config = {
     S3_REGION: getEnv("S3_REGION"),
     MAX_RESUME_SIZE_BYTES: 6 * 1024 * 1024,
     RESUME_URL_EXPIRY_SECONDS: 60,
+
+    ALLOWED_CORS_ORIGIN_PATTERNS: [
+        new RegExp("(.*).reflectionsprojections.org(.*)"),
+        new RegExp("deploy-preview-[0-9]*(--rp2024.netlify.app)(.*)"),
+    ],
 };
 
 export const DeviceRedirects: Record<string, string> = {
