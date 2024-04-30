@@ -1,9 +1,9 @@
 import crypto from "crypto";
 import { Config } from "../../config";
 
-export const generateQrHash = (userId: string, expTime: number) => {
+export function generateQrHash(userId: string, expTime: number) {
     let hashStr = userId + "#" + expTime;
-    const hashIterations = Number(Config.QR_HASH_ITERATIONS);
+    const hashIterations = Config.QR_HASH_ITERATIONS;
     const hashSecret = Config.QR_HASH_SECRET;
 
     const hmac = crypto.createHmac("sha256", hashSecret);
@@ -15,4 +15,4 @@ export const generateQrHash = (userId: string, expTime: number) => {
     }
 
     return `${hashStr}#${expTime}#${userId}`;
-};
+}
