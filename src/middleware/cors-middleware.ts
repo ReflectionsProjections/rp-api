@@ -1,25 +1,20 @@
-// import cors from "cors";
+import cors from "cors";
+import { Config } from "../config";
 
-// // Allow CORS for Netlify deploy previews
-// const allowedOrigins = ["https://reflectionsprojections.org"];
-// // Function to check if the origin matches the deploy preview format
-// function isNetlifyDeployPreview(origin: string) {
-//     const regex = new RegExp("deploy-preview-[0-9]*(--rp2024.netlify.app)(.*)");
-//     return regex.test(origin);
-// }
-//
-// const corsMiddleware = cors({
-//     origin: function (origin, callback) {
-//         if (
-//             !origin ||
-//             allowedOrigins.includes(origin) ||
-//             isNetlifyDeployPreview(origin)
-//         ) {
-//             callback(null, true);
-//         } else {
-//             callback(new Error("Not allowed by CORS"));
-//         }
-//     },
-// });
+const allowedOrigins = Config.ALLOWED_CORS_ORIGIN_PATTERNS;
 
-// export default cors();
+function matchesRegex(target: string, patterns: RegExp[]): boolean {
+    return patterns.some((pattern: RegExp) => pattern.test(target));
+}
+
+const customCors = cors({
+    origin: function (origin, callback) {
+        if (!origin || matchesRegex(origin, allowedOrigins)) {
+            callback(null, true);
+        } else {
+            callback(new Error("Not allowed by CORS"));
+        }
+    },
+});
+
+export default customCors;

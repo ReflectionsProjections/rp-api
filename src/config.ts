@@ -11,6 +11,11 @@ export const MailingListName = z.enum(["rp_interest"]);
 
 export const Config = {
     DEFAULT_APP_PORT: 3000,
+    ALLOWED_CORS_ORIGIN_PATTERNS: [
+        new RegExp("(.*).reflectionsprojections.org(.*)"),
+        new RegExp("deploy-preview-[0-9]*(--rp2024.netlify.app)(.*)"),
+    ],
+
     ENV: Environment.parse(getEnv("ENV")),
 
     DATABASE_USERNAME: getEnv("DATABASE_USERNAME"),
@@ -23,7 +28,7 @@ export const Config = {
     // AUTH_CALLBACK_URI_BASE: "http://localhost:3000/auth/callback/",
     AUTH_CALLBACK_URI_BASE:
         "https://api.reflectionsprojections.org/auth/callback/",
-
+    
     JWT_SIGNING_SECRET: getEnv("JWT_SIGNING_SECRET"),
     JWT_EXPIRATION_TIME: "1 day",
 
@@ -33,12 +38,13 @@ export const Config = {
     S3_REGION: getEnv("S3_REGION"),
     MAX_RESUME_SIZE_BYTES: 6 * 1024 * 1024,
     RESUME_URL_EXPIRY_SECONDS: 60,
-
+    
+    // QR Scanning   
     QR_HASH_ITERATIONS: 10,
-    QR_HASH_SECRET: "b1b6ed1f56967c381a7a6d4daf011faa",
+    QR_HASH_SECRET: getEnv("QR_HASH_SECRET"),
 };
 
 export const DeviceRedirects: Record<string, string> = {
-    web: "https://localhost:5173/",
+    web: "http://localhost:5173/",
     dev: "https://api.reflectionsprojections.org/auth/dev/",
 };
