@@ -2,8 +2,13 @@ import { Router } from "express";
 import { StatusCodes } from "http-status-codes";
 import { AttendeeValidator } from "./attendee-schema";
 import { Database } from "../../database";
-import crypto from "crypto";
 import RoleChecker from "../../middleware/role-checker";
+import { Role } from "../auth/auth-models";
+import crypto from "crypto";
+import { getEnv } from "../../utilities";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const attendeeRouter = Router();
 
@@ -21,19 +26,26 @@ attendeeRouter.post("/", async (req, res, next) => {
 });
 
 // generates a unique QR code for each attendee
+// Role.Enum.USER
 attendeeRouter.get("/qr/", RoleChecker([]), async (req, res, next) => {
+    const payload = res.locals.payload;
+
     try {
-        const userId = res.locals.payload.userId;
+        const userId = payload.userId;
         const expTime = Math.floor(Date.now() / 1000) + 20; // Current epoch time in seconds + 20 seconds
         let hashStr = userId + "#" + expTime;
-        const iterations = 10;
+        const hashIterations = Number(getEnv("QR_HASH_ITERATIONS"));
+        const hashSecret = getEnv("QR_HASH_SECRET");
 
-        for (let i = 0; i < iterations; i++) {
+        const hmac = crypto.createHmac("sha256", hashSecret);
+        hashStr = hmac.update(hashStr).digest("hex");
+
+        for (let i = 0; i < hashIterations; i++) {
             const hash = crypto.createHash("sha256");
-            hashStr = hash.update(hashStr).digest("hex");
+            hashStr = hash.update(hashSecret + "#" + hashStr).digest("hex");
         }
 
-        const qrCodeString = `${hashStr}#${expTime}`;
+        const qrCodeString = `${hashStr}#${expTime}#${userId}`;
         return res.status(StatusCodes.OK).json({ qrCode: qrCodeString });
     } catch (error) {
         next(error);
