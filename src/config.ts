@@ -11,6 +11,11 @@ export const MailingListName = z.enum(["rp_interest"]);
 
 export const Config = {
     DEFAULT_APP_PORT: 3000,
+    ALLOWED_CORS_ORIGIN_PATTERNS: [
+        new RegExp("(.*).reflectionsprojections.org(.*)"),
+        new RegExp("deploy-preview-[0-9]*(--rp2024.netlify.app)(.*)"),
+    ],
+
     ENV: Environment.parse(getEnv("ENV")),
 
     DATABASE_USERNAME: getEnv("DATABASE_USERNAME"),
@@ -34,10 +39,9 @@ export const Config = {
     MAX_RESUME_SIZE_BYTES: 6 * 1024 * 1024,
     RESUME_URL_EXPIRY_SECONDS: 60,
 
-    ALLOWED_CORS_ORIGIN_PATTERNS: [
-        new RegExp("(.*).reflectionsprojections.org(.*)"),
-        new RegExp("deploy-preview-[0-9]*(--rp2024.netlify.app)(.*)"),
-    ],
+    // QR Scanning
+    QR_HASH_ITERATIONS: 10000,
+    QR_HASH_SECRET: getEnv("QR_HASH_SECRET"),
 };
 
 export const DeviceRedirects: Record<string, string> = {
