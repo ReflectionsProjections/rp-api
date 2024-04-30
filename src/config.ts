@@ -40,7 +40,7 @@ export const Config = {
     RESUME_URL_EXPIRY_SECONDS: 60,
 
     // QR Scanning
-    QR_HASH_ITERATIONS: 10,
+    QR_HASH_ITERATIONS: 10000,
     QR_HASH_SECRET: getEnv("QR_HASH_SECRET"),
 };
 
