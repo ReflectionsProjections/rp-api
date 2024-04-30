@@ -1,7 +1,7 @@
 import crypto from "crypto";
 import { Config } from "../../config";
 
-export const generateQrHash = (userId: String, expTime: Number) => {
+export const generateQrHash = (userId: string, expTime: number) => {
     let hashStr = userId + "#" + expTime;
     const hashIterations = Number(Config.QR_HASH_ITERATIONS);
     const hashSecret = Config.QR_HASH_SECRET;

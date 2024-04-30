@@ -4,9 +4,7 @@ import { AttendeeValidator } from "./attendee-schema";
 import { Database } from "../../database";
 import RoleChecker from "../../middleware/role-checker";
 import { Role } from "../auth/auth-models";
-import crypto from "crypto";
 import dotenv from "dotenv";
-import { Config } from "../../config";
 import { generateQrHash } from "./attendees-utils";
 
 dotenv.config();
