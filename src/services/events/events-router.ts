@@ -16,6 +16,26 @@ eventsRouter.post("/", async (req, res, next) => {
     }
 });
 
+eventsRouter.put("/:EVENTID", async (req, res, next) => {
+    const eventId = req.params.EVENTID;
+    try {
+        const validatedData = EventValidator.parse(req.body);
+        const event = await Database.EVENTS.findOne({ eventId: eventId });
+
+        if (!event) {
+            return res
+                .status(StatusCodes.NOT_FOUND)
+                .json({ error: "DoesNotExist" });
+        }
+
+        Object.assign(event, validatedData);
+        await event.save();
+        return res.sendStatus(StatusCodes.OK);
+    } catch (error) {
+        next(error);
+    }
+});
+
 eventsRouter.get("/:EVENTID", async (req, res, next) => {
     const eventId = req.params.EVENTID;
     try {
