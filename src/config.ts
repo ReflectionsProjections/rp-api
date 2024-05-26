@@ -29,6 +29,13 @@ export const Config = {
     AUTH_CALLBACK_URI_BASE:
         "https://api.reflectionsprojections.org/auth/callback/",
 
+    AUTH_ADMIN_WHITELIST: new Set([
+        "apirani2@illinois.edu", // Aydan Pirani (Dev)
+        "divyack2@illinois.edu", // Divya Koya (Dev)
+        "ritikav2@illinois.edu", // Ritika Vithani (Director)
+        "ojaswee2@illinois.edu", // Ojaswee Chaudhary (Director)
+    ]),
+
     JWT_SIGNING_SECRET: getEnv("JWT_SIGNING_SECRET"),
     JWT_EXPIRATION_TIME: "1 day",
 
@@ -42,6 +49,8 @@ export const Config = {
     // QR Scanning
     QR_HASH_ITERATIONS: 10000,
     QR_HASH_SECRET: getEnv("QR_HASH_SECRET"),
+
+    MAIL_TEMPLATE_REGEX: /\${{([^{}]+)}}/g,
 };
 
 export const DeviceRedirects: Record<string, string> = {

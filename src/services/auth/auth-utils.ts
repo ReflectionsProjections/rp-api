@@ -2,6 +2,7 @@
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import { Config } from "../../config";
 import { Database } from "../../database";
+import { Role } from "./auth-models";
 
 export function createGoogleStrategy(device: string) {
     return new GoogleStrategy(
@@ -17,9 +18,15 @@ export function createGoogleStrategy(device: string) {
             const name = profile.displayName;
             const email = profile._json.email;
 
+            let roles = [];
+
+            if (Config.AUTH_ADMIN_WHITELIST.has(email ?? "")) {
+                roles.push(Role.Values.ADMIN);
+            }
+
             Database.ROLES.findOneAndUpdate(
                 { userId: userId },
-                { userId, name, email },
+                { userId, name, email, roles },
                 { upsert: true }
             )
                 .then(() => cb(null, profile))
