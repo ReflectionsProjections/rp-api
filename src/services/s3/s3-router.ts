@@ -63,7 +63,7 @@ s3Router.get(
 
 s3Router.get(
     "/download/:USERID",
-    RoleChecker([Role.enum.ADMIN], false),
+    RoleChecker([Role.enum.STAFF], false),
     s3ClientMiddleware,
     async (req: Request, res: Response) => {
         const userId: string = req.params.USERID;
