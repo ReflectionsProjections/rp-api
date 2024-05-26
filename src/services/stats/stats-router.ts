@@ -9,7 +9,7 @@ const statsRouter = Router();
 // Get the number of people checked in (staff only)
 statsRouter.get(
     "/check-in",
-    RoleChecker([Role.enum.STAFF], true),
+    RoleChecker([Role.enum.STAFF], false),
     async (req, res, next) => {
         try {
             const attendees = await Database.ATTENDEES.find({
@@ -26,7 +26,7 @@ statsRouter.get(
 // Get the number of people eligible for merch item (staff only)
 statsRouter.get(
     "/merch-item/:PRICE",
-    RoleChecker([Role.enum.STAFF], true),
+    RoleChecker([Role.enum.STAFF], false),
     async (req, res, next) => {
         try {
             const price = req.params.PRICE;
@@ -49,7 +49,7 @@ statsRouter.get(
 // Get the number of priority attendees (staff only)
 statsRouter.get(
     "/priority-attendee",
-    RoleChecker([Role.enum.STAFF], true),
+    RoleChecker([Role.enum.STAFF], false),
     async (req, res, next) => {
         try {
             const currentTime = new Date();
@@ -67,7 +67,7 @@ statsRouter.get(
 // Get the attendance of the past n events (staff only)
 statsRouter.get(
     "/attendance/:N",
-    RoleChecker([Role.enum.STAFF], true),
+    RoleChecker([Role.enum.STAFF], false),
     async (req, res, next) => {
         try {
             const n = req.params.N;
@@ -99,7 +99,7 @@ statsRouter.get(
 // Get the dietary restriction breakdown/counts (staff only)
 statsRouter.get(
     "/dietary-restrictions",
-    RoleChecker([Role.enum.STAFF], true),
+    RoleChecker([Role.enum.STAFF], false),
     async (req, res, next) => {
         try {
             const attendees = await Database.ATTENDEES.find({});
