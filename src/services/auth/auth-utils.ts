@@ -17,7 +17,7 @@ export function createGoogleStrategy(device: string) {
             const userId = `user${profile.id}`;
             const name = profile.displayName;
             const email = profile._json.email;
-            
+
             let roles = [];
 
             if (Config.AUTH_ADMIN_WHITELIST.has(email ?? "")) {
