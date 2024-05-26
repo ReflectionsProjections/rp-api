@@ -25,9 +25,16 @@ export const Config = {
     CLIENT_ID: getEnv("OAUTH_GOOGLE_CLIENT_ID"),
     CLIENT_SECRET: getEnv("OAUTH_GOOGLE_CLIENT_SECRET"),
 
-    // AUTH_CALLBACK_URI_BASE: "http://localhost:3000/auth/callback/",
-    AUTH_CALLBACK_URI_BASE:
-        "https://api.reflectionsprojections.org/auth/callback/",
+    AUTH_CALLBACK_URI_BASE: "http://localhost:3000/auth/callback/",
+    // AUTH_CALLBACK_URI_BASE:
+        // "https://api.reflectionsprojections.org/auth/callback/",
+    
+    AUTH_ADMIN_WHITELIST: new Set([
+        "apirani2@illinois.edu",    // Aydan Pirani (Dev)
+        "divyack2@illinois.edu",    // Divya Koya (Dev)
+        "ritikav2@illinois.edu",    // Ritika Vithani (Director)
+        "ojaswee2@illinois.edu",    // Ojaswee Chaudhary (Director)
+    ]),
 
     JWT_SIGNING_SECRET: getEnv("JWT_SIGNING_SECRET"),
     JWT_EXPIRATION_TIME: "1 day",
