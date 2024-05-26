@@ -17,6 +17,10 @@ import {
     NotificationsSchema,
     NotificationsValidator,
 } from "./services/notifications/notifications-schema";
+import {
+    TemplateSchema,
+    TemplateValidator,
+} from "./services/mail/templates/templates-schema";
 
 mongoose.set("toObject", { versionKey: false });
 
@@ -61,6 +65,7 @@ export const Database = {
         RegistrationSchema,
         RegistrationValidator
     ),
+    TEMPLATES: initializeModel("templates", TemplateSchema, TemplateValidator),
     NOTIFICATIONS: initializeModel(
         "notifications",
         NotificationsSchema,
