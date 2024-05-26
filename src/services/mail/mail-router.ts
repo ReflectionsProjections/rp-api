@@ -6,8 +6,8 @@ import { Router } from "express";
 
 const mailRouter = Router();
 
-mailRouter.use("drafts", draftsSubRouter);
-mailRouter.use("lists", listsSubRouter);
-mailRouter.use("templates", templatesSubRouter);
+mailRouter.use("/drafts", draftsSubRouter);
+mailRouter.use("/lists", listsSubRouter);
+mailRouter.use("/templates", templatesSubRouter);
 
 export default mailRouter;

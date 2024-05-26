@@ -5,6 +5,7 @@ import { Database } from "../../../database";
 import { StatusCodes } from "http-status-codes";
 import { TemplateValidator } from "./templates-schema";
 import { z } from "zod";
+import { Config } from "../../../config";
 
 type TemplateData = z.infer<typeof TemplateValidator>;
 
@@ -25,8 +26,12 @@ templatesSubRouter.post(
     RoleChecker([Role.Values.ADMIN]),
     async (req, res) => {
         try {
-            const templateData = TemplateValidator.parse(req.body);
-            await Database.TEMPLATES.create(templateData);
+        
+            let templateData = TemplateValidator.parse(req.body);
+            let substitutions = templateData.content.matchAll(Config.MAIL_TEMPLATE_REGEX)
+            const subVars = Array.from(substitutions, substitutions => substitutions[1]);
+
+            await Database.TEMPLATES.create({...templateData, substitutions: subVars});
             return res.sendStatus(StatusCodes.CREATED);
         } catch (error) {
             return res.status(StatusCodes.BAD_REQUEST).send(error);
@@ -40,15 +45,9 @@ templatesSubRouter.delete(
     async (req, res) => {
         try {
             const templateId = req.params.TEMPLATEID;
-            const templateData = (await Database.TEMPLATES.findOne({
-                templateId: templateId,
-            })) as TemplateData;
+            await Database.TEMPLATES.findOneAndDelete({templateId: templateId});
+            return res.sendStatus(StatusCodes.NO_CONTENT);
 
-            if (!templateData) {
-                return res
-                    .status(StatusCodes.BAD_REQUEST)
-                    .json({ error: "NoSuchId" });
-            }
         } catch (error) {
             return res.status(StatusCodes.BAD_REQUEST).send(error);
         }

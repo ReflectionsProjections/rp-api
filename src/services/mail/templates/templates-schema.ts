@@ -2,11 +2,12 @@ import { Schema } from "mongoose";
 import { z } from "zod";
 
 export const TemplateValidator = z.object({
-    templateId: z.coerce.string(),
-    subject: z.coerce.string(),
-    content: z.coerce.string().email(),
-    substitutions: z.string().array(),
-    usages: z.number().min(0).default(0),
+    templateId: z.string().regex(/^\S*$/, {
+        message: "Spaces Not Allowed",
+    }),
+    subject: z.string(),
+    content: z.string(),
+    substitutions: z.string().array().default([]),
 });
 
 export const TemplateSchema = new Schema({
@@ -26,9 +27,5 @@ export const TemplateSchema = new Schema({
     substitutions: {
         type: [String],
         required: true,
-    },
-    usages: {
-        type: Number,
-        default: 0,
     },
 });

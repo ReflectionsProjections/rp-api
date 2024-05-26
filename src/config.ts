@@ -49,6 +49,8 @@ export const Config = {
     // QR Scanning
     QR_HASH_ITERATIONS: 10000,
     QR_HASH_SECRET: getEnv("QR_HASH_SECRET"),
+
+    MAIL_TEMPLATE_REGEX: /\${{([^{}]+)}}/g,
 };
 
 export const DeviceRedirects: Record<string, string> = {
