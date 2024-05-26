@@ -26,7 +26,6 @@ templatesSubRouter.post(
     RoleChecker([Role.Values.ADMIN]),
     async (req, res) => {
         try {
-        
             let templateData = TemplateValidator.parse(req.body);
             let substitutions = templateData.content.matchAll(Config.MAIL_TEMPLATE_REGEX)
             const subVars = Array.from(substitutions, substitutions => substitutions[1]);
@@ -36,6 +35,41 @@ templatesSubRouter.post(
         } catch (error) {
             return res.status(StatusCodes.BAD_REQUEST).send(error);
         }
+    }
+);
+
+templatesSubRouter.put(
+    "/",
+    RoleChecker([Role.Values.ADMIN]),
+    async (req, res) => {
+        try {
+            let templateData = TemplateValidator.parse(req.body);
+            let substitutions = templateData.content.matchAll(Config.MAIL_TEMPLATE_REGEX)
+            const subVars = Array.from(substitutions, substitutions => substitutions[1]);
+
+            const updateResult = await Database.TEMPLATES.findOneAndUpdate({templateId: templateData.templateId}, {...templateData, substitutions: subVars});
+            
+            if (!updateResult) {
+                return res.status(StatusCodes.NOT_FOUND).send({error: "NoSuchId"});
+            }
+
+            return res.sendStatus(StatusCodes.OK);
+        } catch (error) {
+            return res.status(StatusCodes.BAD_REQUEST).send(error);
+        }
+    }
+);
+
+templatesSubRouter.get(
+    "/:TEMPLATEID",
+    RoleChecker([Role.Values.STAFF]),
+    async (req, res) => {
+        const templateId = req.params.TEMPLATEID;
+        const templateInfo = await Database.TEMPLATES.findOne({templateId: templateId});
+        if (!templateInfo) {
+            return res.status(StatusCodes.NOT_FOUND).send({error: "NoSuchId"});
+        }
+        return res.status(StatusCodes.OK).json(templateInfo?.toObject());
     }
 );
 
