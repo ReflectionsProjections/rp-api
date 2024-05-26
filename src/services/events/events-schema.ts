@@ -12,6 +12,7 @@ export const EventValidator = z.object({
     isVirtual: z.boolean(),
     imageUrl: z.string().nullable().optional(),
     isVisible: z.boolean().default(false),
+    attendanceCount: z.number().optional(),
 });
 
 export const EventSchema = new Schema({
@@ -52,5 +53,9 @@ export const EventSchema = new Schema({
     isVisible: {
         type: Boolean,
         default: false,
+    },
+    attendanceCount: {
+        type: Number,
+        default: 0,
     },
 });
