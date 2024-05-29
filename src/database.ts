@@ -1,4 +1,4 @@
-import mongoose, { Schema } from "mongoose";
+import mongoose, { Schema, Document } from "mongoose";
 import {
     AttendeeSchema,
     AttendeeValidator,
@@ -43,7 +43,9 @@ function initializeModel(
         },
     });
 
-    return mongoose.model(modelName, schema);
+    type objectType = Zod.infer<typeof object>;
+    interface modelType extends Document, objectType {}
+    return mongoose.model<modelType>(modelName, schema);
 }
 
 // Example usage
