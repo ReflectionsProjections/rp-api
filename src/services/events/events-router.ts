@@ -15,8 +15,8 @@ eventsRouter.get("/currentOrNext", async (req, res, next) => {
         let nextEvent = null;
 
         for (const event of events) {
-            let startTime: Date = event.startTime as Date;
-            let endTime: Date = event.endTime as Date;
+            const startTime: Date = event.startTime as Date;
+            const endTime: Date = event.endTime as Date;
 
             if (startTime <= currentTime && endTime >= currentTime) {
                 currentEvent = event;
