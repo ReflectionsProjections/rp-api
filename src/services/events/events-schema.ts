@@ -2,8 +2,7 @@ import { Schema } from "mongoose";
 import { z } from "zod";
 import { v4 as uuidv4 } from "uuid";
 
-const events = ["A", "B", "C"] as const;
-export const EventType = z.enum(events);
+export const EventType = z.enum(["A", "B", "C"]);
 
 export const EventValidator = z.object({
     eventId: z.coerce.string().optional(),
@@ -60,6 +59,6 @@ export const EventSchema = new Schema({
     eventType: {
         type: String,
         required: true,
-        enum: events,
+        enum: EventType.Values,
     },
 });

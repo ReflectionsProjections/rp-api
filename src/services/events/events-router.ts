@@ -10,27 +10,12 @@ eventsRouter.get("/currentOrNext", async (req, res, next) => {
     const currentTime = new Date();
 
     try {
-        const events = await Database.EVENTS.find().sort({ startTime: 1 });
-        let currentEvent = null;
-        let nextEvent = null;
+        const event = await Database.EVENTS.findOne({
+            startTime: { $gte: currentTime },
+        }).sort({ startTime: 1 });
 
-        for (const event of events) {
-            const startTime: Date = event.startTime as Date;
-            const endTime: Date = event.endTime as Date;
-
-            if (startTime <= currentTime && endTime >= currentTime) {
-                currentEvent = event;
-                break;
-            } else if (startTime > currentTime) {
-                nextEvent = event;
-                break;
-            }
-        }
-
-        if (currentEvent) {
-            return res.status(StatusCodes.OK).json(currentEvent);
-        } else if (nextEvent) {
-            return res.status(StatusCodes.OK).json(nextEvent);
+        if (event) {
+            return res.status(StatusCodes.OK).json(event);
         } else {
             return res
                 .status(StatusCodes.NO_CONTENT)
