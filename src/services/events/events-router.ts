@@ -5,6 +5,42 @@ import { Database } from "../../database";
 
 const eventsRouter = Router();
 
+// Get current or next event based on current time
+eventsRouter.get("/currentOrNext", async (req, res, next) => {
+    const currentTime = new Date();
+
+    try {
+        const events = await Database.EVENTS.find().sort({ startTime: 1 });
+        let currentEvent = null;
+        let nextEvent = null;
+
+        for (const event of events) {
+            if (
+                event.startTime <= currentTime &&
+                event.endTime >= currentTime
+            ) {
+                currentEvent = event;
+                break;
+            } else if (event.startTime > currentTime) {
+                nextEvent = event;
+                break;
+            }
+        }
+
+        if (currentEvent) {
+            return res.status(StatusCodes.OK).json(currentEvent);
+        } else if (nextEvent) {
+            return res.status(StatusCodes.OK).json(nextEvent);
+        } else {
+            return res
+                .status(StatusCodes.NO_CONTENT)
+                .json({ error: "DoesNotExist" });
+        }
+    } catch (error) {
+        next(error);
+    }
+});
+
 eventsRouter.post("/", async (req, res, next) => {
     try {
         const validatedData = EventValidator.parse(req.body);

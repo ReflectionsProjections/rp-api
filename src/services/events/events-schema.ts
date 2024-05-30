@@ -2,6 +2,9 @@ import { Schema } from "mongoose";
 import { z } from "zod";
 import { v4 as uuidv4 } from "uuid";
 
+const events = ["A", "B", "C"] as const;
+export const EventType = z.enum(events);
+
 export const EventValidator = z.object({
     eventId: z.coerce.string().optional(),
     name: z.string(),
@@ -12,6 +15,7 @@ export const EventValidator = z.object({
     isVirtual: z.boolean(),
     imageUrl: z.string().nullable().optional(),
     isVisible: z.boolean().default(false),
+    eventType: EventType,
 });
 
 export const EventSchema = new Schema({
@@ -52,5 +56,10 @@ export const EventSchema = new Schema({
     isVisible: {
         type: Boolean,
         default: false,
+    },
+    eventType: {
+        type: String,
+        required: true,
+        enum: events,
     },
 });
