@@ -32,7 +32,7 @@ const RegistrationSchema = new mongoose.Schema({
     university: { type: String, required: true },
     graduation: { type: String, default: null },
     major: { type: String, default: null },
-    dietaryRstrictions: { type: String, required: true },
+    dietaryRestrictions: [{ type: String, required: true }],
     age: { type: Number, default: null },
     gender: { type: String, default: null },
     race: [{ type: String }],

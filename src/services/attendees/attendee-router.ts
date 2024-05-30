@@ -42,26 +42,28 @@ attendeeRouter.get(
     }
 );
 
-// Check if a user email exists
-attendeeRouter.get("/:email", async (req, res, next) => {
-    try {
-        const { email } = req.params;
+attendeeRouter.get(
+    "/",
+    RoleChecker([Role.Enum.USER]),
+    async (req, res, next) => {
+        try {
+            const payload = res.locals.payload;
+            const userId = payload.userId;
 
-        // Check if the user exists in the database
-        const userExists = await Database.ATTENDEES.exists({ email });
+            // Check if the user exists in the database
+            const user = await Database.ATTENDEES.findOne({ userId });
 
-        if (!userExists) {
-            return { error: "DoesNotExist" };
+            if (!user) {
+                return res
+                    .status(StatusCodes.NOT_FOUND)
+                    .json({ error: "UserNotFound" });
+            }
+
+            return res.status(StatusCodes.OK).json(user);
+        } catch (error) {
+            next(error);
         }
-
-        const user = await Database.ATTENDEES.findOne({
-            email,
-        });
-
-        return res.status(StatusCodes.OK).json(user);
-    } catch (error) {
-        next(error);
     }
-});
+);
 
 export default attendeeRouter;
