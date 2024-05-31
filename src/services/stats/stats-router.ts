@@ -103,21 +103,32 @@ statsRouter.get(
     async (req, res, next) => {
         try {
             const attendees = await Database.ATTENDEES.find({});
-            const dietaryRestrictionsMap: { [key: string]: number } = {};
+            let none = 0;
+            let dietary_restrictions = 0;
+            let allergies = 0;
+            let both = 0;
 
             attendees.forEach((attendee) => {
-                const dietary_restriction =
-                    attendee.dietary_restrictions as string;
-                if (dietaryRestrictionsMap[dietary_restriction]) {
-                    dietaryRestrictionsMap[dietary_restriction]++;
+                if (
+                    attendee.dietary_restrictions.length > 0 &&
+                    attendee.allergies.length > 0
+                ) {
+                    both++;
+                } else if (attendee.dietary_restrictions.length > 0) {
+                    dietary_restrictions++;
+                } else if (attendee.allergies.length > 0) {
+                    allergies++;
                 } else {
-                    dietaryRestrictionsMap[dietary_restriction] = 1;
+                    none++;
                 }
             });
 
-            return res
-                .status(StatusCodes.OK)
-                .json({ dietaryRestrictions: dietaryRestrictionsMap });
+            return res.status(StatusCodes.OK).json({
+                none: none,
+                dietary_restrictions: dietary_restrictions,
+                allergies: allergies,
+                both: both,
+            });
         } catch (error) {
             next(error);
         }
