@@ -29,6 +29,22 @@ export const Config = {
     AUTH_CALLBACK_URI_BASE:
         "https://api.reflectionsprojections.org/auth/callback/",
 
+    AUTH_ADMIN_WHITELIST: new Set([
+        "apirani2@illinois.edu", // Aydan Pirani (Dev)
+        "divyack2@illinois.edu", // Divya Koya (Dev)
+        "abahl3@illinois.edu", // Aryan Bahl (Dev)
+        "alexy3@illinois.edu", // Alex Yang (Dev)
+        "aryanb3@illinois.edu", // Aryan Bhardwaj (Dev)
+        "devrp3@illinois.edu", // Dev Patel (Dev)
+        "divyack2@illinois.edu", // Divya Koya (Dev)
+        "jechang3@illinois.edu", // Jacob Chang (Dev)
+        "jeremy19@illinois.edu", // Jeremy Wu (Dev)
+        "manyad2@illinois.edu", // Manya Dua (Dev)
+        "riyakp2@illinois.edu", // Riya Patel (Dev)
+        "ronita2@illinois.edu", // Ronit Anandani (Dev)
+        "srd8@illinois.edu", // Shreenija Reddy Daggavolu (Dev)
+    ]),
+
     JWT_SIGNING_SECRET: getEnv("JWT_SIGNING_SECRET"),
     JWT_EXPIRATION_TIME: "1 day",
 
