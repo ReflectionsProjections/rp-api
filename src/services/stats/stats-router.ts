@@ -104,9 +104,11 @@ statsRouter.get(
         try {
             const attendees = await Database.ATTENDEES.find({});
             let none = 0;
-            let dietary_restrictions = 0;
-            let allergies = 0;
+            let dietary_restrictions = 0; // Gluten-Free, Lactose-Intolerant, No Pork, No Beef, No Fish, Halal, Vegetarian, Vegan, Diabetes
+            let allergies = 0; // Milk, Eggs, Tree nuts, Peanuts, Shellfish, Fish, Soy, Wheat, Sesame
             let both = 0;
+            const dietary_restriction_counts: { [key: string]: number } = {};
+            const allergy_counts: { [key: string]: number } = {};
 
             attendees.forEach((attendee) => {
                 if (
@@ -121,6 +123,22 @@ statsRouter.get(
                 } else {
                     none++;
                 }
+
+                attendee.dietary_restrictions.forEach((dietary_restriction) => {
+                    if (dietary_restriction_counts[dietary_restriction]) {
+                        dietary_restriction_counts[dietary_restriction]++;
+                    } else {
+                        dietary_restriction_counts[dietary_restriction] = 1;
+                    }
+                });
+
+                attendee.allergies.forEach((allergies) => {
+                    if (allergy_counts[allergies]) {
+                        allergy_counts[allergies]++;
+                    } else {
+                        allergy_counts[allergies] = 1;
+                    }
+                });
             });
 
             return res.status(StatusCodes.OK).json({
@@ -128,6 +146,8 @@ statsRouter.get(
                 dietary_restrictions: dietary_restrictions,
                 allergies: allergies,
                 both: both,
+                allergy_counts: allergy_counts,
+                dietary_restriction_counts: dietary_restriction_counts,
             });
         } catch (error) {
             next(error);
