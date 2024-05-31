@@ -124,7 +124,9 @@ statsRouter.get(
                     none++;
                 }
 
-                attendee.dietary_restrictions.forEach((dietary_restriction) => {
+                const attendee_dietary_restrictions: string[] =
+                    attendee.dietary_restrictions;
+                attendee_dietary_restrictions.forEach((dietary_restriction) => {
                     if (dietary_restriction_counts[dietary_restriction]) {
                         dietary_restriction_counts[dietary_restriction]++;
                     } else {
@@ -132,7 +134,8 @@ statsRouter.get(
                     }
                 });
 
-                attendee.allergies.forEach((allergies) => {
+                const attendee_allergies: string[] = attendee.allergies;
+                attendee_allergies.forEach((allergies) => {
                     if (allergy_counts[allergies]) {
                         allergy_counts[allergies]++;
                     } else {
