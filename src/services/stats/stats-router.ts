@@ -3,6 +3,8 @@ import { StatusCodes } from "http-status-codes";
 import { Database } from "../../database";
 import RoleChecker from "../../middleware/role-checker";
 import { Role } from "../auth/auth-models";
+import { AttendeeSchema } from "../attendees/attendee-schema";
+import mongoose from "mongoose";
 
 const statsRouter = Router();
 
@@ -54,7 +56,7 @@ statsRouter.get(
         try {
             const currentTime = new Date();
             const attendees = await Database.ATTENDEES.find({
-                priority_expiry: { $gt: currentTime },
+                priorityExpiry: { $gt: currentTime },
             });
 
             return res.status(StatusCodes.OK).json({ count: attendees.length });
@@ -70,8 +72,8 @@ statsRouter.get(
     RoleChecker([Role.enum.STAFF], false),
     async (req, res, next) => {
         try {
-            const n = req.params.N;
-            if (!n) {
+            const numEvents = req.params.N;
+            if (!numEvents) {
                 return res
                     .status(StatusCodes.BAD_REQUEST)
                     .json({ error: "MissingNParameter" });
@@ -81,7 +83,7 @@ statsRouter.get(
                 endTime: { $lt: currentTime },
             })
                 .sort({ endTime: -1 })
-                .limit(parseInt(n));
+                .limit(parseInt(numEvents));
 
             const attendanceCounts = events.map(
                 (event) => event.attendanceCount
@@ -104,54 +106,75 @@ statsRouter.get(
         try {
             const attendees = await Database.ATTENDEES.find({});
             let none = 0;
-            let dietary_restrictions = 0; // Gluten-Free, Lactose-Intolerant, No Pork, No Beef, No Fish, Halal, Vegetarian, Vegan, Diabetes
+            let dietaryRestrictions = 0; // Gluten-Free, Lactose-Intolerant, No Pork, No Beef, No Fish, Halal, Vegetarian, Vegan, Diabetes
             let allergies = 0; // Milk, Eggs, Tree nuts, Peanuts, Shellfish, Fish, Soy, Wheat, Sesame
             let both = 0;
-            const dietary_restriction_counts: { [key: string]: number } = {};
-            const allergy_counts: { [key: string]: number } = {};
+            const dietaryRestrictionCounts: { [key: string]: number } = {};
+            const allergyCounts: { [key: string]: number } = {};
 
             attendees.forEach((attendee) => {
                 if (
-                    attendee.dietary_restrictions.length > 0 &&
+                    attendee.dietaryRestrictions.length > 0 &&
                     attendee.allergies.length > 0
                 ) {
                     both++;
-                } else if (attendee.dietary_restrictions.length > 0) {
-                    dietary_restrictions++;
+                } else if (attendee.dietaryRestrictions.length > 0) {
+                    dietaryRestrictions++;
                 } else if (attendee.allergies.length > 0) {
                     allergies++;
                 } else {
                     none++;
                 }
 
-                const attendee_dietary_restrictions: string[] =
-                    attendee.dietary_restrictions;
-                attendee_dietary_restrictions.forEach((dietary_restriction) => {
-                    if (dietary_restriction_counts[dietary_restriction]) {
-                        dietary_restriction_counts[dietary_restriction]++;
+                const attendeeDietaryRestrictions: string[] =
+                    attendee.dietaryRestrictions;
+                attendeeDietaryRestrictions.forEach((dietaryRestriction) => {
+                    if (dietaryRestrictionCounts[dietaryRestriction]) {
+                        dietaryRestrictionCounts[dietaryRestriction]++;
                     } else {
-                        dietary_restriction_counts[dietary_restriction] = 1;
+                        dietaryRestrictionCounts[dietaryRestriction] = 1;
                     }
                 });
 
-                const attendee_allergies: string[] = attendee.allergies;
-                attendee_allergies.forEach((allergies) => {
-                    if (allergy_counts[allergies]) {
-                        allergy_counts[allergies]++;
+                const attendeeAllergies: string[] = attendee.allergies;
+                attendeeAllergies.forEach((allergies) => {
+                    if (allergyCounts[allergies]) {
+                        allergyCounts[allergies]++;
                     } else {
-                        allergy_counts[allergies] = 1;
+                        allergyCounts[allergies] = 1;
                     }
                 });
             });
 
             return res.status(StatusCodes.OK).json({
                 none: none,
-                dietary_restrictions: dietary_restrictions,
+                dietaryRestrictions: dietaryRestrictions,
                 allergies: allergies,
                 both: both,
-                allergy_counts: allergy_counts,
-                dietary_restriction_counts: dietary_restriction_counts,
+                allergyCounts: allergyCounts,
+                dietaryRestrictionCounts: dietaryRestrictionCounts,
             });
+        } catch (error) {
+            next(error);
+        }
+    }
+);
+
+statsRouter.get(
+    "/test",
+    RoleChecker([Role.enum.STAFF], true),
+    async (req, res, next) => {
+        try {
+            const Attendee = mongoose.model("Attendee", AttendeeSchema);
+            const exampleAttendee = new Attendee({
+                userId: "12345",
+                name: "John Doe",
+                email: "john.doe@example.com",
+                dietaryRestrictions: ["Vegan"],
+                allergies: ["Peanuts"],
+            });
+            console.log(exampleAttendee);
+            return res.status(StatusCodes.OK);
         } catch (error) {
             next(error);
         }

@@ -7,11 +7,17 @@ const AttendeeValidator = z.object({
     name: z.string(),
     email: z.string().email(),
     events: z.array(z.string()),
-    dietary_restrictions: z.string().array(),
+    dietaryRestrictions: z.string().array(),
     allergies: z.string().array(),
-    priority_expiry: z.date().nullable().optional(),
+    priorityExpiry: z.date().nullable().optional(),
     points: z.number().min(0).default(0),
-    checkin: z.boolean().array().default([false, false, false, false, false]),
+    hasPriority: z.record(z.boolean()).default({
+        dayOne: false,
+        dayTwo: false,
+        dayThree: false,
+        dayFour: false,
+        dayFive: false,
+    }),
 });
 
 // Mongoose schema for attendee
@@ -20,11 +26,23 @@ const AttendeeSchema = new mongoose.Schema({
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     events: [{ type: mongoose.Schema.Types.ObjectId, ref: "Event" }],
-    dietary_restrictions: { type: [String], required: true },
+    dietaryRestrictions: { type: [String], required: true },
     allergies: { type: [String], required: true },
-    priority_expiry: { type: Date, default: null },
+    priorityExpiry: { type: Date, default: null },
     points: { type: Number, default: 0 },
-    checkin: { type: [Boolean], deafult: [false, false, false, false, false] },
+    hasPriority: {
+        type: new mongoose.Schema(
+            {
+                dayOne: { type: Boolean, default: false },
+                dayTwo: { type: Boolean, default: false },
+                dayThree: { type: Boolean, default: false },
+                dayFour: { type: Boolean, default: false },
+                dayFive: { type: Boolean, default: false },
+            },
+            { _id: false }
+        ),
+        default: () => ({}),
+    },
 });
 
 export { AttendeeSchema, AttendeeValidator };
