@@ -10,6 +10,7 @@ import bodyParser from "body-parser";
 import errorHandler from "./middleware/error-handler";
 
 import attendeeRouter from "./services/attendees/attendee-router";
+import adminRouter from "./services/admin/admin-router";
 import authRouter from "./services/auth/auth-router";
 import eventsRouter from "./services/events/events-router";
 import notificationsRouter from "./services/notifications/notifications-router";
@@ -34,6 +35,7 @@ app.use("/", bodyParser.json());
 
 // API routes
 app.use("/attendee", attendeeRouter);
+app.use("/admin", adminRouter);
 app.use("/auth", authRouter);
 app.use("/events", eventsRouter);
 app.use("/notifications", notificationsRouter);
