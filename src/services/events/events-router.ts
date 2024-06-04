@@ -75,4 +75,59 @@ eventsRouter.delete("/:EVENTID", async (req, res, next) => {
     }
 });
 
+eventsRouter.post("/check-in", async (req, res, next) => {
+    try {
+        const { reqeventId, reqUserId } = req.body;
+
+        // Check if the event and attendee exist
+        const event = await Database.EVENTS.findOne({ reqeventId });
+        const attendee = await Database.ATTENDEES.findOne({ reqUserId });
+
+        if (!event || !attendee) {
+            return res
+                .status(StatusCodes.NOT_FOUND)
+                .json({ error: "Event or Attendee not found" });
+        }
+
+        // Add attendee to event attendance
+        // const eventAttendance = await Database.EVENTS_ATT.findOne({
+        //     eventId: reqeventId,
+        // });
+
+        // if (!eventAttendance) {
+        //     const newEventAttendance = await Database.EVENTS_ATT.create({
+        //         eventId: reqeventId,
+        //         attendees: [reqeventId],
+        //     });
+        //     await newEventAttendance.save();
+        // }
+        // else {
+        //     eventAttendance.attendees.push(attendeeId);
+        //     await eventAttendance.save();
+        // }
+
+        // // Add event to attendee list
+        // const attendeeAttendance = await Database.ATTENDEES_ATT.findOne({
+        //     userId: reqUserId,
+        // });
+        // if (!attendeeAttendance) {
+        //     const newAttendeeAttendance = new Database.ATTENDEES_ATT({
+        //         userId: reqUserId,
+        //         eventsAttended: [eventId],
+        //     });
+        //     await newAttendeeAttendance.save();
+        // }
+        // else {
+        //   attendeeAttendance.eventsAttended.push(eventId);
+        //   await attendeeAttendance.save();
+        // }
+
+        return res
+            .status(StatusCodes.OK)
+            .json({ message: "Check-in successful" });
+    } catch (error) {
+        next(error);
+    }
+});
+
 export default eventsRouter;

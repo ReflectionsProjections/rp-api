@@ -54,3 +54,23 @@ export const EventSchema = new Schema({
         default: false,
     },
 });
+
+export const EventAttendanceSchema = new Schema({
+    eventId: {
+        type: Schema.Types.ObjectId,
+        ref: "Event",
+        required: true,
+    },
+    attendees: [
+        {
+            type: Schema.Types.ObjectId,
+            ref: "Attendee",
+            required: true,
+        },
+    ],
+});
+
+export const EventAttendanceValidator = z.object({
+    eventId: z.string(),
+    attendees: z.array(z.string()),
+});

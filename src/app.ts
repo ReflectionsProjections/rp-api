@@ -33,7 +33,7 @@ app.use("/", morgan("dev"));
 app.use("/", bodyParser.json());
 
 // API routes
-app.use("/attendee", attendeeRouter);
+app.use("/attendees", attendeeRouter);
 app.use("/auth", authRouter);
 app.use("/events", eventsRouter);
 app.use("/notifications", notificationsRouter);
