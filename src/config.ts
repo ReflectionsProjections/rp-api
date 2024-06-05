@@ -25,10 +25,11 @@ export const Config = {
     CLIENT_ID: getEnv("OAUTH_GOOGLE_CLIENT_ID"),
     CLIENT_SECRET: getEnv("OAUTH_GOOGLE_CLIENT_SECRET"),
 
-    AUTH_CALLBACK_URI_BASE: 
+    AUTH_CALLBACK_URI_BASE:
         // "http://localhost:3000/auth/callback/",
         "https://api.reflectionsprojections.org/auth/callback/",
 
+    // prettier-ignore
     AUTH_ADMIN_WHITELIST: new Set([
         // Dev Chairs/Code-Owners (reach out to these people for questions)
         "apirani2@illinois.edu",    // Aydan Pirani
@@ -60,7 +61,7 @@ export const Config = {
         "manyad2@illinois.edu",     // Manya Dua
         "riyakp2@illinois.edu",     // Riya Patel
         "ronita2@illinois.edu",     // Ronit Anandani
-        "srd8@illinois.edu",        // Shreenija Reddy Daggavolu
+        "srd8@illinois.edu",        // Shreenija Daggavolu
     ]),
 
     JWT_SIGNING_SECRET: getEnv("JWT_SIGNING_SECRET"),
