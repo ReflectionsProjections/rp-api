@@ -22,12 +22,10 @@ authRouter.get("/login/:DEVICE/", (req, res) => {
         return res.status(StatusCodes.BAD_REQUEST).send({ error: "BadDevice" });
     }
     
-    console.log(authStrategies);
-
     // Use the pre-created strategy
-    passport.use(device, authStrategies[device]);
+    // passport.use(authStrategies[device]);
 
-    return passport.authenticate(device, {
+    return passport.authenticate(authStrategies[device], {
         scope: ["profile", "email"],
     })(req, res);
 });
@@ -36,7 +34,7 @@ authRouter.get(
     "/callback/:DEVICE",
     (req, res, next) =>
         // Check based on the pre-existing strategy name
-        passport.authenticate(req.params.DEVICE, {
+        passport.authenticate(authStrategies[req.params.DEVICE], {
             session: false,
         })(req, res, next),
     async function (req, res, next) {
