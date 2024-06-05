@@ -51,16 +51,16 @@ export const Config = {
         "yosheej2@illinois.edu",    // Yoshee Jain (Content)
 
         // Dev Team
-        "abahl3@illinois.edu",      // Aryan Bahl (Dev)
-        "aryanb3@illinois.edu",     // Aryan Bhardwaj (Dev)
-        "alexy3@illinois.edu",      // Alex Yang (Dev)
-        "devrp3@illinois.edu",      // Dev Patel (Dev)
-        "jechang3@illinois.edu",    // Jacob Chang (Dev)
-        "jeremy19@illinois.edu",    // Jeremy Wu (Dev)
-        "manyad2@illinois.edu",     // Manya Dua (Dev)
-        "riyakp2@illinois.edu",     // Riya Patel (Dev)
-        "ronita2@illinois.edu",     // Ronit Anandani (Dev)
-        "srd8@illinois.edu",        // Shreenija Reddy Daggavolu (Dev)
+        "abahl3@illinois.edu",      // Aryan Bahl
+        "aryanb3@illinois.edu",     // Aryan Bhardwaj
+        "alexy3@illinois.edu",      // Alex Yang
+        "devrp3@illinois.edu",      // Dev Patel
+        "jechang3@illinois.edu",    // Jacob Chang
+        "jeremy19@illinois.edu",    // Jeremy Wu
+        "manyad2@illinois.edu",     // Manya Dua
+        "riyakp2@illinois.edu",     // Riya Patel
+        "ronita2@illinois.edu",     // Ronit Anandani
+        "srd8@illinois.edu",        // Shreenija Reddy Daggavolu
     ]),
 
     JWT_SIGNING_SECRET: getEnv("JWT_SIGNING_SECRET"),
