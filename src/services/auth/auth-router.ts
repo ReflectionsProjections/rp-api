@@ -59,6 +59,7 @@ authRouter.get(
             );
             const redirectUri =
                 DeviceRedirects[req.params.DEVICE] + `?token=${token}`;
+            console.log(redirectUri);
             return res.redirect(redirectUri);
         } catch (error) {
             next(error);
