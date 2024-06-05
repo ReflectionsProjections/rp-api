@@ -40,8 +40,11 @@ export default function RoleChecker(
                 return next();
             }
 
-            // Admins (staff) can access any endpoint
-            if (userRoles.includes(Role.Enum.ADMIN)) {
+            // Admins and staff can access any endpoint
+            if (
+                userRoles.includes(Role.Enum.ADMIN) ||
+                userRoles.includes(Role.Enum.STAFF)
+            ) {
                 return next();
             }
 
