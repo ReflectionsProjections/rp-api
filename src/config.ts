@@ -26,8 +26,8 @@ export const Config = {
     CLIENT_SECRET: getEnv("OAUTH_GOOGLE_CLIENT_SECRET"),
 
     AUTH_CALLBACK_URI_BASE: 
-        "http://localhost:3000/auth/callback/",
-        // "https://api.reflectionsprojections.org/auth/callback/",
+        // "http://localhost:3000/auth/callback/",
+        "https://api.reflectionsprojections.org/auth/callback/",
 
     AUTH_ADMIN_WHITELIST: new Set([
         "apirani2@illinois.edu", // Aydan Pirani (Dev)
