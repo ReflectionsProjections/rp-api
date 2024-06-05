@@ -119,12 +119,10 @@ eventsRouter.post("/check-in", async (req, res, next) => {
                 attendees: [userId],
             });
             await newEventAttendance.save();
+        } else {
+            eventAttendance.attendees.push(userId);
+            await eventAttendance.save();
         }
-
-        // else {
-        //     eventAttendance.attendees.push(userId);
-        //     await eventAttendance.save();
-        // }
 
         const attendeeAttendance = await Database.ATTENDEES_ATT.findOne({
             userId,
@@ -135,11 +133,10 @@ eventsRouter.post("/check-in", async (req, res, next) => {
                 eventsAttended: [eventId],
             });
             await newAttendeeAttendance.save();
+        } else {
+            attendeeAttendance.eventsAttended.push(eventId);
+            await attendeeAttendance.save();
         }
-        // else {
-        //   attendeeAttendance.eventsAttended.push(eventId);
-        //   await attendeeAttendance.save();
-        // }
 
         return res
             .status(StatusCodes.OK)

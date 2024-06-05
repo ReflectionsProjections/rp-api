@@ -6,12 +6,7 @@ export const AttendeeValidator = z.object({
     userId: z.string(),
     name: z.string(),
     email: z.string().email(),
-<<<<<<< HEAD
-    dietary_restrictions: z.string(),
-    priority_expiry: z.date().nullable().optional(),
-=======
     dietaryRestrictions: z.string().array(),
->>>>>>> 08c2b931195657ad9c1a41c1eb648d18400e2d3e
     points: z.number().min(0).default(0),
 });
 
