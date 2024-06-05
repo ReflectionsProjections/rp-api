@@ -8,6 +8,10 @@ import jsonwebtoken from "jsonwebtoken";
 
 const authStrategies: Record<string, GoogleStrategy> = {};
 
+for (const key in DeviceRedirects) {
+    authStrategies[key] = createGoogleStrategy(key);
+}
+
 const authRouter = Router();
 
 authRouter.get("/login/:DEVICE/", (req, res) => {
@@ -17,12 +21,8 @@ authRouter.get("/login/:DEVICE/", (req, res) => {
     if (!(device in DeviceRedirects)) {
         return res.status(StatusCodes.BAD_REQUEST).send({ error: "BadDevice" });
     }
-
-    // Check if we've already created an auth strategy for the device
-    // If not, create a new one
-    if (!(device in authStrategies)) {
-        authStrategies[device] = createGoogleStrategy(device);
-    }
+    
+    console.log(authStrategies);
 
     // Use the pre-created strategy
     passport.use(device, authStrategies[device]);
