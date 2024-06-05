@@ -30,19 +30,37 @@ export const Config = {
         "https://api.reflectionsprojections.org/auth/callback/",
 
     AUTH_ADMIN_WHITELIST: new Set([
-        "apirani2@illinois.edu", // Aydan Pirani (Dev)
-        "divyack2@illinois.edu", // Divya Koya (Dev)
-        "abahl3@illinois.edu", // Aryan Bahl (Dev)
-        "alexy3@illinois.edu", // Alex Yang (Dev)
-        "aryanb3@illinois.edu", // Aryan Bhardwaj (Dev)
-        "devrp3@illinois.edu", // Dev Patel (Dev)
-        "divyack2@illinois.edu", // Divya Koya (Dev)
-        "jechang3@illinois.edu", // Jacob Chang (Dev)
-        "jeremy19@illinois.edu", // Jeremy Wu (Dev)
-        "manyad2@illinois.edu", // Manya Dua (Dev)
-        "riyakp2@illinois.edu", // Riya Patel (Dev)
-        "ronita2@illinois.edu", // Ronit Anandani (Dev)
-        "srd8@illinois.edu", // Shreenija Reddy Daggavolu (Dev)
+        // Dev Chairs/Code-Owners (reach out to these people for questions)
+        "apirani2@illinois.edu",    // Aydan Pirani
+        "divyack2@illinois.edu",    // Divya Koya
+
+        // Directors
+        "ojaswee2@illinois.edu",     // Ojaswee Chaudhary
+        "ritikav2@illinois.edu",     // Ritika Vithani
+
+        // Committee Chairs
+        "adit3@illinois.edu",       // Adit Shah (Ops)
+        "arpitb2@illinois.edu",     // Arpit Bansal (Ops)
+        "mauskar3@illinois.edu",    // Aashna Mauskar (Marketing)
+        "coleej2@illinois.edu",     // Cole Jordan (Marketing)
+        "divyam4@illinois.edu",     // Divya Machineni (Corp)
+        "nzhan2@illinois.edu",      // Nancy Zhang (Design)
+        "preetig3@illinois.edu",    // Preethi Gomathinayagam (Content)
+        "snall6@illinois.edu",      // Sailaja Nallacheruvu (Corp)
+        "sahanah2@illinois.edu",    // Sahana Hariharan (Design)
+        "yosheej2@illinois.edu",    // Yoshee Jain (Content)
+
+        // Dev Team
+        "abahl3@illinois.edu",      // Aryan Bahl (Dev)
+        "aryanb3@illinois.edu",     // Aryan Bhardwaj (Dev)
+        "alexy3@illinois.edu",      // Alex Yang (Dev)
+        "devrp3@illinois.edu",      // Dev Patel (Dev)
+        "jechang3@illinois.edu",    // Jacob Chang (Dev)
+        "jeremy19@illinois.edu",    // Jeremy Wu (Dev)
+        "manyad2@illinois.edu",     // Manya Dua (Dev)
+        "riyakp2@illinois.edu",     // Riya Patel (Dev)
+        "ronita2@illinois.edu",     // Ronit Anandani (Dev)
+        "srd8@illinois.edu",        // Shreenija Reddy Daggavolu (Dev)
     ]),
 
     JWT_SIGNING_SECRET: getEnv("JWT_SIGNING_SECRET"),
