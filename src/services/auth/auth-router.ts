@@ -21,7 +21,7 @@ authRouter.get("/login/:DEVICE/", (req, res) => {
     if (!(device in DeviceRedirects)) {
         return res.status(StatusCodes.BAD_REQUEST).send({ error: "BadDevice" });
     }
-    
+
     // Use the pre-created strategy
     // passport.use(authStrategies[device]);
 

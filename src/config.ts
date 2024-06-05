@@ -25,24 +25,43 @@ export const Config = {
     CLIENT_ID: getEnv("OAUTH_GOOGLE_CLIENT_ID"),
     CLIENT_SECRET: getEnv("OAUTH_GOOGLE_CLIENT_SECRET"),
 
-    AUTH_CALLBACK_URI_BASE: 
+    AUTH_CALLBACK_URI_BASE:
         // "http://localhost:3000/auth/callback/",
         "https://api.reflectionsprojections.org/auth/callback/",
 
+    // prettier-ignore
     AUTH_ADMIN_WHITELIST: new Set([
-        "apirani2@illinois.edu", // Aydan Pirani (Dev)
-        "divyack2@illinois.edu", // Divya Koya (Dev)
-        "abahl3@illinois.edu", // Aryan Bahl (Dev)
-        "alexy3@illinois.edu", // Alex Yang (Dev)
-        "aryanb3@illinois.edu", // Aryan Bhardwaj (Dev)
-        "devrp3@illinois.edu", // Dev Patel (Dev)
-        "divyack2@illinois.edu", // Divya Koya (Dev)
-        "jechang3@illinois.edu", // Jacob Chang (Dev)
-        "jeremy19@illinois.edu", // Jeremy Wu (Dev)
-        "manyad2@illinois.edu", // Manya Dua (Dev)
-        "riyakp2@illinois.edu", // Riya Patel (Dev)
-        "ronita2@illinois.edu", // Ronit Anandani (Dev)
-        "srd8@illinois.edu", // Shreenija Reddy Daggavolu (Dev)
+        // Dev Chairs/Code-Owners (reach out to these people for questions)
+        "apirani2@illinois.edu",    // Aydan Pirani
+        "divyack2@illinois.edu",    // Divya Koya
+
+        // Directors
+        "ojaswee2@illinois.edu",     // Ojaswee Chaudhary
+        "ritikav2@illinois.edu",     // Ritika Vithani
+
+        // Committee Chairs
+        "adit3@illinois.edu",       // Adit Shah (Ops)
+        "arpitb2@illinois.edu",     // Arpit Bansal (Ops)
+        "mauskar3@illinois.edu",    // Aashna Mauskar (Marketing)
+        "coleej2@illinois.edu",     // Cole Jordan (Marketing)
+        "divyam4@illinois.edu",     // Divya Machineni (Corp)
+        "nzhan2@illinois.edu",      // Nancy Zhang (Design)
+        "preetig3@illinois.edu",    // Preethi Gomathinayagam (Content)
+        "snall6@illinois.edu",      // Sailaja Nallacheruvu (Corp)
+        "sahanah2@illinois.edu",    // Sahana Hariharan (Design)
+        "yosheej2@illinois.edu",    // Yoshee Jain (Content)
+
+        // Dev Team
+        "abahl3@illinois.edu",      // Aryan Bahl
+        "aryanb3@illinois.edu",     // Aryan Bhardwaj
+        "alexy3@illinois.edu",      // Alex Yang
+        "devrp3@illinois.edu",      // Dev Patel
+        "jechang3@illinois.edu",    // Jacob Chang
+        "jeremy19@illinois.edu",    // Jeremy Wu
+        "manyad2@illinois.edu",     // Manya Dua
+        "riyakp2@illinois.edu",     // Riya Patel
+        "ronita2@illinois.edu",     // Ronit Anandani
+        "srd8@illinois.edu",        // Shreenija Daggavolu
     ]),
 
     JWT_SIGNING_SECRET: getEnv("JWT_SIGNING_SECRET"),
