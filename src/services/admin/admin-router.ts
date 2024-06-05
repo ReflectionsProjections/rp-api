@@ -11,15 +11,23 @@ dotenv.config();
 const adminRouter = Router();
 
 adminRouter.post(
-    "/scan",
+    "/scan/",
     RoleChecker([Role.Enum.ADMIN]),
     async (req, res, next) => {
         try {
             const { qrCode } = req.body;
+            if (!qrCode) {
+                console.log("made it to if");
+                return res
+                    .status(StatusCodes.BAD_REQUEST)
+                    .json({ error: "QR code is required" });
+            }
             const { userId, expTime } = validateQrHash(qrCode);
 
             if (Date.now() / 1000 > expTime) {
-                return res.status(StatusCodes.UNAUTHORIZED).json({ error: "QR code has expired" });
+                return res
+                    .status(StatusCodes.UNAUTHORIZED)
+                    .json({ error: "QR code has expired" });
             }
 
             const user = await Database.ATTENDEES.findOne({ userId });
