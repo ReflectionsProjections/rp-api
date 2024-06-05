@@ -23,13 +23,11 @@ export const AttendeeSchema = new Schema({
 
 export const AttendeesAttendanceSchema = new Schema({
     userId: {
-        type: Schema.Types.ObjectId,
+        type: String,
         ref: "Attendee",
         required: true,
     },
-    eventsAttended: [
-        { type: Schema.Types.ObjectId, ref: "Event", required: true },
-    ],
+    eventsAttended: [{ type: String, ref: "Event", required: true }],
 });
 
 export const AttendeesAttendanceValidator = z.object({

@@ -77,11 +77,13 @@ eventsRouter.delete("/:EVENTID", async (req, res, next) => {
 
 eventsRouter.post("/check-in", async (req, res, next) => {
     try {
-        const { reqeventId, reqUserId } = req.body;
+        const { eventId, userId } = req.body;
 
         // Check if the event and attendee exist
-        const event = await Database.EVENTS.findOne({ reqeventId });
-        const attendee = await Database.ATTENDEES.findOne({ reqUserId });
+        const event = await Database.EVENTS.findOne({ eventId });
+        const attendee = await Database.ATTENDEES.findOne({ userId });
+        console.log(event);
+        console.log(attendee);
 
         if (!event || !attendee) {
             return res
@@ -89,34 +91,30 @@ eventsRouter.post("/check-in", async (req, res, next) => {
                 .json({ error: "Event or Attendee not found" });
         }
 
-        // Add attendee to event attendance
-        // const eventAttendance = await Database.EVENTS_ATT.findOne({
-        //     eventId: reqeventId,
-        // });
+        const eventAttendance = await Database.EVENTS_ATT.findOne({ eventId });
+        if (!eventAttendance) {
+            const newEventAttendance = await Database.EVENTS_ATT.create({
+                eventId: eventId,
+                attendees: [userId],
+            });
+            await newEventAttendance.save();
+        }
 
-        // if (!eventAttendance) {
-        //     const newEventAttendance = await Database.EVENTS_ATT.create({
-        //         eventId: reqeventId,
-        //         attendees: [reqeventId],
-        //     });
-        //     await newEventAttendance.save();
-        // }
         // else {
-        //     eventAttendance.attendees.push(attendeeId);
+        //     eventAttendance.attendees.push(userId);
         //     await eventAttendance.save();
         // }
 
-        // // Add event to attendee list
-        // const attendeeAttendance = await Database.ATTENDEES_ATT.findOne({
-        //     userId: reqUserId,
-        // });
-        // if (!attendeeAttendance) {
-        //     const newAttendeeAttendance = new Database.ATTENDEES_ATT({
-        //         userId: reqUserId,
-        //         eventsAttended: [eventId],
-        //     });
-        //     await newAttendeeAttendance.save();
-        // }
+        const attendeeAttendance = await Database.ATTENDEES_ATT.findOne({
+            userId,
+        });
+        if (!attendeeAttendance) {
+            const newAttendeeAttendance = new Database.ATTENDEES_ATT({
+                userId: userId,
+                eventsAttended: [eventId],
+            });
+            await newAttendeeAttendance.save();
+        }
         // else {
         //   attendeeAttendance.eventsAttended.push(eventId);
         //   await attendeeAttendance.save();

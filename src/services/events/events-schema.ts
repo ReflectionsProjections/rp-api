@@ -57,13 +57,13 @@ export const EventSchema = new Schema({
 
 export const EventAttendanceSchema = new Schema({
     eventId: {
-        type: Schema.Types.ObjectId,
+        type: String,
         ref: "Event",
         required: true,
     },
     attendees: [
         {
-            type: Schema.Types.ObjectId,
+            type: String,
             ref: "Attendee",
             required: true,
         },
