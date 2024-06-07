@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { StatusCodes } from "http-status-codes";
-import { publicEventValidator, privateEventValidator } from "./events-schema";
+import { publicEventValidator } from "./events-schema";
 import { Database } from "../../database";
 
 const eventsRouter = Router();

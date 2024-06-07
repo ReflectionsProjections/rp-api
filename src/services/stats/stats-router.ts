@@ -98,7 +98,7 @@ statsRouter.get(
 // Get the dietary restriction breakdown/counts (staff only)
 statsRouter.get(
     "/dietary-restrictions",
-    RoleChecker([Role.enum.STAFF], false),
+    RoleChecker([Role.enum.STAFF], true),
     async (req, res, next) => {
         try {
             const results = await Promise.allSettled([
@@ -150,9 +150,13 @@ statsRouter.get(
                 }
             }
 
+            type mongoQueryType = {
+                _id: string;
+                count: number;
+            };
             const allergyCounts: { [key: string]: number } = {};
             const unprocessedAllergyCounts = (
-                results[4] as PromiseFulfilledResult<any[]>
+                results[4] as PromiseFulfilledResult<mongoQueryType[]>
             ).value;
             for (let i = 0; i < unprocessedAllergyCounts.length; i++) {
                 allergyCounts[unprocessedAllergyCounts[i]._id as string] =
@@ -160,7 +164,7 @@ statsRouter.get(
             }
             const dietaryRestrictionCounts: { [key: string]: number } = {};
             const unprocessedDietaryRestrictionCountss = (
-                results[5] as PromiseFulfilledResult<any[]>
+                results[5] as PromiseFulfilledResult<mongoQueryType[]>
             ).value;
             for (
                 let i = 0;
