@@ -17,18 +17,8 @@ export const publicEventValidator = z.object({
     eventType: EventType,
 });
 
-export const privateEventValidator = z.object({
-    eventId: z.coerce.string().optional(),
-    name: z.string(),
-    startTime: z.coerce.date(),
-    endTime: z.coerce.date(),
-    points: z.number().min(0),
-    description: z.string(),
-    isVirtual: z.boolean(),
-    imageUrl: z.string().nullable().optional(),
-    isVisible: z.boolean().default(false),
+export const privateEventValidator = publicEventValidator.extend({
     attendanceCount: z.number(),
-    eventType: EventType,
 });
 
 export const EventSchema = new Schema({
