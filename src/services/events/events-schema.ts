@@ -2,6 +2,8 @@ import { Schema } from "mongoose";
 import { z } from "zod";
 import { v4 as uuidv4 } from "uuid";
 
+export const EventType = z.enum(["A", "B", "C"]);
+
 export const publicEventValidator = z.object({
     eventId: z.coerce.string().optional(),
     name: z.string(),
@@ -12,6 +14,7 @@ export const publicEventValidator = z.object({
     isVirtual: z.boolean(),
     imageUrl: z.string().nullable().optional(),
     isVisible: z.boolean().default(false),
+    eventType: EventType,
 });
 
 export const privateEventValidator = z.object({
@@ -25,6 +28,7 @@ export const privateEventValidator = z.object({
     imageUrl: z.string().nullable().optional(),
     isVisible: z.boolean().default(false),
     attendanceCount: z.number(),
+    eventType: EventType,
 });
 
 export const EventSchema = new Schema({
@@ -69,5 +73,10 @@ export const EventSchema = new Schema({
     attendanceCount: {
         type: Number,
         default: 0,
+    },
+    eventType: {
+        type: String,
+        required: true,
+        enum: EventType.Values,
     },
 });
