@@ -2,7 +2,7 @@
 cd /home/ubuntu/rp-api
 sudo yarn
 
-describe appname > /dev/null
+sudo pm2 describe appname > /dev/null
 RUNNING=$?
 
 
