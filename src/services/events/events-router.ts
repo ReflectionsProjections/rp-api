@@ -1,13 +1,13 @@
 import { Router } from "express";
 import { StatusCodes } from "http-status-codes";
-import { EventValidator } from "./events-schema";
+import { publicEventValidator, privateEventValidator } from "./events-schema";
 import { Database } from "../../database";
 
 const eventsRouter = Router();
 
 eventsRouter.post("/", async (req, res, next) => {
     try {
-        const validatedData = EventValidator.parse(req.body);
+        const validatedData = publicEventValidator.parse(req.body);
         const event = new Database.EVENTS(validatedData);
         await event.save();
         return res.sendStatus(StatusCodes.CREATED);
@@ -19,15 +19,21 @@ eventsRouter.post("/", async (req, res, next) => {
 eventsRouter.get("/:EVENTID", async (req, res, next) => {
     const eventId = req.params.EVENTID;
     try {
-        const event = await Database.EVENTS.findOne({ eventId: eventId });
+        const unfiltered_event = await Database.EVENTS.findOne({
+            eventId: eventId,
+        });
 
-        if (!event) {
+        if (!unfiltered_event) {
             return res
                 .status(StatusCodes.NOT_FOUND)
                 .json({ error: "DoesNotExist" });
         }
 
-        return res.status(StatusCodes.OK).json(event.toObject());
+        const filtered_event = publicEventValidator.parse(
+            unfiltered_event.toJSON()
+        );
+
+        return res.status(StatusCodes.OK).json(filtered_event);
     } catch (error) {
         next(error);
     }
@@ -36,8 +42,11 @@ eventsRouter.get("/:EVENTID", async (req, res, next) => {
 // Get all events
 eventsRouter.get("/", async (req, res, next) => {
     try {
-        const events = await Database.EVENTS.find();
-        return res.status(StatusCodes.OK).json(events);
+        const unfiltered_events = await Database.EVENTS.find();
+        const filtered_events = unfiltered_events.map((unfiltered_event) => {
+            return publicEventValidator.parse(unfiltered_event.toJSON());
+        });
+        return res.status(StatusCodes.OK).json(filtered_events);
     } catch (error) {
         next(error);
     }

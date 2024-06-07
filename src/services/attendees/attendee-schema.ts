@@ -9,7 +9,7 @@ const AttendeeValidator = z.object({
     events: z.array(z.string()),
     dietaryRestrictions: z.string().array(),
     allergies: z.string().array(),
-    priorityExpiry: z.date().nullable().optional(),
+    hasCheckedIn: z.boolean().default(false),
     points: z.number().min(0).default(0),
     hasPriority: z.record(z.boolean()).default({
         dayOne: false,
@@ -28,7 +28,7 @@ const AttendeeSchema = new mongoose.Schema({
     events: [{ type: mongoose.Schema.Types.ObjectId, ref: "Event" }],
     dietaryRestrictions: { type: [String], required: true },
     allergies: { type: [String], required: true },
-    priorityExpiry: { type: Date, default: null },
+    hasCheckedIn: { type: Boolean, default: false },
     points: { type: Number, default: 0 },
     hasPriority: {
         type: new mongoose.Schema(

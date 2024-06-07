@@ -2,7 +2,7 @@ import { Schema } from "mongoose";
 import { z } from "zod";
 import { v4 as uuidv4 } from "uuid";
 
-export const EventValidator = z.object({
+export const publicEventValidator = z.object({
     eventId: z.coerce.string().optional(),
     name: z.string(),
     startTime: z.coerce.date(),
@@ -12,7 +12,19 @@ export const EventValidator = z.object({
     isVirtual: z.boolean(),
     imageUrl: z.string().nullable().optional(),
     isVisible: z.boolean().default(false),
-    attendanceCount: z.number().optional(),
+});
+
+export const privateEventValidator = z.object({
+    eventId: z.coerce.string().optional(),
+    name: z.string(),
+    startTime: z.coerce.date(),
+    endTime: z.coerce.date(),
+    points: z.number().min(0),
+    description: z.string(),
+    isVirtual: z.boolean(),
+    imageUrl: z.string().nullable().optional(),
+    isVisible: z.boolean().default(false),
+    attendanceCount: z.number(),
 });
 
 export const EventSchema = new Schema({

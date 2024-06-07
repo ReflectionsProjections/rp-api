@@ -3,8 +3,6 @@ import { StatusCodes } from "http-status-codes";
 import { Database } from "../../database";
 import RoleChecker from "../../middleware/role-checker";
 import { Role } from "../auth/auth-models";
-import { AttendeeSchema } from "../attendees/attendee-schema";
-import mongoose from "mongoose";
 
 const statsRouter = Router();
 
@@ -54,9 +52,8 @@ statsRouter.get(
     RoleChecker([Role.enum.STAFF], false),
     async (req, res, next) => {
         try {
-            const currentTime = new Date();
             const attendees = await Database.ATTENDEES.find({
-                priorityExpiry: { $gt: currentTime },
+                hasCheckedIn: true,
             });
 
             return res.status(StatusCodes.OK).json({ count: attendees.length });
@@ -104,77 +101,87 @@ statsRouter.get(
     RoleChecker([Role.enum.STAFF], false),
     async (req, res, next) => {
         try {
-            const attendees = await Database.ATTENDEES.find({});
-            let none = 0;
-            let dietaryRestrictions = 0; // Gluten-Free, Lactose-Intolerant, No Pork, No Beef, No Fish, Halal, Vegetarian, Vegan, Diabetes
-            let allergies = 0; // Milk, Eggs, Tree nuts, Peanuts, Shellfish, Fish, Soy, Wheat, Sesame
-            let both = 0;
-            const dietaryRestrictionCounts: { [key: string]: number } = {};
-            const allergyCounts: { [key: string]: number } = {};
+            const results = await Promise.allSettled([
+                Database.ATTENDEES.countDocuments({
+                    allergies: { $size: 0 },
+                    dietaryRestrictions: { $size: 0 },
+                }),
+                Database.ATTENDEES.countDocuments({
+                    allergies: { $size: 0 },
+                    dietaryRestrictions: { $ne: [] },
+                }),
+                Database.ATTENDEES.countDocuments({
+                    allergies: { $ne: [] },
+                    dietaryRestrictions: { $size: 0 },
+                }),
+                Database.ATTENDEES.countDocuments({
+                    allergies: { $ne: [] },
+                    dietaryRestrictions: { $ne: [] },
+                }),
+                Database.ATTENDEES.aggregate([
+                    {
+                        $unwind: "$allergies",
+                    },
+                    {
+                        $group: {
+                            _id: "$allergies",
+                            count: { $sum: 1 },
+                        },
+                    },
+                ]),
+                Database.ATTENDEES.aggregate([
+                    {
+                        $unwind: "$dietaryRestrictions",
+                    },
+                    {
+                        $group: {
+                            _id: "$dietaryRestrictions",
+                            count: { $sum: 1 },
+                        },
+                    },
+                ]),
+            ]);
 
-            attendees.forEach((attendee) => {
-                if (
-                    attendee.dietaryRestrictions.length > 0 &&
-                    attendee.allergies.length > 0
-                ) {
-                    both++;
-                } else if (attendee.dietaryRestrictions.length > 0) {
-                    dietaryRestrictions++;
-                } else if (attendee.allergies.length > 0) {
-                    allergies++;
-                } else {
-                    none++;
+            for (let i = 0; i < results.length; i++) {
+                if (results[i].status === "rejected") {
+                    return res
+                        .status(StatusCodes.INTERNAL_SERVER_ERROR)
+                        .send({ error: "InternalError" });
                 }
+            }
 
-                const attendeeDietaryRestrictions: string[] =
-                    attendee.dietaryRestrictions;
-                attendeeDietaryRestrictions.forEach((dietaryRestriction) => {
-                    if (dietaryRestrictionCounts[dietaryRestriction]) {
-                        dietaryRestrictionCounts[dietaryRestriction]++;
-                    } else {
-                        dietaryRestrictionCounts[dietaryRestriction] = 1;
-                    }
-                });
-
-                const attendeeAllergies: string[] = attendee.allergies;
-                attendeeAllergies.forEach((allergies) => {
-                    if (allergyCounts[allergies]) {
-                        allergyCounts[allergies]++;
-                    } else {
-                        allergyCounts[allergies] = 1;
-                    }
-                });
-            });
+            const allergyCounts: { [key: string]: number } = {};
+            const unprocessedAllergyCounts = (
+                results[4] as PromiseFulfilledResult<any[]>
+            ).value;
+            for (let i = 0; i < unprocessedAllergyCounts.length; i++) {
+                allergyCounts[unprocessedAllergyCounts[i]._id as string] =
+                    unprocessedAllergyCounts[i].count;
+            }
+            const dietaryRestrictionCounts: { [key: string]: number } = {};
+            const unprocessedDietaryRestrictionCountss = (
+                results[5] as PromiseFulfilledResult<any[]>
+            ).value;
+            for (
+                let i = 0;
+                i < unprocessedDietaryRestrictionCountss.length;
+                i++
+            ) {
+                dietaryRestrictionCounts[
+                    unprocessedDietaryRestrictionCountss[i]._id as string
+                ] = unprocessedDietaryRestrictionCountss[i].count;
+            }
 
             return res.status(StatusCodes.OK).json({
-                none: none,
-                dietaryRestrictions: dietaryRestrictions,
-                allergies: allergies,
-                both: both,
+                none: (results[0] as PromiseFulfilledResult<number>).value,
+                dietaryRestrictions: (
+                    results[1] as PromiseFulfilledResult<number>
+                ).value,
+                allergies: (results[2] as PromiseFulfilledResult<number>).value,
+                both: (results[3] as PromiseFulfilledResult<number>).value,
                 allergyCounts: allergyCounts,
                 dietaryRestrictionCounts: dietaryRestrictionCounts,
             });
-        } catch (error) {
-            next(error);
-        }
-    }
-);
-
-statsRouter.get(
-    "/test",
-    RoleChecker([Role.enum.STAFF], true),
-    async (req, res, next) => {
-        try {
-            const Attendee = mongoose.model("Attendee", AttendeeSchema);
-            const exampleAttendee = new Attendee({
-                userId: "12345",
-                name: "John Doe",
-                email: "john.doe@example.com",
-                dietaryRestrictions: ["Vegan"],
-                allergies: ["Peanuts"],
-            });
-            console.log(exampleAttendee);
-            return res.status(StatusCodes.OK);
         } catch (error) {
             next(error);
         }
