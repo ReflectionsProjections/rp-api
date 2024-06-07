@@ -14,6 +14,8 @@ export const Config = {
     ALLOWED_CORS_ORIGIN_PATTERNS: [
         new RegExp("(.*).reflectionsprojections.org(.*)"),
         new RegExp("deploy-preview-[0-9]*(--rp2024.netlify.app)(.*)"),
+        new RegExp("(.*)localhost(.*)"),
+        new RegExp("(.*)127.0.0.1(.*)"),
     ],
 
     ENV: Environment.parse(getEnv("ENV")),
@@ -25,7 +27,7 @@ export const Config = {
     CLIENT_ID: getEnv("OAUTH_GOOGLE_CLIENT_ID"),
     CLIENT_SECRET: getEnv("OAUTH_GOOGLE_CLIENT_SECRET"),
 
-    AUTH_CALLBACK_URI_BASE: 
+    AUTH_CALLBACK_URI_BASE:
         // "http://localhost:3000/auth/callback/",
         "https://api.reflectionsprojections.org/auth/callback/",
 
