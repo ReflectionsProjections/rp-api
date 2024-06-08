@@ -11,12 +11,12 @@ const AttendeeValidator = z.object({
     allergies: z.string().array(),
     hasCheckedIn: z.boolean().default(false),
     points: z.number().min(0).default(0),
-    hasPriority: z.record(z.boolean()).default({
-        dayOne: false,
-        dayTwo: false,
-        dayThree: false,
-        dayFour: false,
-        dayFive: false,
+    hasPriority: z.object({
+        dayOne: z.boolean(),
+        dayTwo: z.boolean(),
+        dayThree: z.boolean(),
+        dayFour: z.boolean(),
+        dayFive: z.boolean(),
     }),
 });
 

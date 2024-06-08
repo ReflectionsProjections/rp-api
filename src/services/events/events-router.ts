@@ -50,9 +50,7 @@ eventsRouter.get("/:EVENTID", async (req, res, next) => {
                 .json({ error: "DoesNotExist" });
         }
 
-        const filtered_event = publicEventValidator.parse(
-            unfiltered_event.toJSON()
-        );
+        const filtered_event = publicEventValidator.parse(unfiltered_event);
 
         return res.status(StatusCodes.OK).json(filtered_event);
     } catch (error) {
