@@ -5,10 +5,44 @@ import { StatusCodes } from "http-status-codes";
 import { Strategy as GoogleStrategy, Profile } from "passport-google-oauth20";
 import { createGoogleStrategy, getJwtPayloadFromDatabase } from "./auth-utils";
 import jsonwebtoken from "jsonwebtoken";
+import { Database } from "../../database";
+import RoleChecker from "../../middleware/role-checker";
+import { Role } from "../auth/auth-models";
 
 const authStrategies: Record<string, GoogleStrategy> = {};
 
 const authRouter = Router();
+
+// Add role to userId by email address (admin only endpoint)
+authRouter.put(
+    "/addRoleByEmail/",
+    RoleChecker([Role.Enum.ADMIN]),
+    async (req, res, next) => {
+        try {
+            const email: string = req.body.email as string;
+            const role: string = req.body.role as string;
+            const user = await Database.ROLES.findOne({ email: email });
+
+            if (!user) {
+                return res.status(StatusCodes.NOT_FOUND).json({
+                    error: "UserNotFound",
+                });
+            }
+
+            const userRoles: string[] = user.roles as string[];
+
+            // Add role if it does not exist
+            if (!userRoles.includes(role)) {
+                userRoles.push(role);
+                await user.save();
+            }
+
+            return res.status(StatusCodes.OK).json(user);
+        } catch (error) {
+            next(error);
+        }
+    }
+);
 
 authRouter.get("/login/:DEVICE/", (req, res) => {
     const device = req.params.DEVICE;
@@ -69,5 +103,20 @@ authRouter.get(
 authRouter.get("/dev/", (req, res) => {
     return res.status(StatusCodes.OK).json(req.query);
 });
+
+// Get a list of people by role (staff only endpoint)
+authRouter.get(
+    "/getPeopleByRole/:ROLE",
+    RoleChecker([Role.Enum.STAFF]),
+    async (req, res, next) => {
+        try {
+            const role = req.params.ROLE;
+            const usersWithRole = await Database.ROLES.find({ roles: role });
+            return res.status(StatusCodes.OK).json(usersWithRole);
+        } catch (error) {
+            next(error);
+        }
+    }
+);
 
 export default authRouter;
