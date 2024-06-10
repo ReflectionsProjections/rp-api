@@ -16,3 +16,16 @@ export function generateQrHash(userId: string, expTime: number) {
 
     return `${hashStr}#${expTime}#${userId}`;
 }
+
+export function validateQrHash(qrCode: string) {
+    const parts = qrCode.split("#");
+    const userId = parts[2];
+    const expTime = parseInt(parts[1]);
+    const generatedHash = generateQrHash(userId, expTime);
+
+    if (generatedHash.split("#")[0] !== parts[0]) {
+        throw new Error("Invalid QR code");
+    }
+
+    return { userId, expTime };
+}

@@ -4,7 +4,7 @@ import { Database } from "../../database";
 import RoleChecker from "../../middleware/role-checker";
 import { Role } from "../auth/auth-models";
 import dotenv from "dotenv";
-import { validateQrHash } from "./admin-utils";
+import { validateQrHash } from "../attendees/attendees-utils";
 
 
 const adminRouter = Router();
