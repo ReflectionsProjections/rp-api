@@ -17,7 +17,7 @@ adminRouter.post(
         try {
             const { qrCode } = req.body;
             if (!qrCode) {
-                console.log("made it to if");
+                
                 return res
                     .status(StatusCodes.BAD_REQUEST)
                     .json({ error: "QR code is required" });
