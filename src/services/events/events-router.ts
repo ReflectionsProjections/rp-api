@@ -2,6 +2,7 @@ import { Router } from "express";
 import { StatusCodes } from "http-status-codes";
 import { EventValidator } from "./events-schema";
 import { Database } from "../../database";
+import { checkInUser } from "./events-utils";
 
 const eventsRouter = Router();
 
@@ -99,48 +100,17 @@ eventsRouter.delete("/:EVENTID", async (req, res, next) => {
 eventsRouter.post("/check-in", async (req, res, next) => {
     try {
         const { eventId, userId } = req.body;
-
-        // Check if the event and attendee exist
-        const event = await Database.EVENTS.findOne({ eventId });
-        const attendee = await Database.ATTENDEES.findOne({ userId });
-        console.log(event);
-        console.log(attendee);
-
-        if (!event || !attendee) {
+        const result = await checkInUser(eventId, userId);
+        if (result.success) {
+            return res
+                .status(StatusCodes.OK)
+                .json({ message: "Check-in successful" });
+        } 
+        else {
             return res
                 .status(StatusCodes.NOT_FOUND)
-                .json({ error: "Event or Attendee not found" });
+                .json({ error: result.message });
         }
-
-        const eventAttendance = await Database.EVENTS_ATT.findOne({ eventId });
-        if (!eventAttendance) {
-            const newEventAttendance = await Database.EVENTS_ATT.create({
-                eventId: eventId,
-                attendees: [userId],
-            });
-            await newEventAttendance.save();
-        } else {
-            eventAttendance.attendees.push(userId);
-            await eventAttendance.save();
-        }
-
-        const attendeeAttendance = await Database.ATTENDEES_ATT.findOne({
-            userId,
-        });
-        if (!attendeeAttendance) {
-            const newAttendeeAttendance = new Database.ATTENDEES_ATT({
-                userId: userId,
-                eventsAttended: [eventId],
-            });
-            await newAttendeeAttendance.save();
-        } else {
-            attendeeAttendance.eventsAttended.push(eventId);
-            await attendeeAttendance.save();
-        }
-
-        return res
-            .status(StatusCodes.OK)
-            .json({ message: "Check-in successful" });
     } catch (error) {
         next(error);
     }
