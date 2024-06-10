@@ -6,7 +6,6 @@ import { Role } from "../auth/auth-models";
 import dotenv from "dotenv";
 import { validateQrHash } from "./admin-utils";
 
-dotenv.config();
 
 const adminRouter = Router();
 
