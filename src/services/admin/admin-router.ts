@@ -3,9 +3,8 @@ import { StatusCodes } from "http-status-codes";
 import { Database } from "../../database";
 import RoleChecker from "../../middleware/role-checker";
 import { Role } from "../auth/auth-models";
-import dotenv from "dotenv";
+// import dotenv from "dotenv";
 import { validateQrHash } from "../attendees/attendees-utils";
-
 
 const adminRouter = Router();
 
@@ -16,7 +15,6 @@ adminRouter.post(
         try {
             const { qrCode } = req.body;
             if (!qrCode) {
-                
                 return res
                     .status(StatusCodes.BAD_REQUEST)
                     .json({ error: "QR code is required" });
