@@ -15,6 +15,8 @@ adminRouter.post(
     async (req, res, next) => {
         try {
             const { eventId, qrCode } = ScanValidator.parse(req.body);
+            console.log("Event ID:", eventId);
+
             if (!qrCode) {
                 return res
                     .status(StatusCodes.BAD_REQUEST)
