@@ -75,7 +75,7 @@ eventsRouter.get("/", async (req, res, next) => {
 eventsRouter.delete("/:EVENTID", async (req, res, next) => {
     const eventId = req.params.EVENTID;
     try {
-        await Database.EVENTS.findByIdAndDelete({ eventId: eventId });
+        await Database.EVENTS.findOneAndDelete({ eventId: eventId });
 
         return res.sendStatus(StatusCodes.NO_CONTENT);
     } catch (error) {
