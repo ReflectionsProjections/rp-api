@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { StatusCodes } from "http-status-codes";
+import { ScanValidator } from "./admin-schema";
 import { Database } from "../../database";
 import RoleChecker from "../../middleware/role-checker";
 import { Role } from "../auth/auth-models";
@@ -13,7 +14,7 @@ adminRouter.post(
     RoleChecker([Role.Enum.ADMIN]),
     async (req, res, next) => {
         try {
-            const { qrCode } = req.body;
+            const { eventId, qrCode } = ScanValidator.parse(req.body);
             if (!qrCode) {
                 return res
                     .status(StatusCodes.BAD_REQUEST)
