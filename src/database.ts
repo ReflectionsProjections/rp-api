@@ -1,10 +1,13 @@
-import mongoose, { Schema } from "mongoose";
+import mongoose, { Schema, Document } from "mongoose";
 import {
     AttendeeSchema,
     AttendeeValidator,
 } from "./services/attendees/attendee-schema";
 import { RoleValidator, RoleSchema } from "./services/auth/auth-schema";
-import { EventSchema, EventValidator } from "./services/events/events-schema";
+import {
+    EventSchema,
+    privateEventValidator,
+} from "./services/events/events-schema";
 import {
     RegistrationSchema,
     RegistrationValidator,
@@ -43,13 +46,15 @@ function initializeModel(
         },
     });
 
-    return mongoose.model(modelName, schema);
+    type objectType = Zod.infer<typeof object>;
+    interface modelType extends Document, objectType {}
+    return mongoose.model<modelType>(modelName, schema);
 }
 
 // Example usage
 export const Database = {
     ROLES: initializeModel("roles", RoleSchema, RoleValidator),
-    EVENTS: initializeModel("events", EventSchema, EventValidator),
+    EVENTS: initializeModel("events", EventSchema, privateEventValidator),
     SUBSCRIPTIONS: initializeModel(
         "subscriptions",
         SubscriptionSchema,
