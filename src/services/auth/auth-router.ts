@@ -141,7 +141,7 @@ authRouter.get("/dev/", (req, res) => {
 
 // Get a list of people by role (staff only endpoint)
 authRouter.get(
-    "/get/:ROLE",
+    "/:ROLE",
     RoleChecker([Role.Enum.STAFF]),
     async (req, res, next) => {
         try {
