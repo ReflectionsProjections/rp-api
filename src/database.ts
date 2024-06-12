@@ -7,7 +7,10 @@ import {
     AttendeesAttendanceSchema,
     AttendeesAttendanceValidator,
 } from "./services/attendees/attendee-schema";
-import { EventSchema, EventValidator } from "./services/events/events-schema";
+import {
+    EventSchema,
+    privateEventValidator,
+} from "./services/events/events-schema";
 import {
     EventAttendanceSchema,
     EventAttendanceValidator,
@@ -59,7 +62,7 @@ function initializeModel(
 // Example usage
 export const Database = {
     ROLES: initializeModel("roles", RoleSchema, RoleValidator),
-    EVENTS: initializeModel("events", EventSchema, EventValidator),
+    EVENTS: initializeModel("events", EventSchema, privateEventValidator),
     EVENTS_ATT: initializeModel(
         "events_att",
         EventAttendanceSchema,

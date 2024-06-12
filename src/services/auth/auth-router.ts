@@ -8,6 +8,10 @@ import jsonwebtoken from "jsonwebtoken";
 
 const authStrategies: Record<string, GoogleStrategy> = {};
 
+for (const key in DeviceRedirects) {
+    authStrategies[key] = createGoogleStrategy(key);
+}
+
 const authRouter = Router();
 
 authRouter.get("/login/:DEVICE/", (req, res) => {
@@ -18,16 +22,10 @@ authRouter.get("/login/:DEVICE/", (req, res) => {
         return res.status(StatusCodes.BAD_REQUEST).send({ error: "BadDevice" });
     }
 
-    // Check if we've already created an auth strategy for the device
-    // If not, create a new one
-    if (!(device in authStrategies)) {
-        authStrategies[device] = createGoogleStrategy(device);
-    }
-
     // Use the pre-created strategy
-    passport.use(device, authStrategies[device]);
+    // passport.use(authStrategies[device]);
 
-    return passport.authenticate(device, {
+    return passport.authenticate(authStrategies[device], {
         scope: ["profile", "email"],
     })(req, res);
 });
@@ -36,7 +34,7 @@ authRouter.get(
     "/callback/:DEVICE",
     (req, res, next) =>
         // Check based on the pre-existing strategy name
-        passport.authenticate(req.params.DEVICE, {
+        passport.authenticate(authStrategies[req.params.DEVICE], {
             session: false,
         })(req, res, next),
     async function (req, res, next) {
@@ -59,6 +57,7 @@ authRouter.get(
             );
             const redirectUri =
                 DeviceRedirects[req.params.DEVICE] + `?token=${token}`;
+            console.log(redirectUri);
             return res.redirect(redirectUri);
         } catch (error) {
             next(error);
