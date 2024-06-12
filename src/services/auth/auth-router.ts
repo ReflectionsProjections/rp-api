@@ -19,6 +19,42 @@ for (const key in DeviceRedirects) {
 
 const authRouter = Router();
 
+// Remove role from userId by email address (admin only endpoint)
+authRouter.delete(
+    "/",
+    RoleChecker([Role.Enum.ADMIN]),
+    async (req, res, next) => {
+        try {
+            // Validate request body using Zod schema
+            const { email, role } = AuthRoleChangeRequest.parse(req.body);
+
+            // Use findOneAndUpdate to remove the role
+            const user = await Database.ROLES.findOneAndUpdate(
+                { email: email },
+                { $pull: { roles: role } },
+                { new: true }
+            );
+
+            if (!user) {
+                return res.status(StatusCodes.NOT_FOUND).json({
+                    error: "UserNotFound",
+                });
+            }
+
+            return res.status(StatusCodes.OK).json(user);
+        } catch (error) {
+            if (error instanceof z.ZodError) {
+                return res.status(StatusCodes.BAD_REQUEST).json({
+                    error: "BadRole",
+                    details: error.errors,
+                });
+            }
+
+            next(error);
+        }
+    }
+);
+
 // Add role to userId by email address (admin only endpoint)
 authRouter.put("/", RoleChecker([Role.Enum.ADMIN]), async (req, res, next) => {
     try {
