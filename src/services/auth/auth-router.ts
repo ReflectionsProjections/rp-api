@@ -27,7 +27,7 @@ authRouter.put("/", RoleChecker([Role.Enum.ADMIN]), async (req, res, next) => {
         const user = await Database.ROLES.findOneAndUpdate(
             { email: email },
             { $addToSet: { roles: role } },
-            { new: true }
+            { new: true, upsert: true }
         );
 
         if (!user) {
@@ -105,7 +105,7 @@ authRouter.get("/dev/", (req, res) => {
 
 // Get a list of people by role (staff only endpoint)
 authRouter.get(
-    "/getPeopleByRole/:ROLE",
+    "/get/:ROLE",
     RoleChecker([Role.Enum.STAFF]),
     async (req, res, next) => {
         try {
