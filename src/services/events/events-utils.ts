@@ -16,8 +16,7 @@ export async function checkInUser(eventId: string, userId: string) {
             eventId: eventId,
             attendees: [userId],
         });
-    } 
-    else {
+    } else {
         if (!eventAttendance.attendees.includes(userId)) {
             eventAttendance.attendees.push(userId);
         }

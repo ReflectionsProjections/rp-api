@@ -3,6 +3,7 @@ import { StatusCodes } from "http-status-codes";
 import { EventValidator } from "./events-schema";
 import { Database } from "../../database";
 import { checkInUser } from "./events-utils";
+// import {mongoose} from "mongoose";
 
 const eventsRouter = Router();
 
@@ -89,7 +90,8 @@ eventsRouter.get("/", async (req, res, next) => {
 eventsRouter.delete("/:EVENTID", async (req, res, next) => {
     const eventId = req.params.EVENTID;
     try {
-        await Database.EVENTS.findByIdAndDelete({ eventId: eventId });
+        // const objectId = mongoose.Types.ObjectId(eventId)
+        await Database.EVENTS.findOneAndDelete({ eventId: eventId });
 
         return res.sendStatus(StatusCodes.NO_CONTENT);
     } catch (error) {
@@ -105,8 +107,7 @@ eventsRouter.post("/check-in", async (req, res, next) => {
             return res
                 .status(StatusCodes.OK)
                 .json({ message: "Check-in successful" });
-        } 
-        else {
+        } else {
             return res
                 .status(StatusCodes.NOT_FOUND)
                 .json({ error: result.message });
