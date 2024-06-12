@@ -8,6 +8,7 @@ const AttendeeValidator = z.object({
     email: z.string().email(),
     dietaryRestrictions: z.string().array(),
     points: z.number().min(0).default(0),
+    foodWave: z.number().int().min(0).default(0),
 });
 
 // Mongoose schema for attendee
@@ -17,6 +18,7 @@ const AttendeeSchema = new mongoose.Schema({
     email: { type: String, required: true, unique: true },
     dietaryRestrictions: [{ type: String, required: true }],
     points: { type: Number, default: 0 },
+    foodWave: { type: Number, default: 0 },
 });
 
 export { AttendeeSchema, AttendeeValidator };
