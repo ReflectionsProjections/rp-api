@@ -11,6 +11,7 @@ const AttendeeValidator = z.object({
     allergies: z.string().array(),
     hasCheckedIn: z.boolean().default(false),
     points: z.number().min(0).default(0),
+    foodWave: z.number().int().min(0).default(0),
     hasPriority: z.object({
         dayOne: z.boolean(),
         dayTwo: z.boolean(),
@@ -30,6 +31,7 @@ const AttendeeSchema = new mongoose.Schema({
     allergies: { type: [String], required: true },
     hasCheckedIn: { type: Boolean, default: false },
     points: { type: Number, default: 0 },
+    foodWave: { type: Number, default: 0 },
     hasPriority: {
         type: new mongoose.Schema(
             {
