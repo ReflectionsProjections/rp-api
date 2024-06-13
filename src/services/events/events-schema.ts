@@ -4,8 +4,8 @@ import { v4 as uuidv4 } from "uuid";
 
 export const EventType = z.enum(["A", "B", "C"]);
 
-export const EventValidator = z.object({
-    eventId: z.coerce.string().optional(),
+export const publicEventValidator = z.object({
+    eventId: z.coerce.string(),
     name: z.string(),
     startTime: z.coerce.date(),
     endTime: z.coerce.date(),
@@ -15,6 +15,10 @@ export const EventValidator = z.object({
     imageUrl: z.string().nullable().optional(),
     isVisible: z.boolean().default(false),
     eventType: EventType,
+});
+
+export const privateEventValidator = publicEventValidator.extend({
+    attendanceCount: z.number(),
 });
 
 export const EventSchema = new Schema({
@@ -55,6 +59,10 @@ export const EventSchema = new Schema({
     isVisible: {
         type: Boolean,
         default: false,
+    },
+    attendanceCount: {
+        type: Number,
+        default: 0,
     },
     eventType: {
         type: String,

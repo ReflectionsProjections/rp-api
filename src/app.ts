@@ -16,6 +16,7 @@ import eventsRouter from "./services/events/events-router";
 import notificationsRouter from "./services/notifications/notifications-router";
 import registrationRouter from "./services/registration/registration-router";
 import s3Router from "./services/s3/s3-router";
+import statsRouter from "./services/stats/stats-router";
 import subscriptionRouter from "./services/subscription/subscription-router";
 
 const app = express();
@@ -41,6 +42,7 @@ app.use("/events", eventsRouter);
 app.use("/notifications", notificationsRouter);
 app.use("/registration", registrationRouter);
 app.use("/s3", s3Router);
+app.use("/stats", statsRouter);
 app.use("/subscription", subscriptionRouter);
 
 app.get("/status", (_, res) => {
