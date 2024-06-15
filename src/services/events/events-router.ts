@@ -28,6 +28,21 @@ eventsRouter.get("/currentOrNext", async (req, res, next) => {
     }
 });
 
+eventsRouter.get("/:EVENTID", async (req, res, next) => {
+    const eventId = req.params.EVENTID;
+    try {
+        const event = await Database.EVENTS.findOne({ eventId: eventId });
+        if (!event) {
+            return res
+                .status(StatusCodes.NOT_FOUND)
+                .json({ error: "DoesNotExist" });
+        }
+        return res.status(StatusCodes.OK).json(event.toObject());
+    } catch (error) {
+        next(error);
+    }
+});
+
 eventsRouter.post("/", async (req, res, next) => {
     try {
         const validatedData = publicEventValidator.parse(req.body);
