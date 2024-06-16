@@ -12,19 +12,21 @@ const AttendeeValidator = z.object({
     hasCheckedIn: z.boolean().default(false),
     points: z.number().min(0).default(0),
     foodWave: z.number().int().min(0).default(0),
-    hasPriority: z.object({
-        dayOne: z.boolean().default(false),
-        dayTwo: z.boolean().default(false),
-        dayThree: z.boolean().default(false),
-        dayFour: z.boolean().default(false),
-        dayFive: z.boolean().default(false),
-    }).default({
-        dayOne: false,
-        dayTwo: false,
-        dayThree: false,
-        dayFour: false,
-        dayFive: false,
-    })
+    hasPriority: z
+        .object({
+            dayOne: z.boolean().default(false),
+            dayTwo: z.boolean().default(false),
+            dayThree: z.boolean().default(false),
+            dayFour: z.boolean().default(false),
+            dayFive: z.boolean().default(false),
+        })
+        .default({
+            dayOne: false,
+            dayTwo: false,
+            dayThree: false,
+            dayFour: false,
+            dayFive: false,
+        }),
 });
 
 // Mongoose schema for attendee
