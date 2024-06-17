@@ -5,6 +5,11 @@ import { StatusCodes } from "http-status-codes";
 import { Strategy as GoogleStrategy, Profile } from "passport-google-oauth20";
 import { createGoogleStrategy, getJwtPayloadFromDatabase } from "./auth-utils";
 import jsonwebtoken from "jsonwebtoken";
+import { Database } from "../../database";
+import RoleChecker from "../../middleware/role-checker";
+import { Role } from "../auth/auth-models";
+import { AuthRoleChangeRequest } from "./auth-schema";
+import { z } from "zod";
 
 const authStrategies: Record<string, GoogleStrategy> = {};
 
@@ -13,6 +18,71 @@ for (const key in DeviceRedirects) {
 }
 
 const authRouter = Router();
+
+// Remove role from userId by email address (admin only endpoint)
+authRouter.delete(
+    "/",
+    RoleChecker([Role.Enum.ADMIN]),
+    async (req, res, next) => {
+        try {
+            // Validate request body using Zod schema
+            const { email, role } = AuthRoleChangeRequest.parse(req.body);
+
+            // Use findOneAndUpdate to remove the role
+            const user = await Database.ROLES.findOneAndUpdate(
+                { email: email },
+                { $pull: { roles: role } },
+                { new: true }
+            );
+
+            if (!user) {
+                return res.status(StatusCodes.NOT_FOUND).json({
+                    error: "UserNotFound",
+                });
+            }
+
+            return res.status(StatusCodes.OK).json(user);
+        } catch (error) {
+            if (error instanceof z.ZodError) {
+                return res.status(StatusCodes.BAD_REQUEST).json({
+                    error: "BadRole",
+                    details: error.errors,
+                });
+            }
+
+            next(error);
+        }
+    }
+);
+
+// Add role to userId by email address (admin only endpoint)
+authRouter.put("/", RoleChecker([Role.Enum.ADMIN]), async (req, res, next) => {
+    try {
+        const { email, role } = AuthRoleChangeRequest.parse(req.body);
+
+        const user = await Database.ROLES.findOneAndUpdate(
+            { email: email },
+            { $addToSet: { roles: role } },
+            { new: true, upsert: true }
+        );
+
+        if (!user) {
+            return res.status(StatusCodes.NOT_FOUND).json({
+                error: "UserNotFound",
+            });
+        }
+
+        return res.status(StatusCodes.OK).json(user);
+    } catch (error) {
+        if (error instanceof z.ZodError) {
+            return res.status(StatusCodes.BAD_REQUEST).json({
+                error: "BadRole",
+            });
+        }
+
+        next(error);
+    }
+});
 
 authRouter.get("/login/:DEVICE/", (req, res) => {
     const device = req.params.DEVICE;
@@ -68,5 +138,28 @@ authRouter.get(
 authRouter.get("/dev/", (req, res) => {
     return res.status(StatusCodes.OK).json(req.query);
 });
+
+// Get a list of people by role (staff only endpoint)
+authRouter.get(
+    "/:ROLE",
+    RoleChecker([Role.Enum.STAFF]),
+    async (req, res, next) => {
+        try {
+            // Validate the role using Zod schema
+            const role = Role.parse(req.params.ROLE);
+
+            const usersWithRole = await Database.ROLES.find({ roles: role });
+            return res.status(StatusCodes.OK).json(usersWithRole);
+        } catch (error) {
+            if (error instanceof z.ZodError) {
+                return res.status(StatusCodes.BAD_REQUEST).json({
+                    error: "BadRole",
+                });
+            }
+
+            next(error);
+        }
+    }
+);
 
 export default authRouter;

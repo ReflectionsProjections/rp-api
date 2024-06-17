@@ -6,18 +6,27 @@ const AttendeeValidator = z.object({
     userId: z.string(),
     name: z.string(),
     email: z.string().email(),
-    events: z.array(z.string()),
+    events: z.array(z.string()).default([]),
     dietaryRestrictions: z.string().array(),
     allergies: z.string().array(),
     hasCheckedIn: z.boolean().default(false),
     points: z.number().min(0).default(0),
-    hasPriority: z.object({
-        dayOne: z.boolean(),
-        dayTwo: z.boolean(),
-        dayThree: z.boolean(),
-        dayFour: z.boolean(),
-        dayFive: z.boolean(),
-    }),
+    foodWave: z.number().int().min(0).default(0),
+    hasPriority: z
+        .object({
+            dayOne: z.boolean().default(false),
+            dayTwo: z.boolean().default(false),
+            dayThree: z.boolean().default(false),
+            dayFour: z.boolean().default(false),
+            dayFive: z.boolean().default(false),
+        })
+        .default({
+            dayOne: false,
+            dayTwo: false,
+            dayThree: false,
+            dayFour: false,
+            dayFive: false,
+        }),
 });
 
 // Mongoose schema for attendee
@@ -30,6 +39,7 @@ const AttendeeSchema = new mongoose.Schema({
     allergies: { type: [String], required: true },
     hasCheckedIn: { type: Boolean, default: false },
     points: { type: Number, default: 0 },
+    foodWave: { type: Number, default: 0 },
     hasPriority: {
         type: new mongoose.Schema(
             {
