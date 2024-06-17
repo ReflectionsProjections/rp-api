@@ -13,7 +13,7 @@ const s3Router: Router = Router();
 
 s3Router.get(
     "/upload/",
-    RoleChecker([Role.enum.USER], false),
+    RoleChecker([], false),
     s3ClientMiddleware,
     async (_req: Request, res: Response) => {
         const payload = res.locals.payload;
