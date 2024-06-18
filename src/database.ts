@@ -3,11 +3,19 @@ import {
     AttendeeSchema,
     AttendeeValidator,
 } from "./services/attendees/attendee-schema";
-import { RoleValidator, RoleSchema } from "./services/auth/auth-schema";
+import {
+    AttendeesAttendanceSchema,
+    AttendeesAttendanceValidator,
+} from "./services/attendees/attendee-schema";
 import {
     EventSchema,
     privateEventValidator,
 } from "./services/events/events-schema";
+import {
+    EventAttendanceSchema,
+    EventAttendanceValidator,
+} from "./services/events/events-schema";
+import { RoleValidator, RoleSchema } from "./services/auth/auth-schema";
 import {
     RegistrationSchema,
     RegistrationValidator,
@@ -55,12 +63,22 @@ function initializeModel(
 export const Database = {
     ROLES: initializeModel("roles", RoleSchema, RoleValidator),
     EVENTS: initializeModel("events", EventSchema, privateEventValidator),
+    EVENTS_ATT: initializeModel(
+        "events_att",
+        EventAttendanceSchema,
+        EventAttendanceValidator
+    ),
+    ATTENDEES: initializeModel("attendees", AttendeeSchema, AttendeeValidator),
+    ATTENDEES_ATT: initializeModel(
+        "attendees_att",
+        AttendeesAttendanceSchema,
+        AttendeesAttendanceValidator
+    ),
     SUBSCRIPTIONS: initializeModel(
         "subscriptions",
         SubscriptionSchema,
         SubscriptionSchemaValidator
     ),
-    ATTENDEES: initializeModel("attendees", AttendeeSchema, AttendeeValidator),
     REGISTRATION: initializeModel(
         "registration",
         RegistrationSchema,

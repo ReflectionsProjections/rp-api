@@ -2,6 +2,8 @@ import { Router } from "express";
 import { StatusCodes } from "http-status-codes";
 import { publicEventValidator } from "./events-schema";
 import { Database } from "../../database";
+import { checkInUser } from "./events-utils";
+// import {mongoose} from "mongoose";
 
 const eventsRouter = Router();
 
@@ -26,6 +28,21 @@ eventsRouter.get("/currentOrNext", async (req, res, next) => {
     }
 });
 
+eventsRouter.get("/:EVENTID", async (req, res, next) => {
+    const eventId = req.params.EVENTID;
+    try {
+        const event = await Database.EVENTS.findOne({ eventId: eventId });
+        if (!event) {
+            return res
+                .status(StatusCodes.NOT_FOUND)
+                .json({ error: "DoesNotExist" });
+        }
+        return res.status(StatusCodes.OK).json(event.toObject());
+    } catch (error) {
+        next(error);
+    }
+});
+
 eventsRouter.post("/", async (req, res, next) => {
     try {
         const validatedData = publicEventValidator.parse(req.body);
@@ -37,22 +54,21 @@ eventsRouter.post("/", async (req, res, next) => {
     }
 });
 
-eventsRouter.get("/:EVENTID", async (req, res, next) => {
+eventsRouter.put("/:EVENTID", async (req, res, next) => {
     const eventId = req.params.EVENTID;
     try {
-        const unfiltered_event = await Database.EVENTS.findOne({
-            eventId: eventId,
-        });
+        const validatedData = publicEventValidator.parse(req.body);
+        const event = await Database.EVENTS.findOne({ eventId: eventId });
 
-        if (!unfiltered_event) {
+        if (!event) {
             return res
                 .status(StatusCodes.NOT_FOUND)
                 .json({ error: "DoesNotExist" });
         }
 
-        const filtered_event = publicEventValidator.parse(unfiltered_event);
-
-        return res.status(StatusCodes.OK).json(filtered_event);
+        Object.assign(event, validatedData);
+        await event.save();
+        return res.sendStatus(StatusCodes.OK);
     } catch (error) {
         next(error);
     }
@@ -75,9 +91,28 @@ eventsRouter.get("/", async (req, res, next) => {
 eventsRouter.delete("/:EVENTID", async (req, res, next) => {
     const eventId = req.params.EVENTID;
     try {
+        // const objectId = mongoose.Types.ObjectId(eventId)
         await Database.EVENTS.findOneAndDelete({ eventId: eventId });
 
         return res.sendStatus(StatusCodes.NO_CONTENT);
+    } catch (error) {
+        next(error);
+    }
+});
+
+eventsRouter.post("/check-in", async (req, res, next) => {
+    try {
+        const { eventId, userId } = req.body;
+        const result = await checkInUser(eventId, userId);
+        if (result.success) {
+            return res
+                .status(StatusCodes.OK)
+                .json({ message: "Check-in successful" });
+        } else {
+            return res
+                .status(StatusCodes.NOT_FOUND)
+                .json({ error: result.message });
+        }
     } catch (error) {
         next(error);
     }
