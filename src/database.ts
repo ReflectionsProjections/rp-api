@@ -4,8 +4,8 @@ import {
     AttendeeValidator,
 } from "./services/attendees/attendee-schema";
 import {
-    AttendeesAttendanceSchema,
-    AttendeesAttendanceValidator,
+    AttendeeAttendanceSchema,
+    AttendeeAttendanceValidator,
 } from "./services/attendees/attendee-schema";
 import {
     EventSchema,
@@ -63,16 +63,16 @@ function initializeModel(
 export const Database = {
     ROLES: initializeModel("roles", RoleSchema, RoleValidator),
     EVENTS: initializeModel("events", EventSchema, privateEventValidator),
-    EVENTS_ATT: initializeModel(
-        "events_att",
+    EVENTS_ATTENDANCE: initializeModel(
+        "events_attendance",
         EventAttendanceSchema,
         EventAttendanceValidator
     ),
     ATTENDEES: initializeModel("attendees", AttendeeSchema, AttendeeValidator),
-    ATTENDEES_ATT: initializeModel(
-        "attendees_att",
-        AttendeesAttendanceSchema,
-        AttendeesAttendanceValidator
+    ATTENDEE_ATTENDANCE: initializeModel(
+        "attendee_attendance",
+        AttendeeAttendanceSchema,
+        AttendeeAttendanceValidator
     ),
     SUBSCRIPTIONS: initializeModel(
         "subscriptions",

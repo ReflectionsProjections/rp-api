@@ -2,39 +2,36 @@ import { Database } from "../../database";
 
 export async function checkInUser(eventId: string, userId: string) {
     // Check if the event and attendee exist
-    const event = await Database.EVENTS.findOne({ eventId });
-    const attendee = await Database.ATTENDEES.findOne({ userId });
+    const [event, attendee] = await Promise.all([
+        Database.EVENTS.findOne({ eventId }),
+        Database.ATTENDEES.findOne({ userId }),
+    ]);
 
+    console.log(event);
+    console.log(attendee);
     if (!event || !attendee) {
         return { success: false, message: "Event or Attendee not found" };
     }
 
-    // Check or create event attendance record
-    let eventAttendance = await Database.EVENTS_ATT.findOne({ eventId });
-    if (!eventAttendance) {
-        eventAttendance = await Database.EVENTS_ATT.create({
-            eventId: eventId,
-            attendees: [userId],
-        });
-    } else {
-        if (!eventAttendance.attendees.includes(userId)) {
-            eventAttendance.attendees.push(userId);
-        }
-    }
-    await eventAttendance.save();
+    try {
+        // Check or create event attendance record
+        const eventAttendance = Database.EVENTS_ATTENDANCE.findOneAndUpdate(
+            { eventId: eventId },
+            { $addToSet: { attendees: userId } },
+            { new: true, upsert: true }
+        );
 
-    // Check or create attendee attendance record
-    let attendeeAttendance = await Database.ATTENDEES_ATT.findOne({ userId });
-    if (!attendeeAttendance) {
-        attendeeAttendance = new Database.ATTENDEES_ATT({
-            userId: userId,
-            eventsAttended: [eventId],
-        });
-    } else {
-        if (!attendeeAttendance.eventsAttended.includes(eventId)) {
-            attendeeAttendance.eventsAttended.push(eventId);
-        }
+        // Check or create attendee attendance record
+        const attendeeAttendance =
+            Database.ATTENDEE_ATTENDANCE.findOneAndUpdate(
+                { userId: userId },
+                { $addToSet: { eventsAttended: eventId } },
+                { new: true, upsert: true }
+            );
+
+        await Promise.all([eventAttendance, attendeeAttendance]);
+        return { success: true };
+    } catch (error) {
+        return { success: false, message: "couldn't upsert event or attendee" };
     }
-    await attendeeAttendance.save();
-    return { success: true };
 }

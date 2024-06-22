@@ -58,7 +58,10 @@ eventsRouter.put("/:EVENTID", async (req, res, next) => {
     const eventId = req.params.EVENTID;
     try {
         const validatedData = publicEventValidator.parse(req.body);
-        const event = await Database.EVENTS.findOne({ eventId: eventId });
+        const event = await Database.EVENTS.findOneAndUpdate(
+            { eventId: eventId },
+            { $set: validatedData }
+        );
 
         if (!event) {
             return res
@@ -66,8 +69,6 @@ eventsRouter.put("/:EVENTID", async (req, res, next) => {
                 .json({ error: "DoesNotExist" });
         }
 
-        Object.assign(event, validatedData);
-        await event.save();
         return res.sendStatus(StatusCodes.OK);
     } catch (error) {
         next(error);
@@ -103,6 +104,8 @@ eventsRouter.delete("/:EVENTID", async (req, res, next) => {
 eventsRouter.post("/check-in", async (req, res, next) => {
     try {
         const { eventId, userId } = req.body;
+        console.log(eventId);
+        console.log(userId);
         const result = await checkInUser(eventId, userId);
         if (result.success) {
             return res

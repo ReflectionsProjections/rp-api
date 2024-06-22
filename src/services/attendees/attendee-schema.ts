@@ -45,7 +45,7 @@ export const AttendeeSchema = new Schema({
     },
 });
 
-export const AttendeesAttendanceSchema = new Schema({
+export const AttendeeAttendanceSchema = new Schema({
     userId: {
         type: String,
         ref: "Attendee",
@@ -54,7 +54,7 @@ export const AttendeesAttendanceSchema = new Schema({
     eventsAttended: [{ type: String, ref: "Event", required: true }],
 });
 
-export const AttendeesAttendanceValidator = z.object({
+export const AttendeeAttendanceValidator = z.object({
     userId: z.string(),
     eventsAttended: z.array(z.string()),
 });
