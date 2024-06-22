@@ -4,7 +4,7 @@ import { RegistrationValidator } from "./registration-schema";
 import { Database } from "../../database";
 import RoleChecker from "../../middleware/role-checker";
 import { Role } from "../auth/auth-models";
-import { AttendeeValidator } from "../attendees/attendee-schema";
+import { AttendeeValidator } from "../attendee/attendee-schema";
 import { registrationExists } from "./registration-utils";
 
 const registrationRouter = Router();
@@ -78,7 +78,7 @@ registrationRouter.post("/submit", RoleChecker([]), async (req, res, next) => {
 
         const attendeeData = AttendeeValidator.parse(registrationData);
 
-        await Database.ATTENDEES.findOneAndUpdate(
+        await Database.ATTENDEE.findOneAndUpdate(
             { userId: payload.userId },
             attendeeData,
             { upsert: true, setDefaultsOnInsert: true }

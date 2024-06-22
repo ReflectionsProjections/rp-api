@@ -2,11 +2,11 @@ import mongoose, { Schema, Document } from "mongoose";
 import {
     AttendeeSchema,
     AttendeeValidator,
-} from "./services/attendees/attendee-schema";
+} from "./services/attendee/attendee-schema";
 import {
     AttendeeAttendanceSchema,
     AttendeeAttendanceValidator,
-} from "./services/attendees/attendee-schema";
+} from "./services/attendee/attendee-schema";
 import {
     EventSchema,
     privateEventValidator,
@@ -68,7 +68,7 @@ export const Database = {
         EventAttendanceSchema,
         EventAttendanceValidator
     ),
-    ATTENDEES: initializeModel("attendees", AttendeeSchema, AttendeeValidator),
+    ATTENDEE: initializeModel("attendee", AttendeeSchema, AttendeeValidator),
     ATTENDEE_ATTENDANCE: initializeModel(
         "attendee_attendance",
         AttendeeAttendanceSchema,
