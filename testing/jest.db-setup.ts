@@ -1,4 +1,4 @@
-import { beforeEach, afterAll, jest } from "@jest/globals";
+import { afterEach, beforeAll, afterAll, jest } from "@jest/globals";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import * as Config from "../src/config";
 import mongoose from "mongoose";
@@ -23,7 +23,7 @@ function mockConfig(dbUrl: string) {
 
 let mongod: MongoMemoryServer | undefined = undefined;
 
-beforeEach(async () => {
+beforeAll(async () => {
     if (!mongod) {
         mongod = await MongoMemoryServer.create();
     }
@@ -35,6 +35,15 @@ beforeEach(async () => {
         `${uri}?retryWrites=true&w=majority&appName=rp-dev-cluster`
     );
     mockConfig(`${uri}?retryWrites=true&w=majority&appName=rp-dev-cluster`);
+});
+
+afterEach(async () => {
+    const collections = await mongoose.connection.db
+        .listCollections()
+        .toArray();
+    for (const collection of collections) {
+        await mongoose.connection.db.collection(collection.name).deleteMany({});
+    }
 });
 
 afterAll(async () => {

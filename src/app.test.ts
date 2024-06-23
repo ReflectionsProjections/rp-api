@@ -4,14 +4,6 @@ import { Database } from "./database";
 import { publicEventValidator } from "./services/events/events-schema";
 import { get } from "../testing/testingTools";
 
-describe("general app test", () => {
-    it("app should be running", async () => {
-        const response = await get("/status", undefined).expect(StatusCodes.OK);
-
-        expect(response.text).toBe("API is alive!");
-    });
-});
-
 const TESTER_EVENT = {
     name: "Tech Conference Update",
     startTime: "2024-09-16T09:00:00.000Z",
@@ -27,12 +19,35 @@ const TESTER_EVENT = {
     eventType: "B",
 };
 
+describe("general app test", () => {
+    it("app should be running", async () => {
+        const response = await get("/status", undefined).expect(StatusCodes.OK);
+
+        expect(response.text).toBe("API is alive!");
+    });
+});
+
 describe("general mongodb test", () => {
-    it("mongodb should work", async () => {
+    it("in-memory mongodb server should work", async () => {
         const postEvent = await Database.EVENTS.create(
             publicEventValidator.parse(TESTER_EVENT)
         );
+        console.log((await get("/events", undefined)).text);
+
         const getEvent = await Database.EVENTS.findOne({ eventId: "b" });
-        expect(postEvent.toObject()).toEqual(getEvent?.toObject());
+        expect(getEvent).not.toBeNull();
+        expect(postEvent!.toObject()).toMatchObject(getEvent!.toObject());
+    });
+});
+
+describe("jest setup test", () => {
+    it("creating an object in the db", async () => {
+        await Database.EVENTS.create(publicEventValidator.parse(TESTER_EVENT));
+    });
+
+    it("db should be empty", async () => {
+        const events = await Database.EVENTS.find();
+        console.log(events.length);
+        expect(events.length).toEqual(0);
     });
 });

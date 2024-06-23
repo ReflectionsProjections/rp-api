@@ -2,6 +2,7 @@ import express from "express";
 import { StatusCodes } from "http-status-codes";
 import { Config } from "./config";
 import { rateLimiter } from "./middleware/rateLimiter";
+import { isTest } from "./utilities";
 
 import databaseMiddleware from "./middleware/database-middleware";
 import customCors from "./middleware/cors-middleware";
@@ -53,9 +54,10 @@ app.use("/", (_, res) =>
 
 app.use(errorHandler);
 
-app.listen(Config.DEFAULT_APP_PORT, async () => {
-    process.send?.("ready");
-    console.log("Server is listening on port 3000...");
-});
-
+if (!isTest()) {
+    app.listen(Config.DEFAULT_APP_PORT, async () => {
+        process.send?.("ready");
+        console.log("Server is listening on port 3000...");
+    });
+}
 export default app;
