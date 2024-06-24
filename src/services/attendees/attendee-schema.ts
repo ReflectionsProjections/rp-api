@@ -1,5 +1,4 @@
 import mongoose from "mongoose";
-import { StringDecoder } from "string_decoder";
 import { z } from "zod";
 
 // Zod schema for attendee
