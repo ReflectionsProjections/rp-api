@@ -11,6 +11,92 @@ dotenv.config();
 
 const attendeeRouter = Router();
 
+// Favorite an event for an attendee
+attendeeRouter.post(
+    "/favoriteEvents/:eventId",
+    RoleChecker([Role.Enum.USER]),
+    async (req, res, next) => {
+        try {
+            const payload = res.locals.payload;
+            const userId = payload.userId;
+            const { eventId } = req.params;
+
+            const attendee = await Database.ATTENDEES.findOne({ userId });
+
+            if (!attendee) {
+                return res
+                    .status(StatusCodes.NOT_FOUND)
+                    .json({ error: "UserNotFound" });
+            }
+
+            await Database.ATTENDEES.updateOne(
+                { userId: userId },
+                { $addToSet: { favorites: eventId } }
+            );
+
+            return res.status(StatusCodes.OK).json(attendee);
+        } catch (error) {
+            next(error);
+        }
+    }
+);
+
+// Unfavorite an event for an attendee
+attendeeRouter.delete(
+    "/favoriteEvents/:eventId",
+    RoleChecker([Role.Enum.USER]),
+    async (req, res, next) => {
+        try {
+            const payload = res.locals.payload;
+            const userId = payload.userId;
+            const { eventId } = req.params;
+
+            const attendee = await Database.ATTENDEES.findOne({ userId });
+
+            if (!attendee) {
+                return res
+                    .status(StatusCodes.NOT_FOUND)
+                    .json({ error: "UserNotFound" });
+            }
+
+            await Database.ATTENDEES.updateOne(
+                { userId: userId },
+                { $pull: { favorites: eventId } }
+            );
+
+            return res.status(StatusCodes.OK).json(attendee);
+        } catch (error) {
+            next(error);
+        }
+    }
+);
+
+// Get favorite events for an attendee
+attendeeRouter.get(
+    "/favoriteEvents",
+    RoleChecker([Role.Enum.USER]),
+    async (req, res, next) => {
+        try {
+            const payload = res.locals.payload;
+            const userId = payload.userId;
+
+            const attendee = await Database.ATTENDEES.findOne({
+                userId,
+            }).populate("favorites");
+
+            if (!attendee) {
+                return res
+                    .status(StatusCodes.NOT_FOUND)
+                    .json({ error: "UserNotFound" });
+            }
+
+            return res.status(StatusCodes.OK).json(attendee.favorites);
+        } catch (error) {
+            next(error);
+        }
+    }
+);
+
 // Create a new attendee
 attendeeRouter.post("/", async (req, res, next) => {
     try {

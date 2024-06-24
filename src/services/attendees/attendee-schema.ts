@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { StringDecoder } from "string_decoder";
 import { z } from "zod";
 
 // Zod schema for attendee
@@ -19,6 +20,7 @@ const AttendeeValidator = z.object({
         dayFour: z.boolean(),
         dayFive: z.boolean(),
     }),
+    favorites: z.array(z.string()).optional(),
 });
 
 // Mongoose schema for attendee
@@ -45,6 +47,7 @@ const AttendeeSchema = new mongoose.Schema({
         ),
         default: () => ({}),
     },
+    favorites: [{ type: String }],
 });
 
 export { AttendeeSchema, AttendeeValidator };
