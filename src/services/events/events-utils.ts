@@ -1,6 +1,6 @@
 import { Database } from "../../database";
 
-export async function checkInUser(eventId: string, userId: string) {
+export async function checkInUserToEvent(eventId: string, userId: string) {
     // Check if the event and attendee exist
     const [event, attendee] = await Promise.all([
         Database.EVENTS.findOne({ eventId }),

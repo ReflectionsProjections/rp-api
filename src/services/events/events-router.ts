@@ -2,7 +2,7 @@ import { Router } from "express";
 import { StatusCodes } from "http-status-codes";
 import { publicEventValidator } from "./events-schema";
 import { Database } from "../../database";
-import { checkInUser } from "./events-utils";
+import { checkInUserToEvent } from "./events-utils";
 // import {mongoose} from "mongoose";
 
 const eventsRouter = Router();
@@ -104,9 +104,7 @@ eventsRouter.delete("/:EVENTID", async (req, res, next) => {
 eventsRouter.post("/check-in", async (req, res, next) => {
     try {
         const { eventId, userId } = req.body;
-        console.log(eventId);
-        console.log(userId);
-        const result = await checkInUser(eventId, userId);
+        const result = await checkInUserToEvent(eventId, userId);
         if (result.success) {
             return res
                 .status(StatusCodes.OK)
