@@ -1,7 +1,6 @@
 import { describe, expect, it } from "@jest/globals";
 import { StatusCodes } from "http-status-codes";
 import { Database } from "./database";
-import { publicEventValidator } from "./services/events/events-schema";
 import { get } from "../testing/testingTools";
 
 const TESTER_EVENT = {
@@ -29,9 +28,7 @@ describe("general app test", () => {
 
 describe("general mongodb test", () => {
     it("in-memory mongodb server should work", async () => {
-        const postEvent = await Database.EVENTS.create(
-            publicEventValidator.parse(TESTER_EVENT)
-        );
+        const postEvent = await Database.EVENTS.create(TESTER_EVENT);
         console.log((await get("/events", undefined)).text);
 
         const getEvent = await Database.EVENTS.findOne({ eventId: "b" });
@@ -42,7 +39,7 @@ describe("general mongodb test", () => {
 
 describe("jest setup test", () => {
     it("creating an object in the db", async () => {
-        await Database.EVENTS.create(publicEventValidator.parse(TESTER_EVENT));
+        await Database.EVENTS.create(TESTER_EVENT);
     });
 
     it("db should be empty", async () => {
