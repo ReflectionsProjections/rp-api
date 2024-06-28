@@ -1,9 +1,10 @@
 import express from "express";
 import { StatusCodes } from "http-status-codes";
 import { Config } from "./config";
-import { connectToDatabase } from "./utilities";
 import { rateLimiter } from "./middleware/rateLimiter";
+import { isTest } from "./utilities";
 
+import databaseMiddleware from "./middleware/database-middleware";
 import customCors from "./middleware/cors-middleware";
 import morgan from "morgan";
 import bodyParser from "body-parser";
@@ -34,14 +35,14 @@ app.use("/", morgan("dev"));
 app.use("/", bodyParser.json());
 
 // API routes
-app.use("/attendee", attendeeRouter);
-app.use("/auth", authRouter);
-app.use("/events", eventsRouter);
-app.use("/notifications", notificationsRouter);
-app.use("/registration", registrationRouter);
-app.use("/s3", s3Router);
-app.use("/stats", statsRouter);
-app.use("/subscription", subscriptionRouter);
+app.use("/attendee", databaseMiddleware, attendeeRouter);
+app.use("/auth", databaseMiddleware, authRouter);
+app.use("/events", databaseMiddleware, eventsRouter);
+app.use("/notifications", databaseMiddleware, notificationsRouter);
+app.use("/registration", databaseMiddleware, registrationRouter);
+app.use("/s3", databaseMiddleware, s3Router);
+app.use("/stats", databaseMiddleware, statsRouter);
+app.use("/subscription", databaseMiddleware, subscriptionRouter);
 
 app.get("/status", (_, res) => {
     return res.status(StatusCodes.OK).send("API is alive!");
@@ -53,8 +54,10 @@ app.use("/", (_, res) =>
 
 app.use(errorHandler);
 
-app.listen(Config.DEFAULT_APP_PORT, async () => {
-    await connectToDatabase();
-    process.send?.("ready");
-    console.log("Server is listening on port 3000...");
-});
+if (!isTest()) {
+    app.listen(Config.DEFAULT_APP_PORT, async () => {
+        process.send?.("ready");
+        console.log("Server is listening on port 3000...");
+    });
+}
+export default app;

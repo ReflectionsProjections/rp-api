@@ -86,3 +86,5 @@ export const DeviceRedirects: Record<string, string> = {
     dev: "https://api.reflectionsprojections.org/auth/dev/",
     mobile: "exp://192.168.86.24:8081/--/Main",
 };
+
+export default Config;
