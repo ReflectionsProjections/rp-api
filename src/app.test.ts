@@ -29,7 +29,6 @@ describe("general app test", () => {
 describe("general mongodb test", () => {
     it("in-memory mongodb server should work", async () => {
         const postEvent = await Database.EVENTS.create(TESTER_EVENT);
-        console.log((await get("/events", undefined)).text);
 
         const getEvent = await Database.EVENTS.findOne({ eventId: "b" });
         expect(getEvent).not.toBeNull();
@@ -44,7 +43,6 @@ describe("jest setup test", () => {
 
     it("db should be empty", async () => {
         const events = await Database.EVENTS.find();
-        console.log(events.length);
         expect(events.length).toEqual(0);
     });
 });
