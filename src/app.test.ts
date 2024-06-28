@@ -43,6 +43,6 @@ describe("jest setup test", () => {
 
     it("db should be empty", async () => {
         const events = await Database.EVENTS.find();
-        expect(events.length).toEqual(1);
+        expect(events.length).toEqual(0);
     });
 });
