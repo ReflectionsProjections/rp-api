@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { StatusCodes } from "http-status-codes";
-import { AttendeeValidator } from "./attendee-schema";
+import { AttendeeValidator, EventIdValidator } from "./attendee-schema";
 import { Database } from "../../database";
 import RoleChecker from "../../middleware/role-checker";
 import { Role } from "../auth/auth-models";
@@ -13,14 +13,14 @@ const attendeeRouter = Router();
 
 // Favorite an event for an attendee
 attendeeRouter.post(
-    "/favoriteEvents/:eventId",
+    "/favorites/:eventId",
     RoleChecker([Role.Enum.USER]),
     async (req, res, next) => {
-        try {
-            const payload = res.locals.payload;
-            const userId = payload.userId;
-            const { eventId } = req.params;
+        const payload = res.locals.payload;
+        const userId = payload.userId;
+        const { eventId } = EventIdValidator.parse(req.params);
 
+        try {
             const attendee = await Database.ATTENDEES.findOne({ userId });
 
             if (!attendee) {
@@ -43,14 +43,14 @@ attendeeRouter.post(
 
 // Unfavorite an event for an attendee
 attendeeRouter.delete(
-    "/favoriteEvents/:eventId",
+    "/favorites/:eventId",
     RoleChecker([Role.Enum.USER]),
     async (req, res, next) => {
-        try {
-            const payload = res.locals.payload;
-            const userId = payload.userId;
-            const { eventId } = req.params;
+        const payload = res.locals.payload;
+        const userId = payload.userId;
+        const { eventId } = EventIdValidator.parse(req.params);
 
+        try {
             const attendee = await Database.ATTENDEES.findOne({ userId });
 
             if (!attendee) {
@@ -73,16 +73,14 @@ attendeeRouter.delete(
 
 // Get favorite events for an attendee
 attendeeRouter.get(
-    "/favoriteEvents",
+    "/favorites",
     RoleChecker([Role.Enum.USER]),
     async (req, res, next) => {
-        try {
-            const payload = res.locals.payload;
-            const userId = payload.userId;
+        const payload = res.locals.payload;
+        const userId = payload.userId;
 
-            const attendee = await Database.ATTENDEES.findOne({
-                userId,
-            }).populate("favorites");
+        try {
+            const attendee = await Database.ATTENDEES.findOne({ userId });
 
             if (!attendee) {
                 return res
@@ -90,7 +88,7 @@ attendeeRouter.get(
                     .json({ error: "UserNotFound" });
             }
 
-            return res.status(StatusCodes.OK).json(attendee.favorites);
+            return res.status(StatusCodes.OK).json(attendee);
         } catch (error) {
             next(error);
         }

@@ -49,4 +49,8 @@ const AttendeeSchema = new mongoose.Schema({
     favorites: [{ type: String }],
 });
 
-export { AttendeeSchema, AttendeeValidator };
+const EventIdValidator = z.object({
+    eventId: z.string().uuid(),
+});
+
+export { AttendeeSchema, AttendeeValidator, EventIdValidator };
