@@ -6,20 +6,27 @@ const AttendeeValidator = z.object({
     userId: z.string(),
     name: z.string(),
     email: z.string().email(),
-    events: z.array(z.string()),
+    events: z.array(z.string()).default([]),
     dietaryRestrictions: z.string().array(),
     allergies: z.string().array(),
     hasCheckedIn: z.boolean().default(false),
     points: z.number().min(0).default(0),
     foodWave: z.number().int().min(0).default(0),
-    hasPriority: z.object({
-        dayOne: z.boolean(),
-        dayTwo: z.boolean(),
-        dayThree: z.boolean(),
-        dayFour: z.boolean(),
-        dayFive: z.boolean(),
-    }),
-    favorites: z.array(z.string()).optional(),
+    hasPriority: z
+        .object({
+            dayOne: z.boolean().default(false),
+            dayTwo: z.boolean().default(false),
+            dayThree: z.boolean().default(false),
+            dayFour: z.boolean().default(false),
+            dayFive: z.boolean().default(false),
+        })
+        .default({
+            dayOne: false,
+            dayTwo: false,
+            dayThree: false,
+            dayFour: false,
+            dayFive: false,
+        }),
 });
 
 // Mongoose schema for attendee
@@ -27,7 +34,9 @@ const AttendeeSchema = new mongoose.Schema({
     userId: { type: String, required: true, unique: true },
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
-    events: [{ type: mongoose.Schema.Types.ObjectId, ref: "Event" }],
+    events: [
+        { type: mongoose.Schema.Types.ObjectId, ref: "Event", default: [] },
+    ],
     dietaryRestrictions: { type: [String], required: true },
     allergies: { type: [String], required: true },
     hasCheckedIn: { type: Boolean, default: false },

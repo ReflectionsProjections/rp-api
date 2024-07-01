@@ -4,9 +4,9 @@ import { Role } from "./auth-models";
 
 export const RoleValidator = z.object({
     userId: z.coerce.string().regex(/user[0-9]*/),
-    name: z.coerce.string(),
+    displayName: z.coerce.string(),
     email: z.coerce.string().email(),
-    roles: z.array(Role),
+    roles: z.array(Role).default([]),
 });
 
 export const AuthRoleChangeRequest = z.object({
@@ -21,7 +21,7 @@ export const RoleSchema = new Schema(
             required: true,
             unique: true,
         },
-        name: {
+        displayName: {
             type: String,
             required: true,
         },

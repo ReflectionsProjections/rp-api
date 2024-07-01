@@ -84,5 +84,7 @@ export const Config = {
 export const DeviceRedirects: Record<string, string> = {
     web: "http://localhost:5173/",
     dev: "https://api.reflectionsprojections.org/auth/dev/",
-    mobile: "https://www.reflectionsprojections.org/",
+    mobile: "exp://192.168.86.24:8081/--/Main",
 };
+
+export default Config;

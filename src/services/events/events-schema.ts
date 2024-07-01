@@ -5,7 +5,7 @@ import { v4 as uuidv4 } from "uuid";
 export const EventType = z.enum(["A", "B", "C"]);
 
 export const publicEventValidator = z.object({
-    eventId: z.coerce.string(),
+    eventId: z.coerce.string().default(() => uuidv4()),
     name: z.string(),
     startTime: z.coerce.date(),
     endTime: z.coerce.date(),
