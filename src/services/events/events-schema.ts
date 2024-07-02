@@ -1,4 +1,4 @@
-import { Schema } from "mongoose";
+import mongoose, { Schema } from "mongoose";
 import { z } from "zod";
 import { v4 as uuidv4 } from "uuid";
 
@@ -70,3 +70,5 @@ export const EventSchema = new Schema({
         enum: EventType.Values,
     },
 });
+
+export const Event = mongoose.model("Event", EventSchema);
