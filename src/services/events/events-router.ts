@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { StatusCodes } from "http-status-codes";
-import { publicEventValidator } from "./events-schema";
+import { publicEventValidator, privateEventValidator } from "./events-schema";
 import { Database } from "../../database";
 import { checkInUserToEvent } from "./events-utils";
 // import {mongoose} from "mongoose";
@@ -28,6 +28,19 @@ eventsRouter.get("/currentOrNext", async (req, res, next) => {
     }
 });
 
+// Get all events
+eventsRouter.get("/", async (req, res, next) => {
+    try {
+        const unfiltered_events = await Database.EVENTS.find();
+        const filtered_events = unfiltered_events.map((unfiltered_event) => {
+            return publicEventValidator.parse(unfiltered_event.toJSON());
+        });
+        return res.status(StatusCodes.OK).json(filtered_events);
+    } catch (error) {
+        next(error);
+    }
+});
+
 eventsRouter.get("/:EVENTID", async (req, res, next) => {
     const eventId = req.params.EVENTID;
     try {
@@ -37,7 +50,8 @@ eventsRouter.get("/:EVENTID", async (req, res, next) => {
                 .status(StatusCodes.NOT_FOUND)
                 .json({ error: "DoesNotExist" });
         }
-        return res.status(StatusCodes.OK).json(event.toObject());
+        const validatedData = publicEventValidator.parse(event.toJSON());
+        return res.status(StatusCodes.OK).json(validatedData);
     } catch (error) {
         next(error);
     }
@@ -45,7 +59,7 @@ eventsRouter.get("/:EVENTID", async (req, res, next) => {
 
 eventsRouter.post("/", async (req, res, next) => {
     try {
-        const validatedData = publicEventValidator.parse(req.body);
+        const validatedData = privateEventValidator.parse(req.body);
         const event = new Database.EVENTS(validatedData);
         await event.save();
         return res.sendStatus(StatusCodes.CREATED);
@@ -57,7 +71,7 @@ eventsRouter.post("/", async (req, res, next) => {
 eventsRouter.put("/:EVENTID", async (req, res, next) => {
     const eventId = req.params.EVENTID;
     try {
-        const validatedData = publicEventValidator.parse(req.body);
+        const validatedData = privateEventValidator.parse(req.body);
         const event = await Database.EVENTS.findOneAndUpdate(
             { eventId: eventId },
             { $set: validatedData }
@@ -70,19 +84,6 @@ eventsRouter.put("/:EVENTID", async (req, res, next) => {
         }
 
         return res.sendStatus(StatusCodes.OK);
-    } catch (error) {
-        next(error);
-    }
-});
-
-// Get all events
-eventsRouter.get("/", async (req, res, next) => {
-    try {
-        const unfiltered_events = await Database.EVENTS.find();
-        const filtered_events = unfiltered_events.map((unfiltered_event) => {
-            return publicEventValidator.parse(unfiltered_event.toJSON());
-        });
-        return res.status(StatusCodes.OK).json(filtered_events);
     } catch (error) {
         next(error);
     }

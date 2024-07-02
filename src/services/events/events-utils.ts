@@ -2,14 +2,12 @@ import { Database } from "../../database";
 
 export async function checkInUserToEvent(eventId: string, userId: string) {
     // Check if the event and attendee exist
-    const [event, attendee] = await Promise.all([
+    const [findEvent, findAttendee] = await Promise.all([
         Database.EVENTS.findOne({ eventId }),
         Database.ATTENDEE.findOne({ userId }),
     ]);
 
-    console.log(event);
-    console.log(attendee);
-    if (!event || !attendee) {
+    if (!findEvent || !findAttendee) {
         return { success: false, message: "Event or Attendee not found" };
     }
 
