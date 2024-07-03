@@ -2,7 +2,7 @@
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import { Config } from "../../config";
 import { Database } from "../../database";
-import { Role } from "./auth-models";
+import { JwtPayloadType, Role } from "./auth-models";
 
 export function createGoogleStrategy(device: string) {
     return new GoogleStrategy(
@@ -45,4 +45,16 @@ export async function getJwtPayloadFromDatabase(userId: string) {
     }
 
     return payload;
+}
+
+export function isUser(payload?: JwtPayloadType) {
+    return payload?.roles.includes(Role.Enum.USER);
+}
+
+export function isStaff(payload?: JwtPayloadType) {
+    return payload?.roles.includes(Role.Enum.STAFF);
+}
+
+export function isAdmin(payload?: JwtPayloadType) {
+    return payload?.roles.includes(Role.Enum.ADMIN);
 }

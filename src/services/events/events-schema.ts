@@ -13,12 +13,12 @@ export const publicEventValidator = z.object({
     description: z.string(),
     isVirtual: z.boolean(),
     imageUrl: z.string().nullable().optional(),
-    isVisible: z.boolean().default(false),
     eventType: EventType,
 });
 
 export const privateEventValidator = publicEventValidator.extend({
     attendanceCount: z.number(),
+    isVisible: z.boolean(),
 });
 
 export const EventSchema = new Schema({

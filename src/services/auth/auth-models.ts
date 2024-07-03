@@ -6,3 +6,5 @@ export const JwtPayloadValidator = z.object({
     userId: z.string(),
     roles: Role.array(),
 });
+
+export type JwtPayloadType = z.infer<typeof JwtPayloadValidator>;
