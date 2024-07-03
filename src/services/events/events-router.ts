@@ -1,3 +1,5 @@
+/* eslint no-var: 0 */
+/* eslint-disable  @typescript-eslint/no-explicit-any */
 import { Router } from "express";
 import { StatusCodes } from "http-status-codes";
 import { publicEventValidator, privateEventValidator } from "./events-schema";
