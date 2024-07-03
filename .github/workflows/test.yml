@@ -1,10 +1,10 @@
-name: Lint
+name: Test
 
 on:
     push:
 
 jobs:
-    lint:
+    build:
         runs-on: ubuntu-latest
 
         steps:
@@ -12,7 +12,8 @@ jobs:
             - uses: actions/setup-node@v4
               with:
                   node-version: "18.x"
+                  cache: "yarn"
             - name: Install dependencies
               run: yarn
-            - name: Run ESLint
-              run: npx eslint .
+            - name: Build
+              run: yarn test

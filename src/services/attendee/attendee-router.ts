@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { StatusCodes } from "http-status-codes";
-import { AttendeeValidator } from "./attendee-schema";
+import { AttendeeValidator, EventIdValidator } from "./attendee-schema";
 import { Database } from "../../database";
 import RoleChecker from "../../middleware/role-checker";
 import { Role } from "../auth/auth-models";
@@ -10,6 +10,90 @@ import { generateQrHash } from "./attendee-utils";
 dotenv.config();
 
 const attendeeRouter = Router();
+
+// Favorite an event for an attendee
+attendeeRouter.post(
+    "/favorites/:eventId",
+    RoleChecker([Role.Enum.USER]),
+    async (req, res, next) => {
+        const payload = res.locals.payload;
+        const userId = payload.userId;
+        const { eventId } = EventIdValidator.parse(req.params);
+
+        try {
+            const attendee = await Database.ATTENDEE.findOne({ userId });
+
+            if (!attendee) {
+                return res
+                    .status(StatusCodes.NOT_FOUND)
+                    .json({ error: "UserNotFound" });
+            }
+
+            await Database.ATTENDEE.updateOne(
+                { userId: userId },
+                { $addToSet: { favorites: eventId } }
+            );
+
+            return res.status(StatusCodes.OK).json(attendee);
+        } catch (error) {
+            next(error);
+        }
+    }
+);
+
+// Unfavorite an event for an attendee
+attendeeRouter.delete(
+    "/favorites/:eventId",
+    RoleChecker([Role.Enum.USER]),
+    async (req, res, next) => {
+        const payload = res.locals.payload;
+        const userId = payload.userId;
+        const { eventId } = EventIdValidator.parse(req.params);
+
+        try {
+            const attendee = await Database.ATTENDEE.findOne({ userId });
+
+            if (!attendee) {
+                return res
+                    .status(StatusCodes.NOT_FOUND)
+                    .json({ error: "UserNotFound" });
+            }
+
+            await Database.ATTENDEE.updateOne(
+                { userId: userId },
+                { $pull: { favorites: eventId } }
+            );
+
+            return res.status(StatusCodes.OK).json(attendee);
+        } catch (error) {
+            next(error);
+        }
+    }
+);
+
+// Get favorite events for an attendee
+attendeeRouter.get(
+    "/favorites",
+    RoleChecker([Role.Enum.USER]),
+    async (req, res, next) => {
+        const payload = res.locals.payload;
+        const userId = payload.userId;
+
+        try {
+            const attendee = await Database.ATTENDEE.findOne({ userId });
+
+            if (!attendee) {
+                return res
+                    .status(StatusCodes.NOT_FOUND)
+                    .json({ error: "UserNotFound" });
+            }
+
+            return res.status(StatusCodes.OK).json(attendee);
+        } catch (error) {
+            next(error);
+        }
+    }
+);
 
 // Create a new attendee
 attendeeRouter.post("/", async (req, res, next) => {

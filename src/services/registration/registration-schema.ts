@@ -43,7 +43,7 @@ const RegistrationSchema = new mongoose.Schema({
     hearAboutRP: [{ type: String }],
     portfolio: { type: String, default: null },
     jobInterest: [{ type: String }],
-    isInterestedMechMania: { type: String },
+    isInterestedMechMania: { type: Boolean },
     isInterestedPuzzleBang: { type: Boolean },
     hasResume: { type: Boolean, default: false },
     hasSubmitted: { type: Boolean, default: false },

@@ -5,7 +5,7 @@ import { v4 as uuidv4 } from "uuid";
 export const EventType = z.enum(["A", "B", "C"]);
 
 export const publicEventValidator = z.object({
-    eventId: z.coerce.string().optional(),
+    eventId: z.coerce.string().default(() => uuidv4()),
     name: z.string(),
     startTime: z.coerce.date(),
     endTime: z.coerce.date(),
@@ -13,7 +13,7 @@ export const publicEventValidator = z.object({
     description: z.string(),
     isVirtual: z.boolean(),
     imageUrl: z.string().nullable().optional(),
-    eventType: EventType,
+    eventType: EventType.optional(),
 });
 
 export const privateEventValidator = publicEventValidator.extend({
@@ -66,7 +66,7 @@ export const EventSchema = new Schema({
     },
     eventType: {
         type: String,
-        required: true,
+        required: false,
         enum: EventType.Values,
     },
 });

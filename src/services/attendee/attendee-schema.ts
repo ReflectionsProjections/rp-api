@@ -6,18 +6,27 @@ export const AttendeeValidator = z.object({
     userId: z.string(),
     name: z.string(),
     email: z.string().email(),
-    events: z.array(z.string()),
+    events: z.array(z.string()).default([]),
     dietaryRestrictions: z.string().array(),
     allergies: z.string().array(),
     hasCheckedIn: z.boolean().default(false),
     points: z.number().min(0).default(0),
-    hasPriority: z.object({
-        dayOne: z.boolean(),
-        dayTwo: z.boolean(),
-        dayThree: z.boolean(),
-        dayFour: z.boolean(),
-        dayFive: z.boolean(),
-    }),
+    foodWave: z.number().int().min(0).default(0),
+    hasPriority: z
+        .object({
+            dayOne: z.boolean().default(false),
+            dayTwo: z.boolean().default(false),
+            dayThree: z.boolean().default(false),
+            dayFour: z.boolean().default(false),
+            dayFive: z.boolean().default(false),
+        })
+        .default({
+            dayOne: false,
+            dayTwo: false,
+            dayThree: false,
+            dayFour: false,
+            dayFive: false,
+        }),
 });
 
 // Mongoose schema for attendee
@@ -25,11 +34,12 @@ export const AttendeeSchema = new Schema({
     userId: { type: String, required: true, unique: true },
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
-    events: [{ type: Schema.Types.ObjectId, ref: "Event" }],
+    events: [{ type: Schema.Types.ObjectId, ref: "Event", default: [] }],
     dietaryRestrictions: { type: [String], required: true },
     allergies: { type: [String], required: true },
     hasCheckedIn: { type: Boolean, default: false },
     points: { type: Number, default: 0 },
+    foodWave: { type: Number, default: 0 },
     hasPriority: {
         type: new Schema(
             {
@@ -43,6 +53,7 @@ export const AttendeeSchema = new Schema({
         ),
         default: () => ({}),
     },
+    favorites: [{ type: String }],
 });
 
 export const AttendeeAttendanceSchema = new Schema({
@@ -57,4 +68,7 @@ export const AttendeeAttendanceSchema = new Schema({
 export const AttendeeAttendanceValidator = z.object({
     userId: z.string(),
     eventsAttended: z.array(z.string()),
+});
+export const EventIdValidator = z.object({
+    eventId: z.string().uuid(),
 });

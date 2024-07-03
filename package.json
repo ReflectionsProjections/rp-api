@@ -7,16 +7,20 @@
         "start": "tsx src/app.ts",
         "lint": "yarn prettier . --write",
         "kill": "kill -9 $(lsof -t -i :3000)",
-        "build": "tsc"
+        "build": "tsc",
+        "test": "jest --config=testing/jest.config.ts"
     },
     "devDependencies": {
+        "@jest/globals": "^29.7.0",
         "@types/dotenv": "^8.2.0",
         "@types/express": "^4.17.21",
         "@types/express-rate-limit": "^6.0.0",
+        "@types/jest": "^29.5.12",
         "@types/jsonwebtoken": "^9.0.6",
         "@types/morgan": "^1.9.9",
         "@types/node": "^20.9.3",
         "@types/passport-google-oauth20": "^2.0.14",
+        "@types/supertest": "^6.0.2",
         "@types/uuid": "^9.0.8",
         "@typescript-eslint/eslint-plugin": "^6.4.0",
         "cross-env": "^7.0.3",
@@ -31,8 +35,11 @@
         "eslint-plugin-promise": "^6.0.0",
         "eslint-plugin-react": "7.28.0",
         "eslint-plugin-react-hooks": "4.3.0",
+        "jest": "^29.7.0",
         "nodemon": "^3.0.1",
-        "prettier": "3.2.5"
+        "prettier": "3.2.5",
+        "supertest": "^7.0.0",
+        "ts-jest": "^29.1.4"
     },
     "dependencies": {
         "@aws-sdk/client-s3": "^3.496.0",
@@ -50,12 +57,14 @@
         "express-rate-limit": "^6.0.0",
         "http-status-codes": "^2.3.0",
         "jsonwebtoken": "^9.0.2",
+        "mongodb-memory-server": "^9.3.0",
         "mongoose": "^8.2.3",
         "morgan": "^1.10.0",
         "passport": "^0.7.0",
         "passport-google-oauth20": "^2.0.0",
+        "ts-node": "^10.9.2",
         "tsx": "^4.5.0",
-        "typescript": "^5.3.2",
+        "typescript": "^5.4.5",
         "uuid": "^9.0.1",
         "zod": "^3.22.4"
     }

@@ -14,7 +14,8 @@
         "isolatedModules": true,
         "esModuleInterop": true,
         "noUnusedLocals": true,
-        "outDir": "./build/"
+        "outDir": "./build/",
+        "types": ["node", "jest"]
     },
     "include": ["./src/"]
 }
