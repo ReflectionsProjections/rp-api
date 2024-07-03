@@ -13,7 +13,7 @@ export const publicEventValidator = z.object({
     description: z.string(),
     isVirtual: z.boolean(),
     imageUrl: z.string().nullable().optional(),
-    eventType: EventType.optional(),
+    eventType: EventType,
 });
 
 export const privateEventValidator = publicEventValidator.extend({
@@ -66,7 +66,7 @@ export const EventSchema = new Schema({
     },
     eventType: {
         type: String,
-        required: false,
+        required: true,
         enum: EventType.Values,
     },
 });
