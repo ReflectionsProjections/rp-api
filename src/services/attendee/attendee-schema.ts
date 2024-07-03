@@ -34,7 +34,7 @@ export const AttendeeSchema = new Schema({
     userId: { type: String, required: true, unique: true },
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
-    events: [{ type: Schema.Types.ObjectId, ref: "Event", default: [] }],
+    events: [{ type: String, ref: "Event", default: [] }],
     dietaryRestrictions: { type: [String], required: true },
     allergies: { type: [String], required: true },
     hasCheckedIn: { type: Boolean, default: false },
