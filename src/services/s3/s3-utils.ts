@@ -25,7 +25,7 @@ export async function getResumeUrl(userId: string, client: S3) {
         Bucket: Config.S3_BUCKET_NAME,
         Key: `${userId}.pdf`,
     });
-    
+
     return getSignedUrl(client, command, {
         expiresIn: Config.RESUME_URL_EXPIRY_SECONDS,
     });
