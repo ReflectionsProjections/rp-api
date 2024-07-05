@@ -1,13 +1,11 @@
-import { Request, Response, Router } from "express";
+import { Router } from "express";
+import { StatusCodes } from "http-status-codes";
 import RoleChecker from "../../middleware/role-checker";
 import { s3ClientMiddleware } from "../../middleware/s3";
-import { StatusCodes } from "http-status-codes";
-import { Config } from "../../config";
 import { Role } from "../auth/auth-models";
 
-import { GetObjectCommand, S3 } from "@aws-sdk/client-s3";
-import { createPresignedPost } from "@aws-sdk/s3-presigned-post";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { S3 } from "@aws-sdk/client-s3";
+import { getResumeUrl, postResumeUrl } from "./s3-utils";
 
 const s3Router: Router = Router();
 
@@ -15,70 +13,54 @@ s3Router.get(
     "/upload/",
     RoleChecker([], false),
     s3ClientMiddleware,
-    async (_req: Request, res: Response) => {
+    async (_req, res, next) => {
         const payload = res.locals.payload;
 
         const s3 = res.locals.s3 as S3;
         const userId: string = payload.userId;
 
-        const { url, fields } = await createPresignedPost(s3, {
-            Bucket: Config.S3_BUCKET_NAME,
-            Key: `${userId}.pdf`,
-            Conditions: [
-                ["content-length-range", 0, Config.MAX_RESUME_SIZE_BYTES], // 6 MB max
-            ],
-            Fields: {
-                success_action_status: "201",
-                "Content-Type": "application/pdf",
-            },
-            Expires: Config.RESUME_URL_EXPIRY_SECONDS,
-        });
-
-        return res.status(StatusCodes.OK).send({ url: url, fields: fields });
+        try {
+            const { url, fields } = await postResumeUrl(userId, s3);
+            return res.status(StatusCodes.OK).send({ url, fields });
+        } catch (error) {
+            next(error);
+        }
     }
 );
 
 s3Router.get(
     "/download/",
-    RoleChecker([Role.enum.USER], false),
+    RoleChecker([Role.Enum.USER], false),
     s3ClientMiddleware,
-    async (_req: Request, res: Response) => {
+    async (_, res, next) => {
         const payload = res.locals.payload;
+        const userId = payload.userId;
 
         const s3 = res.locals.s3 as S3;
-        const userId: string = payload.userId;
-
-        const command = new GetObjectCommand({
-            Bucket: Config.S3_BUCKET_NAME,
-            Key: `${userId}.pdf`,
-        });
-
-        const downloadUrl = await getSignedUrl(s3, command, {
-            expiresIn: Config.RESUME_URL_EXPIRY_SECONDS,
-        });
-
-        return res.status(StatusCodes.OK).send({ url: downloadUrl });
+        
+        try {
+            const downloadUrl = await getResumeUrl(userId, s3);
+            return res.status(StatusCodes.OK).send({ url: downloadUrl });
+        } catch (error) {
+            next(error);
+        }
     }
 );
 
 s3Router.get(
     "/download/:USERID",
-    RoleChecker([Role.enum.STAFF], false),
+    RoleChecker([Role.Enum.STAFF, Role.Enum.CORPORATE], false),
     s3ClientMiddleware,
-    async (req: Request, res: Response) => {
-        const userId: string = req.params.USERID;
+    async (req, res, next) => {
+        const userId = req.params.USERID;
         const s3 = res.locals.s3 as S3;
 
-        const command = new GetObjectCommand({
-            Bucket: Config.S3_BUCKET_NAME,
-            Key: `${userId}.pdf`,
-        });
-
-        const downloadUrl = await getSignedUrl(s3, command, {
-            expiresIn: Config.RESUME_URL_EXPIRY_SECONDS,
-        });
-
-        return res.status(StatusCodes.OK).send({ url: downloadUrl });
+        try {
+            const downloadUrl = await getResumeUrl(userId, s3);
+            return res.status(StatusCodes.OK).send({ url: downloadUrl });
+        } catch (error) {
+            next(error);
+        }
     }
 );
 
