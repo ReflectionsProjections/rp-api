@@ -30,4 +30,4 @@ sponsorRouter.get(
     }
 );
 
-export const sponsorRouter;
+export default sponsorRouter;
