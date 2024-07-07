@@ -66,7 +66,7 @@ s3Router.get(
 );
 
 s3Router.get(
-    "/download/batch/:USERID",
+    "/download/batch/",
     RoleChecker([Role.Enum.STAFF, Role.Enum.CORPORATE], false),
     s3ClientMiddleware,
     async (req, res, next) => {
@@ -77,19 +77,27 @@ s3Router.get(
 
             const batchDownloadPromises = userIds.map((userId) =>
                 getResumeUrl(userId, s3)
+                    .then((url) => ({ userId, url: url }))
+                    .catch(() => ({ userId, url: null }))
             );
-            
-            const batchDownloadUrls = await Promise.allSettled(
+
+            const batchDownloadResults = await Promise.allSettled(
                 batchDownloadPromises
             );
 
-            const filteredUrls = batchDownloadUrls.forEach((result) => {
+            const filteredUrls = batchDownloadResults.forEach((result) => {
                 if (result.status === "fulfilled") {
                     return result.value;
                 }
             });
 
-            return res.status(StatusCodes.OK).send({ url: filteredUrls });
+            const errors = batchDownloadResults.filter(
+                (result) => result.status === "rejected"
+            ).length;
+
+            return res
+                .status(StatusCodes.OK)
+                .send({ data: filteredUrls, errorCount: errors });
         } catch (error) {
             next(error);
         }
