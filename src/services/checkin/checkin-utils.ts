@@ -65,16 +65,12 @@ export async function checkInUserToEvent(
     userId: string,
     isCheckin: boolean = false
 ) {
-    try {
-        await checkEventAndAttendeeExist(eventId, userId);
-        await checkForDuplicateAttendance(eventId, userId);
+    await checkEventAndAttendeeExist(eventId, userId);
+    await checkForDuplicateAttendance(eventId, userId);
 
-        if (!isCheckin) {
-            await updateAttendeePriority(userId);
-        }
-
-        await updateAttendanceRecords(eventId, userId);
-    } catch (error) {
-        throw error;
+    if (!isCheckin) {
+        await updateAttendeePriority(userId);
     }
+
+    await updateAttendanceRecords(eventId, userId);
 }
