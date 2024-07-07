@@ -155,13 +155,16 @@ attendeeRouter.get(
 );
 
 // Get attendees based on a partial filter in body
-attendeeRouter.post(
+attendeeRouter.get(
     "/filter",
-    RoleChecker([Role.Enum.ADMIN]),
+    RoleChecker([Role.Enum.STAFF, Role.Enum.CORPORATE]),
     async (req, res, next) => {
         try {
             const attendeeData = PartialAttendeeValidator.parse(req.body);
-            const attendees = await Database.ATTENDEE.find(attendeeData);
+            const attendees = await Database.ATTENDEE.find(
+                attendeeData,
+                "userId"
+            );
 
             return res.status(StatusCodes.OK).json(attendees);
         } catch (error) {
