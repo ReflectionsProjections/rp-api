@@ -84,6 +84,6 @@ export async function checkInUserToEvent(
 
         await updateAttendanceRecords(eventId, userId);
     } catch (error) {
-        return Promise.reject(error);
+        throw error;
     }
 }
