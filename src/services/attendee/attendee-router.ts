@@ -9,7 +9,7 @@ import { Database } from "../../database";
 import RoleChecker from "../../middleware/role-checker";
 import { Role } from "../auth/auth-models";
 import dotenv from "dotenv";
-import { generateQrHash } from "./attendees-utils";
+import { generateQrHash } from "./attendee-utils";
 
 dotenv.config();
 
@@ -25,7 +25,7 @@ attendeeRouter.post(
         const { eventId } = EventIdValidator.parse(req.params);
 
         try {
-            const attendee = await Database.ATTENDEES.findOne({ userId });
+            const attendee = await Database.ATTENDEE.findOne({ userId });
 
             if (!attendee) {
                 return res
@@ -33,7 +33,7 @@ attendeeRouter.post(
                     .json({ error: "UserNotFound" });
             }
 
-            await Database.ATTENDEES.updateOne(
+            await Database.ATTENDEE.updateOne(
                 { userId: userId },
                 { $addToSet: { favorites: eventId } }
             );
@@ -55,7 +55,7 @@ attendeeRouter.delete(
         const { eventId } = EventIdValidator.parse(req.params);
 
         try {
-            const attendee = await Database.ATTENDEES.findOne({ userId });
+            const attendee = await Database.ATTENDEE.findOne({ userId });
 
             if (!attendee) {
                 return res
@@ -63,7 +63,7 @@ attendeeRouter.delete(
                     .json({ error: "UserNotFound" });
             }
 
-            await Database.ATTENDEES.updateOne(
+            await Database.ATTENDEE.updateOne(
                 { userId: userId },
                 { $pull: { favorites: eventId } }
             );
@@ -84,7 +84,7 @@ attendeeRouter.get(
         const userId = payload.userId;
 
         try {
-            const attendee = await Database.ATTENDEES.findOne({ userId });
+            const attendee = await Database.ATTENDEE.findOne({ userId });
 
             if (!attendee) {
                 return res
@@ -103,7 +103,7 @@ attendeeRouter.get(
 attendeeRouter.post("/", async (req, res, next) => {
     try {
         const attendeeData = AttendeeValidator.parse(req.body);
-        const attendee = new Database.ATTENDEES(attendeeData);
+        const attendee = new Database.ATTENDEE(attendeeData);
         await attendee.save();
 
         return res.status(StatusCodes.CREATED).json(attendeeData);
@@ -139,7 +139,7 @@ attendeeRouter.get(
             const userId = payload.userId;
 
             // Check if the user exists in the database
-            const user = await Database.ATTENDEES.findOne({ userId });
+            const user = await Database.ATTENDEE.findOne({ userId });
 
             if (!user) {
                 return res

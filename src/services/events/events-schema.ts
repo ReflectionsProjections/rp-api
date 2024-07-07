@@ -1,4 +1,4 @@
-import mongoose, { Schema } from "mongoose";
+import { Schema } from "mongoose";
 import { z } from "zod";
 import { v4 as uuidv4 } from "uuid";
 
@@ -13,12 +13,12 @@ export const publicEventValidator = z.object({
     description: z.string(),
     isVirtual: z.boolean(),
     imageUrl: z.string().nullable().optional(),
-    isVisible: z.boolean().default(false),
     eventType: EventType,
 });
 
 export const privateEventValidator = publicEventValidator.extend({
     attendanceCount: z.number(),
+    isVisible: z.boolean(),
 });
 
 export const EventSchema = new Schema({
@@ -71,4 +71,22 @@ export const EventSchema = new Schema({
     },
 });
 
-export const Event = mongoose.model("Event", EventSchema);
+export const EventAttendanceSchema = new Schema({
+    eventId: {
+        type: String,
+        ref: "Event",
+        required: true,
+    },
+    attendees: [
+        {
+            type: String,
+            ref: "Attendee",
+            required: true,
+        },
+    ],
+});
+
+export const EventAttendanceValidator = z.object({
+    eventId: z.string(),
+    attendees: z.array(z.string()),
+});

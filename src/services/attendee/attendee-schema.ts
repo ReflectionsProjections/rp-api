@@ -1,8 +1,8 @@
-import mongoose from "mongoose";
+import { Schema } from "mongoose";
 import { z } from "zod";
 
 // Zod schema for attendee
-const AttendeeValidator = z.object({
+export const AttendeeValidator = z.object({
     userId: z.string(),
     name: z.string(),
     email: z.string().email(),
@@ -30,20 +30,18 @@ const AttendeeValidator = z.object({
 });
 
 // Mongoose schema for attendee
-const AttendeeSchema = new mongoose.Schema({
+export const AttendeeSchema = new Schema({
     userId: { type: String, required: true, unique: true },
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
-    events: [
-        { type: mongoose.Schema.Types.ObjectId, ref: "Event", default: [] },
-    ],
+    events: [{ type: String, ref: "Event", default: [] }],
     dietaryRestrictions: { type: [String], required: true },
     allergies: { type: [String], required: true },
     hasCheckedIn: { type: Boolean, default: false },
     points: { type: Number, default: 0 },
     foodWave: { type: Number, default: 0 },
     hasPriority: {
-        type: new mongoose.Schema(
+        type: new Schema(
             {
                 dayOne: { type: Boolean, default: false },
                 dayTwo: { type: Boolean, default: false },
@@ -58,16 +56,23 @@ const AttendeeSchema = new mongoose.Schema({
     favorites: [{ type: String }],
 });
 
-const EventIdValidator = z.object({
+export const AttendeeAttendanceSchema = new Schema({
+    userId: {
+        type: String,
+        ref: "Attendee",
+        required: true,
+    },
+    eventsAttended: [{ type: String, ref: "Event", required: true }],
+});
+
+export const AttendeeAttendanceValidator = z.object({
+    userId: z.string(),
+    eventsAttended: z.array(z.string()),
+});
+
+export const EventIdValidator = z.object({
     eventId: z.string().uuid(),
 });
 
 // Partial schema for attendee filter
-const PartialAttendeeFilter = AttendeeValidator.partial();
-
-export {
-    AttendeeSchema,
-    AttendeeValidator,
-    EventIdValidator,
-    PartialAttendeeFilter,
-};
+export const PartialAttendeeFilter = AttendeeValidator.partial();

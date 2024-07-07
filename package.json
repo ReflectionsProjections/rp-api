@@ -11,6 +11,7 @@
         "test": "jest --config=testing/jest.config.ts"
     },
     "devDependencies": {
+        "@jest/globals": "^29.7.0",
         "@types/dotenv": "^8.2.0",
         "@types/express": "^4.17.21",
         "@types/express-rate-limit": "^6.0.0",
