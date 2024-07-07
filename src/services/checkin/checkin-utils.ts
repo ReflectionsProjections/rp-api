@@ -9,10 +9,7 @@ function getCurrentDay() {
     return dayString;
 }
 
-async function checkEventAndAttendeeExist(
-    eventId: string,
-    userId: string
-): Promise<void> {
+async function checkEventAndAttendeeExist(eventId: string, userId: string) {
     const [event, attendee] = await Promise.all([
         Database.EVENTS.exists({ eventId }),
         Database.ATTENDEE.exists({ userId }),
@@ -25,10 +22,7 @@ async function checkEventAndAttendeeExist(
     return Promise.resolve();
 }
 
-async function checkForDuplicateAttendance(
-    eventId: string,
-    userId: string
-): Promise<void> {
+async function checkForDuplicateAttendance(eventId: string, userId: string) {
     const [isRepeatEvent, isRepeatAttendee] = await Promise.all([
         Database.EVENTS_ATTENDANCE.exists({ eventId, attendees: userId }),
         Database.ATTENDEE_ATTENDANCE.exists({
@@ -43,7 +37,7 @@ async function checkForDuplicateAttendance(
 }
 
 // Update attendee priority for the current day
-async function updateAttendeePriority(userId: string): Promise<void> {
+async function updateAttendeePriority(userId: string) {
     const day = getCurrentDay();
     await Database.ATTENDEE.findOneAndUpdate(
         { userId },
@@ -51,10 +45,7 @@ async function updateAttendeePriority(userId: string): Promise<void> {
     );
 }
 
-async function updateAttendanceRecords(
-    eventId: string,
-    userId: string
-): Promise<void> {
+async function updateAttendanceRecords(eventId: string, userId: string) {
     await Promise.all([
         Database.EVENTS_ATTENDANCE.findOneAndUpdate(
             { eventId },
@@ -73,7 +64,7 @@ export async function checkInUserToEvent(
     eventId: string,
     userId: string,
     isCheckin: boolean = false
-): Promise<void> {
+) {
     try {
         await checkEventAndAttendeeExist(eventId, userId);
         await checkForDuplicateAttendance(eventId, userId);
