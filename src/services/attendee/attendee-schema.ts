@@ -75,4 +75,4 @@ export const EventIdValidator = z.object({
 });
 
 // Partial schema for attendee filter
-export const PartialAttendeeFilter = AttendeeValidator.partial();
+export const PartialAttendeeValidator = AttendeeValidator.partial();
