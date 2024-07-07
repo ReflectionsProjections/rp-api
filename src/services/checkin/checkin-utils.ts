@@ -9,7 +9,10 @@ function getCurrentDay() {
     return dayString;
 }
 
-async function checkEventAndAttendeeExist(eventId: string, userId: string): Promise<void> {
+async function checkEventAndAttendeeExist(
+    eventId: string,
+    userId: string
+): Promise<void> {
     const [event, attendee] = await Promise.all([
         Database.EVENTS.exists({ eventId }),
         Database.ATTENDEE.exists({ userId }),
@@ -18,14 +21,20 @@ async function checkEventAndAttendeeExist(eventId: string, userId: string): Prom
     if (!event || !attendee) {
         throw new Error("Event or Attendee not found");
     }
-    
+
     return Promise.resolve();
 }
 
-async function checkForDuplicateAttendance(eventId: string, userId: string): Promise<void> {
+async function checkForDuplicateAttendance(
+    eventId: string,
+    userId: string
+): Promise<void> {
     const [isRepeatEvent, isRepeatAttendee] = await Promise.all([
         Database.EVENTS_ATTENDANCE.exists({ eventId, attendees: userId }),
-        Database.ATTENDEE_ATTENDANCE.exists({ userId, eventsAttended: eventId }),
+        Database.ATTENDEE_ATTENDANCE.exists({
+            userId,
+            eventsAttended: eventId,
+        }),
     ]);
 
     if (isRepeatEvent || isRepeatAttendee) {
@@ -42,7 +51,10 @@ async function updateAttendeePriority(userId: string): Promise<void> {
     );
 }
 
-async function updateAttendanceRecords(eventId: string, userId: string): Promise<void> {
+async function updateAttendanceRecords(
+    eventId: string,
+    userId: string
+): Promise<void> {
     await Promise.all([
         Database.EVENTS_ATTENDANCE.findOneAndUpdate(
             { eventId },
@@ -57,7 +69,11 @@ async function updateAttendanceRecords(eventId: string, userId: string): Promise
     ]);
 }
 
-export async function checkInUserToEvent(eventId: string, userId: string, isCheckin: boolean = false): Promise<void> {
+export async function checkInUserToEvent(
+    eventId: string,
+    userId: string,
+    isCheckin: boolean = false
+): Promise<void> {
     try {
         await checkEventAndAttendeeExist(eventId, userId);
         await checkForDuplicateAttendance(eventId, userId);
