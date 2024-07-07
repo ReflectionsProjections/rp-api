@@ -9,6 +9,12 @@ export const Environment = z.enum(["PRODUCTION", "DEVELOPMENT", "TESTING"]);
 
 export const MailingListName = z.enum(["rp_interest"]);
 
+// Native enum for bucket names
+export enum BucketName {
+    RP_2024_RESUMES = "rp-2024-resumes",
+    RP_2024_SPEAKERS = "rp-2024-speakers",
+}
+
 export const Config = {
     DEFAULT_APP_PORT: 3000,
     ALLOWED_CORS_ORIGIN_PATTERNS: [
@@ -71,7 +77,6 @@ export const Config = {
 
     S3_ACCESS_KEY: getEnv("S3_ACCESS_KEY"),
     S3_SECRET_KEY: getEnv("S3_SECRET_KEY"),
-    S3_BUCKET_NAME: getEnv("S3_BUCKET_NAME"),
     S3_REGION: getEnv("S3_REGION"),
     MAX_RESUME_SIZE_BYTES: 6 * 1024 * 1024,
     RESUME_URL_EXPIRY_SECONDS: 60,

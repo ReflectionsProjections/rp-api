@@ -62,4 +62,12 @@ const EventIdValidator = z.object({
     eventId: z.string().uuid(),
 });
 
-export { AttendeeSchema, AttendeeValidator, EventIdValidator };
+// Partial schema for attendee filter
+const PartialAttendeeFilter = AttendeeValidator.partial();
+
+export {
+    AttendeeSchema,
+    AttendeeValidator,
+    EventIdValidator,
+    PartialAttendeeFilter,
+};
