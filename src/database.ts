@@ -28,6 +28,10 @@ import {
     NotificationsSchema,
     NotificationsValidator,
 } from "./services/notifications/notifications-schema";
+import {
+    MerchSchema,
+    privateMerchValidator,
+} from "./services/merch/merch-schema";
 
 mongoose.set("toObject", { versionKey: false });
 
@@ -89,4 +93,5 @@ export const Database = {
         NotificationsSchema,
         NotificationsValidator
     ),
+    MERCH: initializeModel("merch", MerchSchema, privateMerchValidator),
 };

@@ -18,8 +18,11 @@ async function checkEventAndAttendeeExist(eventId: string, userId: string) {
     if (!event || !attendee) {
         throw new Error("Event or Attendee not found");
     }
+    if (!("points" in event)) {
+        throw new Error("Event or Attendee not found");
+    }
 
-    return Promise.resolve();
+    return event.points as number;
 }
 
 async function checkForDuplicateAttendance(eventId: string, userId: string) {
@@ -45,7 +48,11 @@ async function updateAttendeePriority(userId: string) {
     );
 }
 
-async function updateAttendanceRecords(eventId: string, userId: string) {
+async function updateAttendanceRecords(
+    eventId: string,
+    userId: string,
+    eventPoints: number
+) {
     await Promise.all([
         Database.EVENTS_ATTENDANCE.findOneAndUpdate(
             { eventId },
@@ -57,6 +64,11 @@ async function updateAttendanceRecords(eventId: string, userId: string) {
             { $addToSet: { eventsAttended: eventId } },
             { new: true, upsert: true }
         ),
+        Database.ATTENDEE.findOneAndUpdate(
+            { userId },
+            { $inc: { points: eventPoints } },
+            { new: true }
+        ),
     ]);
 }
 
@@ -65,12 +77,12 @@ export async function checkInUserToEvent(
     userId: string,
     isCheckin: boolean = false
 ) {
-    await checkEventAndAttendeeExist(eventId, userId);
+    const eventPoints = await checkEventAndAttendeeExist(eventId, userId);
     await checkForDuplicateAttendance(eventId, userId);
 
     if (!isCheckin) {
         await updateAttendeePriority(userId);
     }
 
-    await updateAttendanceRecords(eventId, userId);
+    await updateAttendanceRecords(eventId, userId, eventPoints);
 }
