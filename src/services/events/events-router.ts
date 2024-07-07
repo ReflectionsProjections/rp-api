@@ -4,7 +4,6 @@ import { Router } from "express";
 import { StatusCodes } from "http-status-codes";
 import { publicEventValidator, privateEventValidator } from "./events-schema";
 import { Database } from "../../database";
-import { checkInUserToEvent } from "./events-utils";
 import RoleChecker from "../../middleware/role-checker";
 import { Role } from "../auth/auth-models";
 import { isAdmin, isStaff } from "../auth/auth-utils";
@@ -148,29 +147,6 @@ eventsRouter.delete(
             await Database.EVENTS.findOneAndDelete({ eventId: eventId });
 
             return res.sendStatus(StatusCodes.NO_CONTENT);
-        } catch (error) {
-            next(error);
-        }
-    }
-);
-
-eventsRouter.post(
-    "/check-in",
-    RoleChecker([Role.Enum.STAFF], true),
-    async (req, res, next) => {
-        // add RoleChecker for staff
-        try {
-            const { eventId, userId } = req.body;
-            const result = await checkInUserToEvent(eventId, userId);
-            if (result.success) {
-                return res
-                    .status(StatusCodes.OK)
-                    .json({ message: "Check-in successful" });
-            } else {
-                return res
-                    .status(StatusCodes.NOT_FOUND)
-                    .json({ error: result.message });
-            }
         } catch (error) {
             next(error);
         }

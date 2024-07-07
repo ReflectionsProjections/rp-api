@@ -14,18 +14,22 @@ export const AttendeeValidator = z.object({
     foodWave: z.number().int().min(0).default(0),
     hasPriority: z
         .object({
-            dayOne: z.boolean().default(false),
-            dayTwo: z.boolean().default(false),
-            dayThree: z.boolean().default(false),
-            dayFour: z.boolean().default(false),
-            dayFive: z.boolean().default(false),
+            Mon: z.boolean().default(false),
+            Tue: z.boolean().default(false),
+            Wed: z.boolean().default(false),
+            Thu: z.boolean().default(false),
+            Fri: z.boolean().default(false),
+            Sat: z.boolean().default(false),
+            Sun: z.boolean().default(false),
         })
         .default({
-            dayOne: false,
-            dayTwo: false,
-            dayThree: false,
-            dayFour: false,
-            dayFive: false,
+            Mon: false,
+            Tue: false,
+            Wed: false,
+            Thu: false,
+            Fri: false,
+            Sat: false,
+            Sun: false,
         }),
 });
 
@@ -43,15 +47,25 @@ export const AttendeeSchema = new Schema({
     hasPriority: {
         type: new Schema(
             {
-                dayOne: { type: Boolean, default: false },
-                dayTwo: { type: Boolean, default: false },
-                dayThree: { type: Boolean, default: false },
-                dayFour: { type: Boolean, default: false },
-                dayFive: { type: Boolean, default: false },
+                Mon: { type: Boolean, default: false },
+                Tue: { type: Boolean, default: false },
+                Wed: { type: Boolean, default: false },
+                Thu: { type: Boolean, default: false },
+                Fri: { type: Boolean, default: false },
+                Sat: { type: Boolean, default: false },
+                Sun: { type: Boolean, default: false },
             },
             { _id: false }
         ),
-        default: () => ({}),
+        default: {
+            Mon: false,
+            Tue: false,
+            Wed: false,
+            Thu: false,
+            Fri: false,
+            Sat: false,
+            Sun: false,
+        },
     },
     favorites: [{ type: String }],
 });
