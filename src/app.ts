@@ -10,7 +10,7 @@ import morgan from "morgan";
 import bodyParser from "body-parser";
 import errorHandler from "./middleware/error-handler";
 
-import attendeeRouter from "./services/attendees/attendee-router";
+import attendeeRouter from "./services/attendee/attendee-router";
 import authRouter from "./services/auth/auth-router";
 import eventsRouter from "./services/events/events-router";
 import notificationsRouter from "./services/notifications/notifications-router";
