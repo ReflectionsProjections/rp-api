@@ -161,7 +161,7 @@ attendeeRouter.post(
     async (req, res, next) => {
         try {
             const attendeeData = PartialAttendeeFilter.parse(req.body);
-            const attendees = await Database.ATTENDEES.find(attendeeData);
+            const attendees = await Database.ATTENDEE.find(attendeeData);
 
             return res.status(StatusCodes.OK).json(attendees);
         } catch (error) {
