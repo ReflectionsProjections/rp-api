@@ -78,7 +78,7 @@ export async function checkInUserToEvent(
         await checkEventAndAttendeeExist(eventId, userId);
         await checkForDuplicateAttendance(eventId, userId);
 
-        if (isCheckin) {
+        if (!isCheckin) {
             await updateAttendeePriority(userId);
         }
 
