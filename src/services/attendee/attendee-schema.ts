@@ -83,6 +83,10 @@ export const AttendeeAttendanceValidator = z.object({
     userId: z.string(),
     eventsAttended: z.array(z.string()),
 });
+
 export const EventIdValidator = z.object({
     eventId: z.string().uuid(),
 });
+
+// Partial schema for attendee filter
+export const PartialAttendeeValidator = AttendeeValidator.partial();

@@ -1,6 +1,10 @@
 import { Router } from "express";
 import { StatusCodes } from "http-status-codes";
-import { AttendeeValidator, EventIdValidator } from "./attendee-schema";
+import {
+    AttendeeValidator,
+    EventIdValidator,
+    PartialAttendeeValidator,
+} from "./attendee-schema";
 import { Database } from "../../database";
 import RoleChecker from "../../middleware/role-checker";
 import { Role } from "../auth/auth-models";
@@ -144,6 +148,25 @@ attendeeRouter.get(
             }
 
             return res.status(StatusCodes.OK).json(user);
+        } catch (error) {
+            next(error);
+        }
+    }
+);
+
+// Get attendees based on a partial filter in body
+attendeeRouter.get(
+    "/filter",
+    RoleChecker([Role.Enum.STAFF, Role.Enum.CORPORATE]),
+    async (req, res, next) => {
+        try {
+            const attendeeData = PartialAttendeeValidator.parse(req.body);
+            const attendees = await Database.ATTENDEE.find(
+                attendeeData,
+                "userId"
+            );
+
+            return res.status(StatusCodes.OK).json(attendees);
         } catch (error) {
             next(error);
         }
