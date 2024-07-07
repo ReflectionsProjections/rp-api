@@ -3,7 +3,7 @@ import { StatusCodes } from "http-status-codes";
 import {
     AttendeeValidator,
     EventIdValidator,
-    PartialAttendeeFilter,
+    PartialAttendeeValidator,
 } from "./attendee-schema";
 import { Database } from "../../database";
 import RoleChecker from "../../middleware/role-checker";
@@ -160,7 +160,7 @@ attendeeRouter.post(
     RoleChecker([Role.Enum.ADMIN]),
     async (req, res, next) => {
         try {
-            const attendeeData = PartialAttendeeFilter.parse(req.body);
+            const attendeeData = PartialAttendeeValidator.parse(req.body);
             const attendees = await Database.ATTENDEE.find(attendeeData);
 
             return res.status(StatusCodes.OK).json(attendees);
