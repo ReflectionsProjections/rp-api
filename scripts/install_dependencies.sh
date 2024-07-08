@@ -8,5 +8,5 @@ RUNNING=$?
 
 
 if [ "${RUNNING}" -eq 1 ]; then
-sudo pm2 start build/app.js --name RP_API -i 2 --wait-ready --listen-timeout 10000
+sudo pm2 start build/src/app.js --name RP_API -i 2 --wait-ready --listen-timeout 10000
 fi;
