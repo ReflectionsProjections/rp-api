@@ -11,13 +11,21 @@ const sesRouter: Router = Router();
 
 sesRouter.post(
     "/template",
-    RoleChecker([Role.enum.STAFF], false),
+    RoleChecker([Role.enum.STAFF], true),
     sesClientMiddleware,
     async (req: Request, res: Response) => {
-        const ses = res.locals.ses as SESClient;
+        const ses = res.locals.sesClient as SESClient;
 
         const createTemplateCommand = createCreateTemplateCommand();
-        console.log(ses.send(createTemplateCommand));
+        try {
+            ses.send(createTemplateCommand);
+            return res.status(StatusCodes.OK);
+        } catch (err) {
+            console.error("Error creating template", err);
+            return res
+                .status(StatusCodes.BAD_REQUEST)
+                .send({ error: "Error creating template" });
+        }
     }
 );
 
