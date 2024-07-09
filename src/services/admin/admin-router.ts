@@ -30,7 +30,7 @@ adminRouter.post(
                     .json({ error: "QR code has expired" });
             }
 
-            const user = await Database.ATTENDEES.findOne({ userId });
+            const user = await Database.ATTENDEE.findOne({ userId });
 
             if (!user) {
                 return res
