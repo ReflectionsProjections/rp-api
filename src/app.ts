@@ -11,7 +11,7 @@ import bodyParser from "body-parser";
 import errorHandler from "./middleware/error-handler";
 
 import attendeeRouter from "./services/attendee/attendee-router";
-import adminRouter from "./services/admin/admin-router";
+import adminRouter from "./services/checkin/checkin-router";
 import authRouter from "./services/auth/auth-router";
 import eventsRouter from "./services/events/events-router";
 import notificationsRouter from "./services/notifications/notifications-router";
