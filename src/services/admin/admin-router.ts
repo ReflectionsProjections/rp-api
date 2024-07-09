@@ -17,11 +17,6 @@ adminRouter.post(
             const { eventId, qrCode } = ScanValidator.parse(req.body);
             console.log("Event ID:", eventId);
 
-            if (!qrCode) {
-                return res
-                    .status(StatusCodes.BAD_REQUEST)
-                    .json({ error: "QR code is required" });
-            }
             const { userId, expTime } = validateQrHash(qrCode);
 
             if (Date.now() / 1000 > expTime) {
