@@ -10,7 +10,7 @@ import { validateQrHash } from "../attendees/attendees-utils";
 const adminRouter = Router();
 
 adminRouter.post(
-    "/scan/",
+    "/checkin/scan/staff",
     RoleChecker([Role.Enum.ADMIN]),
     async (req, res, next) => {
         try {
