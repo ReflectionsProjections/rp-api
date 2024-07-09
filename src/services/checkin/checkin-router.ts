@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { StatusCodes } from "http-status-codes";
-import { ScanValidator } from "../admin/admin-schema";
+import { ScanValidator } from "./checkin-schema";
 import { Database } from "../../database";
 import RoleChecker from "../../middleware/role-checker";
 import { Role } from "../auth/auth-models";
