@@ -2,9 +2,20 @@ import mongoose, { Schema, Document } from "mongoose";
 import {
     AttendeeSchema,
     AttendeeValidator,
-} from "./services/attendees/attendee-schema";
+} from "./services/attendee/attendee-schema";
+import {
+    AttendeeAttendanceSchema,
+    AttendeeAttendanceValidator,
+} from "./services/attendee/attendee-schema";
+import {
+    EventSchema,
+    privateEventValidator,
+} from "./services/events/events-schema";
+import {
+    EventAttendanceSchema,
+    EventAttendanceValidator,
+} from "./services/events/events-schema";
 import { RoleValidator, RoleSchema } from "./services/auth/auth-schema";
-import { EventSchema, EventValidator } from "./services/events/events-schema";
 import {
     RegistrationSchema,
     RegistrationValidator,
@@ -51,13 +62,23 @@ function initializeModel(
 // Example usage
 export const Database = {
     ROLES: initializeModel("roles", RoleSchema, RoleValidator),
-    EVENTS: initializeModel("events", EventSchema, EventValidator),
+    EVENTS: initializeModel("events", EventSchema, privateEventValidator),
+    EVENTS_ATTENDANCE: initializeModel(
+        "events_attendance",
+        EventAttendanceSchema,
+        EventAttendanceValidator
+    ),
+    ATTENDEE: initializeModel("attendee", AttendeeSchema, AttendeeValidator),
+    ATTENDEE_ATTENDANCE: initializeModel(
+        "attendee_attendance",
+        AttendeeAttendanceSchema,
+        AttendeeAttendanceValidator
+    ),
     SUBSCRIPTIONS: initializeModel(
         "subscriptions",
         SubscriptionSchema,
         SubscriptionSchemaValidator
     ),
-    ATTENDEES: initializeModel("attendees", AttendeeSchema, AttendeeValidator),
     REGISTRATION: initializeModel(
         "registration",
         RegistrationSchema,

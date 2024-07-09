@@ -2,7 +2,7 @@
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import { Config } from "../../config";
 import { Database } from "../../database";
-import { Role } from "./auth-models";
+import { JwtPayloadType, Role } from "./auth-models";
 
 export function createGoogleStrategy(device: string) {
     return new GoogleStrategy(
@@ -15,7 +15,7 @@ export function createGoogleStrategy(device: string) {
         // Strategy -> insert user into database if they don't exist
         async function (_1, _2, profile, cb) {
             const userId = `user${profile.id}`;
-            const name = profile.displayName;
+            const displayName = profile.displayName;
             const email = profile._json.email;
             const roles = [];
 
@@ -26,7 +26,7 @@ export function createGoogleStrategy(device: string) {
 
             Database.ROLES.findOneAndUpdate(
                 { userId: userId },
-                { userId, name, email, roles },
+                { userId, displayName, email, roles },
                 { upsert: true }
             )
                 .then(() => cb(null, profile))
@@ -38,6 +38,7 @@ export function createGoogleStrategy(device: string) {
 export async function getJwtPayloadFromDatabase(userId: string) {
     const payload = await Database.ROLES.findOne({ userId: userId }).select([
         "userId",
+        "displayName",
         "roles",
     ]);
     if (!payload) {
@@ -45,4 +46,16 @@ export async function getJwtPayloadFromDatabase(userId: string) {
     }
 
     return payload;
+}
+
+export function isUser(payload?: JwtPayloadType) {
+    return payload?.roles.includes(Role.Enum.USER);
+}
+
+export function isStaff(payload?: JwtPayloadType) {
+    return payload?.roles.includes(Role.Enum.STAFF);
+}
+
+export function isAdmin(payload?: JwtPayloadType) {
+    return payload?.roles.includes(Role.Enum.ADMIN);
 }

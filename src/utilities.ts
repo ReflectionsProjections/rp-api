@@ -16,6 +16,8 @@ function getDatabaseUrl() {
         database = `prod`;
     } else if (isDev()) {
         database = `dev-${username}`;
+    } else if (isTest()) {
+        return Config.DATABASE_HOST;
     }
 
     return `mongodb+srv://${username}:${password}@${host}/${database}?retryWrites=true&w=majority&appName=rp-dev-cluster`;
@@ -27,6 +29,10 @@ export function isProd() {
 
 export function isDev() {
     return Config.ENV == Environment.enum.DEVELOPMENT;
+}
+
+export function isTest() {
+    return Config.ENV == Environment.enum.TESTING;
 }
 
 export function getEnv(key: string): string {
