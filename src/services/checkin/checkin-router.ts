@@ -6,6 +6,7 @@ import RoleChecker from "../../middleware/role-checker";
 import { Role } from "../auth/auth-models";
 // import dotenv from "dotenv";
 import { validateQrHash } from "../attendee/attendee-utils";
+import { checkInUserToEvent } from "./checkin-utils"; 
 
 const adminRouter = Router();
 
@@ -32,6 +33,8 @@ adminRouter.post(
                     .status(StatusCodes.NOT_FOUND)
                     .json({ error: "UserNotFound" });
             }
+
+            await checkInUserToEvent(eventId, userId, true);
 
             return res.status(StatusCodes.OK).json(user);
         } catch (error) {
