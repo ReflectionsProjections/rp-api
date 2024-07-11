@@ -11,7 +11,7 @@ import { checkInUserToEvent } from "./checkin-utils";
 const adminRouter = Router();
 
 adminRouter.post(
-    "/checkin/scan/staff",
+    "/scan/staff",
     RoleChecker([Role.Enum.ADMIN]),
     async (req, res, next) => {
         try {
