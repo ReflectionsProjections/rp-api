@@ -9,7 +9,7 @@ import { Database } from "../../database";
 import RoleChecker from "../../middleware/role-checker";
 import { Role } from "../auth/auth-models";
 import dotenv from "dotenv";
-import { generateQrHash } from "./attendee-utils";
+import { generateQrHash } from "../checkin/checkin-utils";
 
 dotenv.config();
 

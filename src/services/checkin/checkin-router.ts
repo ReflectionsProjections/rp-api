@@ -1,16 +1,14 @@
 import { Router } from "express";
 import { StatusCodes } from "http-status-codes";
 import { ScanValidator } from "./checkin-schema";
-import { Database } from "../../database";
 import RoleChecker from "../../middleware/role-checker";
 import { Role } from "../auth/auth-models";
-// import dotenv from "dotenv";
-import { validateQrHash } from "../attendee/attendee-utils";
+import { validateQrHash } from "./checkin-utils";
 import { checkInUserToEvent } from "./checkin-utils";
 
-const adminRouter = Router();
+const checkinRouter = Router();
 
-adminRouter.post(
+checkinRouter.post(
     "/scan/staff",
     RoleChecker([Role.Enum.ADMIN]),
     async (req, res, next) => {
@@ -26,21 +24,13 @@ adminRouter.post(
                     .json({ error: "QR code has expired" });
             }
 
-            const user = await Database.ATTENDEE.findOne({ userId });
-
-            if (!user) {
-                return res
-                    .status(StatusCodes.NOT_FOUND)
-                    .json({ error: "UserNotFound" });
-            }
-
             await checkInUserToEvent(eventId, userId, true);
 
-            return res.status(StatusCodes.OK).json(user);
+            return res.status(StatusCodes.OK).json(userId);
         } catch (error) {
             next(error);
         }
     }
 );
 
-export default adminRouter;
+export default checkinRouter;
