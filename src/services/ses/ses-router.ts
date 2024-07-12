@@ -1,59 +1,68 @@
 import { Request, Response, Router } from "express";
 import RoleChecker from "../../middleware/role-checker";
 import { StatusCodes } from "http-status-codes";
-// import { Config } from "../../config";
 import { Role } from "../auth/auth-models";
-import { sesClientMiddleware } from "../../middleware/ses";
-import { SESClient } from "@aws-sdk/client-ses";
-import { createCreateTemplateCommand } from "./ses-utils";
+import { sendEmail } from "./ses-utils";
 
 const sesRouter: Router = Router();
 
-sesRouter.post(
-    "/template",
-    RoleChecker([Role.enum.STAFF], true),
-    sesClientMiddleware,
-    async (req: Request, res: Response) => {
-        const ses = res.locals.sesClient as SESClient;
-
-        const createTemplateCommand = createCreateTemplateCommand();
-        try {
-            ses.send(createTemplateCommand);
-            return res.status(StatusCodes.OK);
-        } catch (err) {
-            console.error("Error creating template", err);
-            return res
-                .status(StatusCodes.BAD_REQUEST)
-                .send({ error: "Error creating template" });
-        }
-    }
-);
-
+//Takes in a list of emails and sends a test email to each of them
+//Will change this to take in a template_id later
+//The template_id and substitutions will all be done locally
 sesRouter.post(
     "/email",
-    RoleChecker([Role.enum.STAFF], false),
-    sesClientMiddleware,
+    RoleChecker([Role.enum.STAFF], true),
     async (req: Request, res: Response) => {
-        //recipients (by userid)
-        //template
-        //data
-        //idk
-        //we'll have a function to send mail
-        //individually given the data
+        if (!req.body.emailList) {
+            return res
+                .status(StatusCodes.BAD_REQUEST)
+                .json({ error: "Invalid Params" });
+        }
 
-        //we could have a template and then
-        //for the sub values j follow
-        //assumes we're grabbing from the attendee
-        //profile
-        //ex
-        //sub values = ["name", "points"]
-        // ... etc
-        //which will have to match the template {{name}}, {{points}}
+        const emailList: string[] = req.body.emailList;
+        const emailPromises: Promise<void>[] = [];
+        for (let i = 0; i < emailList.length; i++) {
+            const params = {
+                Destination: {
+                    ToAddresses: [emailList[i]],
+                },
+                Message: {
+                    Body: {
+                        Text: {
+                            Data: "Hello from SES!",
+                        },
+                    },
+                    Subject: {
+                        Data: `Test Email ${i}`,
+                    },
+                },
+                Source: "no-reply@reflectionsprojections.org",
+            };
 
-        // const userId: string = req.params.USERID;
-        // const ses = res.locals.ses as SESClient;
+            emailPromises.push(
+                sendEmail(params)
+                    .then(() => {})
+                    .catch((err) => {
+                        console.error(
+                            `Error sending email ${i + 1}:`,
+                            err.message
+                        );
+                    })
+            );
+        }
 
-        return res.status(StatusCodes.OK).send({ ok: "ok!" });
+        Promise.all(emailPromises)
+            .then(() => {
+                return res
+                    .status(StatusCodes.OK)
+                    .send("All emails sent successfully");
+            })
+            .catch((err) => {
+                console.error("Error sending emails:", err.message);
+                return res
+                    .status(StatusCodes.INTERNAL_SERVER_ERROR)
+                    .send("Internal Server Error");
+            });
     }
 );
 

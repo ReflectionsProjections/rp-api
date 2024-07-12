@@ -1,16 +1,8 @@
-import { CreateTemplateCommand } from "@aws-sdk/client-ses";
+import { sendEmailParams } from "./ses-formats.js";
+import { ses } from "../../config";
 
-export const createCreateTemplateCommand = () => {
-    return new CreateTemplateCommand({
-        Template: {
-            TemplateName: "tester_template",
-            HtmlPart: `
-          <h1>Hello, {{contact.firstName}}!</h1>
-          <p>
-          Did you know Amazon has a mascot named Peccy?
-          </p>
-        `,
-            SubjectPart: "Amazon Tip",
-        },
-    });
-};
+export function sendEmail(
+    params: sendEmailParams
+): Promise<AWS.SES.SendEmailResponse> {
+    return ses.sendEmail(params).promise();
+}
