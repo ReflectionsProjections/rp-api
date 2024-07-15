@@ -12,6 +12,4 @@ process.env.QR_HASH_SECRET = "raidshadowlegends";
 
 process.env.S3_ACCESS_KEY = "2468";
 process.env.S3_SECRET_KEY = "whodeweappreciate";
-process.env.S3_BUCKET_NAME =
-    "theduckwalkeduptothelemonadestandandhesaidtothemanrunningthestandheygotanygrapesandthenthemangotmadandshottheduck";
 process.env.S3_REGION = "aok";
