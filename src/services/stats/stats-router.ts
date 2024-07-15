@@ -12,7 +12,7 @@ statsRouter.get(
     RoleChecker([Role.enum.STAFF], false),
     async (req, res, next) => {
         try {
-            const attendees = await Database.ATTENDEES.find({
+            const attendees = await Database.ATTENDEE.find({
                 events: { $ne: [] },
             });
 
@@ -35,7 +35,7 @@ statsRouter.get(
                     .status(StatusCodes.BAD_REQUEST)
                     .json({ error: "MissingPriceParameter" });
             }
-            const attendees = await Database.ATTENDEES.find({
+            const attendees = await Database.ATTENDEE.find({
                 points: { $gte: price },
             });
 
@@ -52,7 +52,7 @@ statsRouter.get(
     RoleChecker([Role.enum.STAFF], false),
     async (req, res, next) => {
         try {
-            const attendees = await Database.ATTENDEES.find({
+            const attendees = await Database.ATTENDEE.find({
                 hasCheckedIn: true,
             });
 
@@ -102,23 +102,23 @@ statsRouter.get(
     async (req, res, next) => {
         try {
             const results = await Promise.allSettled([
-                Database.ATTENDEES.countDocuments({
+                Database.ATTENDEE.countDocuments({
                     allergies: { $size: 0 },
                     dietaryRestrictions: { $size: 0 },
                 }),
-                Database.ATTENDEES.countDocuments({
+                Database.ATTENDEE.countDocuments({
                     allergies: { $size: 0 },
                     dietaryRestrictions: { $ne: [] },
                 }),
-                Database.ATTENDEES.countDocuments({
+                Database.ATTENDEE.countDocuments({
                     allergies: { $ne: [] },
                     dietaryRestrictions: { $size: 0 },
                 }),
-                Database.ATTENDEES.countDocuments({
+                Database.ATTENDEE.countDocuments({
                     allergies: { $ne: [] },
                     dietaryRestrictions: { $ne: [] },
                 }),
-                Database.ATTENDEES.aggregate([
+                Database.ATTENDEE.aggregate([
                     {
                         $unwind: "$allergies",
                     },
@@ -129,7 +129,7 @@ statsRouter.get(
                         },
                     },
                 ]),
-                Database.ATTENDEES.aggregate([
+                Database.ATTENDEE.aggregate([
                     {
                         $unwind: "$dietaryRestrictions",
                     },

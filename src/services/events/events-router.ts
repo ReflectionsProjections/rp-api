@@ -1,86 +1,180 @@
+/* eslint no-var: 0 */
+/* eslint-disable  @typescript-eslint/no-explicit-any */
 import { Router } from "express";
 import { StatusCodes } from "http-status-codes";
-import { publicEventValidator } from "./events-schema";
+import { publicEventValidator, privateEventValidator } from "./events-schema";
 import { Database } from "../../database";
+import { checkInUserToEvent } from "./events-utils";
+import RoleChecker from "../../middleware/role-checker";
+import { Role } from "../auth/auth-models";
+import { isAdmin, isStaff } from "../auth/auth-utils";
 
 const eventsRouter = Router();
 
 // Get current or next event based on current time
-eventsRouter.get("/currentOrNext", async (req, res, next) => {
-    const currentTime = new Date();
+eventsRouter.get(
+    "/currentOrNext",
+    RoleChecker([], true),
+    async (req, res, next) => {
+        const currentTime = new Date();
+        const payload = res.locals.payload;
 
-    try {
-        const event = await Database.EVENTS.findOne({
-            startTime: { $gte: currentTime },
-        }).sort({ startTime: 1 });
+        const isUser = !(isStaff(payload) || isAdmin(payload));
 
-        if (event) {
-            return res.status(StatusCodes.OK).json(event);
-        } else {
-            return res
-                .status(StatusCodes.NO_CONTENT)
-                .json({ error: "DoesNotExist" });
+        try {
+            const event = await Database.EVENTS.findOne({
+                startTime: { $gte: currentTime },
+                isVisible: isUser ? { $eq: true } : {},
+            }).sort({ startTime: 1 });
+
+            if (event) {
+                return res.status(StatusCodes.OK).json(event);
+            } else {
+                return res
+                    .status(StatusCodes.NO_CONTENT)
+                    .json({ error: "DoesNotExist" });
+            }
+        } catch (error) {
+            next(error);
         }
-    } catch (error) {
-        next(error);
     }
-});
-
-eventsRouter.post("/", async (req, res, next) => {
-    try {
-        const validatedData = publicEventValidator.parse(req.body);
-        const event = new Database.EVENTS(validatedData);
-        await event.save();
-        return res.sendStatus(StatusCodes.CREATED);
-    } catch (error) {
-        next(error);
-    }
-});
-
-eventsRouter.get("/:EVENTID", async (req, res, next) => {
-    const eventId = req.params.EVENTID;
-    try {
-        const unfiltered_event = await Database.EVENTS.findOne({
-            eventId: eventId,
-        });
-
-        if (!unfiltered_event) {
-            return res
-                .status(StatusCodes.NOT_FOUND)
-                .json({ error: "DoesNotExist" });
-        }
-
-        const filtered_event = publicEventValidator.parse(unfiltered_event);
-
-        return res.status(StatusCodes.OK).json(filtered_event);
-    } catch (error) {
-        next(error);
-    }
-});
+);
 
 // Get all events
-eventsRouter.get("/", async (req, res, next) => {
+eventsRouter.get("/", RoleChecker([], true), async (req, res, next) => {
+    const payload = res.locals.payload;
+
+    var filterFunction;
+
     try {
-        const unfiltered_events = await Database.EVENTS.find();
-        const filtered_events = unfiltered_events.map((unfiltered_event) => {
-            return publicEventValidator.parse(unfiltered_event.toJSON());
-        });
+        var unfiltered_events = await Database.EVENTS.find();
+
+        if (isStaff(payload) || isAdmin(payload)) {
+            filterFunction = (x: any) => privateEventValidator.parse(x);
+        } else {
+            unfiltered_events = unfiltered_events.filter((x) => x.isVisible);
+            filterFunction = (x: any) => publicEventValidator.parse(x);
+        }
+
+        const filtered_events = unfiltered_events.map(filterFunction);
+        console.log(filtered_events);
         return res.status(StatusCodes.OK).json(filtered_events);
     } catch (error) {
         next(error);
     }
 });
 
-// Delete event
-eventsRouter.delete("/:EVENTID", async (req, res, next) => {
+eventsRouter.get("/:EVENTID", RoleChecker([], true), async (req, res, next) => {
+    // add RoleChecker here as well
     const eventId = req.params.EVENTID;
-    try {
-        await Database.EVENTS.findOneAndDelete({ eventId: eventId });
+    const payload = res.locals.payload;
 
-        return res.sendStatus(StatusCodes.NO_CONTENT);
+    var filterFunction;
+
+    try {
+        const event = await Database.EVENTS.findOne({ eventId: eventId });
+
+        if (!event) {
+            return res
+                .status(StatusCodes.NOT_FOUND)
+                .json({ error: "DoesNotExist" });
+        }
+
+        if (isStaff(payload) || isAdmin(payload)) {
+            filterFunction = privateEventValidator.parse;
+        } else {
+            filterFunction = publicEventValidator.parse;
+            if (!event.isVisible) {
+                return res
+                    .status(StatusCodes.NOT_FOUND)
+                    .json({ error: "DoesNotExist" });
+            }
+        }
+
+        const validatedData = filterFunction(event.toObject());
+        return res.status(StatusCodes.OK).json(validatedData);
     } catch (error) {
         next(error);
     }
 });
+
+eventsRouter.post(
+    "/",
+    RoleChecker([Role.Enum.STAFF]),
+    async (req, res, next) => {
+        try {
+            const validatedData = privateEventValidator.parse(req.body);
+            const event = new Database.EVENTS(validatedData);
+            await event.save();
+            return res.sendStatus(StatusCodes.CREATED);
+        } catch (error) {
+            next(error);
+        }
+    }
+);
+
+eventsRouter.put(
+    "/:EVENTID",
+    RoleChecker([Role.Enum.STAFF], true),
+    async (req, res, next) => {
+        const eventId = req.params.EVENTID;
+        try {
+            const validatedData = privateEventValidator.parse(req.body);
+            const event = await Database.EVENTS.findOneAndUpdate(
+                { eventId: eventId },
+                { $set: validatedData }
+            );
+
+            if (!event) {
+                return res
+                    .status(StatusCodes.NOT_FOUND)
+                    .json({ error: "DoesNotExist" });
+            }
+
+            return res.sendStatus(StatusCodes.OK);
+        } catch (error) {
+            next(error);
+        }
+    }
+);
+
+// Delete event
+eventsRouter.delete(
+    "/:EVENTID",
+    RoleChecker([Role.Enum.STAFF], true),
+    async (req, res, next) => {
+        const eventId = req.params.EVENTID;
+        try {
+            await Database.EVENTS.findOneAndDelete({ eventId: eventId });
+
+            return res.sendStatus(StatusCodes.NO_CONTENT);
+        } catch (error) {
+            next(error);
+        }
+    }
+);
+
+eventsRouter.post(
+    "/check-in",
+    RoleChecker([Role.Enum.STAFF], true),
+    async (req, res, next) => {
+        // add RoleChecker for staff
+        try {
+            const { eventId, userId } = req.body;
+            const result = await checkInUserToEvent(eventId, userId);
+            if (result.success) {
+                return res
+                    .status(StatusCodes.OK)
+                    .json({ message: "Check-in successful" });
+            } else {
+                return res
+                    .status(StatusCodes.NOT_FOUND)
+                    .json({ error: result.message });
+            }
+        } catch (error) {
+            next(error);
+        }
+    }
+);
 
 export default eventsRouter;
