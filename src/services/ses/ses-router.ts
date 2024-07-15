@@ -22,25 +22,8 @@ sesRouter.post(
         const emailList: string[] = req.body.emailList;
         const emailPromises: Promise<void>[] = [];
         for (let i = 0; i < emailList.length; i++) {
-            const params = {
-                Destination: {
-                    ToAddresses: [emailList[i]],
-                },
-                Message: {
-                    Body: {
-                        Text: {
-                            Data: "Hello from SES!",
-                        },
-                    },
-                    Subject: {
-                        Data: `Test Email ${i}`,
-                    },
-                },
-                Source: "no-reply@reflectionsprojections.org",
-            };
-
             emailPromises.push(
-                sendEmail(params)
+                sendEmail(emailList[i], "Hello from SES!", `Test Email ${i}`)
                     .then(() => {})
                     .catch((err) => {
                         console.error(

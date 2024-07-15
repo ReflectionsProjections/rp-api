@@ -81,6 +81,8 @@ export const Config = {
     // QR Scanning
     QR_HASH_ITERATIONS: 10000,
     QR_HASH_SECRET: getEnv("QR_HASH_SECRET"),
+
+    OUTGOING_EMAIL_ADDRESSES: "no-reply@reflectionsprojections.org",
 };
 
 export const DeviceRedirects: Record<string, string> = {

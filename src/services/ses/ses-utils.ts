@@ -1,8 +1,26 @@
-import { sendEmailParams } from "./ses-formats.js";
-import { ses } from "../../config";
+import { ses, Config } from "../../config";
 
 export function sendEmail(
-    params: sendEmailParams
+    emailId: string,
+    subject: string,
+    emailBody: string
 ): Promise<AWS.SES.SendEmailResponse> {
-    return ses.sendEmail(params).promise();
+    return ses
+        .sendEmail({
+            Destination: {
+                ToAddresses: [emailId],
+            },
+            Message: {
+                Body: {
+                    Text: {
+                        Data: emailBody,
+                    },
+                },
+                Subject: {
+                    Data: subject,
+                },
+            },
+            Source: Config.OUTGOING_EMAIL_ADDRESSES,
+        })
+        .promise();
 }
