@@ -7,6 +7,7 @@ import { Role } from "../auth/auth-models";
 import { S3 } from "@aws-sdk/client-s3";
 import { getResumeUrl, postResumeUrl } from "./s3-utils";
 import BatchResumeDownloadValidator from "./s3-schema";
+import { BucketName } from "../../config";
 
 const s3Router: Router = Router();
 
@@ -21,7 +22,11 @@ s3Router.get(
         const userId: string = payload.userId;
 
         try {
-            const { url, fields } = await postResumeUrl(userId, s3);
+            const { url, fields } = await postResumeUrl(
+                userId,
+                s3,
+                BucketName.RP_2024_RESUMES
+            );
             return res.status(StatusCodes.OK).send({ url, fields });
         } catch (error) {
             next(error);
@@ -40,7 +45,11 @@ s3Router.get(
         const s3 = res.locals.s3 as S3;
 
         try {
-            const downloadUrl = await getResumeUrl(userId, s3);
+            const downloadUrl = await getResumeUrl(
+                userId,
+                s3,
+                BucketName.RP_2024_RESUMES
+            );
             return res.status(StatusCodes.OK).send({ url: downloadUrl });
         } catch (error) {
             next(error);
@@ -57,7 +66,11 @@ s3Router.get(
         const s3 = res.locals.s3 as S3;
 
         try {
-            const downloadUrl = await getResumeUrl(userId, s3);
+            const downloadUrl = await getResumeUrl(
+                userId,
+                s3,
+                BucketName.RP_2024_RESUMES
+            );
             return res.status(StatusCodes.OK).send({ url: downloadUrl });
         } catch (error) {
             next(error);
