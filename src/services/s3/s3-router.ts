@@ -89,7 +89,7 @@ s3Router.get(
             const { userIds } = BatchResumeDownloadValidator.parse(req.body);
 
             const batchDownloadPromises = userIds.map((userId) =>
-                getResumeUrl(userId, s3)
+                getResumeUrl(userId, s3, BucketName.RP_2024_RESUMES)
                     .then((url) => ({ userId, url: url }))
                     .catch(() => ({ userId, url: null }))
             );
