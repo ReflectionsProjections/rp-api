@@ -12,7 +12,7 @@ export const MailingListName = z.enum(["rp_interest"]);
 export enum BucketName {
     RP_2024_RESUMES = "rp-2024-resumes",
     RP_2024_SPEAKERS = "rp-2024-speakers",
-};
+}
 
 export const Config = {
     DEFAULT_APP_PORT: 3000,
