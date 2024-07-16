@@ -28,10 +28,6 @@ import {
     NotificationsSchema,
     NotificationsValidator,
 } from "./services/notifications/notifications-schema";
-import {
-    SpeakerSchema,
-    SpeakerValidator,
-} from "./services/speakers/speakers-schema";
 
 mongoose.set("toObject", { versionKey: false });
 
@@ -93,5 +89,4 @@ export const Database = {
         NotificationsSchema,
         NotificationsValidator
     ),
-    SPEAKERS: initializeModel("speakers", SpeakerSchema, SpeakerValidator),
 };
