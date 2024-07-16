@@ -173,4 +173,34 @@ attendeeRouter.get(
     }
 );
 
+// Update an attendee with partial data
+attendeeRouter.put(
+    "/update",
+    RoleChecker([Role.Enum.USER]),
+    async (req, res, next) => {
+        const payload = res.locals.payload;
+        const userId = payload.userId;
+
+        try {
+            const updateData = PartialAttendeeValidator.parse(req.body);
+
+            const attendee = await Database.ATTENDEE.findOneAndUpdate(
+                { userId },
+                { $set: updateData },
+                { new: true, runValidators: true }
+            );
+
+            if (!attendee) {
+                return res
+                    .status(StatusCodes.NOT_FOUND)
+                    .json({ error: "UserNotFound" });
+            }
+
+            return res.status(StatusCodes.OK).json(attendee);
+        } catch (error) {
+            next(error);
+        }
+    }
+);
+
 export default attendeeRouter;
