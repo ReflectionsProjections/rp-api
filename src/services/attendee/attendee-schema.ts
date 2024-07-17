@@ -96,4 +96,4 @@ export const PartialAttendeeValidator = AttendeeValidator.partial();
 export const AttendeeFilterValidator = z.object({
     in: PartialAttendeeValidator,
     out: PartialAttendeeValidator,
-})
+});
