@@ -96,6 +96,6 @@ export const PartialAttendeeValidator = AttendeeValidator.partial();
 export const AttendeeFilterValidator = z.object({
     filter: PartialAttendeeValidator,
     projection: z.array(
-        z.record(PartialAttendeeValidator.keyof(), z.number().min(0).max(1))
+        z.record(PartialAttendeeValidator.keyof(), z.number().min(1).max(1))
     ),
 });
