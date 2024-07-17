@@ -157,7 +157,7 @@ attendeeRouter.get(
 // Get attendees based on a partial filter in body
 attendeeRouter.get(
     "/filter",
-    // RoleChecker([Role.Enum.STAFF, Role.Enum.CORPORATE]),
+    RoleChecker([Role.Enum.STAFF, Role.Enum.CORPORATE]),
     async (req, res, next) => {
         try {
             const attendeeData = AttendeeFilterValidator.parse(req.body);
