@@ -12,6 +12,7 @@ export const AttendeeValidator = z.object({
     hasCheckedIn: z.boolean().default(false),
     points: z.number().min(0).default(0),
     foodWave: z.number().int().min(0).default(0),
+    hasResume: z.boolean(),
     hasPriority: z
         .object({
             Mon: z.boolean().default(false),
@@ -44,6 +45,7 @@ export const AttendeeSchema = new Schema({
     hasCheckedIn: { type: Boolean, default: false },
     points: { type: Number, default: 0 },
     foodWave: { type: Number, default: 0 },
+    hasResume: { type: Boolean, default: false },
     hasPriority: {
         type: new Schema(
             {

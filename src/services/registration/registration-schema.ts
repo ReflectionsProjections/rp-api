@@ -21,7 +21,7 @@ const RegistrationValidator = z.object({
     jobInterest: z.array(z.string()).nullable().optional(),
     isInterestedMechMania: z.boolean(),
     isInterestedPuzzleBang: z.boolean(),
-    hasResume: z.boolean().optional(),
+    hasResume: z.boolean().default(false),
     hasSubmitted: z.boolean().optional(),
 });
 
