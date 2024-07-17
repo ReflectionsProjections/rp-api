@@ -185,11 +185,11 @@ attendeeRouter.get(
     async (req, res, next) => {
         try {
             const attendeeData = AttendeeFilterValidator.parse(req.body);
+            const projection = Object.assign({}, ...attendeeData.projection);
             const attendees = await Database.ATTENDEE.find(
-                attendeeData.in,
-                attendeeData.out
+                attendeeData.filter,
+                projection
             );
-
             return res.status(StatusCodes.OK).json(attendees);
         } catch (error) {
             next(error);
