@@ -118,9 +118,9 @@ registrationRouter.get(
         try {
             const filterData = RegistrationFilterValidator.parse(req.body);
             const projection = Object.assign({}, ...filterData.projection);
-            const attendees = await Database.ATTENDEE.find(
+            const attendees = await Database.REGISTRATION.find(
                 filterData.filter,
-                projection
+                { ...projection, hasSubmitted: 1 }
             );
             return res.status(StatusCodes.OK).json(attendees);
         } catch (error) {
