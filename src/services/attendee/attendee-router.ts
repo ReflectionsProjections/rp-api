@@ -132,7 +132,7 @@ attendeeRouter.get(
 
 attendeeRouter.get(
     "/points",
-    RoleChecker([Role.Enum.ADMIN]),
+    RoleChecker([Role.Enum.USER]),
     async (req, res, next) => {
         try {
             const payload = res.locals.payload;
