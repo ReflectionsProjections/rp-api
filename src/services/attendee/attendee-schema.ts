@@ -94,8 +94,8 @@ export const EventIdValidator = z.object({
 export const PartialAttendeeValidator = AttendeeValidator.partial();
 
 export const AttendeeFilterValidator = z.object({
-    in: PartialAttendeeValidator,
-    out: z.array(
+    filter: PartialAttendeeValidator,
+    projection: z.array(
         z.record(PartialAttendeeValidator.keyof(), z.number().min(0).max(1))
     ),
 });
