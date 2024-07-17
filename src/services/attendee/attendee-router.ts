@@ -3,7 +3,7 @@ import { StatusCodes } from "http-status-codes";
 import {
     AttendeeValidator,
     EventIdValidator,
-    PartialAttendeeValidator,
+    AttendeeFilterValidator,
 } from "./attendee-schema";
 import { Database } from "../../database";
 import RoleChecker from "../../middleware/role-checker";
@@ -160,10 +160,10 @@ attendeeRouter.get(
     RoleChecker([Role.Enum.STAFF, Role.Enum.CORPORATE]),
     async (req, res, next) => {
         try {
-            const attendeeData = PartialAttendeeValidator.parse(req.body);
+            const attendeeData = AttendeeFilterValidator.parse(req.body);
             const attendees = await Database.ATTENDEE.find(
-                attendeeData,
-                "userId"
+                attendeeData.in,
+                attendeeData.out
             );
 
             return res.status(StatusCodes.OK).json(attendees);

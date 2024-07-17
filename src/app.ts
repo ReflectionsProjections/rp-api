@@ -18,7 +18,6 @@ import notificationsRouter from "./services/notifications/notifications-router";
 import registrationRouter from "./services/registration/registration-router";
 import s3Router from "./services/s3/s3-router";
 import statsRouter from "./services/stats/stats-router";
-import sponsorRouter from "./services/sponsor/sponsor-router";
 import subscriptionRouter from "./services/subscription/subscription-router";
 import speakersRouter from "./services/speakers/speakers-router";
 
@@ -46,7 +45,6 @@ app.use("/notifications", databaseMiddleware, notificationsRouter);
 app.use("/registration", databaseMiddleware, registrationRouter);
 app.use("/s3", databaseMiddleware, s3Router);
 app.use("/stats", databaseMiddleware, statsRouter);
-app.use("/sponsor", databaseMiddleware, sponsorRouter);
 app.use("/subscription", databaseMiddleware, subscriptionRouter);
 app.use("/speakers", databaseMiddleware, speakersRouter);
 
