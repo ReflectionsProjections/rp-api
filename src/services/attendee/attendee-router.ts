@@ -162,8 +162,8 @@ attendeeRouter.get(
         try {
             const attendeeData = AttendeeFilterValidator.parse(req.body);
             const attendees = await Database.ATTENDEE.find(
-                attendeeData,
-                "userId"
+                attendeeData.in,
+                attendeeData.out,
             );
 
             return res.status(StatusCodes.OK).json(attendees);
