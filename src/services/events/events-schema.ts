@@ -13,6 +13,7 @@ export const publicEventValidator = z.object({
     description: z.string(),
     isVirtual: z.boolean(),
     imageUrl: z.string().nullable().optional(),
+    location: z.string().nullable().optional(),
     eventType: EventType,
 });
 
@@ -53,6 +54,10 @@ export const EventSchema = new Schema({
         required: true,
     },
     imageUrl: {
+        type: String,
+        default: null,
+    },
+    location: {
         type: String,
         default: null,
     },
