@@ -1,6 +1,9 @@
 import { Router } from "express";
 import { StatusCodes } from "http-status-codes";
-import { RegistrationValidator } from "./registration-schema";
+import {
+    RegistrationFilterValidator,
+    RegistrationValidator,
+} from "./registration-schema";
 import { Database } from "../../database";
 import RoleChecker from "../../middleware/role-checker";
 import { Role } from "../auth/auth-models";
@@ -106,5 +109,24 @@ registrationRouter.get("/", RoleChecker([]), async (req, res, next) => {
         next(error);
     }
 });
+
+// Get attendees based on a partial filter in body
+registrationRouter.get(
+    "/filter",
+    RoleChecker([Role.Enum.STAFF, Role.Enum.CORPORATE]),
+    async (req, res, next) => {
+        try {
+            const filterData = RegistrationFilterValidator.parse(req.body);
+            const projection = Object.assign({}, ...filterData.projection);
+            const attendees = await Database.REGISTRATION.find(
+                filterData.filter,
+                { ...projection, hasSubmitted: 1 }
+            );
+            return res.status(StatusCodes.OK).json(attendees);
+        } catch (error) {
+            next(error);
+        }
+    }
+);
 
 export default registrationRouter;
