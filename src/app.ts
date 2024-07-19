@@ -3,6 +3,7 @@ import { StatusCodes } from "http-status-codes";
 import { Config } from "./config";
 import { rateLimiter } from "./middleware/rateLimiter";
 import { isTest } from "./utilities";
+import AWS from "aws-sdk";
 
 import databaseMiddleware from "./middleware/database-middleware";
 import customCors from "./middleware/cors-middleware";
@@ -20,6 +21,12 @@ import s3Router from "./services/s3/s3-router";
 import statsRouter from "./services/stats/stats-router";
 import subscriptionRouter from "./services/subscription/subscription-router";
 import speakersRouter from "./services/speakers/speakers-router";
+
+AWS.config.update({
+    region: Config.S3_REGION,
+    accessKeyId: Config.S3_ACCESS_KEY,
+    secretAccessKey: Config.S3_SECRET_KEY,
+});
 
 const app = express();
 

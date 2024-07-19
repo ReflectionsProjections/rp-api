@@ -3,6 +3,8 @@ import dotenv from "dotenv";
 import { z } from "zod";
 import { getEnv } from "./utilities";
 
+import AWS from "aws-sdk";
+
 dotenv.config();
 
 export const Environment = z.enum(["PRODUCTION", "DEVELOPMENT", "TESTING"]);
@@ -79,6 +81,8 @@ export const Config = {
     // QR Scanning
     QR_HASH_ITERATIONS: 10000,
     QR_HASH_SECRET: getEnv("QR_HASH_SECRET"),
+
+    OUTGOING_EMAIL_ADDRESSES: z.enum(["no-reply@reflectionsprojections.org"]),
 };
 
 export const DeviceRedirects: Record<string, string> = {
@@ -86,5 +90,9 @@ export const DeviceRedirects: Record<string, string> = {
     dev: "https://api.reflectionsprojections.org/auth/dev/",
     mobile: "exp://192.168.86.24:8081/--/Main",
 };
+
+export const ses = new AWS.SES({
+    region: Config.S3_REGION,
+});
 
 export default Config;
