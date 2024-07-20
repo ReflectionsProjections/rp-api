@@ -59,3 +59,9 @@ export function isStaff(payload?: JwtPayloadType) {
 export function isAdmin(payload?: JwtPayloadType) {
     return payload?.roles.includes(Role.Enum.ADMIN);
 }
+
+export async function sponsorExists(email: string) {
+    const response = await Database.CORPORATE.findOne({ email: email });
+    if (!response) return false;
+    return true;
+}
