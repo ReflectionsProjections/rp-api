@@ -21,7 +21,7 @@ const RegistrationValidator = z.object({
     jobInterest: z.array(z.string()).nullable().optional(),
     isInterestedMechMania: z.boolean(),
     isInterestedPuzzleBang: z.boolean(),
-    hasResume: z.boolean().optional(),
+    hasResume: z.boolean().default(false),
     hasSubmitted: z.boolean().optional(),
 });
 
@@ -49,4 +49,18 @@ const RegistrationSchema = new mongoose.Schema({
     hasSubmitted: { type: Boolean, default: false },
 });
 
-export { RegistrationSchema, RegistrationValidator };
+// Partial schema for attendee filter
+const PartialRegistrationValidator = RegistrationValidator.partial();
+
+const RegistrationFilterValidator = z.object({
+    filter: PartialRegistrationValidator,
+    projection: z.array(
+        z.record(PartialRegistrationValidator.keyof(), z.number().min(1).max(1))
+    ),
+});
+
+export {
+    RegistrationSchema,
+    RegistrationValidator,
+    RegistrationFilterValidator,
+};
