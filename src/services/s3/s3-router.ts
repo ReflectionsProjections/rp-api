@@ -85,11 +85,13 @@ s3Router.get(
                 batchDownloadPromises
             );
 
-            const filteredUrls = batchDownloadResults.forEach((result) => {
-                if (result.status === "fulfilled") {
-                    return result.value;
-                }
-            });
+            batchDownloadPromises.forEach((bdp) => console.log(bdp));
+
+            const filteredUrls = batchDownloadResults
+                .filter((result) => result.status === "fulfilled")
+                .map((result) => {
+                    return result.value.url;
+                });
 
             const errors = batchDownloadResults.filter(
                 (result) => result.status === "rejected"
