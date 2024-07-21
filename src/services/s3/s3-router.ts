@@ -90,7 +90,12 @@ s3Router.get(
             const filteredUrls = batchDownloadResults
                 .filter((result) => result.status === "fulfilled")
                 .map((result) => {
-                    return result.value.url;
+                    return (
+                        result as PromiseFulfilledResult<{
+                            userId: string;
+                            url: string | null;
+                        }>
+                    ).value.url;
                 });
 
             const errors = batchDownloadResults.filter(
