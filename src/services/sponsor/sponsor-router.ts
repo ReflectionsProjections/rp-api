@@ -6,7 +6,7 @@ import { StatusCodes } from "http-status-codes";
 import { sendEmail } from "../ses/ses-utils";
 import jsonwebtoken from "jsonwebtoken";
 import { Config } from "../../config";
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from "bcrypt";
 const sponsorRouter = Router();
 
 // Get favorite events for an attendee
