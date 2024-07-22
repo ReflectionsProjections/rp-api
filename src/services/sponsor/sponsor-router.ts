@@ -42,13 +42,13 @@ function createSixDigitCode() {
     return result;
 }
 
-function encryptSixDigitCode(sixDigitCode) {
-    console.log("SixDijit: ", sixDigitCode)
-    const saltRounds = 10; 
+function encryptSixDigitCode(sixDigitCode: string): string {
+    console.log("SixDigit: ", sixDigitCode);
+    const saltRounds = 10;
 
     try {
         const hash = bcrypt.hashSync(sixDigitCode, saltRounds);
-        return hash
+        return hash;
     } catch (err) {
         console.error('Error encrypting the code:', err);
         throw err;
