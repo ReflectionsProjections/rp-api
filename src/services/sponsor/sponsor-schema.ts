@@ -9,6 +9,6 @@ export const SponsorSchema = new mongoose.Schema({
 
 export const SponsorValidator = z.object({
     email: z.string().email(),
-    hashedVerificationCode: z.string(), 
+    hashedVerificationCode: z.string(),
     expTime: z.number().int(),
 });
