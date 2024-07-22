@@ -97,10 +97,6 @@ export const Database = {
         NotificationsSchema,
         NotificationsValidator
     ),
-    SPONSOR: initializeModel(
-        "sponsor",
-        SponsorSchema,
-        SponsorValidator
-    ),
+    SPONSOR: initializeModel("sponsor", SponsorSchema, SponsorValidator),
     SPEAKERS: initializeModel("speakers", SpeakerSchema, SpeakerValidator),
 };

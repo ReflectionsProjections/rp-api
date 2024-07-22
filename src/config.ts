@@ -94,7 +94,7 @@ export const DeviceRedirects: Record<string, string> = {
 export const ses = new AWS.SES({
     region: Config.S3_REGION,
     accessKeyId: Config.S3_ACCESS_KEY,
-    secretAccessKey: Config.S3_SECRET_KEY
+    secretAccessKey: Config.S3_SECRET_KEY,
 });
 
 export default Config;
