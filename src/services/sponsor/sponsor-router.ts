@@ -73,15 +73,24 @@ sponsorRouter.post(
             const expTime = Math.floor(Date.now() / 1000) + 120; //2 minutes
             console.log("expTime: ", expTime)
             const hashedVerificationCode = encryptSixDigitCode(sixDigitCode);
-            console.log("hashed code: ", hashedVerificationCode)
-            //create auth collection
-            //store hashedCode and expTime in mongo auth collection
-            const validatedData = SponsorValidator.parse({email, hashedVerificationCode, expTime});
-            console.log("test")
-            const sponsor = new Database.SPONSOR(validatedData);
-            await sponsor.save();
-            //send verification email to email adress
-            await sendEmail(email, 'RP-Verify your Email', ` Verifiction Code: ${sixDigitCode}`);
+            // const validatedData = SponsorValidator.parse({email, hashedVerificationCode, expTime});
+            console.log("created hashed code:",hashedVerificationCode)
+            // const sponsor = new Database.SPONSOR(validatedData);
+            // await sponsor.save();
+            await Database.SPONSOR.findOneAndUpdate(
+                { email }, 
+                {
+                  $set: {
+                    hashed_code: hashedVerificationCode,
+                    expiration_time: expTime,
+                  },
+                },
+                { upsert: true }
+              );
+              console.log("added to sponsor collectoin")
+
+             await sendEmail(email, 'RP-Verify your Email', ` Verifiction Code: ${sixDigitCode}`);
+            console.log("sent email")
             return res.sendStatus(StatusCodes.CREATED);
         } catch (error) {
             next(error);
@@ -92,31 +101,33 @@ sponsorRouter.post(
 sponsorRouter.post(
     "/verify",
     async (req, res, next) => {
-        const { email, sixDigitCode } = req.body;
+        const { email, sixDigitCodeInput } = req.body;
         try {
 
             const sponsorData = await Database.SPONSOR.findOne({ email: email });
             const { hashedVerificationCode, expTime } = sponsorData
+            console.log("retrieved hashedcode: ",hashedVerificationCode)
             if (new Date() > expTime){
                 return res.status(401).json({ message: 'Code expired' });
             }
-            const match = await bcrypt.compareSync(sixDigitCode, hashedVerificationCode)
+            const match = await bcrypt.compareSync(sixDigitCodeInput, hashedVerificationCode)
             if (!match) {
               return res.status(401).json({ message: 'Incorrect Code' });
             }
+            console.log("matched the code")
             await Database.SPONSOR.deleteOne({ email });
-
-        const token = jsonwebtoken.sign(
-            {
-            email,
-            role: 'CORPORATE'
-            },
-            Config.JWT_SIGNING_SECRE, 
-            {
-            expiresIn: Config.JWT_EXPIRATION_TIME,
-            }
-        );
-        res.json({ token });
+            console.log("removed email from collection");
+            const token = jsonwebtoken.sign(
+                {
+                email,
+                role: 'CORPORATE'
+                },
+                Config.JWT_SIGNING_SECRET, 
+                {
+                expiresIn: Config.JWT_EXPIRATION_TIME,
+                }
+            );
+            res.json({ token });
         } catch (error) {
             next(error);
         }
