@@ -3,16 +3,11 @@ import { Database } from "../../database";
 import RoleChecker from "../../middleware/role-checker";
 import { Role } from "../auth/auth-models";
 import { StatusCodes } from "http-status-codes";
-import { SponsorValidator } from "./sponsor-schema";
 import {sendEmail} from "../ses/ses-utils"
 import jsonwebtoken from "jsonwebtoken";
 import { Config } from "../../config";
 const bcrypt = require('bcrypt');
 const sponsorRouter = Router();
-
-sponsorRouter.get('/test', (req, res) => {
-    res.status(200).send({ message: 'Route found' });
-  });
 
 // Get favorite events for an attendee
 sponsorRouter.get(
@@ -65,32 +60,20 @@ sponsorRouter.post(
     async (req, res, next) => {
         const { email } = req.body;
         try {
-            console.log("email: ", email)
-            console.log("req: ", req.body)
-
             const sixDigitCode = createSixDigitCode();
-            console.log("SixDijit: ", sixDigitCode)
-            const expTime = Math.floor(Date.now() / 1000) + 120; //2 minutes
-            console.log("expTime: ", expTime)
+            const expTime = Math.floor(Date.now() / 1000) + 300;
             const hashedVerificationCode = encryptSixDigitCode(sixDigitCode);
-            // const validatedData = SponsorValidator.parse({email, hashedVerificationCode, expTime});
-            console.log("created hashed code:",hashedVerificationCode)
-            // const sponsor = new Database.SPONSOR(validatedData);
-            // await sponsor.save();
             await Database.SPONSOR.findOneAndUpdate(
                 { email }, 
                 {
                   $set: {
-                    hashed_code: hashedVerificationCode,
-                    expiration_time: expTime,
+                    hashedVerificationCode: hashedVerificationCode,
+                    expTime: expTime, 
                   },
                 },
                 { upsert: true }
               );
-              console.log("added to sponsor collectoin")
-
-             await sendEmail(email, 'RP-Verify your Email', ` Verifiction Code: ${sixDigitCode}`);
-            console.log("sent email")
+             await sendEmail(email, 'RP-Sponor Email Verification!', `Here is your verification code: ${sixDigitCode}`);
             return res.sendStatus(StatusCodes.CREATED);
         } catch (error) {
             next(error);
@@ -103,20 +86,19 @@ sponsorRouter.post(
     async (req, res, next) => {
         const { email, sixDigitCodeInput } = req.body;
         try {
-
-            const sponsorData = await Database.SPONSOR.findOne({ email: email });
+            const sponsorData = await Database.SPONSOR.findOne({ email });
+            if (!sponsorData) {
+              return res.status(401).json({ message: 'No Access' });
+            }
             const { hashedVerificationCode, expTime } = sponsorData
-            console.log("retrieved hashedcode: ",hashedVerificationCode)
-            if (new Date() > expTime){
+            if (Math.floor(Date.now() / 1000) > expTime){
                 return res.status(401).json({ message: 'Code expired' });
             }
             const match = await bcrypt.compareSync(sixDigitCodeInput, hashedVerificationCode)
             if (!match) {
               return res.status(401).json({ message: 'Incorrect Code' });
             }
-            console.log("matched the code")
             await Database.SPONSOR.deleteOne({ email });
-            console.log("removed email from collection");
             const token = jsonwebtoken.sign(
                 {
                 email,
