@@ -32,6 +32,10 @@ import {
     SpeakerSchema,
     SpeakerValidator,
 } from "./services/speakers/speakers-schema";
+import {
+    SponsorSchema,
+    SponsorValidator,
+} from "./services/sponsor/sponsor-schema";
 
 mongoose.set("toObject", { versionKey: false });
 
@@ -92,6 +96,11 @@ export const Database = {
         "notifications",
         NotificationsSchema,
         NotificationsValidator
+    ),
+    SPONSOR: initializeModel(
+        "sponsor",
+        SponsorSchema,
+        SponsorValidator
     ),
     SPEAKERS: initializeModel("speakers", SpeakerSchema, SpeakerValidator),
 };
