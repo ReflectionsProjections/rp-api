@@ -1,11 +1,11 @@
 import { Router } from "express";
-import { Database } from "../../database";
-import RoleChecker from "../../middleware/role-checker";
-import { Role } from "../auth/auth-models";
+import { Database } from "../../../database";
+import RoleChecker from "../../../middleware/role-checker";
+import { Role } from "../auth-models";
 import { StatusCodes } from "http-status-codes";
-import { sendEmail } from "../ses/ses-utils";
+import { sendEmail } from "../../ses/ses-utils";
 import jsonwebtoken from "jsonwebtoken";
-import { Config } from "../../config";
+import { Config } from "../../../config";
 import * as bcrypt from "bcrypt";
 const sponsorRouter = Router();
 
@@ -81,7 +81,7 @@ sponsorRouter.post("/login", async (req, res, next) => {
 });
 
 sponsorRouter.post("/verify", async (req, res, next) => {
-    const { email, sixDigitCodeInput } = req.body;
+    const { email, sixDigitCode } = req.body;
     try {
         const sponsorData = await Database.SPONSOR.findOne({ email });
         if (!sponsorData) {
@@ -92,7 +92,7 @@ sponsorRouter.post("/verify", async (req, res, next) => {
             return res.status(401).json({ message: "Code expired" });
         }
         const match = await bcrypt.compareSync(
-            sixDigitCodeInput,
+            sixDigitCode,
             hashedVerificationCode
         );
         if (!match) {

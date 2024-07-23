@@ -35,7 +35,7 @@ import {
 import {
     SponsorSchema,
     SponsorValidator,
-} from "./services/sponsor/sponsor-schema";
+} from "./services/auth/sponsor/sponsor-schema";
 
 mongoose.set("toObject", { versionKey: false });
 
@@ -97,6 +97,6 @@ export const Database = {
         NotificationsSchema,
         NotificationsValidator
     ),
-    SPONSOR: initializeModel("sponsor", SponsorSchema, SponsorValidator),
+    SPONSOR: initializeModel("auth_codes", SponsorSchema, SponsorValidator),
     SPEAKERS: initializeModel("speakers", SpeakerSchema, SpeakerValidator),
 };

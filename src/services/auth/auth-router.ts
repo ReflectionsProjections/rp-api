@@ -10,6 +10,7 @@ import RoleChecker from "../../middleware/role-checker";
 import { Role } from "../auth/auth-models";
 import { AuthRoleChangeRequest } from "./auth-schema";
 import { z } from "zod";
+import sponsorRouter from "./sponsor/sponsor-router";
 
 const authStrategies: Record<string, GoogleStrategy> = {};
 
@@ -18,6 +19,8 @@ for (const key in DeviceRedirects) {
 }
 
 const authRouter = Router();
+
+authRouter.use("/sponsor", sponsorRouter);
 
 // Remove role from userId by email address (admin only endpoint)
 authRouter.delete(
