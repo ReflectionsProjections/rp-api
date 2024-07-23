@@ -165,4 +165,34 @@ authRouter.get(
     }
 );
 
+authRouter.post(
+    "/corporate/:email",
+    RoleChecker([Role.Enum.ADMIN], true),
+    async (req, res, next) => {
+        try {
+            const email = req.params.email;
+            const corporate = new Database.CORPORATE({ email: email });
+            await corporate.save();
+            return res.status(StatusCodes.CREATED).json(email);
+        } catch (error) {
+            next(error);
+        }
+    }
+);
+
+authRouter.delete(
+    "/corporate/:email",
+    RoleChecker([Role.Enum.ADMIN], true),
+    async (req, res, next) => {
+        try {
+            const email = req.params.email;
+            await Database.CORPORATE.findOneAndDelete({ email: email });
+
+            return res.sendStatus(StatusCodes.NO_CONTENT);
+        } catch (error) {
+            next(error);
+        }
+    }
+);
+
 export default authRouter;

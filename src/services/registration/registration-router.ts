@@ -111,7 +111,7 @@ registrationRouter.get("/", RoleChecker([]), async (req, res, next) => {
 });
 
 // Get attendees based on a partial filter in body
-registrationRouter.get(
+registrationRouter.post(
     "/filter",
     RoleChecker([Role.Enum.STAFF, Role.Enum.CORPORATE]),
     async (req, res, next) => {

@@ -36,6 +36,10 @@ import {
     SponsorSchema,
     SponsorValidator,
 } from "./services/auth/sponsor/sponsor-schema";
+import {
+    CorporateSchema,
+    CorporateValidator,
+} from "./services/auth/corporate-schema";
 
 mongoose.set("toObject", { versionKey: false });
 
@@ -99,4 +103,9 @@ export const Database = {
     ),
     SPONSOR: initializeModel("auth_codes", SponsorSchema, SponsorValidator),
     SPEAKERS: initializeModel("speakers", SpeakerSchema, SpeakerValidator),
+    CORPORATE: initializeModel(
+        "corporate",
+        CorporateSchema,
+        CorporateValidator
+    ),
 };
