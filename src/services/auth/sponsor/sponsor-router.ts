@@ -59,7 +59,7 @@ sponsorRouter.post("/login", async (req, res, next) => {
         const sixDigitCode = createSixDigitCode();
         const expTime = Math.floor(Date.now() / 1000) + 300;
         const hashedVerificationCode = encryptSixDigitCode(sixDigitCode);
-        await Database.SPONSOR.findOneAndUpdate(
+        await Database.AUTH_CODES.findOneAndUpdate(
             { email },
             {
                 $set: {
@@ -83,7 +83,7 @@ sponsorRouter.post("/login", async (req, res, next) => {
 sponsorRouter.post("/verify", async (req, res, next) => {
     const { email, sixDigitCode } = req.body;
     try {
-        const sponsorData = await Database.SPONSOR.findOne({ email });
+        const sponsorData = await Database.AUTH_CODES.findOne({ email });
         if (!sponsorData) {
             return res.status(401).json({ message: "No Access" });
         }
@@ -98,7 +98,7 @@ sponsorRouter.post("/verify", async (req, res, next) => {
         if (!match) {
             return res.status(401).json({ message: "Incorrect Code" });
         }
-        await Database.SPONSOR.deleteOne({ email });
+        await Database.AUTH_CODES.deleteOne({ email });
         const token = jsonwebtoken.sign(
             {
                 email,

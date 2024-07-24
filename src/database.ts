@@ -101,7 +101,7 @@ export const Database = {
         NotificationsSchema,
         NotificationsValidator
     ),
-    SPONSOR: initializeModel("auth_codes", SponsorSchema, SponsorValidator),
+    AUTH_CODES: initializeModel("auth_codes", SponsorSchema, SponsorValidator),
     SPEAKERS: initializeModel("speakers", SpeakerSchema, SpeakerValidator),
     CORPORATE: initializeModel(
         "corporate",
