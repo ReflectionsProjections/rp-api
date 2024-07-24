@@ -38,3 +38,30 @@ export function sendEmail(
         })
         .promise();
 }
+
+export function sendHTMLEmail(
+    emailId: string,
+    subject: string,
+    emailHtml: string
+): Promise<AWS.SES.SendEmailResponse> {
+    return ses
+        .sendEmail({
+            Destination: {
+                ToAddresses: [emailId],
+            },
+            Message: {
+                Body: {
+                    Html: {
+                        Data: emailHtml,
+                    },
+                },
+                Subject: {
+                    Data: subject,
+                },
+            },
+            Source: Config.OUTGOING_EMAIL_ADDRESSES.Enum[
+                "no-reply@reflectionsprojections.org"
+            ],
+        })
+        .promise();
+}
