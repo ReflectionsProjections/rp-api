@@ -21,7 +21,6 @@ import s3Router from "./services/s3/s3-router";
 import statsRouter from "./services/stats/stats-router";
 import subscriptionRouter from "./services/subscription/subscription-router";
 import speakersRouter from "./services/speakers/speakers-router";
-// import sponsorRouter from "./services/sponsor/sponsor-router";
 
 AWS.config.update({
     region: Config.S3_REGION,
@@ -55,7 +54,6 @@ app.use("/s3", databaseMiddleware, s3Router);
 app.use("/stats", databaseMiddleware, statsRouter);
 app.use("/subscription", databaseMiddleware, subscriptionRouter);
 app.use("/speakers", databaseMiddleware, speakersRouter);
-// app.use("/sponsor", databaseMiddleware, sponsorRouter);
 
 app.get("/status", (_, res) => {
     return res.status(StatusCodes.OK).send("API is alive!");
