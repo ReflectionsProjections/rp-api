@@ -32,7 +32,7 @@ puzzlebangRouter.post(
 
             return res.sendStatus(StatusCodes.OK);
         } catch (error) {
-            next(error)
+            next(error);
         }
     }
 );
