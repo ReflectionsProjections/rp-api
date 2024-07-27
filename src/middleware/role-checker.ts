@@ -45,6 +45,7 @@ export default function RoleChecker(
                 userRoles.includes(Role.Enum.ADMIN) ||
                 userRoles.includes(Role.Enum.STAFF)
             ) {
+                console.log("skipped!");
                 return next();
             }
 

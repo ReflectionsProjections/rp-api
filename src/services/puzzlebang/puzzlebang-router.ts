@@ -7,39 +7,33 @@ import { PuzzlebangCompleteRequestValidator } from "./puzzlebang-validators";
 
 const puzzlebangRouter = Router();
 
-// Favorite an event for an attendee
-puzzlebangRouter.get(
-    "/:EMAIL",
-    RoleChecker([Role.Enum.PUZZLEBANG]),
-    async (req, res, next) => {
-        const email = req.params.EMAIL;
-        console.log("email:", email);
-
-        const userId = await Database.ATTENDEE.findOne({
-            emailAddress: email,
-        }).select("userId");
-
-        if (userId) {
-            return res.status(StatusCodes.OK).json({ userId });
-        } else {
-            return res.sendStatus(StatusCodes.NOT_FOUND);
-        }
-    }
-);
-
 puzzlebangRouter.post(
-    "/complete",
+    "/",
     RoleChecker([Role.Enum.PUZZLEBANG]),
     async (req, res, next) => {
         try {
-            const requestInfo = PuzzlebangCompleteRequestValidator.parse(req.body);
-            console.log(requestInfo);
-            
-            
+            const requestInfo = PuzzlebangCompleteRequestValidator.parse(
+                req.body
+            );
+
+            const attendeeData = await Database.ATTENDEE.findOneAndUpdate(
+                { email: requestInfo.email },
+                { $addToSet: { puzzlesCompleted: requestInfo.puzzleId } },
+                { new: false }
+            );
+
+            if (!attendeeData) {
+                return res.sendStatus(StatusCodes.NOT_FOUND);
+            }
+
+            if (attendeeData.puzzlesCompleted.includes(requestInfo.puzzleId)) {
+                return res.sendStatus(StatusCodes.UNAUTHORIZED);
+            }
+
+            return res.sendStatus(StatusCodes.OK);
         } catch (error) {
             console.error(error);
         }
-        
     }
 );
 

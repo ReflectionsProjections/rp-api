@@ -35,6 +35,7 @@ export const AttendeeSchema = new Schema({
         },
     },
     favorites: [{ type: String }],
+    puzzlesCompleted: [{ type: String, default: [] }],
 });
 
 export const AttendeeAttendanceSchema = new Schema({

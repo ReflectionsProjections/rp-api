@@ -9,11 +9,6 @@ export const AttendeeCreateValidator = z.object({
     allergies: z.string().array(),
 });
 
-export const AttendeeAttendanceValidator = z.object({
-    userId: z.string(),
-    eventsAttended: z.array(z.string()),
-});
-
 export const EventIdValidator = z.object({
     eventId: z.string().uuid(),
 });
