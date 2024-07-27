@@ -1,6 +1,12 @@
 import { z } from "zod";
 
-export const Role = z.enum(["USER", "STAFF", "ADMIN", "CORPORATE", "PUZZLEBANG"]);
+export const Role = z.enum([
+    "USER",
+    "STAFF",
+    "ADMIN",
+    "CORPORATE",
+    "PUZZLEBANG",
+]);
 
 export const JwtPayloadValidator = z.object({
     userId: z.string(),
