@@ -4,15 +4,26 @@ import { StatusCodes } from "http-status-codes";
 import { sendEmail } from "../../ses/ses-utils";
 import jsonwebtoken from "jsonwebtoken";
 import { Config } from "../../../config";
-import { createSixDigitCode, encryptSixDigitCode} from "./sponsor-utils";
+import {
+    createSixDigitCode,
+    encryptSixDigitCode,
+    sponsorExists,
+} from "./sponsor-utils";
 import * as bcrypt from "bcrypt";
-import {AuthSponsorLoginValidator, AuthSponsorVerifyValidator} from "./sponsor-schema";
+import {
+    AuthSponsorLoginValidator,
+    AuthSponsorVerifyValidator,
+} from "./sponsor-schema";
 
-const sponsorRouter = Router();
+const authSponsorRouter = Router();
 
-sponsorRouter.post("/login", async (req, res, next) => {
+authSponsorRouter.post("/login", async (req, res, next) => {
     try {
         const { email } = AuthSponsorLoginValidator.parse(req.body);
+        if (!sponsorExists(email)) {
+            return res.sendStatus(StatusCodes.UNAUTHORIZED);
+        }
+
         const sixDigitCode = createSixDigitCode();
         const expTime = Math.floor(Date.now() / 1000) + 300;
         const hashedVerificationCode = encryptSixDigitCode(sixDigitCode);
@@ -35,23 +46,26 @@ sponsorRouter.post("/login", async (req, res, next) => {
     }
 });
 
-sponsorRouter.post("/verify", async (req, res, next) => {
+authSponsorRouter.post("/verify", async (req, res, next) => {
     try {
-        const { email, sixDigitCode } = AuthSponsorVerifyValidator.parse(req.body);
-        const sponsorData = await Database.AUTH_CODES.findOneAndDelete({ email });
+        const { email, sixDigitCode } = AuthSponsorVerifyValidator.parse(
+            req.body
+        );
+        const sponsorData = await Database.AUTH_CODES.findOneAndDelete({
+            email,
+        });
         if (!sponsorData) {
             return res.sendStatus(StatusCodes.UNAUTHORIZED);
         }
-        const { hashedVerificationCode, expTime } = sponsorData;
-        if (Math.floor(Date.now() / 1000) > expTime) {
+        if (Math.floor(Date.now() / 1000) > sponsorData.expTime) {
             return res.sendStatus(StatusCodes.GONE);
         }
-        const match = await bcrypt.compareSync(
+        const match = bcrypt.compareSync(
             sixDigitCode,
-            hashedVerificationCode
+            sponsorData.hashedVerificationCode
         );
         if (!match) {
-            return res.sendStatus(StatusCodes.BAD_REQUEST);
+            return res.sendStatus(StatusCodes.UNAUTHORIZED);
         }
         const token = jsonwebtoken.sign(
             {
@@ -60,13 +74,14 @@ sponsorRouter.post("/verify", async (req, res, next) => {
             },
             Config.JWT_SIGNING_SECRET,
             {
-                expiresIn: (Math.floor(Date.now() / 1000)) + Config.JWT_EXPIRATION_TIME
+                expiresIn:
+                    Math.floor(Date.now() / 1000) + Config.JWT_EXPIRATION_TIME,
             }
         );
-        res.json({ token });
+        return res.status(StatusCodes.OK).json({ token });
     } catch (error) {
         next(error);
     }
 });
 
-export default sponsorRouter;
+export default authSponsorRouter;

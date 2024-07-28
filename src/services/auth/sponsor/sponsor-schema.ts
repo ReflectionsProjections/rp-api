@@ -19,5 +19,5 @@ export const AuthSponsorLoginValidator = z.object({
 
 export const AuthSponsorVerifyValidator = z.object({
     email: z.string().email(),
-    sixDigitCode: z.string().length(6)
+    sixDigitCode: z.string().length(6),
 });

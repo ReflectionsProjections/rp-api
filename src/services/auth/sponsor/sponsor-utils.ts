@@ -1,5 +1,5 @@
 import * as bcrypt from "bcrypt";
-
+import { Database } from "../../../database";
 
 export function createSixDigitCode() {
     let result = "";
@@ -20,4 +20,10 @@ export function encryptSixDigitCode(sixDigitCode: string): string {
         console.error("Error encrypting the code:", err);
         throw err;
     }
+}
+
+export async function sponsorExists(email: string) {
+    const response = await Database.CORPORATE.findOne({ email: email });
+    if (!response) return false;
+    return true;
 }
