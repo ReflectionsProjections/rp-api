@@ -27,7 +27,7 @@ authSponsorRouter.post("/login", async (req, res, next) => {
 
         const sixDigitCode = createSixDigitCode();
         const expTime =
-            Math.floor(Date.now() / 1000) + Config.VERIFICATION_EXP_TIME;
+            Math.floor(Date.now() / 1000) + Config.VERIFY_EXP_TIME_MS;
         const hashedVerificationCode = encryptSixDigitCode(sixDigitCode);
         await Database.AUTH_CODES.findOneAndUpdate(
             { email },

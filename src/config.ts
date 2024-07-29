@@ -79,7 +79,7 @@ export const Config = {
     RESUME_URL_EXPIRY_SECONDS: 60,
 
     HASH_SALT_ROUNDS: 10,
-    VERIFICATION_EXP_TIME: 300,
+    VERIFY_EXP_TIME_MS: 300,
 
     // QR Scanning
     QR_HASH_ITERATIONS: 10000,
