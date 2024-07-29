@@ -4,6 +4,7 @@ import { StatusCodes } from "http-status-codes";
 import { sendEmail } from "../../ses/ses-utils";
 import jsonwebtoken from "jsonwebtoken";
 import { Config } from "../../../config";
+import { Role } from "../../auth/auth-models";
 import {
     createSixDigitCode,
     encryptSixDigitCode,
@@ -19,19 +20,20 @@ const authSponsorRouter = Router();
 
 authSponsorRouter.post("/login", async (req, res, next) => {
     try {
-        const { email } = AuthSponsorLoginValidator.parse(req.body);
+        const { email } = await AuthSponsorLoginValidator.parse(req.body);
         if (!sponsorExists(email)) {
             return res.sendStatus(StatusCodes.UNAUTHORIZED);
         }
 
         const sixDigitCode = createSixDigitCode();
-        const expTime = Math.floor(Date.now() / 1000) + 300;
+        const expTime =
+            Math.floor(Date.now() / 1000) + Config.VERIFICATION_EXP_TIME;
         const hashedVerificationCode = encryptSixDigitCode(sixDigitCode);
         await Database.AUTH_CODES.findOneAndUpdate(
             { email },
             {
-                hashedVerificationCode: hashedVerificationCode,
-                expTime: expTime,
+                hashedVerificationCode,
+                expTime,
             },
             { upsert: true }
         );
@@ -70,7 +72,7 @@ authSponsorRouter.post("/verify", async (req, res, next) => {
         const token = jsonwebtoken.sign(
             {
                 email,
-                role: "CORPORATE",
+                role: Role.Enum.CORPORATE,
             },
             Config.JWT_SIGNING_SECRET,
             {

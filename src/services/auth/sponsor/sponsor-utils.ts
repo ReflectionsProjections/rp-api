@@ -1,5 +1,6 @@
 import * as bcrypt from "bcrypt";
 import { Database } from "../../../database";
+import { Config } from "../../../config";
 
 export function createSixDigitCode() {
     let result = "";
@@ -11,10 +12,8 @@ export function createSixDigitCode() {
 }
 
 export function encryptSixDigitCode(sixDigitCode: string): string {
-    const saltRounds = 10;
-
     try {
-        const hash = bcrypt.hashSync(sixDigitCode, saltRounds);
+        const hash = bcrypt.hashSync(sixDigitCode, Config.HASH_SALT_ROUNDS);
         return hash;
     } catch (err) {
         console.error("Error encrypting the code:", err);
