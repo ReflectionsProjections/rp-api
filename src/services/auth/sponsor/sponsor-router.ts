@@ -20,8 +20,8 @@ const authSponsorRouter = Router();
 
 authSponsorRouter.post("/login", async (req, res, next) => {
     try {
-        const { email } = await AuthSponsorLoginValidator.parse(req.body);
-        if (!sponsorExists(email)) {
+        const { email } = AuthSponsorLoginValidator.parse(req.body);
+        if (!(await sponsorExists(email))) {
             return res.sendStatus(StatusCodes.UNAUTHORIZED);
         }
 
