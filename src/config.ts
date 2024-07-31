@@ -78,6 +78,9 @@ export const Config = {
     MAX_RESUME_SIZE_BYTES: 6 * 1024 * 1024,
     RESUME_URL_EXPIRY_SECONDS: 60,
 
+    HASH_SALT_ROUNDS: 10,
+    VERIFY_EXP_TIME_MS: 300,
+
     // QR Scanning
     QR_HASH_ITERATIONS: 10000,
     QR_HASH_SECRET: getEnv("QR_HASH_SECRET"),
@@ -93,6 +96,8 @@ export const DeviceRedirects: Record<string, string> = {
 
 export const ses = new AWS.SES({
     region: Config.S3_REGION,
+    accessKeyId: Config.S3_ACCESS_KEY,
+    secretAccessKey: Config.S3_SECRET_KEY,
 });
 
 export default Config;

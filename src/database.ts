@@ -33,6 +33,10 @@ import {
     SpeakerValidator,
 } from "./services/speakers/speakers-schema";
 import {
+    SponsorAuthSchema,
+    SponsorAuthValidator,
+} from "./services/auth/sponsor/sponsor-schema";
+import {
     CorporateSchema,
     CorporateValidator,
 } from "./services/auth/corporate-schema";
@@ -96,6 +100,11 @@ export const Database = {
         "notifications",
         NotificationsSchema,
         NotificationsValidator
+    ),
+    AUTH_CODES: initializeModel(
+        "auth_codes",
+        SponsorAuthSchema,
+        SponsorAuthValidator
     ),
     SPEAKERS: initializeModel("speakers", SpeakerSchema, SpeakerValidator),
     CORPORATE: initializeModel(
