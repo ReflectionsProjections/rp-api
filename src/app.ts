@@ -21,6 +21,7 @@ import s3Router from "./services/s3/s3-router";
 import statsRouter from "./services/stats/stats-router";
 import subscriptionRouter from "./services/subscription/subscription-router";
 import speakersRouter from "./services/speakers/speakers-router";
+import puzzlebangRouter from "./services/puzzlebang/puzzlebang-router";
 
 AWS.config.update({
     region: Config.S3_REGION,
@@ -49,6 +50,7 @@ app.use("/auth", databaseMiddleware, authRouter);
 app.use("/checkin", databaseMiddleware, checkinRouter);
 app.use("/events", databaseMiddleware, eventsRouter);
 app.use("/notifications", databaseMiddleware, notificationsRouter);
+app.use("/puzzlebang", databaseMiddleware, puzzlebangRouter);
 app.use("/registration", databaseMiddleware, registrationRouter);
 app.use("/s3", databaseMiddleware, s3Router);
 app.use("/stats", databaseMiddleware, statsRouter);

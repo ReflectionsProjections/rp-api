@@ -6,7 +6,7 @@ const RegistrationValidator = z.object({
     userId: z.coerce.string().regex(/user[0-9]*/),
     name: z.string(),
     email: z.string().email(),
-    university: z.string().nonempty(),
+    university: z.string(),
     graduation: z.string().nullable().optional(),
     major: z.string().nullable().optional(),
     dietaryRestrictions: z.string().array(),
