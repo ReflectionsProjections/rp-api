@@ -3,7 +3,7 @@ import { StatusCodes } from "http-status-codes";
 import {
     RegistrationFilterValidator,
     RegistrationValidator,
-} from "./registration-schema";
+} from "./registration-validators";
 import { Database } from "../../database";
 import RoleChecker from "../../middleware/role-checker";
 import { Role } from "../auth/auth-models";
