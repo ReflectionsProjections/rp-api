@@ -12,10 +12,7 @@ import {
     EventAttendanceValidator,
 } from "./services/events/events-schema";
 import { RoleValidator, RoleSchema } from "./services/auth/auth-schema";
-import {
-    RegistrationSchema,
-    RegistrationValidator,
-} from "./services/registration/registration-schema";
+import { RegistrationSchema } from "./services/registration/registration-schema";
 import {
     SubscriptionSchemaValidator,
     SubscriptionSchema,
@@ -24,10 +21,7 @@ import {
     NotificationsSchema,
     NotificationsValidator,
 } from "./services/notifications/notifications-schema";
-import {
-    SpeakerSchema,
-    SpeakerValidator,
-} from "./services/speakers/speakers-schema";
+import { SpeakerSchema } from "./services/speakers/speakers-schema";
 import {
     SponsorAuthSchema,
     SponsorAuthValidator,
@@ -86,11 +80,7 @@ export const Database = {
         SubscriptionSchema,
         SubscriptionSchemaValidator
     ),
-    REGISTRATION: initializeModel(
-        "registration",
-        RegistrationSchema,
-        RegistrationValidator
-    ),
+    REGISTRATION: mongoose.model("registration", RegistrationSchema),
     NOTIFICATIONS: initializeModel(
         "notifications",
         NotificationsSchema,
@@ -101,7 +91,7 @@ export const Database = {
         SponsorAuthSchema,
         SponsorAuthValidator
     ),
-    SPEAKERS: initializeModel("speakers", SpeakerSchema, SpeakerValidator),
+    SPEAKERS: mongoose.model("speakers", SpeakerSchema),
     CORPORATE: initializeModel(
         "corporate",
         CorporateSchema,
