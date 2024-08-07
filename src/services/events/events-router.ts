@@ -102,6 +102,11 @@ eventsRouter.post(
     RoleChecker([Role.Enum.STAFF]),
     async (req, res, next) => {
         try {
+            if (req.body.eventId) {
+                return res.status(StatusCodes.BAD_REQUEST).json({
+                    error: "Invalid Parameters",
+                });
+            }
             const validatedData = privateEventValidator.parse(req.body);
             const event = new Database.EVENTS(validatedData);
             await event.save();
@@ -118,7 +123,13 @@ eventsRouter.put(
     async (req, res, next) => {
         const eventId = req.params.EVENTID;
         try {
+            if (req.body.eventId) {
+                return res.status(StatusCodes.BAD_REQUEST).json({
+                    error: "Invalid Parameters",
+                });
+            }
             const validatedData = privateEventValidator.parse(req.body);
+            validatedData.eventId = eventId;
             const event = await Database.EVENTS.findOneAndUpdate(
                 { eventId: eventId },
                 { $set: validatedData }
