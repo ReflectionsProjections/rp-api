@@ -143,29 +143,6 @@ authRouter.get("/dev/", (req, res) => {
     return res.status(StatusCodes.OK).json(req.query);
 });
 
-// Get a list of people by role (staff only endpoint)
-authRouter.get(
-    "/:ROLE",
-    RoleChecker([Role.Enum.STAFF]),
-    async (req, res, next) => {
-        try {
-            // Validate the role using Zod schema
-            const role = Role.parse(req.params.ROLE);
-
-            const usersWithRole = await Database.ROLES.find({ roles: role });
-            return res.status(StatusCodes.OK).json(usersWithRole);
-        } catch (error) {
-            if (error instanceof z.ZodError) {
-                return res.status(StatusCodes.BAD_REQUEST).json({
-                    error: "BadRole",
-                });
-            }
-
-            next(error);
-        }
-    }
-);
-
 authRouter.get(
     "/corporate",
     RoleChecker([Role.Enum.ADMIN], true),
@@ -173,7 +150,7 @@ authRouter.get(
         try {
             const allCorporate = await Database.CORPORATE.find();
 
-            return res.sendStatus(StatusCodes.OK).json(allCorporate);
+            return res.status(StatusCodes.OK).json(allCorporate);
         } catch (error) {
             next(error);
         }
@@ -207,6 +184,29 @@ authRouter.delete(
 
             return res.sendStatus(StatusCodes.NO_CONTENT);
         } catch (error) {
+            next(error);
+        }
+    }
+);
+
+// Get a list of people by role (staff only endpoint)
+authRouter.get(
+    "/:ROLE",
+    RoleChecker([Role.Enum.STAFF]),
+    async (req, res, next) => {
+        try {
+            // Validate the role using Zod schema
+            const role = Role.parse(req.params.ROLE);
+
+            const usersWithRole = await Database.ROLES.find({ roles: role });
+            return res.status(StatusCodes.OK).json(usersWithRole);
+        } catch (error) {
+            if (error instanceof z.ZodError) {
+                return res.status(StatusCodes.BAD_REQUEST).json({
+                    error: "BadRole",
+                });
+            }
+
             next(error);
         }
     }
