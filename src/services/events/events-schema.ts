@@ -12,8 +12,8 @@ export const publicEventValidator = z.object({
     points: z.number().min(0),
     description: z.string(),
     isVirtual: z.boolean(),
-    imageUrl: z.string().nullable().optional(),
-    location: z.string().nullable().optional(),
+    imageUrl: z.string().nullable(),
+    location: z.string().nullable(),
     eventType: EventType,
 });
 
