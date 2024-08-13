@@ -82,7 +82,12 @@ export async function checkInUserToEvent(
     }
 
     await updateAttendanceRecords(eventId, userId);
-    await assignPixelsToUser(userId, 20);
+
+    const event = await Database.EVENTS.findOne({ eventId });
+    if (!event) {
+        throw new Error("Event not found");
+    }
+    await assignPixelsToUser(userId, event.points);
 }
 
 export function generateQrHash(userId: string, expTime: number) {
