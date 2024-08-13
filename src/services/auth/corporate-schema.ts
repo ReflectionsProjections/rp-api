@@ -16,7 +16,7 @@ export const CorporateDeleteRequest = z.object({
 export const CorporateSchema = new Schema({
     name: {
         type: String,
-        required: true
+        required: true,
     },
     email: {
         type: String,
