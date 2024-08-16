@@ -111,22 +111,56 @@ registrationRouter.get("/", RoleChecker([]), async (req, res, next) => {
 });
 
 // Get attendees based on a partial filter in body
-registrationRouter.post(
-    "/filter",
-    RoleChecker([Role.Enum.STAFF, Role.Enum.CORPORATE]),
-    async (req, res, next) => {
-        try {
-            const filterData = RegistrationFilterValidator.parse(req.body);
-            const projection = Object.assign({}, ...filterData.projection);
-            const attendees = await Database.REGISTRATION.find(
-                filterData.filter,
-                { ...projection, hasSubmitted: 1 }
-            );
-            return res.status(StatusCodes.OK).json(attendees);
-        } catch (error) {
-            next(error);
+// registrationRouter.post(
+//     "/filter",
+//     RoleChecker([Role.Enum.STAFF, Role.Enum.CORPORATE]),
+//     async (req, res, next) => {
+//         try {
+//             const filterData = RegistrationFilterValidator.parse(req.body);
+//             const projection = Object.assign({}, ...filterData.projection);
+//             const attendees = await Database.REGISTRATION.find(
+//                 filterData.filter,
+//                 { ...projection, hasSubmitted: 1 }
+//             );
+//             return res.status(StatusCodes.OK).json(attendees);
+//         } catch (error) {
+//             next(error);
+//         }
+//     }
+// );
+
+// add in roll check garb
+registrationRouter.post("/filter", async (req, res, next) => {
+    try {
+        const filterData = RegistrationFilterValidator.parse(req.body);
+
+        // Build the query object with optional properties
+        const query: Record<string, any> = { hasSubmitted: true };
+
+        if (filterData.graduations && filterData.graduations.length > 0) {
+            query.graduation = { $in: filterData.graduations };
         }
+
+        if (filterData.majors && filterData.majors.length > 0) {
+            query.major = { $in: filterData.majors };
+        }
+
+        if (filterData.jobs && filterData.jobs.length > 0) {
+            query.jobInterest = { $elemMatch: { $in: filterData.jobs } };
+        }
+
+        const registrants = await Database.REGISTRATION.find(query, {
+            userId: 1,
+            name: 1,
+            major: 1,
+            graduation: 1,
+            jobInterest: 1,
+        });
+
+        return res.status(StatusCodes.OK).json({ registrants });
+    } catch (error) {
+        next(error);
     }
-);
+});
 
 export default registrationRouter;
