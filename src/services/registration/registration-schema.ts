@@ -49,16 +49,6 @@ const RegistrationSchema = new mongoose.Schema({
     hasSubmitted: { type: Boolean, default: false },
 });
 
-// Partial schema for attendee filter
-// const PartialRegistrationValidator = RegistrationValidator.partial();
-
-// const RegistrationFilterValidator = z.object({
-//     filter: PartialRegistrationValidator,
-//     projection: z.array(
-//         z.record(PartialRegistrationValidator.keyof(), z.number().min(1).max(1))
-//     ),
-// });
-
 const RegistrationFilterValidator = z.object({
     graduations: z.array(z.string()).optional(),
     majors: z.array(z.string()).optional(),

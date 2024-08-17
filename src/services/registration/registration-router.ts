@@ -110,25 +110,6 @@ registrationRouter.get("/", RoleChecker([]), async (req, res, next) => {
     }
 });
 
-// Get attendees based on a partial filter in body
-// registrationRouter.post(
-//     "/filter",
-//     RoleChecker([Role.Enum.STAFF, Role.Enum.CORPORATE]),
-//     async (req, res, next) => {
-//         try {
-//             const filterData = RegistrationFilterValidator.parse(req.body);
-//             const projection = Object.assign({}, ...filterData.projection);
-//             const attendees = await Database.REGISTRATION.find(
-//                 filterData.filter,
-//                 { ...projection, hasSubmitted: 1 }
-//             );
-//             return res.status(StatusCodes.OK).json(attendees);
-//         } catch (error) {
-//             next(error);
-//         }
-//     }
-// );
-
 registrationRouter.post(
     "/filter",
     RoleChecker([Role.Enum.STAFF, Role.Enum.CORPORATE], true),
