@@ -112,19 +112,37 @@ registrationRouter.get("/", RoleChecker([]), async (req, res, next) => {
     }
 });
 
-// Get attendees based on a partial filter in body
 registrationRouter.post(
     "/filter",
-    RoleChecker([Role.Enum.STAFF, Role.Enum.CORPORATE]),
+    RoleChecker([Role.Enum.STAFF, Role.Enum.CORPORATE], true),
     async (req, res, next) => {
         try {
-            const filterData = RegistrationFilterValidator.parse(req.body);
-            const projection = Object.assign({}, ...filterData.projection);
-            const attendees = await Database.REGISTRATION.find(
-                filterData.filter,
-                { ...projection, hasSubmitted: 1 }
+            const { graduations, majors, jobInterests } =
+                RegistrationFilterValidator.parse(req.body);
+
+            const query = {
+                hasSubmitted: true,
+                ...(graduations && { graduation: { $in: graduations } }),
+                ...(majors && { major: { $in: majors } }),
+                ...(jobInterests && {
+                    jobInterest: { $elemMatch: { $in: jobInterests } },
+                }),
+            };
+
+            const projection = {
+                userId: 1,
+                name: 1,
+                major: 1,
+                graduation: 1,
+                jobInterest: 1,
+            };
+
+            const registrants = await Database.REGISTRATION.find(
+                query,
+                projection
             );
-            return res.status(StatusCodes.OK).json(attendees);
+
+            return res.status(StatusCodes.OK).json({ registrants });
         } catch (error) {
             next(error);
         }
