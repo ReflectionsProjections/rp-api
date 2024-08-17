@@ -38,7 +38,7 @@ app.enable("trust proxy");
 // (we can remove this later)
 app.disable("etag");
 
-app.use(rateLimiter);
+// app.use(rateLimiter);
 
 // app.use(customCors);
 app.use(cors());
