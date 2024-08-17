@@ -52,7 +52,7 @@ const RegistrationSchema = new mongoose.Schema({
 const RegistrationFilterValidator = z.object({
     graduations: z.array(z.string()).optional(),
     majors: z.array(z.string()).optional(),
-    jobs: z.array(z.string()).optional(),
+    jobInterests: z.array(z.string()).optional(),
 });
 
 export {

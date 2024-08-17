@@ -115,30 +115,30 @@ registrationRouter.post(
     RoleChecker([Role.Enum.STAFF, Role.Enum.CORPORATE], true),
     async (req, res, next) => {
         try {
-            const filterData = RegistrationFilterValidator.parse(req.body);
+            const { graduations, majors, jobInterests } =
+                RegistrationFilterValidator.parse(req.body);
 
-            // Build the query object with optional properties
-            const query: Record<string, any> = { hasSubmitted: true };
+            const query = {
+                hasSubmitted: true,
+                ...(graduations && { graduation: { $in: graduations } }),
+                ...(majors && { major: { $in: majors } }),
+                ...(jobInterests && {
+                    jobInterest: { $elemMatch: { $in: jobInterests } },
+                }),
+            };
 
-            if (filterData.graduations) {
-                query.graduation = { $in: filterData.graduations };
-            }
-
-            if (filterData.majors) {
-                query.major = { $in: filterData.majors };
-            }
-
-            if (filterData.jobs) {
-                query.jobInterest = { $elemMatch: { $in: filterData.jobs } };
-            }
-
-            const registrants = await Database.REGISTRATION.find(query, {
+            const projection = {
                 userId: 1,
                 name: 1,
                 major: 1,
                 graduation: 1,
                 jobInterest: 1,
-            });
+            };
+
+            const registrants = await Database.REGISTRATION.find(
+                query,
+                projection
+            );
 
             return res.status(StatusCodes.OK).json({ registrants });
         } catch (error) {
