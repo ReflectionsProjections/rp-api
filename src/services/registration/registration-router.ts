@@ -9,8 +9,10 @@ import RoleChecker from "../../middleware/role-checker";
 import { Role } from "../auth/auth-models";
 import { AttendeeCreateValidator } from "../attendee/attendee-validators";
 import { registrationExists } from "./registration-utils";
+import cors from "cors";
 
 const registrationRouter = Router();
+registrationRouter.use(cors());
 
 // A database upsert operation to save registration mid-progress
 registrationRouter.post("/save", RoleChecker([]), async (req, res, next) => {
