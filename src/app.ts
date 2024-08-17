@@ -1,7 +1,6 @@
 import express from "express";
 import { StatusCodes } from "http-status-codes";
 import { Config } from "./config";
-import { rateLimiter } from "./middleware/rateLimiter";
 import { isTest } from "./utilities";
 import AWS from "aws-sdk";
 
