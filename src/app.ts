@@ -32,6 +32,7 @@ AWS.config.update({
 });
 
 const app = express();
+app.enable('trust proxy');
 
 // to prevent server-side caching/returning status code 200
 // (we can remove this later)
