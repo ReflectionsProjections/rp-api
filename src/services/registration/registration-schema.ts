@@ -17,7 +17,7 @@ const RegistrationValidator = z.object({
     ethnicity: z.array(z.string()).nullable().optional(),
     firstGen: z.string().nullable().optional(),
     hearAboutRP: z.array(z.string()).nullable().optional(),
-    portfolio: z.string().nullable().optional(),
+    portfolios: z.string().array(),
     jobInterest: z.array(z.string()).nullable().optional(),
     isInterestedMechMania: z.boolean(),
     isInterestedPuzzleBang: z.boolean(),
