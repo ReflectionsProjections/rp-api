@@ -135,6 +135,7 @@ registrationRouter.post(
                 major: 1,
                 graduation: 1,
                 jobInterest: 1,
+                portfolios: 1,
             };
 
             const registrants = await Database.REGISTRATION.find(
