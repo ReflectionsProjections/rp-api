@@ -40,7 +40,7 @@ export async function getJwtPayloadFromDatabase(userId: string) {
         "userId",
         "displayName",
         "roles",
-	"email",
+        "email",
     ]);
 
     if (!payload) {
