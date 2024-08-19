@@ -26,7 +26,7 @@ export function createGoogleStrategy(device: string) {
 
             Database.ROLES.findOneAndUpdate(
                 { userId: userId },
-                { userId, displayName, email, roles },
+                { displayName, email, roles },
                 { upsert: true }
             )
                 .then(() => cb(null, profile))
@@ -40,7 +40,9 @@ export async function getJwtPayloadFromDatabase(userId: string) {
         "userId",
         "displayName",
         "roles",
+	"email",
     ]);
+
     if (!payload) {
         throw new Error("NoUserFound");
     }
