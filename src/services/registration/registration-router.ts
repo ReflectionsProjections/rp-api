@@ -122,6 +122,7 @@ registrationRouter.post(
 
             const query = {
                 hasSubmitted: true,
+                hasResume: true,
                 ...(graduations && { graduation: { $in: graduations } }),
                 ...(majors && { major: { $in: majors } }),
                 ...(jobInterests && {
