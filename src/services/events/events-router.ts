@@ -107,7 +107,6 @@ eventsRouter.post(
     async (req, res, next) => {
         try {
             const validatedData = eventInfoValidator.parse(req.body);
-            console.log("ok");
             const event = new Database.EVENTS(validatedData);
             await event.save();
             return res.sendStatus(StatusCodes.CREATED);
