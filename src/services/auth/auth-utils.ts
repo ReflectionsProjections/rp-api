@@ -62,3 +62,7 @@ export function isStaff(payload?: JwtPayloadType) {
 export function isAdmin(payload?: JwtPayloadType) {
     return payload?.roles.includes(Role.Enum.ADMIN);
 }
+
+export function isPuzzleBang(payload?: JwtPayloadType) {
+    return payload?.roles.includes(Role.Enum.PUZZLEBANG);
+}
