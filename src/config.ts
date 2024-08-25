@@ -70,6 +70,7 @@ export const Config = {
 
     JWT_SIGNING_SECRET: getEnv("JWT_SIGNING_SECRET"),
     JWT_EXPIRATION_TIME: "1 day",
+    PB_JWT_EXPIRATION_TIME: "1 week",
 
     S3_ACCESS_KEY: getEnv("S3_ACCESS_KEY"),
     S3_SECRET_KEY: getEnv("S3_SECRET_KEY"),

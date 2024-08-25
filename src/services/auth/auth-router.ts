@@ -11,6 +11,7 @@ import { Role } from "../auth/auth-models";
 import { AuthRoleChangeRequest } from "./auth-schema";
 import { z } from "zod";
 import authSponsorRouter from "./sponsor/sponsor-router";
+import { isPuzzleBang } from "../auth/auth-utils";
 
 const authStrategies: Record<string, GoogleStrategy> = {};
 
@@ -117,6 +118,10 @@ authRouter.get(
         }
         const userData = req.user as Profile;
         const userId = `user${userData.id}`;
+        
+        // Check if user has PuzzleBang role
+        const payload = res.locals.payload;
+        const isPB = isPuzzleBang(payload);
 
         // Generate the JWT, and redirect to JWT initialization
         try {
@@ -126,7 +131,7 @@ authRouter.get(
             const token = jsonwebtoken.sign(
                 jwtPayload,
                 Config.JWT_SIGNING_SECRET,
-                { expiresIn: Config.JWT_EXPIRATION_TIME }
+                { expiresIn: isPB ? Config.PB_JWT_EXPIRATION_TIME : Config.JWT_EXPIRATION_TIME }
             );
             const redirectUri =
                 DeviceRedirects[req.params.DEVICE] + `?token=${token}`;
