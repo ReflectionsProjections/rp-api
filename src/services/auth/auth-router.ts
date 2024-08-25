@@ -118,16 +118,16 @@ authRouter.get(
         }
         const userData = req.user as Profile;
         const userId = `user${userData.id}`;
-        
-        // Check if user has PuzzleBang role
-        const payload = res.locals.payload;
-        const isPB = isPuzzleBang(payload);
 
         // Generate the JWT, and redirect to JWT initialization
         try {
             const jwtPayload = (
                 await getJwtPayloadFromDatabase(userId)
             ).toObject();
+
+            // Check if user has PuzzleBang role
+            const isPB = isPuzzleBang(jwtPayload);
+            
             const token = jsonwebtoken.sign(
                 jwtPayload,
                 Config.JWT_SIGNING_SECRET,
