@@ -7,7 +7,7 @@ import { createGoogleStrategy, getJwtPayloadFromDatabase } from "./auth-utils";
 import jsonwebtoken from "jsonwebtoken";
 import { Database } from "../../database";
 import RoleChecker from "../../middleware/role-checker";
-import { Role } from "../auth/auth-models";
+import { Role, JwtPayloadType } from "../auth/auth-models";
 import { AuthRoleChangeRequest } from "./auth-schema";
 import { z } from "zod";
 import authSponsorRouter from "./sponsor/sponsor-router";
@@ -123,11 +123,11 @@ authRouter.get(
         try {
             const jwtPayload = (
                 await getJwtPayloadFromDatabase(userId)
-            ).toObject();
+            ).toObject() as JwtPayloadType;
 
             // Check if user has PuzzleBang role
             const isPB = isPuzzleBang(jwtPayload);
-            
+
             const token = jsonwebtoken.sign(
                 jwtPayload,
                 Config.JWT_SIGNING_SECRET,
