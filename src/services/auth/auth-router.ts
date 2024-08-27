@@ -7,9 +7,12 @@ import { createGoogleStrategy, getJwtPayloadFromDatabase } from "./auth-utils";
 import jsonwebtoken from "jsonwebtoken";
 import { Database } from "../../database";
 import RoleChecker from "../../middleware/role-checker";
-import { Role } from "../auth/auth-models";
+import { Role, JwtPayloadType } from "../auth/auth-models";
 import { AuthRoleChangeRequest } from "./auth-schema";
 import { z } from "zod";
+import authSponsorRouter from "./sponsor/sponsor-router";
+import { CorporateDeleteRequest, CorporateValidator } from "./corporate-schema";
+import { isPuzzleBang } from "../auth/auth-utils";
 
 const authStrategies: Record<string, GoogleStrategy> = {};
 
@@ -18,6 +21,8 @@ for (const key in DeviceRedirects) {
 }
 
 const authRouter = Router();
+
+authRouter.use("/sponsor", authSponsorRouter);
 
 // Remove role from userId by email address (admin only endpoint)
 authRouter.delete(
@@ -119,11 +124,19 @@ authRouter.get(
         try {
             const jwtPayload = (
                 await getJwtPayloadFromDatabase(userId)
-            ).toObject();
+            ).toObject() as JwtPayloadType;
+
+            // Check if user has PuzzleBang role
+            const isPB = isPuzzleBang(jwtPayload);
+
             const token = jsonwebtoken.sign(
                 jwtPayload,
                 Config.JWT_SIGNING_SECRET,
-                { expiresIn: Config.JWT_EXPIRATION_TIME }
+                {
+                    expiresIn: isPB
+                        ? Config.PB_JWT_EXPIRATION_TIME
+                        : Config.JWT_EXPIRATION_TIME,
+                }
             );
             const redirectUri =
                 DeviceRedirects[req.params.DEVICE] + `?token=${token}`;
@@ -138,6 +151,52 @@ authRouter.get(
 authRouter.get("/dev/", (req, res) => {
     return res.status(StatusCodes.OK).json(req.query);
 });
+
+authRouter.get(
+    "/corporate",
+    RoleChecker([Role.Enum.ADMIN], true),
+    async (req, res, next) => {
+        try {
+            const allCorporate = await Database.CORPORATE.find();
+
+            return res.status(StatusCodes.OK).json(allCorporate);
+        } catch (error) {
+            next(error);
+        }
+    }
+);
+
+authRouter.post(
+    "/corporate",
+    RoleChecker([Role.Enum.ADMIN], true),
+    async (req, res, next) => {
+        try {
+            const attendeeData = CorporateValidator.parse(req.body);
+            const corporate = new Database.CORPORATE(attendeeData);
+            await corporate.save();
+
+            return res.status(StatusCodes.CREATED).json(corporate);
+        } catch (error) {
+            next(error);
+        }
+    }
+);
+
+authRouter.delete(
+    "/corporate",
+    RoleChecker([Role.Enum.ADMIN], true),
+    async (req, res, next) => {
+        try {
+            const attendeeData = CorporateDeleteRequest.parse(req.body);
+            const email = attendeeData.email;
+            await Database.CORPORATE.findOneAndDelete({ email: email });
+
+            return res.sendStatus(StatusCodes.NO_CONTENT);
+        } catch (error) {
+            next(error);
+        }
+    }
+);
 
 // Get a list of people by role (staff only endpoint)
 authRouter.get(
