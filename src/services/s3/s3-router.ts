@@ -5,7 +5,7 @@ import { s3ClientMiddleware } from "../../middleware/s3";
 import { Role } from "../auth/auth-models";
 
 import { S3 } from "@aws-sdk/client-s3";
-import { getResumeUrl, postResumeUrl } from "./s3-utils";
+import { getUrl, postUrl } from "./s3-utils";
 import BatchResumeDownloadValidator from "./s3-schema";
 import { BucketName } from "../../config";
 
@@ -22,7 +22,7 @@ s3Router.get(
         const userId: string = payload.userId;
 
         try {
-            const { url, fields } = await postResumeUrl(
+            const { url, fields } = await postUrl(
                 userId,
                 s3,
                 BucketName.RP_2024_RESUMES
@@ -45,7 +45,7 @@ s3Router.get(
         const s3 = res.locals.s3 as S3;
 
         try {
-            const downloadUrl = await getResumeUrl(
+            const downloadUrl = await getUrl(
                 userId,
                 s3,
                 BucketName.RP_2024_RESUMES
@@ -66,7 +66,7 @@ s3Router.get(
         const s3 = res.locals.s3 as S3;
 
         try {
-            const downloadUrl = await getResumeUrl(
+            const downloadUrl = await getUrl(
                 userId,
                 s3,
                 BucketName.RP_2024_RESUMES
@@ -89,7 +89,7 @@ s3Router.get(
             const { userIds } = BatchResumeDownloadValidator.parse(req.body);
 
             const batchDownloadPromises = userIds.map((userId) =>
-                getResumeUrl(userId, s3, BucketName.RP_2024_RESUMES)
+                getUrl(userId, s3, BucketName.RP_2024_RESUMES)
                     .then((url) => ({ userId, url: url }))
                     .catch(() => ({ userId, url: null }))
             );

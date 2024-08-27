@@ -3,7 +3,7 @@ import { Config, BucketName } from "../../config";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { createPresignedPost } from "@aws-sdk/s3-presigned-post";
 
-export async function postResumeUrl(
+export async function postUrl(
     userId: string,
     client: S3,
     bucketName: BucketName
@@ -24,7 +24,7 @@ export async function postResumeUrl(
     return { url, fields };
 }
 
-export async function getResumeUrl(
+export async function getUrl(
     userId: string,
     client: S3,
     bucketName: BucketName
