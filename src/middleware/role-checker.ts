@@ -48,6 +48,13 @@ export default function RoleChecker(
                 return next();
             }
 
+            // PuzzleBang JWT can access puzzlebang endpoints
+            if (requiredRoles.includes(Role.Enum.PUZZLEBANG)) {
+                if (userRoles.includes(Role.Enum.PUZZLEBANG)) {
+                    return next();
+                }
+            }
+
             // Corporate role can access corporate only endpoints
             if (requiredRoles.includes(Role.Enum.CORPORATE)) {
                 if (userRoles.includes(Role.Enum.CORPORATE)) {

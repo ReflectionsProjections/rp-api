@@ -70,6 +70,7 @@ export const Config = {
 
     JWT_SIGNING_SECRET: getEnv("JWT_SIGNING_SECRET"),
     JWT_EXPIRATION_TIME: "1 day",
+    PB_JWT_EXPIRATION_TIME: "1 week",
 
     S3_ACCESS_KEY: getEnv("S3_ACCESS_KEY"),
     S3_SECRET_KEY: getEnv("S3_SECRET_KEY"),
@@ -77,6 +78,9 @@ export const Config = {
     S3_REGION: getEnv("S3_REGION"),
     MAX_RESUME_SIZE_BYTES: 6 * 1024 * 1024,
     RESUME_URL_EXPIRY_SECONDS: 60,
+
+    HASH_SALT_ROUNDS: 10,
+    VERIFY_EXP_TIME_MS: 300,
 
     // QR Scanning
     QR_HASH_ITERATIONS: 10000,
@@ -86,13 +90,15 @@ export const Config = {
 };
 
 export const DeviceRedirects: Record<string, string> = {
-    web: "http://localhost:5173/",
+    web: "https://reflectionsprojections.org/auth/",
     dev: "https://api.reflectionsprojections.org/auth/dev/",
     mobile: "exp://192.168.86.24:8081/--/Main",
 };
 
 export const ses = new AWS.SES({
     region: Config.S3_REGION,
+    accessKeyId: Config.S3_ACCESS_KEY,
+    secretAccessKey: Config.S3_SECRET_KEY,
 });
 
 export default Config;

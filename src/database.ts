@@ -1,15 +1,11 @@
 import mongoose, { Schema, Document } from "mongoose";
 import {
-    AttendeeSchema,
-    AttendeeValidator,
-} from "./services/attendee/attendee-schema";
-import {
     AttendeeAttendanceSchema,
-    AttendeeAttendanceValidator,
+    AttendeeSchema,
 } from "./services/attendee/attendee-schema";
 import {
     EventSchema,
-    privateEventValidator,
+    internalEventView,
 } from "./services/events/events-schema";
 import {
     EventAttendanceSchema,
@@ -32,6 +28,14 @@ import {
     SpeakerSchema,
     SpeakerValidator,
 } from "./services/speakers/speakers-schema";
+import {
+    SponsorAuthSchema,
+    SponsorAuthValidator,
+} from "./services/auth/sponsor/sponsor-schema";
+import {
+    CorporateSchema,
+    CorporateValidator,
+} from "./services/auth/corporate-schema";
 
 mongoose.set("toObject", { versionKey: false });
 
@@ -66,17 +70,16 @@ function initializeModel(
 // Example usage
 export const Database = {
     ROLES: initializeModel("roles", RoleSchema, RoleValidator),
-    EVENTS: initializeModel("events", EventSchema, privateEventValidator),
+    EVENTS: initializeModel("events", EventSchema, internalEventView),
     EVENTS_ATTENDANCE: initializeModel(
         "events_attendance",
         EventAttendanceSchema,
         EventAttendanceValidator
     ),
-    ATTENDEE: initializeModel("attendee", AttendeeSchema, AttendeeValidator),
-    ATTENDEE_ATTENDANCE: initializeModel(
+    ATTENDEE: mongoose.model("attendee", AttendeeSchema),
+    ATTENDEE_ATTENDANCE: mongoose.model(
         "attendee_attendance",
-        AttendeeAttendanceSchema,
-        AttendeeAttendanceValidator
+        AttendeeAttendanceSchema
     ),
     SUBSCRIPTIONS: initializeModel(
         "subscriptions",
@@ -93,5 +96,15 @@ export const Database = {
         NotificationsSchema,
         NotificationsValidator
     ),
+    AUTH_CODES: initializeModel(
+        "auth_codes",
+        SponsorAuthSchema,
+        SponsorAuthValidator
+    ),
     SPEAKERS: initializeModel("speakers", SpeakerSchema, SpeakerValidator),
+    CORPORATE: initializeModel(
+        "corporate",
+        CorporateSchema,
+        CorporateValidator
+    ),
 };

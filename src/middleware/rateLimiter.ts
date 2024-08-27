@@ -12,6 +12,7 @@ export const rateLimiter = (
     res: Response,
     next: NextFunction
 ) => {
+    console.log(req.hostname);
     if (req.hostname === "localhost" || req.hostname === "127.0.0.1") {
         next();
     } else {

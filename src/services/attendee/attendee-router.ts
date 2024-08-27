@@ -5,13 +5,16 @@ import {
     EventIdValidator,
     PartialAttendeeValidator,
 } from "./attendee-schema";
+
+import {
+    AttendeeCreateValidator,
+    EventIdValidator,
+} from "./attendee-validators";
+
 import { Database } from "../../database";
 import RoleChecker from "../../middleware/role-checker";
 import { Role } from "../auth/auth-models";
-import dotenv from "dotenv";
 import { generateQrHash } from "../checkin/checkin-utils";
-
-dotenv.config();
 
 const attendeeRouter = Router();
 
@@ -102,7 +105,7 @@ attendeeRouter.get(
 // Create a new attendee
 attendeeRouter.post("/", async (req, res, next) => {
     try {
-        const attendeeData = AttendeeValidator.parse(req.body);
+        const attendeeData = AttendeeCreateValidator.parse(req.body);
         const attendee = new Database.ATTENDEE(attendeeData);
         await attendee.save();
 

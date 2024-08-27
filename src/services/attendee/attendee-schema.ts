@@ -1,37 +1,4 @@
 import { Schema } from "mongoose";
-import { z } from "zod";
-
-// Zod schema for attendee
-export const AttendeeValidator = z.object({
-    userId: z.string(),
-    name: z.string(),
-    email: z.string().email(),
-    events: z.array(z.string()).default([]),
-    dietaryRestrictions: z.string().array(),
-    allergies: z.string().array(),
-    hasCheckedIn: z.boolean().default(false),
-    points: z.number().min(0).default(0),
-    foodWave: z.number().int().min(0).default(0),
-    hasPriority: z
-        .object({
-            Mon: z.boolean().default(false),
-            Tue: z.boolean().default(false),
-            Wed: z.boolean().default(false),
-            Thu: z.boolean().default(false),
-            Fri: z.boolean().default(false),
-            Sat: z.boolean().default(false),
-            Sun: z.boolean().default(false),
-        })
-        .default({
-            Mon: false,
-            Tue: false,
-            Wed: false,
-            Thu: false,
-            Fri: false,
-            Sat: false,
-            Sun: false,
-        }),
-});
 
 // Mongoose schema for attendee
 export const AttendeeSchema = new Schema({
@@ -68,6 +35,7 @@ export const AttendeeSchema = new Schema({
         },
     },
     favorites: [{ type: String }],
+    puzzlesCompleted: [{ type: String, default: [] }],
 });
 
 export const AttendeeAttendanceSchema = new Schema({
@@ -78,15 +46,3 @@ export const AttendeeAttendanceSchema = new Schema({
     },
     eventsAttended: [{ type: String, ref: "Event", required: true }],
 });
-
-export const AttendeeAttendanceValidator = z.object({
-    userId: z.string(),
-    eventsAttended: z.array(z.string()),
-});
-
-export const EventIdValidator = z.object({
-    eventId: z.string().uuid(),
-});
-
-// Partial schema for attendee filter
-export const PartialAttendeeValidator = AttendeeValidator.partial();

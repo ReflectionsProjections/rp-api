@@ -7,10 +7,12 @@ import {
 import { Database } from "../../database";
 import RoleChecker from "../../middleware/role-checker";
 import { Role } from "../auth/auth-models";
-import { AttendeeValidator } from "../attendee/attendee-schema";
+import { AttendeeCreateValidator } from "../attendee/attendee-validators";
 import { registrationExists } from "./registration-utils";
+import cors from "cors";
 
 const registrationRouter = Router();
+registrationRouter.use(cors());
 
 // A database upsert operation to save registration mid-progress
 registrationRouter.post("/save", RoleChecker([]), async (req, res, next) => {
@@ -79,7 +81,7 @@ registrationRouter.post("/submit", RoleChecker([]), async (req, res, next) => {
             { upsert: true }
         );
 
-        const attendeeData = AttendeeValidator.parse(registrationData);
+        const attendeeData = AttendeeCreateValidator.parse(registrationData);
 
         await Database.ATTENDEE.findOneAndUpdate(
             { userId: payload.userId },
@@ -110,19 +112,39 @@ registrationRouter.get("/", RoleChecker([]), async (req, res, next) => {
     }
 });
 
-// Get attendees based on a partial filter in body
-registrationRouter.get(
+registrationRouter.post(
     "/filter",
-    RoleChecker([Role.Enum.STAFF, Role.Enum.CORPORATE]),
+    RoleChecker([Role.Enum.STAFF, Role.Enum.CORPORATE], true),
     async (req, res, next) => {
         try {
-            const filterData = RegistrationFilterValidator.parse(req.body);
-            const projection = Object.assign({}, ...filterData.projection);
-            const attendees = await Database.REGISTRATION.find(
-                filterData.filter,
-                { ...projection, hasSubmitted: 1 }
+            const { graduations, majors, jobInterests } =
+                RegistrationFilterValidator.parse(req.body);
+
+            const query = {
+                hasSubmitted: true,
+                hasResume: true,
+                ...(graduations && { graduation: { $in: graduations } }),
+                ...(majors && { major: { $in: majors } }),
+                ...(jobInterests && {
+                    jobInterest: { $elemMatch: { $in: jobInterests } },
+                }),
+            };
+
+            const projection = {
+                userId: 1,
+                name: 1,
+                major: 1,
+                graduation: 1,
+                jobInterest: 1,
+                portfolios: 1,
+            };
+
+            const registrants = await Database.REGISTRATION.find(
+                query,
+                projection
             );
-            return res.status(StatusCodes.OK).json(attendees);
+
+            return res.status(StatusCodes.OK).json({ registrants });
         } catch (error) {
             next(error);
         }
