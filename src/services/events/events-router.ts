@@ -2,7 +2,11 @@
 /* eslint-disable  @typescript-eslint/no-explicit-any */
 import { Router } from "express";
 import { StatusCodes } from "http-status-codes";
-import { publicEventValidator, privateEventValidator } from "./events-schema";
+import {
+    externalEventView,
+    internalEventView,
+    eventInfoValidator,
+} from "./events-schema";
 import { Database } from "../../database";
 import RoleChecker from "../../middleware/role-checker";
 import { Role } from "../auth/auth-models";
@@ -49,10 +53,10 @@ eventsRouter.get("/", RoleChecker([], true), async (req, res, next) => {
         var unfiltered_events = await Database.EVENTS.find();
 
         if (isStaff(payload) || isAdmin(payload)) {
-            filterFunction = (x: any) => privateEventValidator.parse(x);
+            filterFunction = (x: any) => internalEventView.parse(x);
         } else {
             unfiltered_events = unfiltered_events.filter((x) => x.isVisible);
-            filterFunction = (x: any) => publicEventValidator.parse(x);
+            filterFunction = (x: any) => externalEventView.parse(x);
         }
 
         const filtered_events = unfiltered_events.map(filterFunction);
@@ -80,9 +84,9 @@ eventsRouter.get("/:EVENTID", RoleChecker([], true), async (req, res, next) => {
         }
 
         if (isStaff(payload) || isAdmin(payload)) {
-            filterFunction = privateEventValidator.parse;
+            filterFunction = internalEventView.parse;
         } else {
-            filterFunction = publicEventValidator.parse;
+            filterFunction = externalEventView.parse;
             if (!event.isVisible) {
                 return res
                     .status(StatusCodes.NOT_FOUND)
@@ -102,7 +106,7 @@ eventsRouter.post(
     RoleChecker([Role.Enum.STAFF]),
     async (req, res, next) => {
         try {
-            const validatedData = privateEventValidator.parse(req.body);
+            const validatedData = eventInfoValidator.parse(req.body);
             const event = new Database.EVENTS(validatedData);
             await event.save();
             return res.sendStatus(StatusCodes.CREATED);
@@ -118,7 +122,9 @@ eventsRouter.put(
     async (req, res, next) => {
         const eventId = req.params.EVENTID;
         try {
-            const validatedData = privateEventValidator.parse(req.body);
+            eventInfoValidator.parse(req.body);
+            const validatedData = internalEventView.parse(req.body);
+            validatedData.eventId = eventId;
             const event = await Database.EVENTS.findOneAndUpdate(
                 { eventId: eventId },
                 { $set: validatedData }

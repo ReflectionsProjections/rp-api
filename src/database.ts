@@ -5,7 +5,7 @@ import {
 } from "./services/attendee/attendee-schema";
 import {
     EventSchema,
-    privateEventValidator,
+    internalEventView,
 } from "./services/events/events-schema";
 import {
     EventAttendanceSchema,
@@ -70,7 +70,7 @@ function initializeModel(
 // Example usage
 export const Database = {
     ROLES: initializeModel("roles", RoleSchema, RoleValidator),
-    EVENTS: initializeModel("events", EventSchema, privateEventValidator),
+    EVENTS: initializeModel("events", EventSchema, internalEventView),
     EVENTS_ATTENDANCE: initializeModel(
         "events_attendance",
         EventAttendanceSchema,
