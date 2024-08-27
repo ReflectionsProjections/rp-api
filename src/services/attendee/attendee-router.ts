@@ -1,16 +1,9 @@
 import { Router } from "express";
 import { StatusCodes } from "http-status-codes";
 import {
-    AttendeeValidator,
-    EventIdValidator,
-    PartialAttendeeValidator,
-} from "./attendee-schema";
-
-import {
     AttendeeCreateValidator,
     EventIdValidator,
 } from "./attendee-validators";
-
 import { Database } from "../../database";
 import RoleChecker from "../../middleware/role-checker";
 import { Role } from "../auth/auth-models";
@@ -134,6 +127,30 @@ attendeeRouter.get(
 );
 
 attendeeRouter.get(
+    "/points",
+    RoleChecker([Role.Enum.USER]),
+    async (req, res, next) => {
+        try {
+            const payload = res.locals.payload;
+            const userId = payload.userId;
+
+            // Check if the user exists in the database
+            const user = await Database.ATTENDEE.findOne({ userId });
+
+            if (!user) {
+                return res
+                    .status(StatusCodes.NOT_FOUND)
+                    .json({ error: "UserNotFound" });
+            }
+
+            return res.status(StatusCodes.OK).json({ points: user.points });
+        } catch (error) {
+            next(error);
+        }
+    }
+);
+
+attendeeRouter.get(
     "/",
     RoleChecker([Role.Enum.USER]),
     async (req, res, next) => {
@@ -163,7 +180,9 @@ attendeeRouter.get(
     RoleChecker([Role.Enum.STAFF, Role.Enum.CORPORATE]),
     async (req, res, next) => {
         try {
-            const attendeeData = PartialAttendeeValidator.parse(req.body);
+            const attendeeData = AttendeeCreateValidator.partial().parse(
+                req.body
+            );
             const attendees = await Database.ATTENDEE.find(
                 attendeeData,
                 "userId"
