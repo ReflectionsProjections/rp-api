@@ -183,7 +183,9 @@ attendeeRouter.put(
         const userId = payload.userId;
 
         try {
-            const updateData = PartialAttendeeValidator.parse(req.body);
+            const updateData = AttendeeCreateValidator.partial().parse(
+                req.body
+            );
 
             const attendee = await Database.ATTENDEE.findOneAndUpdate(
                 { userId },
