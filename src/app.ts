@@ -9,6 +9,7 @@ import databaseMiddleware from "./middleware/database-middleware";
 import morgan from "morgan";
 import bodyParser from "body-parser";
 import errorHandler from "./middleware/error-handler";
+import { rateLimiter } from "./middleware/rateLimiter";
 
 import attendeeRouter from "./services/attendee/attendee-router";
 import checkinRouter from "./services/checkin/checkin-router";
@@ -31,13 +32,13 @@ AWS.config.update({
 });
 
 const app = express();
-app.enable("trust proxy");
+app.set("trust proxy", true);
 
 // to prevent server-side caching/returning status code 200
 // (we can remove this later)
 app.disable("etag");
 
-// app.use(rateLimiter);
+app.use(rateLimiter);
 
 // app.use(customCors);
 app.use(cors());
