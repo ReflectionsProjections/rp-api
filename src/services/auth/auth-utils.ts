@@ -26,7 +26,7 @@ export function createGoogleStrategy(device: string) {
                 {
                     displayName,
                     email,
-                    ...(isAdmin && { $addToSet: {roles: Role.Enum.ADMIN } }),
+                    ...(isAdmin && { $addToSet: { roles: Role.Enum.ADMIN } }),
                 },
                 { upsert: true }
             )
