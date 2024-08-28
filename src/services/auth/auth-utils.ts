@@ -19,14 +19,14 @@ export function createGoogleStrategy(device: string) {
             const email = profile._json.email;
 
             // Check if user is admin -> if so, add ADMIN role to their list
-            // const isAdmin = email && Config.AUTH_ADMIN_WHITELIST.has(email);
+            const isAdmin = email && Config.AUTH_ADMIN_WHITELIST.has(email);
 
             Database.ROLES.findOneAndUpdate(
                 { userId: userId },
                 {
                     displayName,
                     email,
-                    // ...(isAdmin && { roles: { $addToSet: Role.Enum.ADMIN } }),
+                    ...(isAdmin && { $addToSet: {roles: Role.Enum.ADMIN } }),
                 },
                 { upsert: true }
             )
