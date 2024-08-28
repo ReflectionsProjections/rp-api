@@ -174,4 +174,57 @@ attendeeRouter.get(
     }
 );
 
+// Get attendees based on a partial filter in body
+attendeeRouter.get(
+    "/filter",
+    RoleChecker([Role.Enum.STAFF, Role.Enum.CORPORATE]),
+    async (req, res, next) => {
+        try {
+            const attendeeData = AttendeeCreateValidator.partial().parse(
+                req.body
+            );
+            const attendees = await Database.ATTENDEE.find(
+                attendeeData,
+                "userId"
+            );
+
+            return res.status(StatusCodes.OK).json(attendees);
+        } catch (error) {
+            next(error);
+        }
+    }
+);
+
+// Update an attendee with partial data
+attendeeRouter.put(
+    "/update",
+    RoleChecker([Role.Enum.USER]),
+    async (req, res, next) => {
+        const payload = res.locals.payload;
+        const userId = payload.userId;
+
+        try {
+            const updateData = AttendeeCreateValidator.partial().parse(
+                req.body
+            );
+
+            const attendee = await Database.ATTENDEE.findOneAndUpdate(
+                { userId },
+                { $set: updateData },
+                { new: true, runValidators: true }
+            );
+
+            if (!attendee) {
+                return res
+                    .status(StatusCodes.NOT_FOUND)
+                    .json({ error: "UserNotFound" });
+            }
+
+            return res.status(StatusCodes.OK).json(attendee);
+        } catch (error) {
+            next(error);
+        }
+    }
+);
+
 export default attendeeRouter;
