@@ -92,7 +92,7 @@ export const Config = {
 export const DeviceRedirects: Record<string, string> = {
     web: "https://reflectionsprojections.org/auth/",
     dev: "https://api.reflectionsprojections.org/auth/dev/",
-    mobile: "exp://192.168.86.24:8081/--/Main",
+    mobile: "reflectionsprojections://--/Main",
 };
 
 export const ses = new AWS.SES({
