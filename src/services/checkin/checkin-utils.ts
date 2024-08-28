@@ -62,6 +62,13 @@ async function updateAttendanceRecords(eventId: string, userId: string) {
     ]);
 }
 
+async function assignPixelsToUser(userId: string, pixels: number) {
+    await Database.ATTENDEE.findOneAndUpdate(
+        { userId },
+        { $inc: { points: pixels } }
+    );
+}
+
 export async function checkInUserToEvent(
     eventId: string,
     userId: string,
@@ -75,6 +82,12 @@ export async function checkInUserToEvent(
     }
 
     await updateAttendanceRecords(eventId, userId);
+
+    const event = await Database.EVENTS.findOne({ eventId });
+    if (!event) {
+        throw new Error("Event not found");
+    }
+    await assignPixelsToUser(userId, event.points);
 }
 
 export function generateQrHash(userId: string, expTime: number) {

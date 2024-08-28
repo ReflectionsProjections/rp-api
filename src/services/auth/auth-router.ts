@@ -11,6 +11,7 @@ import { Role, JwtPayloadType } from "../auth/auth-models";
 import { AuthRoleChangeRequest } from "./auth-schema";
 import { z } from "zod";
 import authSponsorRouter from "./sponsor/sponsor-router";
+import { CorporateDeleteRequest, CorporateValidator } from "./corporate-schema";
 import { isPuzzleBang } from "../auth/auth-utils";
 
 const authStrategies: Record<string, GoogleStrategy> = {};
@@ -151,6 +152,52 @@ authRouter.get("/dev/", (req, res) => {
     return res.status(StatusCodes.OK).json(req.query);
 });
 
+authRouter.get(
+    "/corporate",
+    RoleChecker([Role.Enum.ADMIN], true),
+    async (req, res, next) => {
+        try {
+            const allCorporate = await Database.CORPORATE.find();
+
+            return res.status(StatusCodes.OK).json(allCorporate);
+        } catch (error) {
+            next(error);
+        }
+    }
+);
+
+authRouter.post(
+    "/corporate",
+    RoleChecker([Role.Enum.ADMIN], true),
+    async (req, res, next) => {
+        try {
+            const attendeeData = CorporateValidator.parse(req.body);
+            const corporate = new Database.CORPORATE(attendeeData);
+            await corporate.save();
+
+            return res.status(StatusCodes.CREATED).json(corporate);
+        } catch (error) {
+            next(error);
+        }
+    }
+);
+
+authRouter.delete(
+    "/corporate",
+    RoleChecker([Role.Enum.ADMIN], true),
+    async (req, res, next) => {
+        try {
+            const attendeeData = CorporateDeleteRequest.parse(req.body);
+            const email = attendeeData.email;
+            await Database.CORPORATE.findOneAndDelete({ email: email });
+
+            return res.sendStatus(StatusCodes.NO_CONTENT);
+        } catch (error) {
+            next(error);
+        }
+    }
+);
+
 // Get a list of people by role (staff only endpoint)
 authRouter.get(
     "/:ROLE",
@@ -169,36 +216,6 @@ authRouter.get(
                 });
             }
 
-            next(error);
-        }
-    }
-);
-
-authRouter.post(
-    "/corporate/:email",
-    RoleChecker([Role.Enum.ADMIN], true),
-    async (req, res, next) => {
-        try {
-            const email = req.params.email;
-            const corporate = new Database.CORPORATE({ email: email });
-            await corporate.save();
-            return res.status(StatusCodes.CREATED).json(email);
-        } catch (error) {
-            next(error);
-        }
-    }
-);
-
-authRouter.delete(
-    "/corporate/:email",
-    RoleChecker([Role.Enum.ADMIN], true),
-    async (req, res, next) => {
-        try {
-            const email = req.params.email;
-            await Database.CORPORATE.findOneAndDelete({ email: email });
-
-            return res.sendStatus(StatusCodes.NO_CONTENT);
-        } catch (error) {
             next(error);
         }
     }
