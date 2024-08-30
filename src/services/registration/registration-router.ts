@@ -8,8 +8,9 @@ import { Database } from "../../database";
 import RoleChecker from "../../middleware/role-checker";
 import { Role } from "../auth/auth-models";
 import { AttendeeCreateValidator } from "../attendee/attendee-validators";
-import { registrationExists } from "./registration-utils";
+import { registrationExists, generateEncryptedId } from "./registration-utils";
 import cors from "cors";
+import Config from "../../config";
 
 const registrationRouter = Router();
 registrationRouter.use(cors());
@@ -88,6 +89,10 @@ registrationRouter.post("/submit", RoleChecker([]), async (req, res, next) => {
             attendeeData,
             { upsert: true, setDefaultsOnInsert: true }
         );
+
+        const encryptedId = await generateEncryptedId(payload.userId);
+        const redirect = Config.API_RESUME_UPDATE_ROUTE + `${encryptedId}`;
+        console.log(redirect)
 
         return res.status(StatusCodes.OK).json(registrationData);
     } catch (error) {
