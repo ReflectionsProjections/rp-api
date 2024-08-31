@@ -1,4 +1,15 @@
 const templates = {
+    REGISTRATION_CONFIRMATION: `<!DOCTYPE html>
+        <html>
+            <body>
+                <div class="container">
+                    <h1>Here is your magic link:</h1>
+                    <div class="magic_link">{{magic_link}}</div>
+                </div>
+            </body>
+        </html>x
+    `,
+
     SPONSOR_VERIFICATION: `
     <!DOCTYPE html>
     <html lang="en">
