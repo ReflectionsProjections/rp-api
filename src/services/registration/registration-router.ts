@@ -99,16 +99,12 @@ registrationRouter.post("/submit", RoleChecker([]), async (req, res, next) => {
         const redirect = Config.API_RESUME_UPDATE_ROUTE + `${encryptedId}`;
 
         const substitution = { magic_link: redirect };
-        console.log("redirect");
-        console.log(payload.email);
 
         await sendHTMLEmail(
             payload.email,
             "Reflections Projections 2024 Confirmation!",
             Mustache.render(templates.REGISTRATION_CONFIRMATION, substitution)
         );
-
-        console.log(redirect);
 
         return res.status(StatusCodes.OK).json(registrationData);
     } catch (error) {

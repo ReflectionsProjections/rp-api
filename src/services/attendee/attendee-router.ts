@@ -179,16 +179,12 @@ attendeeRouter.get(
     }
 );
 
-attendeeRouter.get(
-    "/resume/update/:ENCODED_ID",
-    async (req, res, next) => {
-        const ENCODED_ID = req.params.ENCODED_ID;
-        const decrypted_id = await decryptId(ENCODED_ID);
-        const token = await generateJWT(decrypted_id);
-        const uploadURL = Config.WEB_RESUME_REUPLOAD_ROUTE + `?token=${token}`;
-        console.log(uploadURL);
-        return res.redirect(uploadURL);
-    }
-);
+attendeeRouter.get("/resume/update/:ENCODED_ID", async (req, res, next) => {
+    const ENCODED_ID = req.params.ENCODED_ID;
+    const decrypted_id = await decryptId(ENCODED_ID);
+    const token = await generateJWT(decrypted_id);
+    const uploadURL = Config.WEB_RESUME_REUPLOAD_ROUTE + `?token=${token}`;
+    return res.redirect(uploadURL);
+});
 
 export default attendeeRouter;

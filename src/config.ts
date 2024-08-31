@@ -33,8 +33,7 @@ export const Config = {
     CLIENT_ID: getEnv("OAUTH_GOOGLE_CLIENT_ID"),
     CLIENT_SECRET: getEnv("OAUTH_GOOGLE_CLIENT_SECRET"),
 
-    AUTH_CALLBACK_URI_BASE:
-        `${API_BASE}/auth/callback/`,
+    AUTH_CALLBACK_URI_BASE: `${API_BASE}/auth/callback/`,
 
     // prettier-ignore
     AUTH_ADMIN_WHITELIST: new Set([
@@ -88,7 +87,7 @@ export const Config = {
     // QR Scanning
     QR_HASH_ITERATIONS: 10000,
     QR_HASH_SECRET: getEnv("QR_HASH_SECRET"),
-    USERID_ENCRYPTION_KEY: "1234",
+    USERID_ENCRYPTION_KEY: getEnv("USERID_ENCRYPTION_KEY"),
     API_RESUME_UPDATE_ROUTE: `${API_BASE}/attendee/resume/update/`,
     WEB_RESUME_REUPLOAD_ROUTE: `${WEB_BASE}/resume/upload/`,
     OUTGOING_EMAIL_ADDRESSES: z.enum(["no-reply@reflectionsprojections.org"]),

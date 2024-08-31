@@ -18,7 +18,6 @@ export function createGoogleStrategy(device: string) {
             const userId = `user${profile.id}`;
             const displayName = profile.displayName;
             const email = profile._json.email;
-            console.log(email);
 
             // Check if user is admin -> if so, add ADMIN role to their list
             const isAdmin = email && Config.AUTH_ADMIN_WHITELIST.has(email);
@@ -49,8 +48,6 @@ export async function getJwtPayloadFromDatabase(userId: string) {
     if (!payload) {
         throw new Error("NoUserFound");
     }
-
-    console.log(payload);
 
     return payload;
 }
