@@ -3,11 +3,13 @@ const templates = {
         <html>
             <body>
                 <div class="container">
-                    <h1>Here is your magic link:</h1>
-                    <div class="magic_link">{{magic_link}}</div>
+                    <p> Thank you for registering for R|P 2025. We have recieved your information, and will be sending next steps shortly.  </p>
+                        <p> Need to update your resume? Use 
+                            <a href="{{magic_link}}">this</a>
+                        magic link to do so! This is a UNIQUE link for you - for your privacy and safety, please do not share this link with anyone else. </p>
                 </div>
             </body>
-        </html>x
+        </html>
     `,
 
     SPONSOR_VERIFICATION: `
