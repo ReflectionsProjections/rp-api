@@ -87,5 +87,6 @@ export function isPuzzleBang(payload?: JwtPayloadType) {
     return payload?.roles.includes(Role.Enum.PUZZLEBANG);
 }
 function next(error: unknown) {
+    console.error(error);
     throw new Error("Function not implemented.");
 }

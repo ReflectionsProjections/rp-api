@@ -179,7 +179,7 @@ attendeeRouter.get(
     }
 );
 
-attendeeRouter.get("/resume/update/:ENCODED_ID", async (req, res, next) => {
+attendeeRouter.get("/resume/update/:ENCODED_ID", async (req, res) => {
     const ENCODED_ID = req.params.ENCODED_ID;
     const decrypted_id = await decryptId(ENCODED_ID);
     const token = await generateJWT(decrypted_id);
