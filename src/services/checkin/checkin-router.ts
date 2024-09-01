@@ -14,7 +14,6 @@ checkinRouter.post(
     async (req, res, next) => {
         try {
             const { eventId, qrCode } = ScanValidator.parse(req.body);
-            console.log("Event ID:", eventId);
 
             const { userId, expTime } = validateQrHash(qrCode);
 

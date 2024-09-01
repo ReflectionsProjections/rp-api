@@ -8,8 +8,14 @@ import { Database } from "../../database";
 import RoleChecker from "../../middleware/role-checker";
 import { Role } from "../auth/auth-models";
 import { AttendeeCreateValidator } from "../attendee/attendee-validators";
-import { registrationExists } from "./registration-utils";
+import { registrationExists, generateEncryptedId } from "./registration-utils";
 import cors from "cors";
+import Config from "../../config";
+
+import Mustache from "mustache";
+import { sendHTMLEmail } from "../ses/ses-utils";
+
+import templates from "../../templates/templates";
 
 const registrationRouter = Router();
 registrationRouter.use(cors());
@@ -87,6 +93,17 @@ registrationRouter.post("/submit", RoleChecker([]), async (req, res, next) => {
             { userId: payload.userId },
             attendeeData,
             { upsert: true, setDefaultsOnInsert: true }
+        );
+
+        const encryptedId = await generateEncryptedId(payload.userId);
+        const redirect = Config.API_RESUME_UPDATE_ROUTE + `${encryptedId}`;
+
+        const substitution = { magic_link: redirect };
+
+        await sendHTMLEmail(
+            payload.email,
+            "Reflections Projections 2024 Confirmation!",
+            Mustache.render(templates.REGISTRATION_CONFIRMATION, substitution)
         );
 
         return res.status(StatusCodes.OK).json(registrationData);

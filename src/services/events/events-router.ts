@@ -60,7 +60,6 @@ eventsRouter.get("/", RoleChecker([], true), async (req, res, next) => {
         }
 
         const filtered_events = unfiltered_events.map(filterFunction);
-        console.log(filtered_events);
         return res.status(StatusCodes.OK).json(filtered_events);
     } catch (error) {
         next(error);
