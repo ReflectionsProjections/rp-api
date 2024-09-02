@@ -94,8 +94,8 @@ export const Config = {
 };
 
 export const DeviceRedirects: Record<string, string> = {
-    web: "https://reflectionsprojections.org/auth/",
-    dev: "https://api.reflectionsprojections.org/auth/dev/",
+    web: `${WEB_BASE}/auth/`,
+    dev: `${API_BASE}/auth/dev/`,
     mobile: "reflectionsprojections://--/Main",
 };
 
