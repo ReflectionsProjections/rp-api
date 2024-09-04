@@ -42,7 +42,7 @@ const RegistrationSchema = new mongoose.Schema({
     isInterestedPuzzleBang: { type: Boolean },
     hasResume: { type: Boolean, default: false },
     hasSubmitted: { type: Boolean, default: false },
-    degree: {type: String}
+    degree: { type: String },
 });
 
 const RegistrationFilterValidator = z.object({
