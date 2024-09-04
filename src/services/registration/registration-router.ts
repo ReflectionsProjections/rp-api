@@ -98,7 +98,30 @@ registrationRouter.post("/submit", RoleChecker([]), async (req, res, next) => {
         const encryptedId = await generateEncryptedId(payload.userId);
         const redirect = Config.API_RESUME_UPDATE_ROUTE + `${encryptedId}`;
 
-        const substitution = { magic_link: redirect };
+        const substitution = {
+            magic_link: redirect,
+            name: registrationData.name || "N/A",
+            email: registrationData.email || "N/A",
+            university: registrationData.university || "N/A",
+            major: registrationData.major || "N/A",
+            degree: registrationData.degree || "N/A",
+            graduation: registrationData.graduation || "N/A",
+            dietaryRestrictions:
+                registrationData.dietaryRestrictions.length > 0
+                    ? registrationData.dietaryRestrictions
+                    : "N/A",
+            allergies:
+                registrationData.allergies.length > 0
+                    ? registrationData.allergies
+                    : "N/A",
+            gender: registrationData.gender || "N/A",
+            ethnicity: registrationData.ethnicity || "N/A",
+            portfolios:
+                registrationData.portfolios.length > 0
+                    ? registrationData.portfolios
+                    : "N/A",
+            jobInterest: registrationData.jobInterest || "N/A",
+        };
 
         await sendHTMLEmail(
             payload.email,
