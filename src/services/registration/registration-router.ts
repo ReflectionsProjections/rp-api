@@ -120,7 +120,10 @@ registrationRouter.post("/submit", RoleChecker([]), async (req, res, next) => {
                 registrationData.portfolios.length > 0
                     ? registrationData.portfolios
                     : "N/A",
-            jobInterest: registrationData.jobInterest || "N/A",
+            jobInterest:
+                (registrationData?.jobInterest ?? []).length > 0
+                    ? registrationData.jobInterest
+                    : "N/A",
         };
 
         await sendHTMLEmail(
