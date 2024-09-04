@@ -156,6 +156,32 @@ registrationRouter.get("/", RoleChecker([]), async (req, res, next) => {
 });
 
 registrationRouter.post(
+    "/resume/upload",
+    RoleChecker([]),
+    async (req, res, next) => {
+        const { hasResume } = req.body;
+
+        try {
+            const registration = await Database.REGISTRATION.findOneAndUpdate(
+                { userId: res.locals.payload.userId },
+                { $set: { hasResume: hasResume } },
+                { new: true }
+            );
+
+            if (!registration) {
+                return res
+                    .status(StatusCodes.NOT_FOUND)
+                    .json({ error: "UserNotFound" });
+            }
+
+            return res.status(StatusCodes.OK).json({ registration });
+        } catch (error) {
+            next(error);
+        }
+    }
+);
+
+registrationRouter.post(
     "/filter",
     RoleChecker([Role.Enum.STAFF, Role.Enum.CORPORATE], true),
     async (req, res, next) => {
