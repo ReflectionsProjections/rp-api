@@ -7,7 +7,7 @@ import {
 import { Database } from "../../database";
 import RoleChecker from "../../middleware/role-checker";
 import { Role } from "../auth/auth-models";
-import { generateQrHash } from "../checkin/checkin-utils";
+import { generateQrHash, getCurrentDay } from "../checkin/checkin-utils";
 
 import { decryptId } from "./attendee-utils";
 
@@ -149,6 +149,78 @@ attendeeRouter.get(
             }
 
             return res.status(StatusCodes.OK).json({ points: user.points });
+        } catch (error) {
+            next(error);
+        }
+    }
+);
+
+attendeeRouter.get(
+    "/foodwave",
+    RoleChecker([Role.Enum.USER]),
+    async (req, res, next) => {
+        try {
+            const payload = res.locals.payload;
+            const userId = payload.userId;
+
+            // Check if the user exists in the database
+            const user = await Database.ATTENDEE.findOne({ userId });
+
+            if (!user) {
+                return res
+                    .status(StatusCodes.NOT_FOUND)
+                    .json({ error: "UserNotFound" });
+            }
+
+            // check if true for cur day
+            const day = getCurrentDay();
+            let hasPriority = null;
+            if (day === "Mon") {
+                hasPriority = user.hasPriority.Mon;
+            } else if (day === "Tue") {
+                hasPriority = user.hasPriority.Tue;
+            } else if (day === "Wed") {
+                hasPriority = user.hasPriority.Wed;
+            } else if (day === "Thu") {
+                hasPriority = user.hasPriority.Thu;
+            } else if (day === "Fri") {
+                hasPriority = user.hasPriority.Fri;
+            } else if (day === "Sat") {
+                hasPriority = user.hasPriority.Sat;
+            } else if (day === "Sun") {
+                hasPriority = user.hasPriority.Sun;
+            }
+
+            const hasFoodRestrictions =
+                user.dietaryRestrictions.length > 0 ||
+                user.allergies.length > 0;
+            const foodwave = hasPriority || hasFoodRestrictions ? 1 : 2;
+
+            return res.status(StatusCodes.OK).json({ foodwave: foodwave });
+        } catch (error) {
+            next(error);
+        }
+    }
+);
+
+attendeeRouter.get(
+    "/",
+    RoleChecker([Role.Enum.USER]),
+    async (req, res, next) => {
+        try {
+            const payload = res.locals.payload;
+            const userId = payload.userId;
+
+            // Check if the user exists in the database
+            const user = await Database.ATTENDEE.findOne({ userId });
+
+            if (!user) {
+                return res
+                    .status(StatusCodes.NOT_FOUND)
+                    .json({ error: "UserNotFound" });
+            }
+
+            return res.status(StatusCodes.OK).json(user);
         } catch (error) {
             next(error);
         }
