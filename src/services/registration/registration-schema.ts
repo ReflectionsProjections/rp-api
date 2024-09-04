@@ -20,6 +20,7 @@ const RegistrationValidator = z.object({
     isInterestedPuzzleBang: z.boolean(),
     hasResume: z.boolean().default(false),
     hasSubmitted: z.boolean().optional(),
+    degree: z.string(),
 });
 
 // Mongoose schema for registration
@@ -41,6 +42,7 @@ const RegistrationSchema = new mongoose.Schema({
     isInterestedPuzzleBang: { type: Boolean },
     hasResume: { type: Boolean, default: false },
     hasSubmitted: { type: Boolean, default: false },
+    degree: {type: String}
 });
 
 const RegistrationFilterValidator = z.object({
