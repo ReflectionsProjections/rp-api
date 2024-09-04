@@ -3,13 +3,13 @@ const templates = {
         <html>
             <body>
                 <div class="container">
-                    <p> Thank you for registering for R|P 2024. We have recieved your information, and will be sending next steps shortly.  </p>
+                    <p> Thank you for registering for R|P 2024. We have received your information, and will be sending next steps shortly.  </p>
                     
                     <p> Need to update your resume? Use 
                         <a href="{{magic_link}}">this</a>
                     magic link to do so! This is a UNIQUE link for you - for your privacy and safety, please do not share this link with anyone else. </p>
 
-                    <p> For your reference, your application contained the following information: </p>
+                    <p> For your reference, your application included the following information: </p>
                     <ul>
                         <li> <b> Name: </b>  {{name}} </li>
                         <li> <b> Email: </b>  {{email}} </li>
