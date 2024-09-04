@@ -89,7 +89,7 @@ export const Config = {
     QR_HASH_SECRET: getEnv("QR_HASH_SECRET"),
     USERID_ENCRYPTION_KEY: getEnv("USERID_ENCRYPTION_KEY"),
     API_RESUME_UPDATE_ROUTE: `${API_BASE}/attendee/resume/update/`,
-    WEB_RESUME_REUPLOAD_ROUTE: `${WEB_BASE}/resume/upload/`,
+    WEB_RESUME_REUPLOAD_ROUTE: `${WEB_BASE}/update`,
     OUTGOING_EMAIL_ADDRESSES: z.enum(["no-reply@reflectionsprojections.org"]),
 };
 
