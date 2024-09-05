@@ -36,22 +36,22 @@ export const AttendeeSchema = new Schema({
     },
     hasRedeemedMerch: {
         type: new Schema(
-        {
-            Button: { type: Boolean, default: false },
-            Tote: { type: Boolean, default: false },
-            Cap: { type: Boolean, default: false },
-        },
-        { _id: false }
+            {
+                Button: { type: Boolean, default: false },
+                Tote: { type: Boolean, default: false },
+                Cap: { type: Boolean, default: false },
+            },
+            { _id: false }
         ),
     },
     isEligibleMerch: {
         type: new Schema(
-        {
-            Button: { type: Boolean, default: false },
-            Tote: { type: Boolean, default: false },
-            Cap: { type: Boolean, default: false },
-        },
-        { _id: false }
+            {
+                Button: { type: Boolean, default: false },
+                Tote: { type: Boolean, default: false },
+                Cap: { type: Boolean, default: false },
+            },
+            { _id: false }
         ),
     },
 

@@ -186,7 +186,7 @@ attendeeRouter.post(
         try {
             const payload = res.locals.payload;
             const userId = payload.userId;
-            const merchItem = req.params.ITEM
+            const merchItem = req.params.ITEM;
 
             // Check if the user exists in the database
             const user = await Database.ATTENDEE.findOne({ userId });
@@ -197,37 +197,39 @@ attendeeRouter.post(
                     .json({ error: "UserNotFound" });
             }
 
-            if (merchItem == "Cap" || merchItem == "Tote" || merchItem == "Button") {
-                if (!(user.isEligibleMerch![merchItem])) {
-                    return res.status(StatusCodes.BAD_REQUEST).json({ error: "Too few points" });
-                } 
-
-                else if ((user.hasRedeemedMerch![merchItem])) {
-                    return res.status(StatusCodes.BAD_REQUEST).json({ error: "Item already redeemed" });
-                }
-
-                else {
+            if (
+                merchItem == "Cap" ||
+                merchItem == "Tote" ||
+                merchItem == "Button"
+            ) {
+                if (!user.isEligibleMerch![merchItem]) {
+                    return res
+                        .status(StatusCodes.BAD_REQUEST)
+                        .json({ error: "Too few points" });
+                } else if (user.hasRedeemedMerch![merchItem]) {
+                    return res
+                        .status(StatusCodes.BAD_REQUEST)
+                        .json({ error: "Item already redeemed" });
+                } else {
                     await Database.ATTENDEE.updateOne(
                         { userId },
                         { $set: { [`hasRedeemedMerch.${merchItem}`]: true } }
                     );
 
-                    return res.status(StatusCodes.OK).json({ message: "Item Redeemed!" });
+                    return res
+                        .status(StatusCodes.OK)
+                        .json({ message: "Item Redeemed!" });
                 }
+            } else {
+                return res
+                    .status(StatusCodes.BAD_REQUEST)
+                    .json({ error: "Not a valid item" });
             }
-
-            else {
-                return res.status(StatusCodes.BAD_REQUEST).json({ error: "Not a valid item" });
-            }
-
         } catch (error) {
             next(error);
         }
     }
 );
-
-
-
 
 attendeeRouter.get("/resume/update/:ENCODED_ID", async (req, res) => {
     const ENCODED_ID = req.params.ENCODED_ID;
