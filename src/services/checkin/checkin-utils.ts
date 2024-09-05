@@ -68,7 +68,6 @@ async function assignPixelsToUser(userId: string, pixels: number) {
         { $inc: { points: pixels } },
         { new: true }
     );
-    console.log("here");
 
     const new_points = updatedDoc!.points;
     const updatedFields = {
