@@ -92,6 +92,7 @@ export const DeviceRedirects: Record<string, string> = {
     web: "http://localhost:5173/",
     dev: "https://api.reflectionsprojections.org/auth/dev/",
     mobile: "exp://192.168.86.24:8081/--/Main",
+    admin: "https://admin.reflectionsprojections.org/auth/",
 };
 
 export const ses = new AWS.SES({
