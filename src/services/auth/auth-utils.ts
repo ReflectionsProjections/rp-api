@@ -3,6 +3,7 @@ import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import { Config } from "../../config";
 import { Database } from "../../database";
 import { JwtPayloadType, Role } from "./auth-models";
+import jsonwebtoken from "jsonwebtoken";
 
 export function createGoogleStrategy(device: string) {
     return new GoogleStrategy(
@@ -17,16 +18,17 @@ export function createGoogleStrategy(device: string) {
             const userId = `user${profile.id}`;
             const displayName = profile.displayName;
             const email = profile._json.email;
-            const roles = [];
 
             // Check if user is admin -> if so, add ADMIN role to their list
-            if (Config.AUTH_ADMIN_WHITELIST.has(email ?? "")) {
-                roles.push(Role.Enum.ADMIN);
-            }
+            const isAdmin = email && Config.AUTH_ADMIN_WHITELIST.has(email);
 
             Database.ROLES.findOneAndUpdate(
                 { userId: userId },
-                { userId, displayName, email, roles },
+                {
+                    displayName,
+                    email,
+                    ...(isAdmin && { $addToSet: { roles: Role.Enum.ADMIN } }),
+                },
                 { upsert: true }
             )
                 .then(() => cb(null, profile))
@@ -40,12 +42,33 @@ export async function getJwtPayloadFromDatabase(userId: string) {
         "userId",
         "displayName",
         "roles",
+        "email",
     ]);
+
     if (!payload) {
         throw new Error("NoUserFound");
     }
 
     return payload;
+}
+
+export async function generateJWT(userId: string) {
+    try {
+        const jwtPayload = (
+            await getJwtPayloadFromDatabase(userId)
+        ).toObject() as JwtPayloadType;
+
+        // Check if user has PuzzleBang role
+        const isPB = isPuzzleBang(jwtPayload);
+
+        return jsonwebtoken.sign(jwtPayload, Config.JWT_SIGNING_SECRET, {
+            expiresIn: isPB
+                ? Config.PB_JWT_EXPIRATION_TIME
+                : Config.JWT_EXPIRATION_TIME,
+        });
+    } catch (error) {
+        next(error);
+    }
 }
 
 export function isUser(payload?: JwtPayloadType) {
@@ -58,4 +81,12 @@ export function isStaff(payload?: JwtPayloadType) {
 
 export function isAdmin(payload?: JwtPayloadType) {
     return payload?.roles.includes(Role.Enum.ADMIN);
+}
+
+export function isPuzzleBang(payload?: JwtPayloadType) {
+    return payload?.roles.includes(Role.Enum.PUZZLEBANG);
+}
+function next(error: unknown) {
+    console.error(error);
+    throw new Error("Function not implemented.");
 }

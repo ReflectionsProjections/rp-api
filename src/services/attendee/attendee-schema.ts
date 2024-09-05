@@ -10,7 +10,6 @@ export const AttendeeSchema = new Schema({
     allergies: { type: [String], required: true },
     hasCheckedIn: { type: Boolean, default: false },
     points: { type: Number, default: 0 },
-    foodWave: { type: Number, default: 0 },
     hasPriority: {
         type: new Schema(
             {

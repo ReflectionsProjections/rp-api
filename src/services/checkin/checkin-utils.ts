@@ -2,7 +2,7 @@ import { Database } from "../../database";
 import crypto from "crypto";
 import { Config } from "../../config";
 
-function getCurrentDay() {
+export function getCurrentDay() {
     const currDate = new Date();
     const dayString = new Intl.DateTimeFormat("en-US", {
         timeZone: "America/Chicago",

@@ -11,18 +11,16 @@ const RegistrationValidator = z.object({
     major: z.string().nullable().optional(),
     dietaryRestrictions: z.string().array(),
     allergies: z.string().array(),
-    age: z.number().nullable().optional(),
     gender: z.string().nullable().optional(),
-    race: z.array(z.string()).nullable().optional(),
     ethnicity: z.array(z.string()).nullable().optional(),
-    firstGen: z.string().nullable().optional(),
     hearAboutRP: z.array(z.string()).nullable().optional(),
-    portfolio: z.string().nullable().optional(),
+    portfolios: z.string().array(),
     jobInterest: z.array(z.string()).nullable().optional(),
     isInterestedMechMania: z.boolean(),
     isInterestedPuzzleBang: z.boolean(),
     hasResume: z.boolean().default(false),
     hasSubmitted: z.boolean().optional(),
+    degree: z.string(),
 });
 
 // Mongoose schema for registration
@@ -35,28 +33,22 @@ const RegistrationSchema = new mongoose.Schema({
     major: { type: String, default: null },
     dietaryRestrictions: [{ type: String, required: true }],
     allergies: [{ type: String, required: true }],
-    age: { type: Number, default: null },
     gender: { type: String, default: null },
-    race: [{ type: String }],
     ethnicity: [{ type: String }],
-    firstGen: { type: String, default: null },
     hearAboutRP: [{ type: String }],
-    portfolio: { type: String, default: null },
+    portfolios: [{ type: String, required: true }],
     jobInterest: [{ type: String }],
     isInterestedMechMania: { type: Boolean },
     isInterestedPuzzleBang: { type: Boolean },
     hasResume: { type: Boolean, default: false },
     hasSubmitted: { type: Boolean, default: false },
+    degree: { type: String },
 });
 
-// Partial schema for attendee filter
-const PartialRegistrationValidator = RegistrationValidator.partial();
-
 const RegistrationFilterValidator = z.object({
-    filter: PartialRegistrationValidator,
-    projection: z.array(
-        z.record(PartialRegistrationValidator.keyof(), z.number().min(1).max(1))
-    ),
+    graduations: z.array(z.string()).optional(),
+    majors: z.array(z.string()).optional(),
+    jobInterests: z.array(z.string()).optional(),
 });
 
 export {

@@ -8,9 +8,17 @@ import { Database } from "../../database";
 import RoleChecker from "../../middleware/role-checker";
 import { Role } from "../auth/auth-models";
 import { AttendeeCreateValidator } from "../attendee/attendee-validators";
-import { registrationExists } from "./registration-utils";
+import { registrationExists, generateEncryptedId } from "./registration-utils";
+import cors from "cors";
+import Config from "../../config";
+
+import Mustache from "mustache";
+import { sendHTMLEmail } from "../ses/ses-utils";
+
+import templates from "../../templates/templates";
 
 const registrationRouter = Router();
+registrationRouter.use(cors());
 
 // A database upsert operation to save registration mid-progress
 registrationRouter.post("/save", RoleChecker([]), async (req, res, next) => {
@@ -87,6 +95,43 @@ registrationRouter.post("/submit", RoleChecker([]), async (req, res, next) => {
             { upsert: true, setDefaultsOnInsert: true }
         );
 
+        const encryptedId = await generateEncryptedId(payload.userId);
+        const redirect = Config.API_RESUME_UPDATE_ROUTE + `${encryptedId}`;
+
+        const substitution = {
+            magic_link: redirect,
+            name: registrationData.name || "N/A",
+            email: registrationData.email || "N/A",
+            university: registrationData.university || "N/A",
+            major: registrationData.major || "N/A",
+            degree: registrationData.degree || "N/A",
+            graduation: registrationData.graduation || "N/A",
+            dietaryRestrictions:
+                registrationData.dietaryRestrictions.length > 0
+                    ? registrationData.dietaryRestrictions
+                    : "N/A",
+            allergies:
+                registrationData.allergies.length > 0
+                    ? registrationData.allergies
+                    : "N/A",
+            gender: registrationData.gender || "N/A",
+            ethnicity: registrationData.ethnicity || "N/A",
+            portfolios:
+                registrationData.portfolios.length > 0
+                    ? registrationData.portfolios
+                    : "N/A",
+            jobInterest:
+                (registrationData?.jobInterest ?? []).length > 0
+                    ? registrationData.jobInterest
+                    : "N/A",
+        };
+
+        await sendHTMLEmail(
+            payload.email,
+            "Reflections Projections 2024 Confirmation!",
+            Mustache.render(templates.REGISTRATION_CONFIRMATION, substitution)
+        );
+
         return res.status(StatusCodes.OK).json(registrationData);
     } catch (error) {
         next(error);
@@ -110,19 +155,39 @@ registrationRouter.get("/", RoleChecker([]), async (req, res, next) => {
     }
 });
 
-// Get attendees based on a partial filter in body
 registrationRouter.post(
     "/filter",
-    RoleChecker([Role.Enum.STAFF, Role.Enum.CORPORATE]),
+    RoleChecker([Role.Enum.STAFF, Role.Enum.CORPORATE], true),
     async (req, res, next) => {
         try {
-            const filterData = RegistrationFilterValidator.parse(req.body);
-            const projection = Object.assign({}, ...filterData.projection);
-            const attendees = await Database.REGISTRATION.find(
-                filterData.filter,
-                { ...projection, hasSubmitted: 1 }
+            const { graduations, majors, jobInterests } =
+                RegistrationFilterValidator.parse(req.body);
+
+            const query = {
+                hasSubmitted: true,
+                hasResume: true,
+                ...(graduations && { graduation: { $in: graduations } }),
+                ...(majors && { major: { $in: majors } }),
+                ...(jobInterests && {
+                    jobInterest: { $elemMatch: { $in: jobInterests } },
+                }),
+            };
+
+            const projection = {
+                userId: 1,
+                name: 1,
+                major: 1,
+                graduation: 1,
+                jobInterest: 1,
+                portfolios: 1,
+            };
+
+            const registrants = await Database.REGISTRATION.find(
+                query,
+                projection
             );
-            return res.status(StatusCodes.OK).json(attendees);
+
+            return res.status(StatusCodes.OK).json({ registrants });
         } catch (error) {
             next(error);
         }

@@ -11,6 +11,7 @@ export const Role = z.enum([
 export const JwtPayloadValidator = z.object({
     userId: z.string(),
     displayName: z.string(),
+    email: z.string().email(),
     roles: Role.array(),
 });
 
