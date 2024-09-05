@@ -62,10 +62,25 @@ async function updateAttendanceRecords(eventId: string, userId: string) {
     ]);
 }
 
-async function assignPixelsToUser(userId: string, pixels: number) {
+export async function assignPixelsToUser(userId: string, pixels: number) {
+    const updatedDoc = await Database.ATTENDEE.findOneAndUpdate(
+        { userId },
+        { $inc: { points: pixels } },
+        { new: true }
+    );
+    console.log("here")
+
+    const new_points = updatedDoc!.points;
+    const updatedFields = {
+        'isEligibleMerch.Cap': new_points >= 50,
+        'isEligibleMerch.Tote': new_points >= 35,
+        'isEligibleMerch.Button': new_points >= 20
+    };
+    console.log(updatedFields)
+
     await Database.ATTENDEE.findOneAndUpdate(
         { userId },
-        { $inc: { points: pixels } }
+        { $set: updatedFields }
     );
 }
 

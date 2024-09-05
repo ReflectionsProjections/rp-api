@@ -179,6 +179,56 @@ attendeeRouter.get(
     }
 );
 
+attendeeRouter.post(
+    "/redeemMerch/:ITEM",
+    RoleChecker([]),
+    async (req, res, next) => {
+        try {
+            const payload = res.locals.payload;
+            const userId = payload.userId;
+            const merchItem = req.params.ITEM
+
+            // Check if the user exists in the database
+            const user = await Database.ATTENDEE.findOne({ userId });
+
+            if (!user) {
+                return res
+                    .status(StatusCodes.NOT_FOUND)
+                    .json({ error: "UserNotFound" });
+            }
+
+            if (merchItem == "Cap" || merchItem == "Tote" || merchItem == "Button") {
+                if (!(user.isEligibleMerch![merchItem])) {
+                    return res.status(StatusCodes.BAD_REQUEST).json({ error: "Too few points" });
+                } 
+
+                else if ((user.hasRedeemedMerch![merchItem])) {
+                    return res.status(StatusCodes.BAD_REQUEST).json({ error: "Item already redeemed" });
+                }
+
+                else {
+                    await Database.ATTENDEE.updateOne(
+                        { userId },
+                        { $set: { [`hasRedeemedMerch.${merchItem}`]: true } }
+                    );
+
+                    return res.status(StatusCodes.OK).json({ message: "Item Redeemed!" });
+                }
+            }
+
+            else {
+                return res.status(StatusCodes.BAD_REQUEST).json({ error: "Not a valid item" });
+            }
+
+        } catch (error) {
+            next(error);
+        }
+    }
+);
+
+
+
+
 attendeeRouter.get("/resume/update/:ENCODED_ID", async (req, res) => {
     const ENCODED_ID = req.params.ENCODED_ID;
     const decrypted_id = await decryptId(ENCODED_ID);
