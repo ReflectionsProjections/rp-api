@@ -160,7 +160,7 @@ registrationRouter.post(
     RoleChecker([Role.Enum.STAFF, Role.Enum.CORPORATE], true),
     async (req, res, next) => {
         try {
-            const { graduations, majors, jobInterests } =
+            const { graduations, majors, jobInterests, degrees } =
                 RegistrationFilterValidator.parse(req.body);
 
             const query = {
@@ -168,6 +168,7 @@ registrationRouter.post(
                 hasResume: true,
                 ...(graduations && { graduation: { $in: graduations } }),
                 ...(majors && { major: { $in: majors } }),
+                ...(degrees && { degree: { $in: degrees } }),
                 ...(jobInterests && {
                     jobInterest: { $elemMatch: { $in: jobInterests } },
                 }),
@@ -178,6 +179,7 @@ registrationRouter.post(
                 name: 1,
                 major: 1,
                 graduation: 1,
+                degree: 1,
                 jobInterest: 1,
                 portfolios: 1,
             };

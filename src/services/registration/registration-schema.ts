@@ -49,6 +49,7 @@ const RegistrationFilterValidator = z.object({
     graduations: z.array(z.string()).optional(),
     majors: z.array(z.string()).optional(),
     jobInterests: z.array(z.string()).optional(),
+    degrees: z.array(z.string()).optional(),
 });
 
 export {
