@@ -157,7 +157,7 @@ registrationRouter.get("/", RoleChecker([]), async (req, res, next) => {
 
 registrationRouter.post(
     "/filter",
-    RoleChecker([Role.Enum.STAFF, Role.Enum.CORPORATE], true),
+    RoleChecker([Role.Enum.ADMIN, Role.Enum.CORPORATE]),
     async (req, res, next) => {
         try {
             const { graduations, majors, jobInterests, degrees } =
