@@ -76,8 +76,7 @@ authSponsorRouter.post("/verify", async (req, res, next) => {
             },
             Config.JWT_SIGNING_SECRET,
             {
-                expiresIn:
-                    Math.floor(Date.now() / 1000) + Config.JWT_EXPIRATION_TIME,
+                expiresIn: Config.JWT_EXPIRATION_TIME,
             }
         );
         return res.status(StatusCodes.OK).json({ token });
