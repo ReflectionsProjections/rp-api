@@ -190,7 +190,7 @@ registrationRouter.get(
             );
 
             return res.status(StatusCodes.OK).json({
-                pagecout: Math.floor((registrants.length + 99) / 100),
+                pagecount: Math.floor((registrants.length + 99) / 100),
             });
         } catch (error) {
             next(error);
