@@ -155,6 +155,49 @@ registrationRouter.get("/", RoleChecker([]), async (req, res, next) => {
     }
 });
 
+registrationRouter.get(
+    "/filter/pagecount",
+    RoleChecker([Role.Enum.ADMIN, Role.Enum.CORPORATE]),
+    async (req, res, next) => {
+        try {
+            const { graduations, majors, jobInterests, degrees } =
+                RegistrationFilterValidator.parse(req.body);
+
+            const query = {
+                hasSubmitted: true,
+                hasResume: true,
+                ...(graduations && { graduation: { $in: graduations } }),
+                ...(majors && { major: { $in: majors } }),
+                ...(degrees && { degree: { $in: degrees } }),
+                ...(jobInterests && {
+                    jobInterest: { $elemMatch: { $in: jobInterests } },
+                }),
+            };
+
+            const projection = {
+                userId: 1,
+                name: 1,
+                major: 1,
+                graduation: 1,
+                degree: 1,
+                jobInterest: 1,
+                portfolios: 1,
+            };
+
+            const registrants = await Database.REGISTRATION.find(
+                query,
+                projection
+            );
+
+            return res.status(StatusCodes.OK).json({
+                pagecout: Math.floor((registrants.length + 99) / 100),
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+);
+
 registrationRouter.post(
     "/filter/:PAGE",
     RoleChecker([Role.Enum.ADMIN, Role.Enum.CORPORATE]),
