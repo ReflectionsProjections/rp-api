@@ -56,6 +56,9 @@ authSponsorRouter.post("/verify", async (req, res, next) => {
         const sponsorData = await Database.AUTH_CODES.findOneAndDelete({
             email,
         });
+        const corpResponse = await Database.CORPORATE.findOne({
+            email: email,
+        });
         if (!sponsorData) {
             return res.sendStatus(StatusCodes.UNAUTHORIZED);
         }
@@ -71,8 +74,10 @@ authSponsorRouter.post("/verify", async (req, res, next) => {
         }
         const token = jsonwebtoken.sign(
             {
-                email,
-                role: Role.Enum.CORPORATE,
+                userId: email,
+                displayName: corpResponse?.name,
+                email: email,
+                roles: [Role.Enum.CORPORATE],
             },
             Config.JWT_SIGNING_SECRET,
             {
