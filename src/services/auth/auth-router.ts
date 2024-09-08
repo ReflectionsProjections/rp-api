@@ -154,7 +154,7 @@ authRouter.get("/dev/", (req, res) => {
 
 authRouter.get(
     "/corporate",
-    RoleChecker([Role.Enum.ADMIN], true),
+    RoleChecker([Role.Enum.ADMIN]),
     async (req, res, next) => {
         try {
             const allCorporate = await Database.CORPORATE.find();
@@ -168,7 +168,7 @@ authRouter.get(
 
 authRouter.post(
     "/corporate",
-    RoleChecker([Role.Enum.ADMIN], true),
+    RoleChecker([Role.Enum.ADMIN]),
     async (req, res, next) => {
         try {
             const attendeeData = CorporateValidator.parse(req.body);
@@ -184,7 +184,7 @@ authRouter.post(
 
 authRouter.delete(
     "/corporate",
-    RoleChecker([Role.Enum.ADMIN], true),
+    RoleChecker([Role.Enum.ADMIN]),
     async (req, res, next) => {
         try {
             const attendeeData = CorporateDeleteRequest.parse(req.body);

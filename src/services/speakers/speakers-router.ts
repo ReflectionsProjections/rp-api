@@ -59,7 +59,7 @@ speakersRouter.post(
 // Update a speaker
 speakersRouter.put(
     "/:SPEAKERID",
-    RoleChecker([Role.Enum.STAFF], true),
+    RoleChecker([Role.Enum.STAFF]),
     async (req, res, next) => {
         const speakerId = req.params.SPEAKERID;
 
@@ -87,7 +87,7 @@ speakersRouter.put(
 // Delete a speaker
 speakersRouter.delete(
     "/:SPEAKERID",
-    RoleChecker([Role.Enum.STAFF], true),
+    RoleChecker([Role.Enum.STAFF]),
     async (req, res, next) => {
         const speakerId = req.params.SPEAKERID;
 
