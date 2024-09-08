@@ -155,8 +155,8 @@ registrationRouter.get("/", RoleChecker([]), async (req, res, next) => {
     }
 });
 
-registrationRouter.post(
-    "/filter",
+registrationRouter.get(
+    "/filter/pagecount",
     RoleChecker([Role.Enum.ADMIN, Role.Enum.CORPORATE]),
     async (req, res, next) => {
         try {
@@ -189,7 +189,56 @@ registrationRouter.post(
                 projection
             );
 
-            return res.status(StatusCodes.OK).json({ registrants });
+            return res.status(StatusCodes.OK).json({
+                pagecount: Math.floor((registrants.length + 99) / 100),
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+);
+
+registrationRouter.post(
+    "/filter/:PAGE",
+    RoleChecker([Role.Enum.ADMIN, Role.Enum.CORPORATE]),
+    async (req, res, next) => {
+        try {
+            const page = parseInt(req.params.PAGE, 10);
+            const { graduations, majors, jobInterests, degrees } =
+                RegistrationFilterValidator.parse(req.body);
+
+            if (!page || page <= 0) {
+                return res.status(StatusCodes.BAD_REQUEST).send("Invalid Page");
+            }
+
+            const query = {
+                hasSubmitted: true,
+                hasResume: true,
+                ...(graduations && { graduation: { $in: graduations } }),
+                ...(majors && { major: { $in: majors } }),
+                ...(degrees && { degree: { $in: degrees } }),
+                ...(jobInterests && {
+                    jobInterest: { $elemMatch: { $in: jobInterests } },
+                }),
+            };
+
+            const projection = {
+                userId: 1,
+                name: 1,
+                major: 1,
+                graduation: 1,
+                degree: 1,
+                jobInterest: 1,
+                portfolios: 1,
+            };
+
+            const registrants = await Database.REGISTRATION.find(
+                query,
+                projection,
+                { skip: 100 * (page - 1), limit: 100 }
+            );
+
+            return res.status(StatusCodes.OK).json({ registrants, page });
         } catch (error) {
             next(error);
         }
