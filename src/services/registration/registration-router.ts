@@ -190,7 +190,7 @@ registrationRouter.get(
             );
 
             return res.status(StatusCodes.OK).json({
-                pagecount: Math.floor((registrants.length + 99) / 100),
+                pagecount: Math.floor((registrants.length + 49) / 50),
             });
         } catch (error) {
             next(error);
@@ -235,7 +235,7 @@ registrationRouter.post(
             const registrants = await Database.REGISTRATION.find(
                 query,
                 projection,
-                { skip: 100 * (page - 1), limit: 100 }
+                { skip: 50 * (page - 1), limit: 50 }
             );
 
             return res.status(StatusCodes.OK).json({ registrants, page });
