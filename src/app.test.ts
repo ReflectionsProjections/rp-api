@@ -15,7 +15,7 @@ const TESTER_EVENT = {
     isVisible: true,
     eventId: "b",
     attendanceCount: 0,
-    eventType: "B",
+    eventType: "SPEAKER",
 };
 
 describe("general app test", () => {
