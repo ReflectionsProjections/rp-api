@@ -2,7 +2,7 @@ import { Schema } from "mongoose";
 import { z } from "zod";
 import { v4 as uuidv4 } from "uuid";
 
-export const EventType = z.enum(["A", "B", "C"]);
+export const EventType = z.enum(["SPEAKER", "CORPORATE", "SPECIAL", "PARTNERS", "MEALS"]);
 
 export const externalEventView = z.object({
     eventId: z.coerce.string().default(() => uuidv4()),
