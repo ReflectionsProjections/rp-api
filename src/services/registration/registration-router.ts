@@ -155,7 +155,7 @@ registrationRouter.get("/", RoleChecker([]), async (req, res, next) => {
     }
 });
 
-registrationRouter.get(
+registrationRouter.post(
     "/filter/pagecount",
     RoleChecker([Role.Enum.ADMIN, Role.Enum.CORPORATE]),
     async (req, res, next) => {
