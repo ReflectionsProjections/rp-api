@@ -65,7 +65,7 @@ s3Router.get(
     }
 );
 
-s3Router.get(
+s3Router.post(
     "/download/batch/",
     RoleChecker([Role.Enum.STAFF, Role.Enum.CORPORATE], false),
     s3ClientMiddleware,
