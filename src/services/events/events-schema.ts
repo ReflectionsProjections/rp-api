@@ -7,7 +7,7 @@ export const EventType = z.enum([
     "CORPORATE",
     "SPECIAL",
     "PARTNERS",
-    "MEALS"
+    "MEALS",
 ]);
 
 export const externalEventView = z.object({
