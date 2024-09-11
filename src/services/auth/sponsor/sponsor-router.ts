@@ -39,8 +39,13 @@ authSponsorRouter.post("/login", async (req, res, next) => {
         );
         await sendEmail(
             email,
-            "R|P Sponsor Email Verification!",
-            `Here is your verification code: ${sixDigitCode}`
+            "R|P Sponsor Email Verification",
+            `<html>
+                <body>
+                    <p>Here is your verification code:</p>
+                    <p>${sixDigitCode}</p>
+                </body>
+            </html>`
         );
         return res.sendStatus(StatusCodes.CREATED);
     } catch (error) {
