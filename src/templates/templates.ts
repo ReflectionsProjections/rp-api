@@ -75,6 +75,7 @@ const templates = {
         <div class="container">
             <h1>Here is your verification code:</h1>
             <div class="code">{{code}}</div>
+            <p> Note that this verification code is valid for ONLY 10 minutes from now. </p>
         </div>
     </body>
     </html>`,
