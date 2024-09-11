@@ -45,7 +45,11 @@ authSponsorRouter.post("/login", async (req, res, next) => {
             code: sixDigitCode,
         });
 
-        await sendHTMLEmail(email, "R|P Resume Book Email Verification", emailBody);
+        await sendHTMLEmail(
+            email,
+            "R|P Resume Book Email Verification",
+            emailBody
+        );
         return res.sendStatus(StatusCodes.CREATED);
     } catch (error) {
         next(error);
