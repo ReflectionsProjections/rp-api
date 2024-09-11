@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { Database } from "../../../database";
 import { StatusCodes } from "http-status-codes";
-import { sendEmail } from "../../ses/ses-utils";
+import { sendHTMLEmail } from "../../ses/ses-utils";
 import jsonwebtoken from "jsonwebtoken";
 import { Config } from "../../../config";
 import { Role } from "../../auth/auth-models";
