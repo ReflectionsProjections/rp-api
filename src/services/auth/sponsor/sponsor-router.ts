@@ -45,7 +45,7 @@ authSponsorRouter.post("/login", async (req, res, next) => {
             code: sixDigitCode,
         });
 
-        await sendEmail(email, "R|P Sponsor Email Verification", emailBody);
+        await sendHTMLEmail(email, "R|P Sponsor Email Verification", emailBody);
         return res.sendStatus(StatusCodes.CREATED);
     } catch (error) {
         next(error);
