@@ -5,6 +5,9 @@ import { sendEmail } from "../../ses/ses-utils";
 import jsonwebtoken from "jsonwebtoken";
 import { Config } from "../../../config";
 import { Role } from "../../auth/auth-models";
+import mustache from "mustache";
+import templates from "../../../templates/templates";
+
 import {
     createSixDigitCode,
     encryptSixDigitCode,
@@ -37,16 +40,12 @@ authSponsorRouter.post("/login", async (req, res, next) => {
             },
             { upsert: true }
         );
-        await sendEmail(
-            email,
-            "R|P Sponsor Email Verification",
-            `<html>
-                <body>
-                    <p>Here is your verification code:</p>
-                    <p>${sixDigitCode}</p>
-                </body>
-            </html>`
-        );
+
+        const emailBody = mustache.render(templates.SPONSOR_VERIFICATION, {
+            code: sixDigitCode,
+        });
+
+        await sendEmail(email, "R|P Sponsor Email Verification", emailBody);
         return res.sendStatus(StatusCodes.CREATED);
     } catch (error) {
         next(error);
