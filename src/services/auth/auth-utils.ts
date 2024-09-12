@@ -23,10 +23,10 @@ export function createGoogleStrategy(device: string) {
             const isAdmin = email && Config.AUTH_ADMIN_WHITELIST.has(email);
 
             Database.ROLES.findOneAndUpdate(
-                { userId: userId },
+                { email: email },
                 {
+                    userId,
                     displayName,
-                    email,
                     ...(isAdmin && { $addToSet: { roles: Role.Enum.ADMIN } }),
                 },
                 { upsert: true }
