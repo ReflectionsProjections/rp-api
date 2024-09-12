@@ -18,7 +18,6 @@ export const RoleSchema = new Schema(
     {
         userId: {
             type: String,
-            unique: true,
         },
         displayName: {
             type: String,
