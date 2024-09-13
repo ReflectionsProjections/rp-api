@@ -190,7 +190,10 @@ registrationRouter.post(
             );
 
             return res.status(StatusCodes.OK).json({
-                pagecount: Math.floor((registrants.length + 59) / 60),
+                pagecount: Math.floor(
+                    (registrants.length + Config.SPONSOR_ENTIRES_PER_PAGE - 1) /
+                        Config.SPONSOR_ENTIRES_PER_PAGE
+                ),
             });
         } catch (error) {
             next(error);
@@ -235,7 +238,10 @@ registrationRouter.post(
             const registrants = await Database.REGISTRATION.find(
                 query,
                 projection,
-                { skip: 60 * (page - 1), limit: 60 }
+                {
+                    skip: Config.SPONSOR_ENTIRES_PER_PAGE * (page - 1),
+                    limit: Config.SPONSOR_ENTIRES_PER_PAGE,
+                }
             );
 
             return res.status(StatusCodes.OK).json({ registrants, page });
