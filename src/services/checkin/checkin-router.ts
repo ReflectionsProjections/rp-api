@@ -34,7 +34,7 @@ checkinRouter.post(
 );
 
 checkinRouter.post(
-    "/main",
+    "/",
     RoleChecker([Role.Enum.ADMIN, Role.Enum.STAFF]),
     async (req, res, next) => {
         try {
