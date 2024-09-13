@@ -54,7 +54,7 @@ checkinRouter.post(
                     .status(StatusCodes.NOT_FOUND)
                     .json({ error: "UserNotFound" });
             }
-            if (attendee.hasCheckedIn === true) {
+            if (attendee.hasCheckedIn) {
                 return res
                     .status(StatusCodes.BAD_REQUEST)
                     .json({ error: "AlreadyCheckedIn" });
