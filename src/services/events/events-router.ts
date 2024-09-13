@@ -50,7 +50,10 @@ eventsRouter.get("/", RoleChecker([], true), async (req, res, next) => {
     var filterFunction;
 
     try {
-        var unfiltered_events = await Database.EVENTS.find().sort({ startTime: 1 });
+        var unfiltered_events = await Database.EVENTS.find().sort({
+            startTime: 1,
+            endTime: -1,
+        });
 
         if (isStaff(payload) || isAdmin(payload)) {
             filterFunction = (x: any) => internalEventView.parse(x);
