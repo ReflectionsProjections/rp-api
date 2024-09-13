@@ -85,15 +85,11 @@ async function assignPixelsToUser(userId: string, pixels: number) {
 export async function checkInUserToEvent(
     eventId: string,
     userId: string,
-    isCheckin: boolean = false
 ) {
     await checkEventAndAttendeeExist(eventId, userId);
     await checkForDuplicateAttendance(eventId, userId);
 
-    if (!isCheckin) {
-        await updateAttendeePriority(userId);
-    }
-
+    await updateAttendeePriority(userId);
     await updateAttendanceRecords(eventId, userId);
 
     const event = await Database.EVENTS.findOne({ eventId });

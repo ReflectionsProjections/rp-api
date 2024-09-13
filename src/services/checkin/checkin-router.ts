@@ -24,7 +24,7 @@ checkinRouter.post(
                     .json({ error: "QR code has expired" });
             }
 
-            await checkInUserToEvent(eventId, userId, true);
+            await checkInUserToEvent(eventId, userId);
 
             return res.status(StatusCodes.OK).json(userId);
         } catch (error) {
