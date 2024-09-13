@@ -83,6 +83,7 @@ export const Config = {
 
     HASH_SALT_ROUNDS: 10,
     VERIFY_EXP_TIME_MS: 300,
+    SPONSOR_ENTIRES_PER_PAGE: 60,
 
     // QR Scanning
     QR_HASH_ITERATIONS: 10000,
