@@ -10,7 +10,7 @@ const checkinRouter = Router();
 
 checkinRouter.post(
     "/scan/staff",
-    RoleChecker([Role.Enum.ADMIN]),
+    RoleChecker([Role.Enum.ADMIN, Role.Enum.STAFF]),
     async (req, res, next) => {
         try {
             const { eventId, qrCode } = ScanValidator.parse(req.body);
