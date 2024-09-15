@@ -227,6 +227,37 @@ attendeeRouter.get(
     }
 );
 
+// Get attendee merch info via email
+attendeeRouter.get(
+    "/email",
+    RoleChecker([Role.Enum.USER]),
+    async (req, res, next) => {
+        try {
+            const payload = res.locals.payload;
+            const email = payload.email;
+            
+            const user = await Database.ATTENDEE.findOne({ email });
+
+            if (!user) {
+                return res
+                    .status(StatusCodes.NOT_FOUND)
+                    .json({ error: "UserNotFound" });
+            }
+
+            const merchInfo = {
+                attendeeName: user.name,
+                hasButton: user.hasRedeemedMerch!["Button"],
+                hasCap: user.hasRedeemedMerch!["Cap"],
+                hasTote: user.hasRedeemedMerch!["Tote"]
+            }
+
+            return res.status(StatusCodes.OK).json(merchInfo);
+        } catch (error) {
+            next(error);
+        }
+    }
+);
+
 attendeeRouter.post(
     "/redeemMerch/:ITEM",
     RoleChecker([]),

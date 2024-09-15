@@ -52,6 +52,17 @@ registrationRouter.post("/save", RoleChecker([]), async (req, res, next) => {
     }
 });
 
+registrationRouter.get("/emails", RoleChecker([Role.Enum.STAFF, Role.Enum.ADMIN]), async (req, res, next) => {
+    try {
+        const registrations = await Database.REGISTRATION.find();
+        const attendeeEmails = registrations.map((registration: any) => registration.email);
+
+        return res.status(StatusCodes.OK).json(attendeeEmails);
+    } catch (error) {
+        next(error);
+    }
+});
+
 registrationRouter.post("/submit", RoleChecker([]), async (req, res, next) => {
     try {
         const payload = res.locals.payload;
