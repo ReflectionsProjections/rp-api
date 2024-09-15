@@ -11,8 +11,8 @@ export const Environment = z.enum(["PRODUCTION", "DEVELOPMENT", "TESTING"]);
 
 export const MailingListName = z.enum(["rp_interest"]);
 
-const API_BASE = "https://api.reflectionsprojections.org";
-// const API_BASE = "http://localhost:3000";
+// const API_BASE = "https://api.reflectionsprojections.org";
+const API_BASE = "http://localhost:3000";
 const WEB_BASE = "https://reflectionsprojections.org";
 
 export const Config = {

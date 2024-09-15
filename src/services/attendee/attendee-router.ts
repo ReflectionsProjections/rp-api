@@ -248,7 +248,10 @@ attendeeRouter.get(
                 attendeeName: user.name,
                 hasButton: user.hasRedeemedMerch!["Button"],
                 hasCap: user.hasRedeemedMerch!["Cap"],
-                hasTote: user.hasRedeemedMerch!["Tote"]
+                hasTote: user.hasRedeemedMerch!["Tote"],
+                eligibleButton: user.isEligibleMerch!["Button"],
+                eligibleCap: user.isEligibleMerch!["Cap"],
+                eligibleTote: user.isEligibleMerch!["Tote"],
             }
 
             return res.status(StatusCodes.OK).json(merchInfo);
