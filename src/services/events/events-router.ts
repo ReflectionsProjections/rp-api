@@ -120,7 +120,7 @@ eventsRouter.post(
 
 eventsRouter.put(
     "/:EVENTID",
-    RoleChecker([Role.Enum.STAFF], true),
+    RoleChecker([Role.Enum.ADMIN], true),
     async (req, res, next) => {
         const eventId = req.params.EVENTID;
         try {
@@ -148,7 +148,7 @@ eventsRouter.put(
 // Delete event
 eventsRouter.delete(
     "/:EVENTID",
-    RoleChecker([Role.Enum.STAFF], true),
+    RoleChecker([Role.Enum.ADMIN], true),
     async (req, res, next) => {
         const eventId = req.params.EVENTID;
         try {
