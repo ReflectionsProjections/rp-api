@@ -244,15 +244,11 @@ attendeeRouter.get(
             }
 
             return res.status(StatusCodes.OK).json(user!.hasRedeemedMerch);
-
-        }
-        catch(error){
+        } catch (error) {
             next(error);
         }
     }
-)
-
-
+);
 
 attendeeRouter.post(
     "/redeemMerch/:ITEM",
