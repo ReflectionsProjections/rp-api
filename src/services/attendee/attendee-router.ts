@@ -310,8 +310,6 @@ attendeeRouter.post(
                     .json({ error: "UserNotFound" });
             }
 
-            console.log("FOUND USER")
-
             if (!user) {
                 return res
                     .status(StatusCodes.NOT_FOUND)
