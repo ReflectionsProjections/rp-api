@@ -59,7 +59,7 @@ registrationRouter.get(
         try {
             const registrations = await Database.REGISTRATION.find();
             const attendeeEmails = registrations.map(
-                (registration: any) => registration.email
+                (registration) => registration.email
             );
 
             return res.status(StatusCodes.OK).json(attendeeEmails);
