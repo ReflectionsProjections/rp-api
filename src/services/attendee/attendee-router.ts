@@ -290,11 +290,10 @@ attendeeRouter.post(
     RoleChecker([Role.Enum.STAFF, Role.Enum.ADMIN]),
     async (req, res, next) => {
         try {
-            console.log("STARTING")
             const payload = res.locals.payload;
             const userId = payload.userId;
             const merchItem = req.params.ITEM;
-            
+
             let user;
 
             // Check if userId or email is provided and query the database accordingly
