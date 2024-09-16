@@ -294,8 +294,7 @@ attendeeRouter.post(
             const payload = res.locals.payload;
             const userId = payload.userId;
             const merchItem = req.params.ITEM;
-            console.log("HERE")
-
+            
             let user;
 
             // Check if userId or email is provided and query the database accordingly
