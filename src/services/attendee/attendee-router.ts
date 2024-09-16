@@ -258,7 +258,7 @@ attendeeRouter.get(
     async (req, res, next) => {
         try {
             const email = req.params.EMAIL;
-            
+
             const user = await Database.ATTENDEE.findOne({ email });
 
             if (!user) {
@@ -276,7 +276,7 @@ attendeeRouter.get(
                 eligibleButton: user.isEligibleMerch!["Button"],
                 eligibleCap: user.isEligibleMerch!["Cap"],
                 eligibleTote: user.isEligibleMerch!["Tote"],
-            }
+            };
 
             return res.status(StatusCodes.OK).json(merchInfo);
         } catch (error) {
