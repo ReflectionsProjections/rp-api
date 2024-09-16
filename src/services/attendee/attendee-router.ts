@@ -227,6 +227,33 @@ attendeeRouter.get(
     }
 );
 
+attendeeRouter.get(
+    "/redeemedMerch",
+    RoleChecker([]),
+    async (req, res, next) => {
+        try {
+            const payload = res.locals.payload;
+            const userId = payload.userId;
+
+            const user = await Database.ATTENDEE.findOne({ userId });
+
+            if (!user) {
+                return res
+                    .status(StatusCodes.NOT_FOUND)
+                    .json({ error: "UserNotFound" });
+            }
+
+            return res.status(StatusCodes.OK).json(user!.hasRedeemedMerch);
+
+        }
+        catch(error){
+            next(error);
+        }
+    }
+)
+
+
+
 attendeeRouter.post(
     "/redeemMerch/:ITEM",
     RoleChecker([]),
