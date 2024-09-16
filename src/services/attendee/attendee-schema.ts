@@ -42,6 +42,11 @@ export const AttendeeSchema = new Schema({
             },
             { _id: false }
         ),
+        default: {
+            Button: false,
+            Tote: false,
+            Cap: false,
+        }
     },
     isEligibleMerch: {
         type: new Schema(
@@ -52,6 +57,11 @@ export const AttendeeSchema = new Schema({
             },
             { _id: false }
         ),
+        default: {
+            Button: false,
+            Tote: false,
+            Cap: false,
+        }
     },
 
     favorites: [{ type: String }],

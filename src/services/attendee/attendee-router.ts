@@ -227,14 +227,37 @@ attendeeRouter.get(
     }
 );
 
-// Get attendee merch info via email
+// Get attendee info via userId
 attendeeRouter.get(
-    "/email",
+    "/id/:USERID",
     RoleChecker([Role.Enum.USER]),
     async (req, res, next) => {
         try {
-            const payload = res.locals.payload;
-            const email = payload.email;
+            const userId = req.params.USERID;
+
+            // Check if the user exists in the database
+            const user = await Database.ATTENDEE.findOne({ userId });
+
+            if (!user) {
+                return res
+                    .status(StatusCodes.NOT_FOUND)
+                    .json({ error: "UserNotFound" });
+            }
+
+            return res.status(StatusCodes.OK).json(user);
+        } catch (error) {
+            next(error);
+        }
+    }
+);
+
+// Get attendee merch info via email
+attendeeRouter.get(
+    "/email/:EMAIL",
+    RoleChecker([Role.Enum.STAFF, Role.Enum.ADMIN]),
+    async (req, res, next) => {
+        try {
+            const email = req.params.EMAIL;
             
             const user = await Database.ATTENDEE.findOne({ email });
 
@@ -246,6 +269,7 @@ attendeeRouter.get(
 
             const merchInfo = {
                 attendeeName: user.name,
+                attendeePoints: user.points,
                 hasButton: user.hasRedeemedMerch!["Button"],
                 hasCap: user.hasRedeemedMerch!["Cap"],
                 hasTote: user.hasRedeemedMerch!["Tote"],
@@ -263,15 +287,32 @@ attendeeRouter.get(
 
 attendeeRouter.post(
     "/redeemMerch/:ITEM",
-    RoleChecker([]),
+    RoleChecker([Role.Enum.STAFF, Role.Enum.ADMIN]),
     async (req, res, next) => {
         try {
+            console.log("STARTING")
             const payload = res.locals.payload;
             const userId = payload.userId;
             const merchItem = req.params.ITEM;
+            console.log("HERE")
 
-            // Check if the user exists in the database
-            const user = await Database.ATTENDEE.findOne({ userId });
+            let user;
+
+            // Check if userId or email is provided and query the database accordingly
+            if (userId) {
+                user = await Database.ATTENDEE.findOne({ userId });
+            } else if (req.body.email) {
+                const email = req.body.email; // TODO: use a validator here?
+                user = await Database.ATTENDEE.findOne({ email });
+            }
+
+            if (!user) {
+                return res
+                    .status(StatusCodes.NOT_FOUND)
+                    .json({ error: "UserNotFound" });
+            }
+
+            console.log("FOUND USER")
 
             if (!user) {
                 return res
