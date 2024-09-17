@@ -256,13 +256,13 @@ attendeeRouter.get(
     RoleChecker([Role.Enum.STAFF, Role.Enum.ADMIN]),
     async (req, res, next) => {
         try {
-            const registrations = await Database.ATTENDEE.find();
-            const attendeeData = registrations.map((registration) => ({
-                email: registration.email,
-                userId: registration.userId,
-            }));
+            const projection = {
+                email: 1,
+                userId: 1,
+            };
+            const registrations = await Database.ATTENDEE.find({}, projection);
 
-            return res.status(StatusCodes.OK).json(attendeeData);
+            return res.status(StatusCodes.OK).json(registrations);
         } catch (error) {
             next(error);
         }
@@ -298,8 +298,6 @@ attendeeRouter.post(
                 merchItem == "Tote" ||
                 merchItem == "Button"
             ) {
-                console.log("ELIGIBLE ", merchItem, user.isEligibleMerch![merchItem])
-                console.log("REDEEMED ", merchItem, user.hasRedeemedMerch![merchItem])
                 if (!user.isEligibleMerch![merchItem]) {
                     return res
                         .status(StatusCodes.BAD_REQUEST)
