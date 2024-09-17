@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { StatusCodes } from "http-status-codes";
-import { ScanValidator } from "./checkin-schema";
+import { ScanValidator, MerchScanValidator } from "./checkin-schema";
 import RoleChecker from "../../middleware/role-checker";
 import { Role } from "../auth/auth-models";
 import { validateQrHash } from "./checkin-utils";
@@ -25,6 +25,28 @@ checkinRouter.post(
             }
 
             await checkInUserToEvent(eventId, userId, true);
+
+            return res.status(StatusCodes.OK).json(userId);
+        } catch (error) {
+            next(error);
+        }
+    }
+);
+
+checkinRouter.post(
+    "/scan/merch",
+    RoleChecker([Role.Enum.ADMIN, Role.Enum.STAFF]),
+    async (req, res, next) => {
+        try {
+            const { qrCode } = MerchScanValidator.parse(req.body);
+
+            const { userId, expTime } = validateQrHash(qrCode);
+
+            if (Date.now() / 1000 > expTime) {
+                return res
+                    .status(StatusCodes.UNAUTHORIZED)
+                    .json({ error: "QR code has expired" });
+            }
 
             return res.status(StatusCodes.OK).json(userId);
         } catch (error) {

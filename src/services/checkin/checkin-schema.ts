@@ -5,4 +5,8 @@ const ScanValidator = z.object({
     qrCode: z.string(),
 });
 
-export { ScanValidator };
+const MerchScanValidator = z.object({
+    qrCode: z.string(),
+});
+
+export { ScanValidator, MerchScanValidator };

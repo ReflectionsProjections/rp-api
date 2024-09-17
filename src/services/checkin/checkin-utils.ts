@@ -74,6 +74,7 @@ async function assignPixelsToUser(userId: string, pixels: number) {
         "isEligibleMerch.Cap": new_points >= 50,
         "isEligibleMerch.Tote": new_points >= 35,
         "isEligibleMerch.Button": new_points >= 20,
+        "isEligibleMerch.Tshirt": new_points >= 0,
     };
 
     await Database.ATTENDEE.findOneAndUpdate(
