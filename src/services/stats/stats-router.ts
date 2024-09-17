@@ -3,6 +3,7 @@ import { StatusCodes } from "http-status-codes";
 import { Database } from "../../database";
 import RoleChecker from "../../middleware/role-checker";
 import { Role } from "../auth/auth-models";
+import { getCurrentDay } from "../checkin/checkin-utils";
 
 const statsRouter = Router();
 
@@ -52,8 +53,11 @@ statsRouter.get(
     RoleChecker([Role.enum.STAFF], false),
     async (req, res, next) => {
         try {
+            const day = getCurrentDay();
+            const dayField = `hasPriority.${day}`;
             const attendees = await Database.ATTENDEE.find({
                 hasCheckedIn: true,
+                [dayField]: true,
             });
 
             return res.status(StatusCodes.OK).json({ count: attendees.length });
