@@ -53,7 +53,7 @@ statsRouter.get(
     RoleChecker([Role.enum.STAFF], false),
     async (req, res, next) => {
         try {
-            const day = getCurrentDay(); 
+            const day = getCurrentDay();
             const dayField = `hasPriority.${day}`;
             const attendees = await Database.ATTENDEE.find({
                 hasCheckedIn: true,
