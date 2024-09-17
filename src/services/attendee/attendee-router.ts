@@ -259,7 +259,7 @@ attendeeRouter.get(
             const registrations = await Database.ATTENDEE.find();
             const attendeeData = registrations.map((registration) => ({
                 email: registration.email,
-                userId: registration.userId
+                userId: registration.userId,
             }));
 
             return res.status(StatusCodes.OK).json(attendeeData);
