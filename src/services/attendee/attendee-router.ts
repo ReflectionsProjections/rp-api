@@ -251,34 +251,18 @@ attendeeRouter.get(
     }
 );
 
-// Get attendee merch info via email
 attendeeRouter.get(
-    "/email/:EMAIL",
+    "/emails",
     RoleChecker([Role.Enum.STAFF, Role.Enum.ADMIN]),
     async (req, res, next) => {
         try {
-            const email = req.params.EMAIL;
+            const registrations = await Database.ATTENDEE.find();
+            const attendeeData = registrations.map((registration) => ({
+                email: registration.email,
+                userId: registration.userId
+            }));
 
-            const user = await Database.ATTENDEE.findOne({ email });
-
-            if (!user) {
-                return res
-                    .status(StatusCodes.NOT_FOUND)
-                    .json({ error: "UserNotFound" });
-            }
-
-            const merchInfo = {
-                attendeeName: user.name,
-                attendeePoints: user.points,
-                hasButton: user.hasRedeemedMerch!["Button"],
-                hasCap: user.hasRedeemedMerch!["Cap"],
-                hasTote: user.hasRedeemedMerch!["Tote"],
-                eligibleButton: user.isEligibleMerch!["Button"],
-                eligibleCap: user.isEligibleMerch!["Cap"],
-                eligibleTote: user.isEligibleMerch!["Tote"],
-            };
-
-            return res.status(StatusCodes.OK).json(merchInfo);
+            return res.status(StatusCodes.OK).json(attendeeData);
         } catch (error) {
             next(error);
         }
@@ -294,15 +278,8 @@ attendeeRouter.post(
             const userId = payload.userId;
             const merchItem = req.params.ITEM;
 
-            let user;
-
-            // Check if userId or email is provided and query the database accordingly
-            if (userId) {
-                user = await Database.ATTENDEE.findOne({ userId });
-            } else if (req.body.email) {
-                const email = req.body.email; // TODO: use a validator here?
-                user = await Database.ATTENDEE.findOne({ email });
-            }
+            // Check if the user exists in the database
+            const user = await Database.ATTENDEE.findOne({ userId });
 
             if (!user) {
                 return res
