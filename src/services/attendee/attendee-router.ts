@@ -294,6 +294,7 @@ attendeeRouter.post(
             }
 
             if (
+                merchItem == "Tshirt" ||
                 merchItem == "Cap" ||
                 merchItem == "Tote" ||
                 merchItem == "Button"

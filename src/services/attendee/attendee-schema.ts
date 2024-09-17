@@ -36,6 +36,7 @@ export const AttendeeSchema = new Schema({
     hasRedeemedMerch: {
         type: new Schema(
             {
+                Tshirt: { type: Boolean, default: false },
                 Button: { type: Boolean, default: false },
                 Tote: { type: Boolean, default: false },
                 Cap: { type: Boolean, default: false },
@@ -43,6 +44,7 @@ export const AttendeeSchema = new Schema({
             { _id: false }
         ),
         default: {
+            Tshirt: false,
             Button: false,
             Tote: false,
             Cap: false,
@@ -51,6 +53,7 @@ export const AttendeeSchema = new Schema({
     isEligibleMerch: {
         type: new Schema(
             {
+                Tshirt: { type: Boolean, default: false },
                 Button: { type: Boolean, default: false },
                 Tote: { type: Boolean, default: false },
                 Cap: { type: Boolean, default: false },
@@ -58,6 +61,7 @@ export const AttendeeSchema = new Schema({
             { _id: false }
         ),
         default: {
+            Tshirt: false,
             Button: false,
             Tote: false,
             Cap: false,
