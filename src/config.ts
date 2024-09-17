@@ -99,7 +99,7 @@ export const DeviceRedirects: Record<string, string> = {
     dev: `${API_BASE}/auth/dev/`,
     mobile: "reflectionsprojections://--/Login",
     admin: "https://admin.reflectionsprojections.org/auth/",
-    // admin: "http://localhost:5173/auth/",
+    pwa: "localhost:8081/Login",
 };
 
 export const ses = new AWS.SES({
