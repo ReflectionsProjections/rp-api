@@ -27,7 +27,7 @@ eventsRouter.get(
         try {
             const event = await Database.EVENTS.findOne({
                 startTime: { $gte: currentTime },
-                isVisible: isUser ? { $eq: true } : {},
+                ...(isUser && { isVisible: true }),
             }).sort({ startTime: 1 });
 
             if (event) {
