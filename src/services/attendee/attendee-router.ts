@@ -230,7 +230,7 @@ attendeeRouter.get(
 // Get attendee info via userId
 attendeeRouter.get(
     "/id/:USERID",
-    RoleChecker([Role.Enum.USER]),
+    RoleChecker([Role.Enum.STAFF, Role.Enum.ADMIN]),
     async (req, res, next) => {
         try {
             const userId = req.params.USERID;
@@ -274,8 +274,7 @@ attendeeRouter.post(
     RoleChecker([Role.Enum.STAFF, Role.Enum.ADMIN]),
     async (req, res, next) => {
         try {
-            const payload = res.locals.payload;
-            const userId = payload.userId;
+            const userId = req.body.userId;
             const merchItem = req.params.ITEM;
 
             // Check if the user exists in the database
@@ -299,6 +298,8 @@ attendeeRouter.post(
                 merchItem == "Tote" ||
                 merchItem == "Button"
             ) {
+                console.log("ELIGIBLE ", merchItem, user.isEligibleMerch![merchItem])
+                console.log("REDEEMED ", merchItem, user.hasRedeemedMerch![merchItem])
                 if (!user.isEligibleMerch![merchItem]) {
                     return res
                         .status(StatusCodes.BAD_REQUEST)

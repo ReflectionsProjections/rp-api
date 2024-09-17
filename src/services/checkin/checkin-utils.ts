@@ -79,7 +79,7 @@ async function assignPixelsToUser(userId: string, pixels: number) {
 
     await Database.ATTENDEE.findOneAndUpdate(
         { userId },
-        { $set: updatedFields }
+        { $set: updatedFields },
     );
 }
 

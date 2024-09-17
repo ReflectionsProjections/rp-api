@@ -11,8 +11,8 @@ export const Environment = z.enum(["PRODUCTION", "DEVELOPMENT", "TESTING"]);
 
 export const MailingListName = z.enum(["rp_interest"]);
 
-const API_BASE = "https://api.reflectionsprojections.org";
-// const API_BASE = "http://localhost:3000";
+// const API_BASE = "https://api.reflectionsprojections.org";
+const API_BASE = "http://localhost:3000";
 const WEB_BASE = "https://reflectionsprojections.org";
 
 export const Config = {
@@ -98,7 +98,8 @@ export const DeviceRedirects: Record<string, string> = {
     web: `${WEB_BASE}/auth/`,
     dev: `${API_BASE}/auth/dev/`,
     mobile: "reflectionsprojections://--/Login",
-    admin: "https://admin.reflectionsprojections.org/auth/",
+    // admin: "https://admin.reflectionsprojections.org/auth/",
+    admin: "http://localhost:5173/auth/",
     pwa: "localhost:8081/Login",
 };
 
