@@ -1,6 +1,10 @@
 import { Router } from "express";
 import { StatusCodes } from "http-status-codes";
-import { ScanValidator, MerchScanValidator } from "./checkin-schema";
+import {
+    ScanValidator,
+    MerchScanValidator,
+    EventValidator,
+} from "./checkin-schema";
 import RoleChecker from "../../middleware/role-checker";
 import { Role } from "../auth/auth-models";
 import { validateQrHash } from "./checkin-utils";
@@ -24,8 +28,41 @@ checkinRouter.post(
                     .json({ error: "QR code has expired" });
             }
 
-            await checkInUserToEvent(eventId, userId, true);
+            try {
+                await checkInUserToEvent(eventId, userId);
+            } catch (error: unknown) {
+                if (error instanceof Error && error.message == "IsDuplicate") {
+                    return res
+                        .status(StatusCodes.FORBIDDEN)
+                        .json({ error: "IsDuplicate" });
+                }
+                return res.sendStatus(StatusCodes.INTERNAL_SERVER_ERROR);
+            }
 
+            return res.status(StatusCodes.OK).json(userId);
+        } catch (error) {
+            next(error);
+        }
+    }
+);
+
+checkinRouter.post(
+    "/event",
+    RoleChecker([Role.Enum.ADMIN, Role.Enum.STAFF]),
+    async (req, res, next) => {
+        try {
+            const { eventId, userId } = EventValidator.parse(req.body);
+
+            try {
+                await checkInUserToEvent(eventId, userId);
+            } catch (error: unknown) {
+                if (error instanceof Error && error.message == "IsDuplicate") {
+                    return res
+                        .status(StatusCodes.FORBIDDEN)
+                        .json({ error: "IsDuplicate" });
+                }
+                return res.sendStatus(StatusCodes.INTERNAL_SERVER_ERROR);
+            }
             return res.status(StatusCodes.OK).json(userId);
         } catch (error) {
             next(error);
