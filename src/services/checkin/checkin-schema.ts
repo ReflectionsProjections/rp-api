@@ -12,7 +12,6 @@ const MerchScanValidator = z.object({
 const EventValidator = z.object({
     eventId: z.string(),
     userId: z.string(),
-    isCheckin: z.boolean(),
 });
 
 export { ScanValidator, MerchScanValidator, EventValidator };

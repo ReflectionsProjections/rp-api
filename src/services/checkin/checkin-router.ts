@@ -51,12 +51,20 @@ checkinRouter.post(
     RoleChecker([Role.Enum.ADMIN, Role.Enum.STAFF]),
     async (req, res, next) => {
         try {
-            const { eventId, userId, isCheckin } = EventValidator.parse(
+            const { eventId, userId } = EventValidator.parse(
                 req.body
             );
 
-            await checkInUserToEvent(eventId, userId, isCheckin);
-
+            try {
+                await checkInUserToEvent(eventId, userId);
+            } catch (error: unknown) {
+                if (error instanceof Error && error.message == "IsDuplicate") {
+                    return res
+                        .status(StatusCodes.FORBIDDEN)
+                        .json({ error: "IsDuplicate" });
+                }
+                return res.sendStatus(StatusCodes.INTERNAL_SERVER_ERROR);
+            }
             return res.status(StatusCodes.OK).json(userId);
         } catch (error) {
             next(error);

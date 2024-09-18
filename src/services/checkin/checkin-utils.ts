@@ -1,6 +1,7 @@
 import { Database } from "../../database";
 import crypto from "crypto";
 import { Config } from "../../config";
+import { EventType } from "../events/events-schema";
 
 export function getCurrentDay() {
     const currDate = new Date();
@@ -47,6 +48,7 @@ async function updateAttendeePriority(userId: string) {
     );
 }
 
+
 async function updateAttendanceRecords(eventId: string, userId: string) {
     await Promise.all([
         Database.EVENTS_ATTENDANCE.findOneAndUpdate(
@@ -83,24 +85,35 @@ async function assignPixelsToUser(userId: string, pixels: number) {
     );
 }
 
+async function markUserAsCheckedIn(userId: string) {
+    await Database.ATTENDEE.findOneAndUpdate(
+        { userId },
+        { $set: { hasCheckedIn: true } }
+    );
+}
+
 export async function checkInUserToEvent(
     eventId: string,
     userId: string,
-    isCheckin: boolean = false
 ) {
     await checkEventAndAttendeeExist(eventId, userId);
     await checkForDuplicateAttendance(eventId, userId);
+    
+    const event = await Database.EVENTS.findOne({ eventId });
+    if (!event) {
+        throw new Error("Event not found");
+    }
 
-    if (!isCheckin) {
+    // check for checkin event, and for meals
+    if (event.eventType == EventType.Enum.CHECKIN) {
+        await markUserAsCheckedIn(userId);
+    } else if (event.eventType != EventType.Enum.MEALS){
         await updateAttendeePriority(userId);
     }
 
     await updateAttendanceRecords(eventId, userId);
 
-    const event = await Database.EVENTS.findOne({ eventId });
-    if (!event) {
-        throw new Error("Event not found");
-    }
+
     await assignPixelsToUser(userId, event.points);
 }
 
