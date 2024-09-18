@@ -87,7 +87,7 @@ async function assignPixelsToUser(userId: string, pixels: number) {
 async function markUserAsCheckedIn(userId: string) {
     await Database.ATTENDEE.findOneAndUpdate(
         { userId },
-        { $set: { hasCheckedIn: true } }
+        { hasCheckedIn: true }
     );
 }
 
