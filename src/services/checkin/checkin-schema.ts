@@ -9,4 +9,10 @@ const MerchScanValidator = z.object({
     qrCode: z.string(),
 });
 
-export { ScanValidator, MerchScanValidator };
+const EventValidator = z.object({
+    eventId: z.string(),
+    userId: z.string(),
+    isCheckin: z.boolean(),
+});
+
+export { ScanValidator, MerchScanValidator, EventValidator };
