@@ -83,6 +83,7 @@ export const Config = {
 
     HASH_SALT_ROUNDS: 10,
     VERIFY_EXP_TIME_MS: 300,
+    SPONSOR_ENTIRES_PER_PAGE: 60,
 
     // QR Scanning
     QR_HASH_ITERATIONS: 10000,
@@ -98,6 +99,8 @@ export const DeviceRedirects: Record<string, string> = {
     dev: `${API_BASE}/auth/dev/`,
     mobile: "reflectionsprojections://--/Login",
     admin: "https://admin.reflectionsprojections.org/auth/",
+    // admin: "http://localhost:5173/auth/",
+    pwa: "localhost:8081/Login",
 };
 
 export const ses = new AWS.SES({

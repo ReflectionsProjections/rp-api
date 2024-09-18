@@ -27,7 +27,7 @@ eventsRouter.get(
         try {
             const event = await Database.EVENTS.findOne({
                 startTime: { $gte: currentTime },
-                isVisible: isUser ? { $eq: true } : {},
+                ...(isUser && { isVisible: true }),
             }).sort({ startTime: 1 });
 
             if (event) {
@@ -50,7 +50,10 @@ eventsRouter.get("/", RoleChecker([], true), async (req, res, next) => {
     var filterFunction;
 
     try {
-        var unfiltered_events = await Database.EVENTS.find();
+        var unfiltered_events = await Database.EVENTS.find().sort({
+            startTime: 1,
+            endTime: -1,
+        });
 
         if (isStaff(payload) || isAdmin(payload)) {
             filterFunction = (x: any) => internalEventView.parse(x);
@@ -145,7 +148,7 @@ eventsRouter.put(
 // Delete event
 eventsRouter.delete(
     "/:EVENTID",
-    RoleChecker([Role.Enum.STAFF]),
+    RoleChecker([Role.Enum.ADMIN]),
     async (req, res, next) => {
         const eventId = req.params.EVENTID;
         try {

@@ -73,8 +73,9 @@ const templates = {
     </head>
     <body>
         <div class="container">
-            <h1>Here is your verification code:</h1>
+            <h2>Here is your <a href="https://sponsor.reflectionsprojections.org/login/">SponsorRP</a> verification code:</h2>
             <div class="code">{{code}}</div>
+            <p> Note that this verification code will expire approximately 10 minutes from now. </p>
         </div>
     </body>
     </html>`,

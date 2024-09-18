@@ -155,7 +155,7 @@ registrationRouter.get("/", RoleChecker([]), async (req, res, next) => {
     }
 });
 
-registrationRouter.get(
+registrationRouter.post(
     "/filter/pagecount",
     RoleChecker([Role.Enum.ADMIN, Role.Enum.CORPORATE]),
     async (req, res, next) => {
@@ -190,7 +190,10 @@ registrationRouter.get(
             );
 
             return res.status(StatusCodes.OK).json({
-                pagecount: Math.floor((registrants.length + 99) / 100),
+                pagecount: Math.floor(
+                    (registrants.length + Config.SPONSOR_ENTIRES_PER_PAGE - 1) /
+                        Config.SPONSOR_ENTIRES_PER_PAGE
+                ),
             });
         } catch (error) {
             next(error);
@@ -235,7 +238,10 @@ registrationRouter.post(
             const registrants = await Database.REGISTRATION.find(
                 query,
                 projection,
-                { skip: 100 * (page - 1), limit: 100 }
+                {
+                    skip: Config.SPONSOR_ENTIRES_PER_PAGE * (page - 1),
+                    limit: Config.SPONSOR_ENTIRES_PER_PAGE,
+                }
             );
 
             return res.status(StatusCodes.OK).json({ registrants, page });

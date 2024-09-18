@@ -1,6 +1,7 @@
 import { Database } from "../../database";
 import crypto from "crypto";
 import { Config } from "../../config";
+import { EventType } from "../events/events-schema";
 
 export function getCurrentDay() {
     const currDate = new Date();
@@ -34,7 +35,7 @@ async function checkForDuplicateAttendance(eventId: string, userId: string) {
     ]);
 
     if (isRepeatEvent || isRepeatAttendee) {
-        throw new Error("Is Duplicate");
+        throw new Error("IsDuplicate");
     }
 }
 
@@ -74,6 +75,7 @@ async function assignPixelsToUser(userId: string, pixels: number) {
         "isEligibleMerch.Cap": new_points >= 50,
         "isEligibleMerch.Tote": new_points >= 35,
         "isEligibleMerch.Button": new_points >= 20,
+        "isEligibleMerch.Tshirt": new_points >= 0,
     };
 
     await Database.ATTENDEE.findOneAndUpdate(
@@ -82,24 +84,31 @@ async function assignPixelsToUser(userId: string, pixels: number) {
     );
 }
 
-export async function checkInUserToEvent(
-    eventId: string,
-    userId: string,
-    isCheckin: boolean = false
-) {
+async function markUserAsCheckedIn(userId: string) {
+    await Database.ATTENDEE.findOneAndUpdate(
+        { userId },
+        { $set: { hasCheckedIn: true } }
+    );
+}
+
+export async function checkInUserToEvent(eventId: string, userId: string) {
     await checkEventAndAttendeeExist(eventId, userId);
     await checkForDuplicateAttendance(eventId, userId);
-
-    if (!isCheckin) {
-        await updateAttendeePriority(userId);
-    }
-
-    await updateAttendanceRecords(eventId, userId);
 
     const event = await Database.EVENTS.findOne({ eventId });
     if (!event) {
         throw new Error("Event not found");
     }
+
+    // check for checkin event, and for meals
+    if (event.eventType == EventType.Enum.CHECKIN) {
+        await markUserAsCheckedIn(userId);
+    } else if (event.eventType != EventType.Enum.MEALS) {
+        await updateAttendeePriority(userId);
+    }
+
+    await updateAttendanceRecords(eventId, userId);
+
     await assignPixelsToUser(userId, event.points);
 }
 

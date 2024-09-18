@@ -227,13 +227,13 @@ attendeeRouter.get(
     }
 );
 
+// Get attendee info via userId
 attendeeRouter.get(
-    "/",
-    RoleChecker([Role.Enum.USER]),
+    "/id/:USERID",
+    RoleChecker([Role.Enum.STAFF, Role.Enum.ADMIN]),
     async (req, res, next) => {
         try {
-            const payload = res.locals.payload;
-            const userId = payload.userId;
+            const userId = req.params.USERID;
 
             // Check if the user exists in the database
             const user = await Database.ATTENDEE.findOne({ userId });
@@ -251,13 +251,30 @@ attendeeRouter.get(
     }
 );
 
-attendeeRouter.post(
-    "/redeemMerch/:ITEM",
-    RoleChecker([]),
+attendeeRouter.get(
+    "/emails",
+    RoleChecker([Role.Enum.STAFF, Role.Enum.ADMIN]),
     async (req, res, next) => {
         try {
-            const payload = res.locals.payload;
-            const userId = payload.userId;
+            const projection = {
+                email: 1,
+                userId: 1,
+            };
+            const registrations = await Database.ATTENDEE.find({}, projection);
+
+            return res.status(StatusCodes.OK).json(registrations);
+        } catch (error) {
+            next(error);
+        }
+    }
+);
+
+attendeeRouter.post(
+    "/redeemMerch/:ITEM",
+    RoleChecker([Role.Enum.STAFF, Role.Enum.ADMIN]),
+    async (req, res, next) => {
+        try {
+            const userId = req.body.userId;
             const merchItem = req.params.ITEM;
 
             // Check if the user exists in the database
@@ -269,7 +286,14 @@ attendeeRouter.post(
                     .json({ error: "UserNotFound" });
             }
 
+            if (!user) {
+                return res
+                    .status(StatusCodes.NOT_FOUND)
+                    .json({ error: "UserNotFound" });
+            }
+
             if (
+                merchItem == "Tshirt" ||
                 merchItem == "Cap" ||
                 merchItem == "Tote" ||
                 merchItem == "Button"
