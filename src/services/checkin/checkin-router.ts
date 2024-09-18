@@ -30,7 +30,7 @@ checkinRouter.post(
 
             try {
                 await checkInUserToEvent(eventId, userId);
-            } catch (error: any) {
+            } catch (error: unknown) {
                 if (error instanceof Error && error.message == "IsDuplicate") {
                     return res
                         .status(StatusCodes.FORBIDDEN)
