@@ -56,7 +56,6 @@ statsRouter.get(
             const day = getCurrentDay();
             const dayField = `hasPriority.${day}`;
             const attendees = await Database.ATTENDEE.find({
-                hasCheckedIn: true,
                 [dayField]: true,
             });
 
