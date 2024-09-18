@@ -60,6 +60,11 @@ async function updateAttendanceRecords(eventId: string, userId: string) {
             { $addToSet: { eventsAttended: eventId } },
             { new: true, upsert: true }
         ),
+        Database.EVENTS.findOneAndUpdate(
+            { eventId },
+            { $inc: { attendanceCount: 1 } },
+            { new: true, upsert: true }
+        ),
     ]);
 }
 
