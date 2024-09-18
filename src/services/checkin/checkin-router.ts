@@ -51,9 +51,7 @@ checkinRouter.post(
     RoleChecker([Role.Enum.ADMIN, Role.Enum.STAFF]),
     async (req, res, next) => {
         try {
-            const { eventId, userId } = EventValidator.parse(
-                req.body
-            );
+            const { eventId, userId } = EventValidator.parse(req.body);
 
             try {
                 await checkInUserToEvent(eventId, userId);

@@ -48,7 +48,6 @@ async function updateAttendeePriority(userId: string) {
     );
 }
 
-
 async function updateAttendanceRecords(eventId: string, userId: string) {
     await Promise.all([
         Database.EVENTS_ATTENDANCE.findOneAndUpdate(
@@ -92,13 +91,10 @@ async function markUserAsCheckedIn(userId: string) {
     );
 }
 
-export async function checkInUserToEvent(
-    eventId: string,
-    userId: string,
-) {
+export async function checkInUserToEvent(eventId: string, userId: string) {
     await checkEventAndAttendeeExist(eventId, userId);
     await checkForDuplicateAttendance(eventId, userId);
-    
+
     const event = await Database.EVENTS.findOne({ eventId });
     if (!event) {
         throw new Error("Event not found");
@@ -107,12 +103,11 @@ export async function checkInUserToEvent(
     // check for checkin event, and for meals
     if (event.eventType == EventType.Enum.CHECKIN) {
         await markUserAsCheckedIn(userId);
-    } else if (event.eventType != EventType.Enum.MEALS){
+    } else if (event.eventType != EventType.Enum.MEALS) {
         await updateAttendeePriority(userId);
     }
 
     await updateAttendanceRecords(eventId, userId);
-
 
     await assignPixelsToUser(userId, event.points);
 }
