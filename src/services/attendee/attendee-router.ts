@@ -192,8 +192,8 @@ attendeeRouter.get(
             }
 
             const hasFoodRestrictions =
-                user.dietaryRestrictions.length > 0 ||
-                user.allergies.length > 0;
+                user.dietaryRestrictions.includes("VEGAN") ||
+                user.dietaryRestrictions.includes("GLUTEN-FREE");
             const foodwave = hasPriority || hasFoodRestrictions ? 1 : 2;
 
             return res.status(StatusCodes.OK).json({ foodwave: foodwave });
