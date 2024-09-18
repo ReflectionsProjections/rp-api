@@ -34,7 +34,7 @@ async function checkForDuplicateAttendance(eventId: string, userId: string) {
     ]);
 
     if (isRepeatEvent || isRepeatAttendee) {
-        throw new Error("Is Duplicate");
+        throw new Error("IsDuplicate");
     }
 }
 
