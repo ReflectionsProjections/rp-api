@@ -14,7 +14,7 @@ statsRouter.get(
     async (req, res, next) => {
         try {
             const attendees = await Database.ATTENDEE.find({
-                events: { $ne: [] },
+                hasCheckedIn: true,
             });
 
             return res.status(StatusCodes.OK).json({ count: attendees.length });
