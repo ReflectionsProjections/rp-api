@@ -83,13 +83,6 @@ async function assignPixelsToUser(userId: string, pixels: number) {
     );
 }
 
-export async function markUserAsCheckedIn(userId: string) {
-    await Database.ATTENDEE.findOneAndUpdate(
-        { userId },
-        { hasCheckedIn: true }
-    );
-}
-
 export async function checkInUserToEvent(
     eventId: string,
     userId: string,
@@ -98,9 +91,7 @@ export async function checkInUserToEvent(
     await checkEventAndAttendeeExist(eventId, userId);
     await checkForDuplicateAttendance(eventId, userId);
 
-    if (isCheckin) {
-        await markUserAsCheckedIn(userId);
-    } else {
+    if (!isCheckin) {
         await updateAttendeePriority(userId);
     }
 
