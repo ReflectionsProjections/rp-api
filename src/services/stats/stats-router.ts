@@ -102,7 +102,7 @@ statsRouter.get(
 // Get the dietary restriction breakdown/counts (staff only)
 statsRouter.get(
     "/dietary-restrictions",
-    RoleChecker([Role.enum.STAFF], true),
+    RoleChecker([Role.enum.STAFF], false),
     async (req, res, next) => {
         try {
             const results = await Promise.allSettled([
