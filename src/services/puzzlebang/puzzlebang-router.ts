@@ -18,7 +18,10 @@ puzzlebangRouter.post(
 
             const attendeeData = await Database.ATTENDEE.findOneAndUpdate(
                 { email: requestInfo.email },
-                { $addToSet: { puzzlesCompleted: requestInfo.puzzleId } },
+                {
+                    $addToSet: { puzzlesCompleted: requestInfo.puzzleId },
+                    $inc: { points: 2 },
+                },
                 { new: false }
             );
 
