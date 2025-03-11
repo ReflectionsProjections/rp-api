@@ -7,7 +7,7 @@ import AWS from "aws-sdk";
 
 dotenv.config();
 
-enum EnvironmentEnum {
+export enum EnvironmentEnum {
     PRODUCTION = "PRODUCTION",
     DEVELOPMENT = "DEVELOPMENT",
     TESTING = "TESTING",

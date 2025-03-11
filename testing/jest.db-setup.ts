@@ -10,7 +10,7 @@ function mockConfig(dbUrl: string) {
         const newConfig: typeof Config.default = {
             ...actual.default,
             DATABASE_HOST: dbUrl,
-            ENV: Config.Environment.Enum.TESTING,
+            ENV: Config.EnvironmentEnum.TESTING,
         };
 
         return {
