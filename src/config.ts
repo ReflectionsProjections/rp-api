@@ -32,6 +32,7 @@ const ADMIN_BASE =
         : "http://localhost:3002";
 
 export const Config = {
+    ENV: env,
     DEFAULT_APP_PORT: 3000,
     ALLOWED_CORS_ORIGIN_PATTERNS: [
         new RegExp("(.*).reflectionsprojections.org(.*)"),
