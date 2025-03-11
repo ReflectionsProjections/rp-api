@@ -7,13 +7,29 @@ import AWS from "aws-sdk";
 
 dotenv.config();
 
-export const Environment = z.enum(["PRODUCTION", "DEVELOPMENT", "TESTING"]);
+enum EnvironmentEnum {
+    PRODUCTION = "PRODUCTION",
+    DEVELOPMENT = "DEVELOPMENT",
+    TESTING = "TESTING",
+}
+
+export const Environment = z.nativeEnum(EnvironmentEnum);
 
 export const MailingListName = z.enum(["rp_interest"]);
 
-const API_BASE = "https://api.reflectionsprojections.org";
-// const API_BASE = "http://localhost:3000";
-const WEB_BASE = "https://reflectionsprojections.org";
+const env = Environment.parse(getEnv("ENV"));
+const API_BASE =
+    env === EnvironmentEnum.PRODUCTION
+        ? "https://api.reflectionsprojections.org"
+        : "http://localhost:3000";
+const WEB_BASE =
+    env === EnvironmentEnum.PRODUCTION
+        ? "https://reflectionsprojections.org"
+        : "http://localhost:3001";
+const ADMIN_BASE =
+    env === EnvironmentEnum.PRODUCTION
+        ? "https://admin.reflectionsprojections.org"
+        : "http://localhost:3002";
 
 export const Config = {
     DEFAULT_APP_PORT: 3000,
@@ -23,8 +39,6 @@ export const Config = {
         new RegExp("(.*)localhost(.*)"),
         new RegExp("(.*)127.0.0.1(.*)"),
     ],
-
-    ENV: Environment.parse(getEnv("ENV")),
 
     DATABASE_USERNAME: getEnv("DATABASE_USERNAME"),
     DATABASE_PASSWORD: getEnv("DATABASE_PASSWORD"),
@@ -98,7 +112,7 @@ export const DeviceRedirects: Record<string, string> = {
     web: `${WEB_BASE}/auth/`,
     dev: `${API_BASE}/auth/dev/`,
     mobile: "reflectionsprojections://--/Login",
-    admin: "https://admin.reflectionsprojections.org/auth/",
+    admin: `${ADMIN_BASE}/auth/`,
     // admin: "http://localhost:5173/auth/",
     pwa: "localhost:8081/Login",
 };
