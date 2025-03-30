@@ -37,7 +37,7 @@ export const MeetingSchema = new Schema({
 });
 
 export const meetingValidator = z.object({
-    meetingId: z.string().uuid(),
+    // meetingId: z.string().uuid(),
     committeeType: CommitteeNames,
     startTime: z.coerce.date(),
 });
