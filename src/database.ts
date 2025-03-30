@@ -36,6 +36,10 @@ import {
     CorporateSchema,
     CorporateValidator,
 } from "./services/auth/corporate-schema";
+import {
+    MeetingSchema,
+    meetingView,
+} from "./services/meetings/meetings-schema";
 
 mongoose.set("toObject", { versionKey: false });
 
@@ -107,4 +111,5 @@ export const Database = {
         CorporateSchema,
         CorporateValidator
     ),
+    MEETINGS: initializeModel("meetings", MeetingSchema, meetingView),
 };
