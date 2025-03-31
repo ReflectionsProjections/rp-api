@@ -9,16 +9,15 @@ export const StaffValidator = z.object({
     team: z.string(),
 
     // add preprocessor to convert a map into a plain javascript object
-    attendances: z.preprocess(
-        (val) => {
+    attendances: z
+        .preprocess((val) => {
             // If the value is an instance of Map, convert it to a plain object
             if (val instanceof Map) {
                 return Object.fromEntries(val);
             }
             return val;
-        },
-        z.record(z.string())
-    ).optional(),
+        }, z.record(z.string()))
+        .optional(),
 });
 
 // Mongoose schema for staff

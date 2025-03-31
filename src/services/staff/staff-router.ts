@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { StatusCodes } from "http-status-codes";
 import { StaffValidator } from "./staff-schema";
-import { Database } from "../../database"
+import { Database } from "../../database";
 import RoleChecker from "../../middleware/role-checker";
 import { Role } from "../auth/auth-models";
 
@@ -56,9 +56,7 @@ staffRouter.post(
             const staff = new Database.STAFF(staffData);
             const savedStaff = await staff.save();
 
-            return res
-                .status(StatusCodes.CREATED)
-                .json(savedStaff);
+            return res.status(StatusCodes.CREATED).json(savedStaff);
         } catch (error) {
             next(error);
         }
@@ -73,14 +71,15 @@ staffRouter.delete(
         try {
             const userId = req.params.USERID;
             // delete staff member
-            const deletedStaff = await Database.STAFF.findOneAndDelete({ userId: userId });
+            const deletedStaff = await Database.STAFF.findOneAndDelete({
+                userId: userId,
+            });
             if (!deletedStaff) {
                 return res
                     .status(StatusCodes.NOT_FOUND)
                     .json({ error: "UserNotFound" });
             }
             return res.sendStatus(StatusCodes.NO_CONTENT);
-
         } catch (error) {
             next(error);
         }
