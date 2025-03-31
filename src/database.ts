@@ -1,5 +1,9 @@
 import mongoose, { Schema, Document } from "mongoose";
 import {
+    StaffSchema,
+    StaffValidator,
+} from "./services/staff/staff-schema";
+import {
     AttendeeAttendanceSchema,
     AttendeeSchema,
 } from "./services/attendee/attendee-schema";
@@ -80,6 +84,11 @@ export const Database = {
     ATTENDEE_ATTENDANCE: mongoose.model(
         "attendee_attendance",
         AttendeeAttendanceSchema
+    ),
+    STAFF: initializeModel(
+        "staff",
+        StaffSchema,
+        StaffValidator
     ),
     SUBSCRIPTIONS: initializeModel(
         "subscriptions",
