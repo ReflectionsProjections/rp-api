@@ -17,21 +17,24 @@ export default function RoleChecker(
                 return next();
             }
 
-            return res.status(StatusCodes.UNAUTHORIZED).json({ error: "NoJWT" });
+            return res
+                .status(StatusCodes.UNAUTHORIZED)
+                .json({ error: "NoJWT" });
         }
 
         let payloadData;
         try {
-            payloadData = jsonwebtoken.verify(
-                jwt,
-                Config.JWT_SIGNING_SECRET
-            );
+            payloadData = jsonwebtoken.verify(jwt, Config.JWT_SIGNING_SECRET);
         } catch (error) {
             if (error instanceof TokenExpiredError) {
-                return res.status(StatusCodes.FORBIDDEN).json({ error: "ExpiredJWT" });
+                return res
+                    .status(StatusCodes.FORBIDDEN)
+                    .json({ error: "ExpiredJWT" });
             }
 
-            return res.status(StatusCodes.UNAUTHORIZED).json({ error: "InvalidJWT" });
+            return res
+                .status(StatusCodes.UNAUTHORIZED)
+                .json({ error: "InvalidJWT" });
         }
 
         try {
