@@ -21,6 +21,7 @@ import statsRouter from "./services/stats/stats-router";
 import subscriptionRouter from "./services/subscription/subscription-router";
 import speakersRouter from "./services/speakers/speakers-router";
 import puzzlebangRouter from "./services/puzzlebang/puzzlebang-router";
+import meetingsRouter from "./services/meetings/meetings-router";
 
 import cors from "cors";
 
@@ -59,6 +60,7 @@ app.use("/s3", databaseMiddleware, s3Router);
 app.use("/stats", databaseMiddleware, statsRouter);
 app.use("/subscription", databaseMiddleware, subscriptionRouter);
 app.use("/speakers", databaseMiddleware, speakersRouter);
+app.use("/meetings", databaseMiddleware, meetingsRouter);
 
 app.get("/status", (_, res) => {
     return res.status(StatusCodes.OK).send("API is alive!");
