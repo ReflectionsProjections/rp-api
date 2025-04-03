@@ -3,9 +3,8 @@ import { StatusCodes } from "http-status-codes";
 import { meetingView, meetingValidator } from "./meetings-schema";
 
 import { Database } from "../../database";
-// import RoleChecker from "../../middleware/role-checker";
-// import { Role } from "../auth/auth-models";
-// import { isAdmin, isStaff } from "../auth/auth-utils";
+import RoleChecker from "../../middleware/role-checker";
+import { Role } from "../auth/auth-models";
 
 const meetingsRouter = Router();
 
@@ -19,7 +18,7 @@ const meetingsRouter = Router();
 // @todo add actual role checking
 
 // get all events
-meetingsRouter.get("/", async (req, res, next) => {
+meetingsRouter.get("/", RoleChecker([Role.enum.STAFF, Role.enum.ADMIN], true), async (req, res, next) => {
     try {
         const meetings = await Database.MEETINGS.find();
         const parsedMeetings = meetings.map((meeting) =>
@@ -32,7 +31,7 @@ meetingsRouter.get("/", async (req, res, next) => {
 });
 
 // get specific event
-meetingsRouter.get("/:meetingId", async (req, res, next) => {
+meetingsRouter.get("/:meetingId", RoleChecker([Role.enum.STAFF, Role.enum.ADMIN], true), async (req, res, next) => {
     try {
         const { meetingId } = req.params;
         const meeting = await Database.MEETINGS.findOne({ meetingId });
@@ -51,7 +50,7 @@ meetingsRouter.get("/:meetingId", async (req, res, next) => {
 });
 
 // create an event
-meetingsRouter.post("/", async (req, res, next) => {
+meetingsRouter.post("/", RoleChecker([Role.enum.ADMIN], true), async (req, res, next) => {
     try {
         const validatedData = meetingValidator.parse(req.body);
         const newMeeting = new Database.MEETINGS(validatedData);
@@ -65,7 +64,7 @@ meetingsRouter.post("/", async (req, res, next) => {
 });
 
 // edit a meeting, parameter is the ID
-meetingsRouter.put("/:meetingId", async (req, res, next) => {
+meetingsRouter.put("/:meetingId", RoleChecker([Role.enum.ADMIN], true), async (req, res, next) => {
     try {
         const { meetingId } = req.params;
         const parsedData = meetingValidator.partial().parse(req.body);
@@ -91,7 +90,7 @@ meetingsRouter.put("/:meetingId", async (req, res, next) => {
 
 // delete a meeting, by meeting ID
 
-meetingsRouter.delete("/:meetingId", async (req, res, next) => {
+meetingsRouter.delete("/:meetingId", RoleChecker([Role.enum.ADMIN], true), async (req, res, next) => {
     try {
         const { meetingId } = req.params;
         const deletedMeeting = await Database.MEETINGS.findOneAndDelete({
