@@ -1,6 +1,10 @@
 import { Router } from "express";
 import { StatusCodes } from "http-status-codes";
-import { meetingView, meetingValidator } from "./meetings-schema";
+import {
+    meetingView,
+    createMeetingValidator,
+    updateMeetingValidator,
+} from "./meetings-schema";
 
 import { Database } from "../../database";
 import RoleChecker from "../../middleware/role-checker";
@@ -59,7 +63,7 @@ meetingsRouter.post(
     RoleChecker([Role.enum.ADMIN], true),
     async (req, res, next) => {
         try {
-            const validatedData = meetingValidator.parse(req.body);
+            const validatedData = createMeetingValidator.parse(req.body);
             const newMeeting = new Database.MEETINGS(validatedData);
             await newMeeting.save();
 
@@ -78,7 +82,7 @@ meetingsRouter.put(
     async (req, res, next) => {
         try {
             const { meetingId } = req.params;
-            const parsedData = meetingValidator.partial().parse(req.body);
+            const parsedData = updateMeetingValidator.parse(req.body);
 
             const updatedMeeting = await Database.MEETINGS.findOneAndUpdate(
                 { meetingId },
