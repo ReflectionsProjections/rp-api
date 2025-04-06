@@ -11,6 +11,7 @@ import bodyParser from "body-parser";
 import errorHandler from "./middleware/error-handler";
 
 import attendeeRouter from "./services/attendee/attendee-router";
+import staffRouter from "./services/staff/staff-router";
 import checkinRouter from "./services/checkin/checkin-router";
 import authRouter from "./services/auth/auth-router";
 import eventsRouter from "./services/events/events-router";
@@ -50,6 +51,7 @@ app.use("/", bodyParser.json());
 
 // API routes
 app.use("/attendee", databaseMiddleware, attendeeRouter);
+app.use("/staff", databaseMiddleware, staffRouter);
 app.use("/auth", databaseMiddleware, authRouter);
 app.use("/checkin", databaseMiddleware, checkinRouter);
 app.use("/events", databaseMiddleware, eventsRouter);
