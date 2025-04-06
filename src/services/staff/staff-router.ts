@@ -7,7 +7,7 @@ import { Role } from "../auth/auth-models";
 
 const staffRouter = Router();
 
-// GET /staff
+// Get all staff
 staffRouter.get(
     "/",
     RoleChecker([Role.Enum.STAFF, Role.Enum.ADMIN]),
@@ -21,7 +21,7 @@ staffRouter.get(
     }
 );
 
-// GET /staff/:id
+// Get staff member by ID
 staffRouter.get(
     "/:USERID",
     RoleChecker([Role.Enum.STAFF, Role.Enum.ADMIN]),
@@ -45,7 +45,7 @@ staffRouter.get(
     }
 );
 
-// POST /staff
+// Create new staff member
 staffRouter.post(
     "/",
     RoleChecker([Role.Enum.ADMIN]),
@@ -63,7 +63,7 @@ staffRouter.post(
     }
 );
 
-// DELETE /staff/:id
+// Delete staff member by ID
 staffRouter.delete(
     "/:USERID",
     RoleChecker([Role.Enum.ADMIN]),
