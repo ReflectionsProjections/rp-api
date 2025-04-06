@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { JwtPayloadValidator, Role } from "../services/auth/auth-models";
 import { z } from "zod";
-import jsonwebtoken from "jsonwebtoken";
+import jsonwebtoken, { TokenExpiredError } from "jsonwebtoken";
 import { Config } from "../config";
 import { StatusCodes } from "http-status-codes";
 
@@ -17,15 +17,27 @@ export default function RoleChecker(
                 return next();
             }
 
-            return res.status(StatusCodes.BAD_REQUEST).json({ error: "NoJWT" });
+            return res
+                .status(StatusCodes.UNAUTHORIZED)
+                .json({ error: "NoJWT" });
+        }
+
+        let payloadData;
+        try {
+            payloadData = jsonwebtoken.verify(jwt, Config.JWT_SIGNING_SECRET);
+        } catch (error) {
+            if (error instanceof TokenExpiredError) {
+                return res
+                    .status(StatusCodes.FORBIDDEN)
+                    .json({ error: "ExpiredJWT" });
+            }
+
+            return res
+                .status(StatusCodes.UNAUTHORIZED)
+                .json({ error: "InvalidJWT" });
         }
 
         try {
-            const payloadData = jsonwebtoken.verify(
-                jwt,
-                Config.JWT_SIGNING_SECRET
-            );
-
             const payload = JwtPayloadValidator.parse(payloadData);
             res.locals.payload = payload;
 
