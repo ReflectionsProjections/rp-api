@@ -5,9 +5,12 @@
     "scripts": {
         "dev": "nodemon -w src/ -x tsx src/app.ts",
         "start": "tsx src/app.ts",
-        "lint": "yarn prettier . --write",
-        "kill": "kill -9 $(lsof -t -i :3000)",
+        "lint": "eslint . --fix",
+        "lint:check": "eslint .",
+        "format": "prettier . --write",
+        "format:check": "prettier . --check",
         "build": "tsc",
+        "verify": "yarn build && yarn lint:check && yarn format:check",
         "test": "jest --config=testing/jest.config.ts"
     },
     "devDependencies": {
