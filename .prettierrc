@@ -3,5 +3,14 @@
     "tabWidth": 4,
     "semi": true,
     "singleQuote": false,
-    "endOfLine": "lf"
+    "endOfLine": "lf",
+    "overrides": [
+        {
+            "files": "*.yml",
+            "options": {
+                "useTabs": true,
+                "tabWidth": 2
+            }
+        }
+    ]
 }
