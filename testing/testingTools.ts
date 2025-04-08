@@ -10,7 +10,7 @@ export const TESTER = {
 };
 
 function app() {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const appExports = require("../src/app");
     return appExports.default;
 }
