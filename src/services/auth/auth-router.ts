@@ -198,6 +198,20 @@ authRouter.delete(
     }
 );
 
+authRouter.get("/info", RoleChecker([]), async (req, res, next) => {
+    const userId = res.locals.payload.userId;
+    try {
+        const user = await Database.ROLES.findOne({ userId }).select({
+            displayName: true,
+            roles: true,
+            _id: false,
+        });
+        return res.status(StatusCodes.OK).json(user);
+    } catch (error) {
+        next(error);
+    }
+});
+
 // Get a list of people by role (staff only endpoint)
 authRouter.get(
     "/:ROLE",
@@ -220,9 +234,5 @@ authRouter.get(
         }
     }
 );
-
-authRouter.get("/roles", RoleChecker([]), (req, res) => {
-    return res.status(StatusCodes.OK).json(res.locals.payload.roles);
-});
 
 export default authRouter;
