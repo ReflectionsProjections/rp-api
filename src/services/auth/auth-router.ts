@@ -221,4 +221,8 @@ authRouter.get(
     }
 );
 
+authRouter.get("/roles", RoleChecker([]), (req, res) => {
+    return res.status(StatusCodes.OK).json(res.locals.payload.roles);
+});
+
 export default authRouter;
