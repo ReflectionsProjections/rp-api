@@ -8,6 +8,7 @@ export const CommitteeNames = z.enum([
     "CORPORATE",
     "DESIGN",
     "DEV",
+    "FULL TEAM",
     "MARKETING",
     "OPERATIONS",
 ]);
