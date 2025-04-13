@@ -1,14 +1,24 @@
-import { Request, Response } from "express";
-// NextFunction
-// TODO: Fix this function
+import { NextFunction, Request, Response } from "express";
+import { StatusCodes } from "http-status-codes";
+import { z } from "zod";
+
 function errorHandler(
     err: Error,
-    _req: Request,
-    res: Response
-    // _next: NextFunction
+    req: Request,
+    res: Response,
+    _next: NextFunction
 ) {
-    console.error("IN HERE", err.stack);
-    return res.status(500).send("Something broke!");
+    if (err instanceof z.ZodError) {
+        return res.status(StatusCodes.BAD_REQUEST).json({
+            error: "BadRequest",
+            details: err.errors,
+        });
+    }
+
+    console.error("ERROR", err.stack);
+    return res.status(500).send({
+        error: "InternalError",
+    });
 }
 
 export default errorHandler;
