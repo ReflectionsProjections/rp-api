@@ -9,7 +9,6 @@ import { Database } from "../../database";
 import RoleChecker from "../../middleware/role-checker";
 import { Role, JwtPayloadType } from "../auth/auth-models";
 import { AuthRoleChangeRequest } from "./auth-schema";
-import { z } from "zod";
 import authSponsorRouter from "./sponsor/sponsor-router";
 import { CorporateDeleteRequest, CorporateValidator } from "./corporate-schema";
 import { isPuzzleBang } from "../auth/auth-utils";
@@ -25,68 +24,43 @@ const authRouter = Router();
 authRouter.use("/sponsor", authSponsorRouter);
 
 // Remove role from userId by email address (admin only endpoint)
-authRouter.delete(
-    "/",
-    RoleChecker([Role.Enum.ADMIN]),
-    async (req, res, next) => {
-        try {
-            // Validate request body using Zod schema
-            const { email, role } = AuthRoleChangeRequest.parse(req.body);
+authRouter.delete("/", RoleChecker([Role.Enum.ADMIN]), async (req, res) => {
+    // Validate request body using Zod schema
+    const { email, role } = AuthRoleChangeRequest.parse(req.body);
 
-            // Use findOneAndUpdate to remove the role
-            const user = await Database.ROLES.findOneAndUpdate(
-                { email: email },
-                { $pull: { roles: role } },
-                { new: true }
-            );
+    // Use findOneAndUpdate to remove the role
+    const user = await Database.ROLES.findOneAndUpdate(
+        { email: email },
+        { $pull: { roles: role } },
+        { new: true }
+    );
 
-            if (!user) {
-                return res.status(StatusCodes.NOT_FOUND).json({
-                    error: "UserNotFound",
-                });
-            }
-
-            return res.status(StatusCodes.OK).json(user);
-        } catch (error) {
-            if (error instanceof z.ZodError) {
-                return res.status(StatusCodes.BAD_REQUEST).json({
-                    error: "BadRole",
-                    details: error.errors,
-                });
-            }
-
-            next(error);
-        }
+    if (!user) {
+        return res.status(StatusCodes.NOT_FOUND).json({
+            error: "UserNotFound",
+        });
     }
-);
+
+    return res.status(StatusCodes.OK).json(user);
+});
 
 // Add role to userId by email address (admin only endpoint)
-authRouter.put("/", RoleChecker([Role.Enum.ADMIN]), async (req, res, next) => {
-    try {
-        const { email, role } = AuthRoleChangeRequest.parse(req.body);
+authRouter.put("/", RoleChecker([Role.Enum.ADMIN]), async (req, res) => {
+    const { email, role } = AuthRoleChangeRequest.parse(req.body);
 
-        const user = await Database.ROLES.findOneAndUpdate(
-            { email: email },
-            { $addToSet: { roles: role } },
-            { new: true, upsert: true }
-        );
+    const user = await Database.ROLES.findOneAndUpdate(
+        { email: email },
+        { $addToSet: { roles: role } },
+        { new: true, upsert: true }
+    );
 
-        if (!user) {
-            return res.status(StatusCodes.NOT_FOUND).json({
-                error: "UserNotFound",
-            });
-        }
-
-        return res.status(StatusCodes.OK).json(user);
-    } catch (error) {
-        if (error instanceof z.ZodError) {
-            return res.status(StatusCodes.BAD_REQUEST).json({
-                error: "BadRole",
-            });
-        }
-
-        next(error);
+    if (!user) {
+        return res.status(StatusCodes.NOT_FOUND).json({
+            error: "UserNotFound",
+        });
     }
+
+    return res.status(StatusCodes.OK).json(user);
 });
 
 authRouter.get("/login/:DEVICE/", (req, res) => {
@@ -112,7 +86,7 @@ authRouter.get(
         passport.authenticate(authStrategies[req.params.DEVICE], {
             session: false,
         })(req, res, next),
-    async function (req, res, next) {
+    async function (req, res) {
         // Authentication failed - redirect to login
         if (req.user == undefined) {
             return res.redirect(`/auth/login/${req.params.DEVICE}`);
@@ -121,30 +95,22 @@ authRouter.get(
         const userId = `user${userData.id}`;
 
         // Generate the JWT, and redirect to JWT initialization
-        try {
-            const jwtPayload = (
-                await getJwtPayloadFromDatabase(userId)
-            ).toObject() as JwtPayloadType;
+        const jwtPayload = (
+            await getJwtPayloadFromDatabase(userId)
+        ).toObject() as JwtPayloadType;
 
-            // Check if user has PuzzleBang role
-            const isPB = isPuzzleBang(jwtPayload);
+        // Check if user has PuzzleBang role
+        const isPB = isPuzzleBang(jwtPayload);
 
-            const token = jsonwebtoken.sign(
-                jwtPayload,
-                Config.JWT_SIGNING_SECRET,
-                {
-                    expiresIn: isPB
-                        ? Config.PB_JWT_EXPIRATION_TIME
-                        : Config.JWT_EXPIRATION_TIME,
-                }
-            );
-            const redirectUri =
-                DeviceRedirects[req.params.DEVICE] + `?token=${token}`;
-            console.log(redirectUri);
-            return res.redirect(redirectUri);
-        } catch (error) {
-            next(error);
-        }
+        const token = jsonwebtoken.sign(jwtPayload, Config.JWT_SIGNING_SECRET, {
+            expiresIn: isPB
+                ? Config.PB_JWT_EXPIRATION_TIME
+                : Config.JWT_EXPIRATION_TIME,
+        });
+        const redirectUri =
+            DeviceRedirects[req.params.DEVICE] + `?token=${token}`;
+        console.log(redirectUri);
+        return res.redirect(redirectUri);
     }
 );
 
@@ -155,84 +121,54 @@ authRouter.get("/dev/", (req, res) => {
 authRouter.get(
     "/corporate",
     RoleChecker([Role.Enum.ADMIN]),
-    async (req, res, next) => {
-        try {
-            const allCorporate = await Database.CORPORATE.find();
+    async (req, res) => {
+        const allCorporate = await Database.CORPORATE.find();
 
-            return res.status(StatusCodes.OK).json(allCorporate);
-        } catch (error) {
-            next(error);
-        }
+        return res.status(StatusCodes.OK).json(allCorporate);
     }
 );
 
 authRouter.post(
     "/corporate",
     RoleChecker([Role.Enum.ADMIN]),
-    async (req, res, next) => {
-        try {
-            const attendeeData = CorporateValidator.parse(req.body);
-            const corporate = new Database.CORPORATE(attendeeData);
-            await corporate.save();
+    async (req, res) => {
+        const attendeeData = CorporateValidator.parse(req.body);
+        const corporate = new Database.CORPORATE(attendeeData);
+        await corporate.save();
 
-            return res.status(StatusCodes.CREATED).json(corporate);
-        } catch (error) {
-            next(error);
-        }
+        return res.status(StatusCodes.CREATED).json(corporate);
     }
 );
 
 authRouter.delete(
     "/corporate",
     RoleChecker([Role.Enum.ADMIN]),
-    async (req, res, next) => {
-        try {
-            const attendeeData = CorporateDeleteRequest.parse(req.body);
-            const email = attendeeData.email;
-            await Database.CORPORATE.findOneAndDelete({ email: email });
+    async (req, res) => {
+        const attendeeData = CorporateDeleteRequest.parse(req.body);
+        const email = attendeeData.email;
+        await Database.CORPORATE.findOneAndDelete({ email: email });
 
-            return res.sendStatus(StatusCodes.NO_CONTENT);
-        } catch (error) {
-            next(error);
-        }
+        return res.sendStatus(StatusCodes.NO_CONTENT);
     }
 );
 
-authRouter.get("/info", RoleChecker([]), async (req, res, next) => {
+authRouter.get("/info", RoleChecker([]), async (req, res) => {
     const userId = res.locals.payload.userId;
-    try {
-        const user = await Database.ROLES.findOne({ userId }).select({
-            displayName: true,
-            roles: true,
-            _id: false,
-        });
-        return res.status(StatusCodes.OK).json(user);
-    } catch (error) {
-        next(error);
-    }
+    const user = await Database.ROLES.findOne({ userId }).select({
+        displayName: true,
+        roles: true,
+        _id: false,
+    });
+    return res.status(StatusCodes.OK).json(user);
 });
 
 // Get a list of people by role (staff only endpoint)
-authRouter.get(
-    "/:ROLE",
-    RoleChecker([Role.Enum.STAFF]),
-    async (req, res, next) => {
-        try {
-            // Validate the role using Zod schema
-            const role = Role.parse(req.params.ROLE);
+authRouter.get("/:ROLE", RoleChecker([Role.Enum.STAFF]), async (req, res) => {
+    // Validate the role using Zod schema
+    const role = Role.parse(req.params.ROLE);
 
-            const usersWithRole = await Database.ROLES.find({ roles: role });
-            return res.status(StatusCodes.OK).json(usersWithRole);
-        } catch (error) {
-            if (error instanceof z.ZodError) {
-                return res.status(StatusCodes.BAD_REQUEST).json({
-                    error: "BadRole",
-                });
-            }
-
-            next(error);
-        }
-    }
-);
+    const usersWithRole = await Database.ROLES.find({ roles: role });
+    return res.status(StatusCodes.OK).json(usersWithRole);
+});
 
 export default authRouter;

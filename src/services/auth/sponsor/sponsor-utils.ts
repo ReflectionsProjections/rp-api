@@ -12,13 +12,8 @@ export function createSixDigitCode() {
 }
 
 export function encryptSixDigitCode(sixDigitCode: string): string {
-    try {
-        const hash = bcrypt.hashSync(sixDigitCode, Config.HASH_SALT_ROUNDS);
-        return hash;
-    } catch (err) {
-        console.error("Error encrypting the code:", err);
-        throw err;
-    }
+    const hash = bcrypt.hashSync(sixDigitCode, Config.HASH_SALT_ROUNDS);
+    return hash;
 }
 
 export async function sponsorExists(email: string) {

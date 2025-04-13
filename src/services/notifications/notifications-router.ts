@@ -11,23 +11,20 @@ const notificationsRouter = Router();
 notificationsRouter.post(
     "/",
     RoleChecker([Role.enum.USER]),
-    async (req, res, next) => {
+    async (req, res) => {
         const payload = res.locals.payload;
-        try {
-            const notificationEnrollmentData = NotificationsValidator.parse(
-                req.body
-            );
-            // Upsert the user-device mapping info
-            await Database.NOTIFICATIONS.findOneAndUpdate(
-                { userId: payload.userId },
-                { deviceId: notificationEnrollmentData.deviceId },
-                { upsert: true }
-            );
 
-            return res.status(StatusCodes.OK).json(notificationEnrollmentData);
-        } catch (error) {
-            next(error);
-        }
+        const notificationEnrollmentData = NotificationsValidator.parse(
+            req.body
+        );
+        // Upsert the user-device mapping info
+        await Database.NOTIFICATIONS.findOneAndUpdate(
+            { userId: payload.userId },
+            { deviceId: notificationEnrollmentData.deviceId },
+            { upsert: true }
+        );
+
+        return res.status(StatusCodes.OK).json(notificationEnrollmentData);
     }
 );
 

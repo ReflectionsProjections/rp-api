@@ -8,21 +8,17 @@ import cors from "cors";
 const subscriptionRouter = Router();
 
 // Create a new subscription
-subscriptionRouter.post("/", cors(), async (req, res, next) => {
-    try {
-        // Validate the incoming user subscription
-        const subscriptionData = SubscriptionValidator.parse(req.body);
+subscriptionRouter.post("/", cors(), async (req, res) => {
+    // Validate the incoming user subscription
+    const subscriptionData = SubscriptionValidator.parse(req.body);
 
-        // Upsert the user info into the corresponding Subscription collection
-        await Database.SUBSCRIPTIONS.findOneAndUpdate(
-            { mailingList: subscriptionData.mailingList },
-            { $addToSet: { subscriptions: subscriptionData.email } },
-            { upsert: true, new: true }
-        );
-        return res.status(StatusCodes.CREATED).json(subscriptionData);
-    } catch (error) {
-        next(error);
-    }
+    // Upsert the user info into the corresponding Subscription collection
+    await Database.SUBSCRIPTIONS.findOneAndUpdate(
+        { mailingList: subscriptionData.mailingList },
+        { $addToSet: { subscriptions: subscriptionData.email } },
+        { upsert: true, new: true }
+    );
+    return res.status(StatusCodes.CREATED).json(subscriptionData);
 });
 
 export default subscriptionRouter;

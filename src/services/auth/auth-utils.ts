@@ -53,22 +53,18 @@ export async function getJwtPayloadFromDatabase(userId: string) {
 }
 
 export async function generateJWT(userId: string) {
-    try {
-        const jwtPayload = (
-            await getJwtPayloadFromDatabase(userId)
-        ).toObject() as JwtPayloadType;
+    const jwtPayload = (
+        await getJwtPayloadFromDatabase(userId)
+    ).toObject() as JwtPayloadType;
 
-        // Check if user has PuzzleBang role
-        const isPB = isPuzzleBang(jwtPayload);
+    // Check if user has PuzzleBang role
+    const isPB = isPuzzleBang(jwtPayload);
 
-        return jsonwebtoken.sign(jwtPayload, Config.JWT_SIGNING_SECRET, {
-            expiresIn: isPB
-                ? Config.PB_JWT_EXPIRATION_TIME
-                : Config.JWT_EXPIRATION_TIME,
-        });
-    } catch (error) {
-        next(error);
-    }
+    return jsonwebtoken.sign(jwtPayload, Config.JWT_SIGNING_SECRET, {
+        expiresIn: isPB
+            ? Config.PB_JWT_EXPIRATION_TIME
+            : Config.JWT_EXPIRATION_TIME,
+    });
 }
 
 export function isUser(payload?: JwtPayloadType) {
@@ -85,8 +81,4 @@ export function isAdmin(payload?: JwtPayloadType) {
 
 export function isPuzzleBang(payload?: JwtPayloadType) {
     return payload?.roles.includes(Role.Enum.PUZZLEBANG);
-}
-function next(error: unknown) {
-    console.error(error);
-    throw new Error("Function not implemented.");
 }
