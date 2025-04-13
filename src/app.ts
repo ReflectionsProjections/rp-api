@@ -44,32 +44,41 @@ app.disable("etag");
 // app.use(customCors);
 app.use(cors());
 
-// To display the logs every time
-app.use("/", morgan("dev"));
+// Logs
+app.use(morgan("dev"));
 
-app.use("/", bodyParser.json());
+// Parsing
+app.use(bodyParser.json());
+
+// Database
+app.use(databaseMiddleware);
 
 // API routes
-app.use("/attendee", databaseMiddleware, attendeeRouter);
-app.use("/staff", databaseMiddleware, staffRouter);
-app.use("/auth", databaseMiddleware, authRouter);
-app.use("/checkin", databaseMiddleware, checkinRouter);
-app.use("/events", databaseMiddleware, eventsRouter);
-app.use("/notifications", databaseMiddleware, notificationsRouter);
-app.use("/puzzlebang", databaseMiddleware, puzzlebangRouter);
-app.use("/registration", databaseMiddleware, registrationRouter);
-app.use("/s3", databaseMiddleware, s3Router);
-app.use("/stats", databaseMiddleware, statsRouter);
-app.use("/subscription", databaseMiddleware, subscriptionRouter);
-app.use("/speakers", databaseMiddleware, speakersRouter);
-app.use("/meetings", databaseMiddleware, meetingsRouter);
+app.use("/attendee", attendeeRouter);
+app.use("/staff", staffRouter);
+app.use("/auth", authRouter);
+app.use("/checkin", checkinRouter);
+app.use("/events", eventsRouter);
+app.use("/notifications", notificationsRouter);
+app.use("/puzzlebang", puzzlebangRouter);
+app.use("/registration", registrationRouter);
+app.use("/s3", s3Router);
+app.use("/stats", statsRouter);
+app.use("/subscription", subscriptionRouter);
+app.use("/speakers", speakersRouter);
+app.use("/meetings", meetingsRouter);
 
-app.get("/status", (_, res) => {
-    return res.status(StatusCodes.OK).send("API is alive!");
+app.get("/status", (req, res) => {
+    return res.status(StatusCodes.OK).send({
+        ok: true,
+        message: "API is alive!",
+    });
 });
 
-app.use("/", (_, res) =>
-    res.status(StatusCodes.NOT_FOUND).send("No endpoint here!")
+app.use("/", (req, res) =>
+    res.status(StatusCodes.NOT_FOUND).send({
+        error: "EndpointNotFound",
+    })
 );
 
 app.use(errorHandler);
