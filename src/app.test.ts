@@ -21,8 +21,10 @@ const TESTER_EVENT = {
 describe("general app test", () => {
     it("app should be running", async () => {
         const response = await get("/status", undefined).expect(StatusCodes.OK);
-
-        expect(response.text).toBe("API is alive!");
+        expect(response.body).toMatchObject({
+            ok: true,
+            message: "API is alive!",
+        });
     });
 });
 

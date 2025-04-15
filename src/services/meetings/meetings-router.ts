@@ -21,16 +21,12 @@ const meetingsRouter = Router();
 meetingsRouter.get(
     "/",
     RoleChecker([Role.enum.STAFF, Role.enum.ADMIN], true),
-    async (req, res, next) => {
-        try {
-            const meetings = await Database.MEETINGS.find();
-            const parsedMeetings = meetings.map((meeting) =>
-                meetingView.parse(meeting.toObject())
-            );
-            res.status(StatusCodes.OK).json(parsedMeetings);
-        } catch (error) {
-            next(error);
-        }
+    async (req, res) => {
+        const meetings = await Database.MEETINGS.find();
+        const parsedMeetings = meetings.map((meeting) =>
+            meetingView.parse(meeting.toObject())
+        );
+        res.status(StatusCodes.OK).json(parsedMeetings);
     }
 );
 
@@ -38,22 +34,18 @@ meetingsRouter.get(
 meetingsRouter.get(
     "/:meetingId",
     RoleChecker([Role.enum.STAFF, Role.enum.ADMIN], true),
-    async (req, res, next) => {
-        try {
-            const { meetingId } = req.params;
-            const meeting = await Database.MEETINGS.findOne({ meetingId });
+    async (req, res) => {
+        const { meetingId } = req.params;
+        const meeting = await Database.MEETINGS.findOne({ meetingId });
 
-            if (!meeting) {
-                return res
-                    .status(StatusCodes.NOT_FOUND)
-                    .json({ message: "Meeting not found" });
-            }
-
-            const parsedMeeting = meetingView.parse(meeting.toObject());
-            res.status(StatusCodes.OK).json(parsedMeeting);
-        } catch (error) {
-            next(error);
+        if (!meeting) {
+            return res
+                .status(StatusCodes.NOT_FOUND)
+                .json({ message: "Meeting not found" });
         }
+
+        const parsedMeeting = meetingView.parse(meeting.toObject());
+        res.status(StatusCodes.OK).json(parsedMeeting);
     }
 );
 
@@ -61,17 +53,13 @@ meetingsRouter.get(
 meetingsRouter.post(
     "/",
     RoleChecker([Role.enum.ADMIN], true),
-    async (req, res, next) => {
-        try {
-            const validatedData = createMeetingValidator.parse(req.body);
-            const newMeeting = new Database.MEETINGS(validatedData);
-            await newMeeting.save();
+    async (req, res) => {
+        const validatedData = createMeetingValidator.parse(req.body);
+        const newMeeting = new Database.MEETINGS(validatedData);
+        await newMeeting.save();
 
-            const parsedMeeting = meetingView.parse(newMeeting.toObject());
-            res.status(StatusCodes.CREATED).json(parsedMeeting);
-        } catch (error) {
-            next(error);
-        }
+        const parsedMeeting = meetingView.parse(newMeeting.toObject());
+        res.status(StatusCodes.CREATED).json(parsedMeeting);
     }
 );
 
@@ -79,28 +67,24 @@ meetingsRouter.post(
 meetingsRouter.put(
     "/:meetingId",
     RoleChecker([Role.enum.ADMIN], true),
-    async (req, res, next) => {
-        try {
-            const { meetingId } = req.params;
-            const parsedData = updateMeetingValidator.parse(req.body);
+    async (req, res) => {
+        const { meetingId } = req.params;
+        const parsedData = updateMeetingValidator.parse(req.body);
 
-            const updatedMeeting = await Database.MEETINGS.findOneAndUpdate(
-                { meetingId },
-                parsedData,
-                { new: true }
-            );
+        const updatedMeeting = await Database.MEETINGS.findOneAndUpdate(
+            { meetingId },
+            parsedData,
+            { new: true }
+        );
 
-            if (!updatedMeeting) {
-                return res
-                    .status(StatusCodes.NOT_FOUND)
-                    .json({ message: "Meeting not found" });
-            }
-
-            const parsedMeeting = meetingView.parse(updatedMeeting.toObject());
-            res.status(StatusCodes.OK).json(parsedMeeting);
-        } catch (error) {
-            next(error);
+        if (!updatedMeeting) {
+            return res
+                .status(StatusCodes.NOT_FOUND)
+                .json({ message: "Meeting not found" });
         }
+
+        const parsedMeeting = meetingView.parse(updatedMeeting.toObject());
+        res.status(StatusCodes.OK).json(parsedMeeting);
     }
 );
 
@@ -109,23 +93,19 @@ meetingsRouter.put(
 meetingsRouter.delete(
     "/:meetingId",
     RoleChecker([Role.enum.ADMIN], true),
-    async (req, res, next) => {
-        try {
-            const { meetingId } = req.params;
-            const deletedMeeting = await Database.MEETINGS.findOneAndDelete({
-                meetingId,
-            });
+    async (req, res) => {
+        const { meetingId } = req.params;
+        const deletedMeeting = await Database.MEETINGS.findOneAndDelete({
+            meetingId,
+        });
 
-            if (!deletedMeeting) {
-                return res
-                    .status(StatusCodes.NOT_FOUND)
-                    .json({ message: "Meeting not found" });
-            }
-
-            res.status(StatusCodes.NO_CONTENT).send(); // 204 No Content on successful deletion
-        } catch (error) {
-            next(error);
+        if (!deletedMeeting) {
+            return res
+                .status(StatusCodes.NOT_FOUND)
+                .json({ message: "Meeting not found" });
         }
+
+        res.status(StatusCodes.NO_CONTENT).send(); // 204 No Content on successful deletion
     }
 );
 

@@ -8,79 +8,55 @@ import { Role } from "../auth/auth-models";
 const speakersRouter = Router();
 
 // Get all speakers
-speakersRouter.get("/", RoleChecker([], true), async (req, res, next) => {
-    try {
-        const speakers = await Database.SPEAKERS.find();
-        return res.status(StatusCodes.OK).json(speakers);
-    } catch (error) {
-        next(error);
-    }
+speakersRouter.get("/", RoleChecker([], true), async (req, res) => {
+    const speakers = await Database.SPEAKERS.find();
+    return res.status(StatusCodes.OK).json(speakers);
 });
 
 // Get a specific speaker
-speakersRouter.get(
-    "/:SPEAKERID",
-    RoleChecker([], true),
-    async (req, res, next) => {
-        const speakerId = req.params.SPEAKERID;
+speakersRouter.get("/:SPEAKERID", RoleChecker([], true), async (req, res) => {
+    const speakerId = req.params.SPEAKERID;
 
-        try {
-            const speaker = await Database.SPEAKERS.findOne({ speakerId });
+    const speaker = await Database.SPEAKERS.findOne({ speakerId });
 
-            if (!speaker) {
-                return res
-                    .status(StatusCodes.NOT_FOUND)
-                    .json({ error: "DoesNotExist" });
-            }
-
-            return res.status(StatusCodes.OK).json(speaker);
-        } catch (error) {
-            next(error);
-        }
+    if (!speaker) {
+        return res
+            .status(StatusCodes.NOT_FOUND)
+            .json({ error: "DoesNotExist" });
     }
-);
+
+    return res.status(StatusCodes.OK).json(speaker);
+});
 
 // Create a new speaker
-speakersRouter.post(
-    "/",
-    RoleChecker([Role.Enum.STAFF]),
-    async (req, res, next) => {
-        try {
-            const validatedData = SpeakerValidator.parse(req.body);
-            const speaker = new Database.SPEAKERS(validatedData);
-            await speaker.save();
-            return res.status(StatusCodes.CREATED).json(speaker);
-        } catch (error) {
-            next(error);
-        }
-    }
-);
+speakersRouter.post("/", RoleChecker([Role.Enum.STAFF]), async (req, res) => {
+    const validatedData = SpeakerValidator.parse(req.body);
+    const speaker = new Database.SPEAKERS(validatedData);
+    await speaker.save();
+    return res.status(StatusCodes.CREATED).json(speaker);
+});
 
 // Update a speaker
 speakersRouter.put(
     "/:SPEAKERID",
     RoleChecker([Role.Enum.STAFF]),
-    async (req, res, next) => {
+    async (req, res) => {
         const speakerId = req.params.SPEAKERID;
 
-        try {
-            const validatedData = SpeakerValidator.parse(req.body);
-            const speaker = await Database.SPEAKERS.findOneAndUpdate(
-                { speakerId },
-                { $set: validatedData },
-                { new: true, runValidators: true }
-            );
+        const validatedData = SpeakerValidator.parse(req.body);
+        const speaker = await Database.SPEAKERS.findOneAndUpdate(
+            { speakerId },
+            { $set: validatedData },
+            { new: true, runValidators: true }
+        );
 
-            if (!speaker) {
-                return res
-                    .status(StatusCodes.NOT_FOUND)
-                    .json({ error: "DoesNotExist" });
-            }
-
-            return res.status(StatusCodes.OK).json(speaker);
-        } catch (error) {
-            next(error);
+        if (!speaker) {
+            return res
+                .status(StatusCodes.NOT_FOUND)
+                .json({ error: "DoesNotExist" });
         }
+
+        return res.status(StatusCodes.OK).json(speaker);
     }
 );
 
@@ -88,16 +64,12 @@ speakersRouter.put(
 speakersRouter.delete(
     "/:SPEAKERID",
     RoleChecker([Role.Enum.STAFF]),
-    async (req, res, next) => {
+    async (req, res) => {
         const speakerId = req.params.SPEAKERID;
 
-        try {
-            await Database.SPEAKERS.findOneAndDelete({ speakerId });
+        await Database.SPEAKERS.findOneAndDelete({ speakerId });
 
-            return res.sendStatus(StatusCodes.NO_CONTENT);
-        } catch (error) {
-            next(error);
-        }
+        return res.sendStatus(StatusCodes.NO_CONTENT);
     }
 );
 
