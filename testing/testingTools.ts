@@ -1,10 +1,10 @@
 import request from "supertest";
-import { z } from 'zod';
+import { z } from "zod";
 import jsonwebtoken from "jsonwebtoken";
 import { Config } from "../src/config";
-import { JwtPayloadType, Role } from '../src/services/auth/auth-models';
+import { JwtPayloadType, Role } from "../src/services/auth/auth-models";
 
-type RoleType = z.infer<typeof Role>; 
+type RoleType = z.infer<typeof Role>;
 
 export const TESTER = {
     userId: "lforger132",
@@ -23,7 +23,7 @@ function setRole(request: request.Test, role?: RoleType) {
     if (!role) {
         return request;
     }
-    
+
     const payload = {
         userId: TESTER.userId,
         roles: [role],
@@ -31,13 +31,9 @@ function setRole(request: request.Test, role?: RoleType) {
         email: TESTER.email,
     } satisfies JwtPayloadType;
 
-    const jwt = jsonwebtoken.sign(
-        payload,
-        Config.JWT_SIGNING_SECRET,
-        {
-            expiresIn: Config.JWT_EXPIRATION_TIME,
-        }
-    );
+    const jwt = jsonwebtoken.sign(payload, Config.JWT_SIGNING_SECRET, {
+        expiresIn: Config.JWT_EXPIRATION_TIME,
+    });
 
     return request.set("Authorization", jwt as string);
 }
