@@ -50,18 +50,14 @@ meetingsRouter.get(
 );
 
 // create an event
-meetingsRouter.post(
-    "/",
-    RoleChecker([Role.enum.ADMIN]),
-    async (req, res) => {
-        const validatedData = createMeetingValidator.parse(req.body);
-        const newMeeting = new Database.MEETINGS(validatedData);
-        await newMeeting.save();
+meetingsRouter.post("/", RoleChecker([Role.enum.ADMIN]), async (req, res) => {
+    const validatedData = createMeetingValidator.parse(req.body);
+    const newMeeting = new Database.MEETINGS(validatedData);
+    await newMeeting.save();
 
-        const parsedMeeting = meetingView.parse(newMeeting.toObject());
-        res.status(StatusCodes.CREATED).json(parsedMeeting);
-    }
-);
+    const parsedMeeting = meetingView.parse(newMeeting.toObject());
+    res.status(StatusCodes.CREATED).json(parsedMeeting);
+});
 
 // edit a meeting, parameter is the ID
 meetingsRouter.put(
