@@ -1,12 +1,16 @@
 import request from "supertest";
+import { z } from "zod";
 import jsonwebtoken from "jsonwebtoken";
 import { Config } from "../src/config";
-// import { Role } from "../src/services/auth/auth-models";
+import { JwtPayloadType, Role } from "../src/services/auth/auth-models";
+
+type RoleType = z.infer<typeof Role>;
 
 export const TESTER = {
     userId: "lforger132",
     roles: [],
     displayName: "Loid Forger",
+    email: "loid.forger@testing.com",
 };
 
 function app() {
@@ -15,44 +19,81 @@ function app() {
     return appExports.default;
 }
 
-//fix this later
-//https://github.com/colinhacks/zod/discussions/2125
-function setRole(request: request.Test, role?: string) {
+function setRole(request: request.Test, role?: RoleType) {
     if (!role) {
         return request;
     }
 
-    const jwt = jsonwebtoken.sign(
-        {
-            userId: TESTER.userId,
-            roles: [role],
-            displayName: TESTER.displayName,
-        },
-        Config.JWT_SIGNING_SECRET,
-        {
-            expiresIn: Config.JWT_EXPIRATION_TIME,
-        }
-    );
+    const payload = {
+        userId: TESTER.userId,
+        roles: [role],
+        displayName: TESTER.displayName,
+        email: TESTER.email,
+    } satisfies JwtPayloadType;
+
+    const jwt = jsonwebtoken.sign(payload, Config.JWT_SIGNING_SECRET, {
+        expiresIn: Config.JWT_EXPIRATION_TIME,
+    });
 
     return request.set("Authorization", jwt as string);
 }
 
-export function get(url: string, role?: string): request.Test {
+export function get(url: string, role?: RoleType): request.Test {
     return setRole(request(app()).get(url), role);
 }
 
-export function post(url: string, role?: string): request.Test {
+export function getAsStaff(url: string): request.Test {
+    return get(url, Role.enum.STAFF);
+}
+
+export function getAsAdmin(url: string): request.Test {
+    return get(url, Role.enum.ADMIN);
+}
+
+export function post(url: string, role?: RoleType): request.Test {
     return setRole(request(app()).post(url), role);
 }
 
-export function put(url: string, role?: string): request.Test {
+export function postAsStaff(url: string): request.Test {
+    return post(url, Role.enum.STAFF);
+}
+
+export function postAsAdmin(url: string): request.Test {
+    return post(url, Role.enum.ADMIN);
+}
+
+export function put(url: string, role?: RoleType): request.Test {
     return setRole(request(app()).put(url), role);
 }
 
-export function patch(url: string, role?: string): request.Test {
+export function putAsStaff(url: string): request.Test {
+    return put(url, Role.enum.STAFF);
+}
+
+export function putAsAdmin(url: string): request.Test {
+    return put(url, Role.enum.ADMIN);
+}
+
+export function patch(url: string, role?: RoleType): request.Test {
     return setRole(request(app()).patch(url), role);
 }
 
-export function del(url: string, role?: string): request.Test {
+export function patchAsStaff(url: string): request.Test {
+    return patch(url, Role.enum.STAFF);
+}
+
+export function patchAsAdmin(url: string): request.Test {
+    return patch(url, Role.enum.ADMIN);
+}
+
+export function del(url: string, role?: RoleType): request.Test {
     return setRole(request(app()).delete(url), role);
+}
+
+export function delAsStaff(url: string): request.Test {
+    return del(url, Role.enum.STAFF);
+}
+
+export function delAsAdmin(url: string): request.Test {
+    return del(url, Role.enum.ADMIN);
 }
