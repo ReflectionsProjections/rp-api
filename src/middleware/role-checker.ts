@@ -51,6 +51,7 @@ export default function RoleChecker(
         }
 
         // Admins and staff can access any endpoint
+        // TODO: WTF this is not okay, what is the point of admin???
         if (
             userRoles.includes(Role.Enum.ADMIN) ||
             userRoles.includes(Role.Enum.STAFF)

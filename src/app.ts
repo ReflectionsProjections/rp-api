@@ -1,6 +1,6 @@
 import express from "express";
 import { StatusCodes } from "http-status-codes";
-import { Config } from "./config";
+import { Config, EnvironmentEnum } from "./config";
 import { isTest } from "./utilities";
 import AWS from "aws-sdk";
 
@@ -45,7 +45,9 @@ app.disable("etag");
 app.use(cors());
 
 // Logs
-app.use(morgan("dev"));
+if (Config.ENV !== EnvironmentEnum.TESTING) {
+    app.use(morgan("dev"));
+}
 
 // Parsing
 app.use(bodyParser.json());

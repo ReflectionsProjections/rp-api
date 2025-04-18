@@ -3,7 +3,7 @@ import { z } from "zod";
 
 // Zod schema for registration
 const RegistrationValidator = z.object({
-    userId: z.coerce.string().regex(/user[0-9]*/),
+    userId: z.coerce.string(),
     name: z.string(),
     email: z.string().email(),
     university: z.string(),
