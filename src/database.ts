@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document } from "mongoose";
+import mongoose, { Schema, Document, InferSchemaType } from "mongoose";
 import { StaffSchema, StaffValidator } from "./services/staff/staff-schema";
 import {
     AttendeeAttendanceSchema,
@@ -41,13 +41,14 @@ import {
     MeetingSchema,
     meetingView,
 } from "./services/meetings/meetings-schema";
+import { AnyZodObject } from "zod";
 
 mongoose.set("toObject", { versionKey: false });
 
-function initializeModel(
+function initializeModel<T extends Schema>(
     modelName: string,
-    schema: Schema,
-    object: Zod.AnyZodObject
+    schema: T,
+    object: AnyZodObject
 ) {
     schema.pre("validate", function (next) {
         const data = this.toObject();
@@ -67,9 +68,7 @@ function initializeModel(
         },
     });
 
-    type objectType = Zod.infer<typeof object>;
-    interface modelType extends Document, objectType {}
-    return mongoose.model<modelType>(modelName, schema);
+    return mongoose.model<Document & InferSchemaType<T>>(modelName, schema);
 }
 
 // Example usage
