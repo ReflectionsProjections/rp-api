@@ -3,7 +3,7 @@ import { z } from "zod";
 
 // Zod schema for notifications
 const NotificationsValidator = z.object({
-    userId: z.coerce.string().regex(/user[0-9]*/),
+    userId: z.coerce.string(),
     deviceId: z.string(),
 });
 

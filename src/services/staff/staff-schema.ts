@@ -4,7 +4,7 @@ import { v4 as uuidv4 } from "uuid";
 
 // Zod schema for staff
 export const StaffValidator = z.object({
-    userId: z.coerce.string().regex(/user[0-9]*/),
+    userId: z.coerce.string(),
     name: z.string(),
     team: z.string(),
 
