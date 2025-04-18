@@ -18,6 +18,7 @@ export const meetingView = z.object({
     committeeType: CommitteeNames,
     startTime: z.coerce.date(),
 });
+export type Meeting = z.infer<typeof meetingView>;
 
 export const MeetingSchema = new Schema({
     meetingId: {
