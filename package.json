@@ -19,6 +19,7 @@
         "@aws-sdk/s3-presigned-post": "^3.499.0",
         "@aws-sdk/s3-request-presigner": "^3.496.0",
         "@paralleldrive/cuid2": "^2.2.2",
+        "@supabase/supabase-js": "^2.49.4",
         "@types/cors": "^2.8.17",
         "@types/mustache": "^4.2.5",
         "aws-sdk": "^2.1604.0",
