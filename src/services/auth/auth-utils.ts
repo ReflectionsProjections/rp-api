@@ -2,7 +2,7 @@
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import { Config } from "../../config";
 import { Database } from "../../database";
-import { SupabaseDB, RoleTypes } from "../../supabase"
+import { SupabaseDB, RoleTypes } from "../../supabase";
 import { JwtPayloadType, Role } from "./auth-models";
 import jsonwebtoken from "jsonwebtoken";
 
@@ -21,33 +21,29 @@ export function createGoogleStrategy(device: string) {
             const email = profile._json.email || "";
 
             // Check if user is admin -> if so, add ADMIN role to their list
-            const isAdmin = email && Config.AUTH_ADMIN_WHITELIST.has(email)
-            const { data: staffData, error: staffError } = await SupabaseDB
-                .STAFF
-                .select('*')
-                .eq('email', email);
+            const isAdmin = email && Config.AUTH_ADMIN_WHITELIST.has(email);
+            const { data: staffData, error: staffError } =
+                await SupabaseDB.STAFF.select("*").eq("email", email);
 
             if (staffError) throw staffError;
             const isStaff = staffData && staffData.length > 0;
             console.log(`Auth check - Admin:${isAdmin}, Staff:${isStaff}`);
-            
+
             // TODO: either Admin or Staff, not both
             const roles = [
                 ...(isAdmin ? [RoleTypes.ADMIN] : []),
                 ...(isStaff ? [RoleTypes.STAFF] : []),
-                RoleTypes.USER
+                RoleTypes.USER,
             ];
-            
+
             // Supabase update
-            await SupabaseDB
-                .ROLES
-                .upsert({
-                    user_id: userId,
-                    display_name: displayName,
-                    email,
-                    roles,
-                })
-            
+            await SupabaseDB.ROLES.upsert({
+                user_id: userId,
+                display_name: displayName,
+                email,
+                roles,
+            });
+
             // MongoDB update - TODO: phase out
             await Database.ROLES.findOneAndUpdate(
                 { email: email },
