@@ -11,7 +11,7 @@ export const CommitteeNames = z.enum([
     "FULL TEAM",
     "MARKETING",
     "OPERATIONS",
-]);
+]); // would it be better to import the committee names from Supabase itself (similar to RoleTypes)
 
 export const meetingView = z.object({
     meetingId: z.coerce.string().default(() => uuidv4()),
@@ -20,6 +20,7 @@ export const meetingView = z.object({
 });
 export type Meeting = z.infer<typeof meetingView>;
 
+// TODO: phase out meeting schema
 export const MeetingSchema = new Schema({
     meetingId: {
         type: String,

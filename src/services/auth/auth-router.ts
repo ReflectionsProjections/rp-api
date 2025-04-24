@@ -101,11 +101,14 @@ authRouter.get(
 
         // Check if user has PuzzleBang role
         const isPB = isPuzzleBang(jwtPayload);
+        const isMobile = req.params.DEVICE == "mobile";
 
         const token = jsonwebtoken.sign(jwtPayload, Config.JWT_SIGNING_SECRET, {
             expiresIn: isPB
                 ? Config.PB_JWT_EXPIRATION_TIME
-                : Config.JWT_EXPIRATION_TIME,
+                : isMobile
+                  ? Config.MOBILE_JWT_EXPIRATION_TIME
+                  : Config.JWT_EXPIRATION_TIME,
         });
         const redirectUri =
             DeviceRedirects[req.params.DEVICE] + `?token=${token}`;

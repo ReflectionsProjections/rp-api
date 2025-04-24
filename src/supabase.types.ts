@@ -225,17 +225,17 @@ export type Database = {
                 Row: {
                     committee_type: Database["public"]["Enums"]["committee_names"];
                     meeting_id: string;
-                    start_time: string;
+                    start_time: Date;
                 };
                 Insert: {
                     committee_type: Database["public"]["Enums"]["committee_names"];
                     meeting_id?: string;
-                    start_time: string;
+                    start_time: Date;
                 };
                 Update: {
                     committee_type?: Database["public"]["Enums"]["committee_names"];
                     meeting_id?: string;
-                    start_time?: string;
+                    start_time?: Date;
                 };
                 Relationships: [];
             };
