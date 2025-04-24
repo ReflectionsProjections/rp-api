@@ -85,7 +85,7 @@ export const Database = {
         "attendee_attendance",
         AttendeeAttendanceSchema
     ),
-    STAFF: initializeModel("staff", StaffSchema, StaffValidator),
+    // STAFF: initializeModel("staff", StaffSchema, StaffValidator),
     SUBSCRIPTIONS: initializeModel(
         "subscriptions",
         SubscriptionSchema,

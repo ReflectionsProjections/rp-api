@@ -28,3 +28,16 @@ export const RoleTypes: Record<
     CORPORATE: "CORPORATE",
     PUZZLEBANG: "PUZZLEBANG",
 };
+
+export const CommitteeTypes: Record<
+    string,
+    Database["public"]["Enums"]["committee_names"]
+> = {
+    CONTENT: "CONTENT",
+    CORPORATE: "CORPORATE",
+    DESIGN: "DESIGN",
+    DEV: "DEV",
+    FULLTEAM: "FULL TEAM",
+    MARKETING: "MARKETING",
+    OPERATIONS: "OPERATIONS"
+};
