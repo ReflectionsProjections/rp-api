@@ -119,7 +119,7 @@ meetingsRouter.post(
     }
 );
 
-// edit a meeting, parameter is the ID
+// edit a meeting, parameter is the ID ()
 meetingsRouter.put(
     "/:meetingId",
     RoleChecker([Role.enum.ADMIN]),
@@ -143,12 +143,8 @@ meetingsRouter.put(
         // Supabase call
         const { data: updatedMeeting, error } =
             await SupabaseDB.MEETINGS.update({
-                ...(parsedData.committeeType && {
-                    committee_type: parsedData.committeeType,
-                }),
-                ...(parsedData.startTime && {
-                    start_time: parsedData.startTime,
-                }),
+                committee_type: parsedData.committeeType,
+                start_time: parsedData.startTime,
             })
                 .eq("meeting_id", meetingId)
                 .select()
