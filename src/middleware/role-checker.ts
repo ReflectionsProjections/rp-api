@@ -55,7 +55,7 @@ export default function RoleChecker(
         if (matchingRoles.length == 0) {
             return res.status(StatusCodes.FORBIDDEN).send({
                 error: "Forbidden",
-                message: `You require one of the following roles to do that: ${requiredRoles}`,
+                message: `You require one of the following roles to do that: ${requiredRoles.join(", ")}`,
             });
         }
 
