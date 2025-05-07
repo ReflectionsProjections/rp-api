@@ -5,6 +5,7 @@ import { StatusCodes } from "http-status-codes";
 import { Database } from "../../database";
 import { Role } from "../auth/auth-models";
 import Config from "../../config";
+import { sendHTMLEmail } from "../ses/ses-utils";
 
 jest.mock("../ses/ses-utils", () => ({
     sendHTMLEmail: jest.fn(),
@@ -126,8 +127,6 @@ describe("POST /registration/submit", () => {
 
         const roles = await Database.ROLES.findOne({ userId: TESTER.userId });
         expect(roles?.roles).toContain(Role.enum.USER);
-
-        const { sendHTMLEmail } = require("../ses/ses-utils");
         expect(sendHTMLEmail).toHaveBeenCalled();
     });
 
