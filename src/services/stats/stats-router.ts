@@ -25,11 +25,16 @@ statsRouter.get(
     "/merch-item/:PRICE",
     RoleChecker([Role.enum.STAFF], false),
     async (req, res) => {
-        const price = req.params.PRICE;
+        const price = parseInt(req.params.PRICE, 10);
         if (!price) {
             return res
                 .status(StatusCodes.BAD_REQUEST)
                 .json({ error: "MissingPriceParameter" });
+        }
+        if (isNaN(price)) {
+            return res
+                .status(StatusCodes.BAD_REQUEST)
+                .json({ error: "InvalidPriceParameter" });
         }
         const attendees = await Database.ATTENDEE.find({
             points: { $gte: price },
@@ -64,6 +69,11 @@ statsRouter.get(
             return res
                 .status(StatusCodes.BAD_REQUEST)
                 .json({ error: "MissingNParameter" });
+        }
+        if (isNaN(parseInt(numEvents))) {
+            return res
+                .status(StatusCodes.BAD_REQUEST)
+                .json({ error: "InvalidNParameter" });
         }
         const currentTime = new Date();
         const events = await Database.EVENTS.find({
