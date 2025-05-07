@@ -4,7 +4,7 @@ import { z } from "zod";
 // Zod schema for registration
 const RegistrationValidator = z.object({
     userId: z.coerce.string(),
-    name: z.string(),
+    name: z.string().min(1, "Name is required"),
     email: z.string().email(),
     university: z.string(),
     graduation: z.string().nullable().optional(),
