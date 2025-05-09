@@ -128,6 +128,16 @@ staffRouter.get(
 staffRouter.post("/", RoleChecker([Role.Enum.ADMIN]), async (req, res) => {
     // validate input using StaffValidator
     const staffData = StaffValidator.parse(req.body);
+
+    const existingStaff = await Database.STAFF.findOne({
+        userId: staffData.userId,
+    });
+    if (existingStaff) {
+        return res
+            .status(StatusCodes.BAD_REQUEST)
+            .json({ error: "UserAlreadyExists" });
+    }
+
     const staff = new Database.STAFF(staffData);
     const savedStaff = await staff.save();
 
