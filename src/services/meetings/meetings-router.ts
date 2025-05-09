@@ -20,7 +20,7 @@ const meetingsRouter = Router();
 // get all events
 meetingsRouter.get(
     "/",
-    RoleChecker([Role.enum.STAFF, Role.enum.ADMIN], true),
+    RoleChecker([Role.enum.STAFF, Role.enum.ADMIN]),
     async (req, res) => {
         const meetings = await Database.MEETINGS.find();
         const parsedMeetings = meetings.map((meeting) =>
@@ -33,7 +33,7 @@ meetingsRouter.get(
 // get specific event
 meetingsRouter.get(
     "/:meetingId",
-    RoleChecker([Role.enum.STAFF, Role.enum.ADMIN], true),
+    RoleChecker([Role.enum.STAFF, Role.enum.ADMIN]),
     async (req, res) => {
         const { meetingId } = req.params;
         const meeting = await Database.MEETINGS.findOne({ meetingId });
@@ -50,23 +50,19 @@ meetingsRouter.get(
 );
 
 // create an event
-meetingsRouter.post(
-    "/",
-    RoleChecker([Role.enum.ADMIN], true),
-    async (req, res) => {
-        const validatedData = createMeetingValidator.parse(req.body);
-        const newMeeting = new Database.MEETINGS(validatedData);
-        await newMeeting.save();
+meetingsRouter.post("/", RoleChecker([Role.enum.ADMIN]), async (req, res) => {
+    const validatedData = createMeetingValidator.parse(req.body);
+    const newMeeting = new Database.MEETINGS(validatedData);
+    await newMeeting.save();
 
-        const parsedMeeting = meetingView.parse(newMeeting.toObject());
-        res.status(StatusCodes.CREATED).json(parsedMeeting);
-    }
-);
+    const parsedMeeting = meetingView.parse(newMeeting.toObject());
+    res.status(StatusCodes.CREATED).json(parsedMeeting);
+});
 
 // edit a meeting, parameter is the ID
 meetingsRouter.put(
     "/:meetingId",
-    RoleChecker([Role.enum.ADMIN], true),
+    RoleChecker([Role.enum.ADMIN]),
     async (req, res) => {
         const { meetingId } = req.params;
         const parsedData = updateMeetingValidator.parse(req.body);
@@ -92,7 +88,7 @@ meetingsRouter.put(
 
 meetingsRouter.delete(
     "/:meetingId",
-    RoleChecker([Role.enum.ADMIN], true),
+    RoleChecker([Role.enum.ADMIN]),
     async (req, res) => {
         const { meetingId } = req.params;
         const deletedMeeting = await Database.MEETINGS.findOneAndDelete({

@@ -1,11 +1,98 @@
 import { Router } from "express";
 import { StatusCodes } from "http-status-codes";
-import { StaffValidator } from "./staff-schema";
+import {
+    CheckInValidator,
+    StaffAttendanceTypeEnum,
+    StaffValidator,
+    UpdateStaffAttendanceValidator,
+} from "./staff-schema";
 import { Database } from "../../database";
 import RoleChecker from "../../middleware/role-checker";
-import { Role } from "../auth/auth-models";
+import { JwtPayloadType, Role } from "../auth/auth-models";
+import Config from "../../config";
 
 const staffRouter = Router();
+
+// Check in to a meeting
+staffRouter.post(
+    "/check-in",
+    RoleChecker([Role.Enum.STAFF, Role.Enum.ADMIN]),
+    async (req, res) => {
+        const { userId } = res.locals.payload as JwtPayloadType;
+        const { meetingId } = CheckInValidator.parse(req.body);
+
+        const meeting = await Database.MEETINGS.findOne({ meetingId });
+        if (!meeting) {
+            return res
+                .status(StatusCodes.NOT_FOUND)
+                .send({ error: "NotFound", message: "Meeting not found" });
+        }
+
+        const staff = await Database.STAFF.findOne({ userId });
+        if (!staff) {
+            throw new Error(`Could not find staff for ${userId}`);
+        }
+
+        // Haven't already checked in
+        if (
+            staff.attendances.get(meetingId) == StaffAttendanceTypeEnum.PRESENT
+        ) {
+            return res.status(StatusCodes.BAD_REQUEST).send({
+                error: "AlreadyCheckedIn",
+                message: "You're already checked into this meeting!",
+            });
+        }
+
+        // Must be within a certain range of meeting time
+        const diffSeconds =
+            Math.abs(Date.now() - meeting.startTime.getTime()) / 1000;
+        if (diffSeconds >= Config.STAFF_MEETING_CHECK_IN_WINDOW_SECONDS) {
+            return res.status(StatusCodes.BAD_REQUEST).send({
+                error: "Expired",
+                message:
+                    "That meeting has already passed - you can no longer check into it",
+            });
+        }
+
+        // Otherwise, we're good!
+        staff.attendances.set(meetingId, StaffAttendanceTypeEnum.PRESENT);
+        await staff.save();
+
+        const updatedStaff = await StaffValidator.parse(staff);
+        return res.status(StatusCodes.OK).send(updatedStaff);
+    }
+);
+
+// Update a staff's attendance
+staffRouter.post(
+    "/:USERID/attendance",
+    RoleChecker([Role.Enum.ADMIN]),
+    async (req, res) => {
+        const userId = req.params.USERID;
+        const { meetingId, attendanceType } =
+            UpdateStaffAttendanceValidator.parse(req.body);
+
+        const meeting = await Database.MEETINGS.findOne({ meetingId });
+        if (!meeting) {
+            return res
+                .status(StatusCodes.NOT_FOUND)
+                .send({ error: "NotFound", message: "Meeting not found" });
+        }
+
+        const staff = await Database.STAFF.findOne({ userId });
+        if (!staff) {
+            return res
+                .status(StatusCodes.NOT_FOUND)
+                .send({ error: "NotFound", message: "Staff not found" });
+        }
+
+        staff.attendances.set(meetingId, attendanceType);
+        await staff.save();
+
+        const updatedStaff = await StaffValidator.parse(staff);
+        return res.status(StatusCodes.OK).send(updatedStaff);
+    }
+);
 
 // Get all staff
 staffRouter.get(

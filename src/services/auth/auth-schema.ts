@@ -3,7 +3,7 @@ import { z } from "zod";
 import { Role } from "./auth-models";
 
 export const RoleValidator = z.object({
-    userId: z.coerce.string().regex(/user[0-9]*/),
+    userId: z.coerce.string(),
     displayName: z.coerce.string(),
     email: z.coerce.string().email(),
     roles: z.array(Role).default([]),

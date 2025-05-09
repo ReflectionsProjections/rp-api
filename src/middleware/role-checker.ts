@@ -1,12 +1,11 @@
 import { NextFunction, Request, Response } from "express";
 import { JwtPayloadValidator, Role } from "../services/auth/auth-models";
-import { z } from "zod";
 import jsonwebtoken, { TokenExpiredError } from "jsonwebtoken";
 import { Config } from "../config";
 import { StatusCodes } from "http-status-codes";
 
 export default function RoleChecker(
-    requiredRoles: z.infer<typeof Role>[],
+    requiredRoles: Role[],
     weakVerification: boolean = false
 ) {
     return function (req: Request, res: Response, next: NextFunction) {
@@ -50,35 +49,16 @@ export default function RoleChecker(
             return next();
         }
 
-        // Admins and staff can access any endpoint
-        if (
-            userRoles.includes(Role.Enum.ADMIN) ||
-            userRoles.includes(Role.Enum.STAFF)
-        ) {
-            return next();
+        const matchingRoles = userRoles.filter((role) =>
+            requiredRoles.includes(role)
+        );
+        if (matchingRoles.length == 0) {
+            return res.status(StatusCodes.FORBIDDEN).send({
+                error: "Forbidden",
+                message: `You require one of the following roles to do that: ${requiredRoles.join(", ")}`,
+            });
         }
 
-        // PuzzleBang JWT can access puzzlebang endpoints
-        if (requiredRoles.includes(Role.Enum.PUZZLEBANG)) {
-            if (userRoles.includes(Role.Enum.PUZZLEBANG)) {
-                return next();
-            }
-        }
-
-        // Corporate role can access corporate only endpoints
-        if (requiredRoles.includes(Role.Enum.CORPORATE)) {
-            if (userRoles.includes(Role.Enum.CORPORATE)) {
-                return next();
-            }
-        }
-
-        // Need to be a user to access user endpoints (app users)
-        if (requiredRoles.includes(Role.Enum.USER)) {
-            if (userRoles.includes(Role.Enum.USER)) {
-                return next();
-            }
-        }
-
-        throw new Error("InvalidRoles");
+        return next();
     };
 }

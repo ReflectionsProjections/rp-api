@@ -7,6 +7,7 @@ export const Role = z.enum([
     "CORPORATE",
     "PUZZLEBANG",
 ]);
+export type Role = z.infer<typeof Role>;
 
 export const JwtPayloadValidator = z.object({
     userId: z.string(),
