@@ -40,7 +40,7 @@ const OTHER_STAFF = {
 const NEW_STAFF_VALID = {
     userId: "userNew789",
     name: "New Staff User 789",
-    team: "marketing",
+    team: CommitteeNames.Enum.MARKETING,
     attendances: {},
 } satisfies Staff;
 
