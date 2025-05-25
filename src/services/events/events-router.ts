@@ -87,12 +87,16 @@ eventsRouter.get("/:EVENTID", RoleChecker([], true), async (req, res) => {
     return res.status(StatusCodes.OK).json(validatedData);
 });
 
-eventsRouter.post("/", RoleChecker([Role.Enum.STAFF, Role.Enum.ADMIN]), async (req, res) => {
-    const validatedData = eventInfoValidator.parse(req.body);
-    const event = new Database.EVENTS(validatedData);
-    await event.save();
-    return res.sendStatus(StatusCodes.CREATED);
-});
+eventsRouter.post(
+    "/",
+    RoleChecker([Role.Enum.STAFF, Role.Enum.ADMIN]),
+    async (req, res) => {
+        const validatedData = eventInfoValidator.parse(req.body);
+        const event = new Database.EVENTS(validatedData);
+        await event.save();
+        return res.sendStatus(StatusCodes.CREATED);
+    }
+);
 
 eventsRouter.put(
     "/:EVENTID",
@@ -123,7 +127,9 @@ eventsRouter.delete(
     RoleChecker([Role.Enum.ADMIN]),
     async (req, res) => {
         const eventId = req.params.EVENTID;
-        const deletedEvent = await Database.EVENTS.findOneAndDelete({ eventId: eventId });
+        const deletedEvent = await Database.EVENTS.findOneAndDelete({
+            eventId: eventId,
+        });
 
         if (!deletedEvent) {
             return res
