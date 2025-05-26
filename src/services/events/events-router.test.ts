@@ -15,7 +15,13 @@ import {
 } from "../../../testing/testingTools";
 import { StatusCodes } from "http-status-codes";
 import { Database } from "../../database";
-import { EventType, InternalEvent, EventInputPayload } from "./events-schema";
+import {
+    EventType,
+    InternalEvent,
+    EventInputPayload,
+    ExternalEventApiResponse,
+    InternalEventApiResponse,
+} from "./events-schema";
 
 const NOW = new Date();
 const ONE_HOUR_MS = 1 * 60 * 60 * 1000;
@@ -64,7 +70,6 @@ const UPCOMING_EVENT_HIDDEN_EARLIER = {
     isVisible: false,
     attendanceCount: 50,
 } satisfies InternalEvent;
-``;
 
 const UPCOMING_EVENT_VISIBLE_SOONEST = {
     eventId: "upcomingEvent004",
@@ -128,12 +133,19 @@ const EVENT_UPDATE_PARTIAL_PAYLOAD = {
 
 const NON_EXISTENT_EVENT_ID = "event1234566778";
 
-// helper function to create an expected internal or external event view object
-const createExpectedEventObject = (
+function createExpectedEventObject(
+    eventData: InternalEvent,
+    viewType: "internal"
+): InternalEventApiResponse;
+function createExpectedEventObject(
+    eventData: InternalEvent,
+    viewType: "external"
+): ExternalEventApiResponse;
+function createExpectedEventObject(
     eventData: InternalEvent,
     viewType: "internal" | "external"
-): Record<string, any> => {
-    const expectedObject: any = {
+): InternalEventApiResponse | ExternalEventApiResponse {
+    const apiOutputObject = {
         eventId: eventData.eventId,
         name: eventData.name,
         startTime: eventData.startTime.toISOString(),
@@ -147,11 +159,14 @@ const createExpectedEventObject = (
     };
 
     if (viewType === "internal") {
-        expectedObject.isVisible = eventData.isVisible;
-        expectedObject.attendanceCount = eventData.attendanceCount;
+        return {
+            ...apiOutputObject,
+            isVisible: eventData.isVisible,
+            attendanceCount: eventData.attendanceCount,
+        } as InternalEventApiResponse;
     }
-    return expectedObject;
-};
+    return apiOutputObject as ExternalEventApiResponse;
+}
 
 beforeEach(async () => {
     await Database.EVENTS.create(PAST_EVENT_VISIBLE);
@@ -301,7 +316,7 @@ describe("GET /events/", () => {
         );
 
         // verify that no hidden fields are present for the external view for a regular user
-        response.body.forEach((event: any) => {
+        response.body.forEach((event: ExternalEventApiResponse) => {
             expect(event).not.toHaveProperty("isVisible");
             expect(event).not.toHaveProperty("attendanceCount");
         });
@@ -360,7 +375,7 @@ describe("GET /events/", () => {
             );
 
             // verify internal fields are present for the internal view of a staff or admin user
-            response.body.forEach((event: any) => {
+            response.body.forEach((event: InternalEventApiResponse) => {
                 expect(event).toHaveProperty("isVisible");
                 expect(event).toHaveProperty("attendanceCount");
             });
