@@ -32,6 +32,23 @@ export const internalEventView = externalEventView.extend({
     isVisible: z.boolean(),
 });
 
+// ApiResponseSchema objects used to create expected internal and external event objects
+export const externalEventApiResponseSchema = externalEventView.extend({
+    startTime: z.string(),
+    endTime: z.string(),
+});
+export type ExternalEventApiResponse = z.infer<
+    typeof externalEventApiResponseSchema
+>;
+
+export const internalEventApiResponseSchema = internalEventView.extend({
+    startTime: z.string(),
+    endTime: z.string(),
+});
+export type InternalEventApiResponse = z.infer<
+    typeof internalEventApiResponseSchema
+>;
+
 export const eventInfoValidator = internalEventView
     .omit({ eventId: true })
     .strict();
