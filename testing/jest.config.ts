@@ -8,7 +8,9 @@ const config: Config = {
     rootDir: "../src",
 
     setupFiles: ["../testing/jest.env-setup.ts"],
-    setupFilesAfterEnv: ["../testing/jest.db-setup.ts"],
+    // setupFilesAfterEnv: ["../testing/jest.db-setup.ts"],
+    setupFilesAfterEnv: ["../testing/jest.supabase-db.setup.ts"],
+
 
     testPathIgnorePatterns: [
         "/app.ts", // Ignore app.ts

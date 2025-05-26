@@ -13,18 +13,18 @@ import {
     delAsStaff,
     delAsAdmin,
 } from "../../../testing/testingTools";
-import { z } from "zod";
 import { StatusCodes } from "http-status-codes";
-import { Database } from "../../database";
-import { meetingView, createMeetingValidator } from "./meetings-schema";
-
-type MeetingType = z.infer<typeof meetingView>;
+import { pool } from "../../../testing/jest.supabase-db.setup";
+import { CommitteeTypes } from "../../supabase";
+import { v4 as uuidv4 } from 'uuid';
+const TEST_MEETING_1_ID = uuidv4();
+const TEST_MEETING_2_ID = uuidv4();
 
 const TEST_MEETING_1 = {
-    meetingId: "test-meeting-1",
-    committeeType: "DEV",
+    meetingId: TEST_MEETING_1_ID,
+    committeeType: CommitteeTypes.DEV,
     startTime: new Date(),
-} satisfies MeetingType;
+};
 
 const EXPECTED_TEST_MEETING_1_RESPONSE = {
     meetingId: TEST_MEETING_1.meetingId,
@@ -33,10 +33,10 @@ const EXPECTED_TEST_MEETING_1_RESPONSE = {
 };
 
 const TEST_MEETING_2 = {
-    meetingId: "test-meeting-2",
-    committeeType: "CONTENT",
+    meetingId: TEST_MEETING_2_ID,
+    committeeType: CommitteeTypes.CONTENT,
     startTime: new Date(),
-} satisfies MeetingType;
+};
 
 const EXPECTED_TEST_MEETING_2_RESPONSE = {
     meetingId: TEST_MEETING_2.meetingId,
@@ -44,13 +44,23 @@ const EXPECTED_TEST_MEETING_2_RESPONSE = {
     startTime: TEST_MEETING_2.startTime.toISOString(),
 };
 
-const UNREAL_MEETING_ID = "not_a_real_meeting_id";
+const UNREAL_MEETING_ID = uuidv4();
 
-// Runs these before running the tests - putting the test meetings into database
+// Runs these before running the tests
 beforeEach(async () => {
-    await Database.MEETINGS.deleteMany({}); // clear whatever used to be there, not sure if this is needed
-    await Database.MEETINGS.create(TEST_MEETING_1);
-    await Database.MEETINGS.create(TEST_MEETING_2);
+    // Clear existing meetings
+    await pool.query('TRUNCATE TABLE meetings CASCADE');
+    
+    // Insert test meetings
+    await pool.query(
+        'INSERT INTO meetings (meeting_id, committee_type, start_time) VALUES ($1, $2, $3)',
+        [TEST_MEETING_1.meetingId, TEST_MEETING_1.committeeType, TEST_MEETING_1.startTime]
+    );
+    
+    await pool.query(
+        'INSERT INTO meetings (meeting_id, committee_type, start_time) VALUES ($1, $2, $3)',
+        [TEST_MEETING_2.meetingId, TEST_MEETING_2.committeeType, TEST_MEETING_2.startTime]
+    );
 });
 
 describe("GET /meetings/", () => {
@@ -72,7 +82,7 @@ describe("GET /meetings/", () => {
     });
 
     it("should return empty array if no meetings exist", async () => {
-        await Database.MEETINGS.deleteMany({}); // delete everything in it
+        await pool.query('TRUNCATE TABLE meetings CASCADE');
         const response = await getAsAdmin("/meetings").expect(StatusCodes.OK);
         expect(response.body).toEqual([]);
     });
@@ -117,7 +127,7 @@ Post test cases
 
 describe("POST /meetings/", () => {
     const newMeetingData = {
-        committeeType: "DEV",
+        committeeType: CommitteeTypes.DEV,
         startTime: new Date().toISOString(),
     };
 
@@ -131,9 +141,20 @@ describe("POST /meetings/", () => {
             newMeetingData.startTime
         );
         expect(response.body).toHaveProperty("meetingId");
-        expect(() =>
-            createMeetingValidator.parse(newMeetingData)
-        ).not.toThrow();
+
+        // Verify the meeting was actually created in the database
+        const result = await pool.query(
+            'SELECT * FROM meetings WHERE meeting_id = $1',
+            [response.body.meetingId]
+        );
+        
+        const dbMeeting = {
+            meetingId: result.rows[0].meeting_id,
+            committeeType: result.rows[0].committee_type,
+            startTime: result.rows[0].start_time.toISOString()
+        };
+        
+        expect(dbMeeting).toMatchObject(newMeetingData);
     });
 
     it("should return 400 if required fields are missing", async () => {
@@ -201,7 +222,7 @@ Put test cases
 describe("PUT /meetings/:meetingId", () => {
     it("should allow an admin to edit a meeting", async () => {
         const updatedData = {
-            committeeType: "CORPORATE",
+            committeeType: CommitteeTypes.CORPORATE,
             startTime: new Date().toISOString(),
         };
         const response = await putAsAdmin(
@@ -233,7 +254,7 @@ describe("PUT /meetings/:meetingId", () => {
         async ({ requester, expectedStatus }) => {
             const response = await requester()
                 .send({
-                    committeeType: "FULL TEAM",
+                    committeeType: CommitteeTypes.FULL_TEAM,
                     startTime: new Date().toISOString(),
                 })
                 .expect(expectedStatus);
@@ -255,7 +276,7 @@ describe("PUT /meetings/:meetingId", () => {
 
     it("should return 404 Not Found if meeting does not exist", async () => {
         const updateData = {
-            committeeType: "DESIGN",
+            committeeType: CommitteeTypes.DESIGN,
             startTime: new Date().toISOString(),
         };
 
@@ -266,7 +287,7 @@ describe("PUT /meetings/:meetingId", () => {
 
     it("should allow admins to edit just one field", async () => {
         const updateDataOneParam = {
-            committeeType: "DESIGN",
+            committeeType: CommitteeTypes.DESIGN,
         };
 
         const response = await putAsAdmin(
@@ -325,4 +346,9 @@ describe("DELETE /meetings/:meetingId", () => {
             StatusCodes.NOT_FOUND
         );
     });
+});
+
+// Add cleanup after all tests
+afterAll(async () => {
+    await pool.end();
 });
