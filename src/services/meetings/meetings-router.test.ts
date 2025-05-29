@@ -14,9 +14,19 @@ import {
     delAsAdmin,
 } from "../../../testing/testingTools";
 import { StatusCodes } from "http-status-codes";
-import { pool } from "../../../testing/jest.supabase-db.setup";
 import { CommitteeTypes } from "../../supabase";
 import { v4 as uuidv4 } from 'uuid';
+import { supabase, SupabaseDB } from "../../supabase";
+
+const url = process.env.SUPABASE_URL;
+const anonKey = process.env.SUPABASE_ANON_KEY;
+const env = process.env.ENV;
+
+console.log("url", url);
+console.log("anonKey", anonKey);
+console.log("supabase", supabase);
+console.log("env", env);
+
 const TEST_MEETING_1_ID = uuidv4();
 const TEST_MEETING_2_ID = uuidv4();
 
@@ -49,18 +59,21 @@ const UNREAL_MEETING_ID = uuidv4();
 // Runs these before running the tests
 beforeEach(async () => {
     // Clear existing meetings
-    await pool.query('TRUNCATE TABLE meetings CASCADE');
+    await SupabaseDB.MEETINGS.delete().neq('meeting_id', '00000000-0000-0000-0000-000000000000');
     
     // Insert test meetings
-    await pool.query(
-        'INSERT INTO meetings (meeting_id, committee_type, start_time) VALUES ($1, $2, $3)',
-        [TEST_MEETING_1.meetingId, TEST_MEETING_1.committeeType, TEST_MEETING_1.startTime]
-    );
-    
-    await pool.query(
-        'INSERT INTO meetings (meeting_id, committee_type, start_time) VALUES ($1, $2, $3)',
-        [TEST_MEETING_2.meetingId, TEST_MEETING_2.committeeType, TEST_MEETING_2.startTime]
-    );
+    await SupabaseDB.MEETINGS.insert([
+        {
+            meeting_id: TEST_MEETING_1.meetingId,
+            committee_type: TEST_MEETING_1.committeeType,
+            start_time: TEST_MEETING_1.startTime
+        },
+        {
+            meeting_id: TEST_MEETING_2.meetingId,
+            committee_type: TEST_MEETING_2.committeeType,
+            start_time: TEST_MEETING_2.startTime
+        }
+    ]);
 });
 
 describe("GET /meetings/", () => {
@@ -82,7 +95,7 @@ describe("GET /meetings/", () => {
     });
 
     it("should return empty array if no meetings exist", async () => {
-        await pool.query('TRUNCATE TABLE meetings CASCADE');
+        await SupabaseDB.MEETINGS.delete().neq('meeting_id', '00000000-0000-0000-0000-000000000000');
         const response = await getAsAdmin("/meetings").expect(StatusCodes.OK);
         expect(response.body).toEqual([]);
     });
@@ -143,15 +156,17 @@ describe("POST /meetings/", () => {
         expect(response.body).toHaveProperty("meetingId");
 
         // Verify the meeting was actually created in the database
-        const result = await pool.query(
-            'SELECT * FROM meetings WHERE meeting_id = $1',
-            [response.body.meetingId]
-        );
+        const { data: result, error } = await SupabaseDB.MEETINGS
+            .select('*')
+            .eq('meeting_id', response.body.meetingId)
+            .single();
+        
+        if (error) throw error;
         
         const dbMeeting = {
-            meetingId: result.rows[0].meeting_id,
-            committeeType: result.rows[0].committee_type,
-            startTime: result.rows[0].start_time.toISOString()
+            meetingId: result.meeting_id,
+            committeeType: result.committee_type,
+            startTime: result.start_time.toISOString()
         };
         
         expect(dbMeeting).toMatchObject(newMeetingData);
@@ -346,9 +361,4 @@ describe("DELETE /meetings/:meetingId", () => {
             StatusCodes.NOT_FOUND
         );
     });
-});
-
-// Add cleanup after all tests
-afterAll(async () => {
-    await pool.end();
 });
