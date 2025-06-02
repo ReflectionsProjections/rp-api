@@ -1,39 +1,26 @@
 // Create a function to generate GoogleStrategy instances
-import { Strategy as GoogleStrategy } from "passport-google-oauth20";
+import { TokenPayload } from "google-auth-library";
 import { Config } from "../../config";
 import { Database } from "../../database";
 import { JwtPayloadType, Role } from "./auth-models";
 import jsonwebtoken from "jsonwebtoken";
 
-export function createGoogleStrategy(device: string) {
-    return new GoogleStrategy(
+export async function updateDatabaseWithAuthPayload(payload: TokenPayload) {
+    const userId = `user${payload.sub}`;
+    const displayName = payload.name;
+    const email = payload.email;
+
+    // Check if user is admin -> if so, add ADMIN role to their list
+    const isAdmin = email && Config.AUTH_ADMIN_WHITELIST.has(email);
+
+    await Database.ROLES.findOneAndUpdate(
+        { email: email },
         {
-            clientID: Config.CLIENT_ID,
-            clientSecret: Config.CLIENT_SECRET,
-            callbackURL: Config.AUTH_CALLBACK_URI_BASE + device,
+            userId,
+            displayName,
+            ...(isAdmin && { $addToSet: { roles: Role.Enum.ADMIN } }),
         },
-
-        // Strategy -> insert user into database if they don't exist
-        async function (_1, _2, profile, cb) {
-            const userId = `user${profile.id}`;
-            const displayName = profile.displayName;
-            const email = profile._json.email;
-
-            // Check if user is admin -> if so, add ADMIN role to their list
-            const isAdmin = email && Config.AUTH_ADMIN_WHITELIST.has(email);
-
-            Database.ROLES.findOneAndUpdate(
-                { email: email },
-                {
-                    userId,
-                    displayName,
-                    ...(isAdmin && { $addToSet: { roles: Role.Enum.ADMIN } }),
-                },
-                { upsert: true }
-            )
-                .then(() => cb(null, profile))
-                .catch((err) => cb(err, profile));
-        }
+        { upsert: true, new: true }
     );
 }
 
