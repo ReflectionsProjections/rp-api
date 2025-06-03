@@ -1,20 +1,14 @@
 import { beforeEach, describe, expect, it } from "@jest/globals";
-import {
-    post,
-    postAsStaff,
-    postAsAdmin,
-} from "../../../testing/testingTools";
+import { post, postAsStaff, postAsAdmin } from "../../../testing/testingTools";
 import { StatusCodes } from "http-status-codes";
 import { Database } from "../../database";
-import { 
+import {
     CheckinEventPayload,
     ScanPayload,
     MerchScanPayload,
 } from "./checkin-schema";
 import { EventType, InternalEvent } from "../events/events-schema";
-import { generateQrHash, 
-    getCurrentDay,
-} from "./checkin-utils";
+import { generateQrHash, getCurrentDay } from "./checkin-utils";
 import { AttendeeType } from "../attendee/attendee-validators";
 import { DayKey } from "../attendee/attendee-schema";
 
@@ -90,8 +84,14 @@ beforeEach(async () => {
     const validExpTime = NOW_SECONDS + ONE_HOUR_SECONDS;
     const expiredExpTime = NOW_SECONDS - ONE_HOUR_SECONDS;
 
-    VALID_QR_CODE_TEST_ATTENDEE_1 = generateQrHash(TEST_ATTENDEE_1.userId, validExpTime);
-    EXPIRED_QR_CODE_TEST_ATTENDEE_1 = generateQrHash(TEST_ATTENDEE_1.userId, expiredExpTime);
+    VALID_QR_CODE_TEST_ATTENDEE_1 = generateQrHash(
+        TEST_ATTENDEE_1.userId,
+        validExpTime
+    );
+    EXPIRED_QR_CODE_TEST_ATTENDEE_1 = generateQrHash(
+        TEST_ATTENDEE_1.userId,
+        expiredExpTime
+    );
 });
 
 describe("POST /checkin/scan/staff", () => {
@@ -108,21 +108,38 @@ describe("POST /checkin/scan/staff", () => {
     });
 
     it("should return UNAUTHORIZED for an unauthenticated user", async () => {
-        await post("/checkin/scan/staff").send(payload).expect(StatusCodes.UNAUTHORIZED);
+        await post("/checkin/scan/staff")
+            .send(payload)
+            .expect(StatusCodes.UNAUTHORIZED);
     });
 
     const invalidBodyPayloads = [
-        { description: "missing eventId", payload: { qrCode: VALID_QR_CODE_TEST_ATTENDEE_1 } },
-        { description: "missing qrCode", payload: { eventId: REGULAR_EVENT_FOR_CHECKIN.eventId } },
-        { description: "eventId is not a string", payload: { eventId: 123, qrCode: VALID_QR_CODE_TEST_ATTENDEE_1 } },
-        { description: "qrCode is not a string", payload: { eventId: REGULAR_EVENT_FOR_CHECKIN, qrCode: true } },
+        {
+            description: "missing eventId",
+            payload: { qrCode: VALID_QR_CODE_TEST_ATTENDEE_1 },
+        },
+        {
+            description: "missing qrCode",
+            payload: { eventId: REGULAR_EVENT_FOR_CHECKIN.eventId },
+        },
+        {
+            description: "eventId is not a string",
+            payload: { eventId: 123, qrCode: VALID_QR_CODE_TEST_ATTENDEE_1 },
+        },
+        {
+            description: "qrCode is not a string",
+            payload: { eventId: REGULAR_EVENT_FOR_CHECKIN, qrCode: true },
+        },
     ];
 
-    it.each(invalidBodyPayloads)("should return BAD_REQUEST when $description", async ({ payload: invalidData }) => {
-        await postAsAdmin("/checkin/scan/staff")
-            .send(invalidData)
-            .expect(StatusCodes.BAD_REQUEST);
-    });
+    it.each(invalidBodyPayloads)(
+        "should return BAD_REQUEST when $description",
+        async ({ payload: invalidData }) => {
+            await postAsAdmin("/checkin/scan/staff")
+                .send(invalidData)
+                .expect(StatusCodes.BAD_REQUEST);
+        }
+    );
 
     it("should return UNAUTHORIZED if QR code has expired", async () => {
         payload.qrCode = EXPIRED_QR_CODE_TEST_ATTENDEE_1;
@@ -156,15 +173,20 @@ describe("POST /checkin/scan/staff", () => {
 
     it("should return INTERNAL_SERVER_ERROR if userId from QR code does not exist in Attendee collection", async () => {
         const nonExistentUserId = "userNotInDB123";
-        payload.qrCode = generateQrHash(nonExistentUserId, NOW_SECONDS + ONE_HOUR_SECONDS);
-        
+        payload.qrCode = generateQrHash(
+            nonExistentUserId,
+            NOW_SECONDS + ONE_HOUR_SECONDS
+        );
+
         await postAsAdmin("/checkin/scan/staff")
             .send(payload)
             .expect(StatusCodes.INTERNAL_SERVER_ERROR);
     });
 
     it("should return FORBIDDEN if attendee is already checked into the event", async () => {
-        await postAsAdmin("/checkin/scan/staff").send(payload).expect(StatusCodes.OK);
+        await postAsAdmin("/checkin/scan/staff")
+            .send(payload)
+            .expect(StatusCodes.OK);
 
         const response = await postAsAdmin("/checkin/scan/staff")
             .send(payload)
@@ -182,16 +204,26 @@ describe("POST /checkin/scan/staff", () => {
             .expect(StatusCodes.OK);
         expect(response.body).toBe(TEST_ATTENDEE_1.userId);
 
-        const eventAttendance = await Database.EVENTS_ATTENDANCE.findOne({ eventId: payload.eventId });
+        const eventAttendance = await Database.EVENTS_ATTENDANCE.findOne({
+            eventId: payload.eventId,
+        });
         expect(eventAttendance?.attendees).toContain(TEST_ATTENDEE_1.userId);
 
-        const attendeeAttendance = await Database.ATTENDEE_ATTENDANCE.findOne({ userId: TEST_ATTENDEE_1.userId });
+        const attendeeAttendance = await Database.ATTENDEE_ATTENDANCE.findOne({
+            userId: TEST_ATTENDEE_1.userId,
+        });
         expect(attendeeAttendance?.eventsAttended).toContain(payload.eventId);
 
-        const updatedEvent = await Database.EVENTS.findOne({ eventId: payload.eventId });
-        expect(updatedEvent?.attendanceCount).toBe(REGULAR_EVENT_FOR_CHECKIN.attendanceCount + 1);
+        const updatedEvent = await Database.EVENTS.findOne({
+            eventId: payload.eventId,
+        });
+        expect(updatedEvent?.attendanceCount).toBe(
+            REGULAR_EVENT_FOR_CHECKIN.attendanceCount + 1
+        );
 
-        const updatedAttendee = await Database.ATTENDEE.findOne({ userId: TEST_ATTENDEE_1.userId });
+        const updatedAttendee = await Database.ATTENDEE.findOne({
+            userId: TEST_ATTENDEE_1.userId,
+        });
         expect(updatedAttendee?.points).toBe(REGULAR_EVENT_FOR_CHECKIN.points);
         expect(updatedAttendee?.hasCheckedIn).toBe(false);
 
@@ -207,17 +239,26 @@ describe("POST /checkin/scan/staff", () => {
             .expect(StatusCodes.OK);
         expect(response.body).toBe(TEST_ATTENDEE_1.userId);
 
-        
-        const eventAttendance = await Database.EVENTS_ATTENDANCE.findOne({ eventId: payload.eventId });
+        const eventAttendance = await Database.EVENTS_ATTENDANCE.findOne({
+            eventId: payload.eventId,
+        });
         expect(eventAttendance?.attendees).toContain(TEST_ATTENDEE_1.userId);
 
-        const attendeeAttendance = await Database.ATTENDEE_ATTENDANCE.findOne({ userId: TEST_ATTENDEE_1.userId });
+        const attendeeAttendance = await Database.ATTENDEE_ATTENDANCE.findOne({
+            userId: TEST_ATTENDEE_1.userId,
+        });
         expect(attendeeAttendance?.eventsAttended).toContain(payload.eventId);
 
-        const updatedEvent = await Database.EVENTS.findOne({ eventId: payload.eventId });
-        expect(updatedEvent?.attendanceCount).toBe(GENERAL_CHECKIN_EVENT.attendanceCount + 1);
+        const updatedEvent = await Database.EVENTS.findOne({
+            eventId: payload.eventId,
+        });
+        expect(updatedEvent?.attendanceCount).toBe(
+            GENERAL_CHECKIN_EVENT.attendanceCount + 1
+        );
 
-        const updatedAttendee = await Database.ATTENDEE.findOne({ userId: TEST_ATTENDEE_1.userId });
+        const updatedAttendee = await Database.ATTENDEE.findOne({
+            userId: TEST_ATTENDEE_1.userId,
+        });
         expect(updatedAttendee?.points).toBe(GENERAL_CHECKIN_EVENT.points);
         expect(updatedAttendee?.hasCheckedIn).toBe(true);
         expect(updatedAttendee?.hasPriority?.[currentDay]).toBe(false);
@@ -232,21 +273,30 @@ describe("POST /checkin/scan/staff", () => {
             .expect(StatusCodes.OK);
         expect(response.body).toBe(TEST_ATTENDEE_1.userId);
 
-        const eventAttendance = await Database.EVENTS_ATTENDANCE.findOne({ eventId: payload.eventId });
+        const eventAttendance = await Database.EVENTS_ATTENDANCE.findOne({
+            eventId: payload.eventId,
+        });
         expect(eventAttendance?.attendees).toContain(TEST_ATTENDEE_1.userId);
 
-        const attendeeAttendance = await Database.ATTENDEE_ATTENDANCE.findOne({ userId: TEST_ATTENDEE_1.userId });
+        const attendeeAttendance = await Database.ATTENDEE_ATTENDANCE.findOne({
+            userId: TEST_ATTENDEE_1.userId,
+        });
         expect(attendeeAttendance?.eventsAttended).toContain(payload.eventId);
 
-        const updatedEvent = await Database.EVENTS.findOne({ eventId: payload.eventId });
-        expect(updatedEvent?.attendanceCount).toBe(MEALS_EVENT.attendanceCount + 1);
-        
-        const updatedAttendee = await Database.ATTENDEE.findOne({ userId: TEST_ATTENDEE_1.userId });
+        const updatedEvent = await Database.EVENTS.findOne({
+            eventId: payload.eventId,
+        });
+        expect(updatedEvent?.attendanceCount).toBe(
+            MEALS_EVENT.attendanceCount + 1
+        );
+
+        const updatedAttendee = await Database.ATTENDEE.findOne({
+            userId: TEST_ATTENDEE_1.userId,
+        });
         expect(updatedAttendee?.points).toBe(MEALS_EVENT.points);
         expect(updatedAttendee?.hasCheckedIn).toBe(false);
         expect(updatedAttendee?.hasPriority?.[currentDay]).toBe(false);
     });
-
 });
 
 describe("POST /checkin/event", () => {
@@ -262,42 +312,79 @@ describe("POST /checkin/event", () => {
     });
 
     it("should return UNAUTHORIZED for an unauthenticated user", async () => {
-        await post("/checkin/event").send(payload).expect(StatusCodes.UNAUTHORIZED);
+        await post("/checkin/event")
+            .send(payload)
+            .expect(StatusCodes.UNAUTHORIZED);
     });
 
     const invalidEventApiPayloads = [
-        { description: "missing eventId", payload: { userId: TEST_ATTENDEE_1.userId } },
-        { description: "missing userId", payload: { eventId: REGULAR_EVENT_FOR_CHECKIN.eventId } },
-        { description: "eventId is not a string", payload: { eventId: 12345, userId: TEST_ATTENDEE_1.userId } },
-        { description: "userId is not a string", payload: { eventId: REGULAR_EVENT_FOR_CHECKIN.eventId, userId: true } },
-        { description: "eventId is an empty string", payload: { eventId: "", userId: TEST_ATTENDEE_1.userId } },
-        { description: "userId is an empty string", payload: { eventId: REGULAR_EVENT_FOR_CHECKIN.eventId, userId: "" } },
-        
+        {
+            description: "missing eventId",
+            payload: { userId: TEST_ATTENDEE_1.userId },
+        },
+        {
+            description: "missing userId",
+            payload: { eventId: REGULAR_EVENT_FOR_CHECKIN.eventId },
+        },
+        {
+            description: "eventId is not a string",
+            payload: { eventId: 12345, userId: TEST_ATTENDEE_1.userId },
+        },
+        {
+            description: "userId is not a string",
+            payload: {
+                eventId: REGULAR_EVENT_FOR_CHECKIN.eventId,
+                userId: true,
+            },
+        },
+        {
+            description: "eventId is an empty string",
+            payload: { eventId: "", userId: TEST_ATTENDEE_1.userId },
+        },
+        {
+            description: "userId is an empty string",
+            payload: { eventId: REGULAR_EVENT_FOR_CHECKIN.eventId, userId: "" },
+        },
     ];
 
-    it.each(invalidEventApiPayloads)("should return BAD_REQUEST when $description for an admin user", async ({ payload: invalidData }) => {
-        await postAsAdmin("/checkin/event")
-            .send(invalidData)
-            .expect(StatusCodes.BAD_REQUEST);
-    });
+    it.each(invalidEventApiPayloads)(
+        "should return BAD_REQUEST when $description for an admin user",
+        async ({ payload: invalidData }) => {
+            await postAsAdmin("/checkin/event")
+                .send(invalidData)
+                .expect(StatusCodes.BAD_REQUEST);
+        }
+    );
 
     it("should successfully check-in to a regular event and update all records", async () => {
         payload.eventId = REGULAR_EVENT_FOR_CHECKIN.eventId;
         payload.userId = TEST_ATTENDEE_1.userId;
 
-        const response = await postAsAdmin("/checkin/event").send(payload).expect(StatusCodes.OK);
+        const response = await postAsAdmin("/checkin/event")
+            .send(payload)
+            .expect(StatusCodes.OK);
         expect(response.body).toBe(TEST_ATTENDEE_1.userId);
 
-        const eventAttendance = await Database.EVENTS_ATTENDANCE.findOne({ eventId: payload.eventId });
+        const eventAttendance = await Database.EVENTS_ATTENDANCE.findOne({
+            eventId: payload.eventId,
+        });
         expect(eventAttendance?.attendees).toContain(TEST_ATTENDEE_1.userId);
 
-        const attendeeAttendance = await Database.ATTENDEE_ATTENDANCE.findOne({ userId: TEST_ATTENDEE_1.userId });
+        const attendeeAttendance = await Database.ATTENDEE_ATTENDANCE.findOne({
+            userId: TEST_ATTENDEE_1.userId,
+        });
         expect(attendeeAttendance?.eventsAttended).toContain(payload.eventId);
 
-        const updatedEvent = await Database.EVENTS.findOne({ eventId: payload.eventId });
-        expect(updatedEvent?.attendanceCount).toBe(REGULAR_EVENT_FOR_CHECKIN.attendanceCount + 1);
+        const updatedEvent = await Database.EVENTS.findOne({
+            eventId: payload.eventId,
+        });
+        expect(updatedEvent?.attendanceCount).toBe(
+            REGULAR_EVENT_FOR_CHECKIN.attendanceCount + 1
+        );
 
-        const updatedAttendee = await Database.ATTENDEE.findOne({ userId: TEST_ATTENDEE_1.userId });
+        const updatedAttendee = await Database.ATTENDEE.findOne({
+            userId: TEST_ATTENDEE_1.userId,
+        });
         expect(updatedAttendee?.points).toBe(REGULAR_EVENT_FOR_CHECKIN.points);
         expect(updatedAttendee?.hasCheckedIn).toBe(false);
         expect(updatedAttendee?.hasPriority?.[currentDay]).toBe(true);
@@ -307,19 +394,31 @@ describe("POST /checkin/event", () => {
         payload.eventId = GENERAL_CHECKIN_EVENT.eventId;
         payload.userId = TEST_ATTENDEE_1.userId;
 
-        const response = await postAsAdmin("/checkin/event").send(payload).expect(StatusCodes.OK);
+        const response = await postAsAdmin("/checkin/event")
+            .send(payload)
+            .expect(StatusCodes.OK);
         expect(response.body).toBe(TEST_ATTENDEE_1.userId);
 
-        const eventAttendance = await Database.EVENTS_ATTENDANCE.findOne({ eventId: payload.eventId });
+        const eventAttendance = await Database.EVENTS_ATTENDANCE.findOne({
+            eventId: payload.eventId,
+        });
         expect(eventAttendance?.attendees).toContain(TEST_ATTENDEE_1.userId);
 
-        const attendeeAttendance = await Database.ATTENDEE_ATTENDANCE.findOne({ userId: TEST_ATTENDEE_1.userId });
+        const attendeeAttendance = await Database.ATTENDEE_ATTENDANCE.findOne({
+            userId: TEST_ATTENDEE_1.userId,
+        });
         expect(attendeeAttendance?.eventsAttended).toContain(payload.eventId);
 
-        const updatedEvent = await Database.EVENTS.findOne({ eventId: payload.eventId });
-        expect(updatedEvent?.attendanceCount).toBe(GENERAL_CHECKIN_EVENT.attendanceCount + 1);
+        const updatedEvent = await Database.EVENTS.findOne({
+            eventId: payload.eventId,
+        });
+        expect(updatedEvent?.attendanceCount).toBe(
+            GENERAL_CHECKIN_EVENT.attendanceCount + 1
+        );
 
-        const updatedAttendee = await Database.ATTENDEE.findOne({ userId: TEST_ATTENDEE_1.userId });
+        const updatedAttendee = await Database.ATTENDEE.findOne({
+            userId: TEST_ATTENDEE_1.userId,
+        });
         expect(updatedAttendee?.hasCheckedIn).toBe(true);
         expect(updatedAttendee?.points).toBe(GENERAL_CHECKIN_EVENT.points);
         expect(updatedAttendee?.hasPriority?.[currentDay]).toBe(false);
@@ -329,19 +428,31 @@ describe("POST /checkin/event", () => {
         payload.eventId = MEALS_EVENT.eventId;
         payload.userId = TEST_ATTENDEE_1.userId;
 
-        const response = await postAsAdmin("/checkin/event").send(payload).expect(StatusCodes.OK);
+        const response = await postAsAdmin("/checkin/event")
+            .send(payload)
+            .expect(StatusCodes.OK);
         expect(response.body).toBe(TEST_ATTENDEE_1.userId);
 
-        const eventAttendance = await Database.EVENTS_ATTENDANCE.findOne({ eventId: payload.eventId });
+        const eventAttendance = await Database.EVENTS_ATTENDANCE.findOne({
+            eventId: payload.eventId,
+        });
         expect(eventAttendance?.attendees).toContain(TEST_ATTENDEE_1.userId);
 
-        const attendeeAttendance = await Database.ATTENDEE_ATTENDANCE.findOne({ userId: TEST_ATTENDEE_1.userId });
+        const attendeeAttendance = await Database.ATTENDEE_ATTENDANCE.findOne({
+            userId: TEST_ATTENDEE_1.userId,
+        });
         expect(attendeeAttendance?.eventsAttended).toContain(payload.eventId);
 
-        const updatedEvent = await Database.EVENTS.findOne({ eventId: payload.eventId });
-        expect(updatedEvent?.attendanceCount).toBe(MEALS_EVENT.attendanceCount + 1);
+        const updatedEvent = await Database.EVENTS.findOne({
+            eventId: payload.eventId,
+        });
+        expect(updatedEvent?.attendanceCount).toBe(
+            MEALS_EVENT.attendanceCount + 1
+        );
 
-        const updatedAttendee = await Database.ATTENDEE.findOne({ userId: TEST_ATTENDEE_1.userId });
+        const updatedAttendee = await Database.ATTENDEE.findOne({
+            userId: TEST_ATTENDEE_1.userId,
+        });
         expect(updatedAttendee?.hasCheckedIn).toBe(false);
         expect(updatedAttendee?.points).toBe(MEALS_EVENT.points);
         expect(updatedAttendee?.hasPriority?.[currentDay]).toBe(false);
@@ -349,61 +460,102 @@ describe("POST /checkin/event", () => {
 
     it("should correctly add points when $role checks in attendee who already has points", async () => {
         const preExistingPoints = 25;
-        await Database.ATTENDEE.updateOne({ userId: TEST_ATTENDEE_1.userId }, { $set: { points: preExistingPoints } });
-        
+        await Database.ATTENDEE.updateOne(
+            { userId: TEST_ATTENDEE_1.userId },
+            { $set: { points: preExistingPoints } }
+        );
+
         payload.eventId = REGULAR_EVENT_FOR_CHECKIN.eventId;
         payload.userId = TEST_ATTENDEE_1.userId;
 
-        await postAsAdmin("/checkin/event").send(payload).expect(StatusCodes.OK);
+        await postAsAdmin("/checkin/event")
+            .send(payload)
+            .expect(StatusCodes.OK);
 
-        const updatedAttendee = await Database.ATTENDEE.findOne({ userId: TEST_ATTENDEE_1.userId });
-        expect(updatedAttendee?.points).toBe(preExistingPoints + REGULAR_EVENT_FOR_CHECKIN.points);
+        const updatedAttendee = await Database.ATTENDEE.findOne({
+            userId: TEST_ATTENDEE_1.userId,
+        });
+        expect(updatedAttendee?.points).toBe(
+            preExistingPoints + REGULAR_EVENT_FOR_CHECKIN.points
+        );
     });
 
     it("should return FORBIDDEN if attempting to check-in an attendee that has already checked into the event", async () => {
-        await postAsAdmin("/checkin/event").send(payload).expect(StatusCodes.OK);
+        await postAsAdmin("/checkin/event")
+            .send(payload)
+            .expect(StatusCodes.OK);
 
-        const response = await postAsAdmin("/checkin/event").send(payload).expect(StatusCodes.FORBIDDEN);
+        const response = await postAsAdmin("/checkin/event")
+            .send(payload)
+            .expect(StatusCodes.FORBIDDEN);
         expect(response.body).toEqual({ error: "IsDuplicate" });
     });
 
     it("should return INTERNAL_SERVER_ERROR if eventId does not exist", async () => {
         payload.eventId = NON_EXISTENT_EVENT_ID;
-        await postAsAdmin("/checkin/event").send(payload).expect(StatusCodes.INTERNAL_SERVER_ERROR);
+        await postAsAdmin("/checkin/event")
+            .send(payload)
+            .expect(StatusCodes.INTERNAL_SERVER_ERROR);
     });
 
     it("should return INTERNAL_SERVER_ERROR if userId does not exist", async () => {
         payload.userId = NON_EXISTENT_ATTENDEE_ID;
-        await postAsAdmin("/checkin/event").send(payload).expect(StatusCodes.INTERNAL_SERVER_ERROR);
+        await postAsAdmin("/checkin/event")
+            .send(payload)
+            .expect(StatusCodes.INTERNAL_SERVER_ERROR);
     });
 
     it("should not make partial updates if check-in fails due to non-existent event", async () => {
         payload.eventId = NON_EXISTENT_EVENT_ID;
         payload.userId = TEST_ATTENDEE_1.userId;
 
-        const attendeeBefore = await Database.ATTENDEE.findOne({ userId: TEST_ATTENDEE_1.userId }).lean();
-        const eventAttendanceBefore = await Database.EVENTS_ATTENDANCE.countDocuments({ attendees: TEST_ATTENDEE_1.userId });
-        const attendeeEventListBefore = await Database.ATTENDEE_ATTENDANCE.findOne({ userId: TEST_ATTENDEE_1.userId });
+        const attendeeBefore = await Database.ATTENDEE.findOne({
+            userId: TEST_ATTENDEE_1.userId,
+        }).lean();
+        const eventAttendanceBefore =
+            await Database.EVENTS_ATTENDANCE.countDocuments({
+                attendees: TEST_ATTENDEE_1.userId,
+            });
+        const attendeeEventListBefore =
+            await Database.ATTENDEE_ATTENDANCE.findOne({
+                userId: TEST_ATTENDEE_1.userId,
+            });
 
-        await postAsAdmin("/checkin/event").send(payload).expect(StatusCodes.INTERNAL_SERVER_ERROR);
+        await postAsAdmin("/checkin/event")
+            .send(payload)
+            .expect(StatusCodes.INTERNAL_SERVER_ERROR);
 
-        const attendeeAfter = await Database.ATTENDEE.findOne({ userId: TEST_ATTENDEE_1.userId }).lean();
-        const eventAttendanceAfter = await Database.EVENTS_ATTENDANCE.countDocuments({ attendees: TEST_ATTENDEE_1.userId });
-        const attendeeEventListAfter = await Database.ATTENDEE_ATTENDANCE.findOne({ userId: TEST_ATTENDEE_1.userId });
+        const attendeeAfter = await Database.ATTENDEE.findOne({
+            userId: TEST_ATTENDEE_1.userId,
+        }).lean();
+        const eventAttendanceAfter =
+            await Database.EVENTS_ATTENDANCE.countDocuments({
+                attendees: TEST_ATTENDEE_1.userId,
+            });
+        const attendeeEventListAfter =
+            await Database.ATTENDEE_ATTENDANCE.findOne({
+                userId: TEST_ATTENDEE_1.userId,
+            });
 
         expect(attendeeAfter?.points).toBe(attendeeBefore?.points);
         expect(attendeeAfter?.hasCheckedIn).toBe(attendeeBefore?.hasCheckedIn);
-        expect(attendeeAfter?.hasPriority?.[currentDay]).toBe(attendeeBefore?.hasPriority?.[currentDay]);
+        expect(attendeeAfter?.hasPriority?.[currentDay]).toBe(
+            attendeeBefore?.hasPriority?.[currentDay]
+        );
         expect(eventAttendanceAfter).toBe(eventAttendanceBefore);
-        expect(attendeeEventListAfter?.eventsAttended?.length ?? 0).toBe(attendeeEventListBefore?.eventsAttended?.length ?? 0);
+        expect(attendeeEventListAfter?.eventsAttended?.length ?? 0).toBe(
+            attendeeEventListBefore?.eventsAttended?.length ?? 0
+        );
     });
-
 });
 
 describe("POST /checkin/scan/merch", () => {
     let payload: MerchScanPayload;
 
-    const QR_CODE_NON_EXISTENT_USER = generateQrHash("nonExistentUserForMerch", NOW_SECONDS + ONE_HOUR_SECONDS);
+    const QR_CODE_NON_EXISTENT_USER = generateQrHash(
+        "nonExistentUserForMerch",
+        NOW_SECONDS + ONE_HOUR_SECONDS
+    );
 
     beforeEach(() => {
         payload = {
@@ -412,7 +564,9 @@ describe("POST /checkin/scan/merch", () => {
     });
 
     it("should return UNAUTHORIZED for an unauthenticated user", async () => {
-        await post("/checkin/scan/merch").send(payload).expect(StatusCodes.UNAUTHORIZED);
+        await post("/checkin/scan/merch")
+            .send(payload)
+            .expect(StatusCodes.UNAUTHORIZED);
     });
 
     const invalidMerchScanPayloads = [
@@ -421,11 +575,14 @@ describe("POST /checkin/scan/merch", () => {
         { description: "qrCode is an empty string", payload: { qrCode: "" } },
     ];
 
-    it.each(invalidMerchScanPayloads)("should return BAD_REQUEST when $description", async ({ payload: invalidData }) => {
-        await postAsAdmin("/checkin/scan/merch")
-            .send(invalidData)
-            .expect(StatusCodes.BAD_REQUEST);
-    });
+    it.each(invalidMerchScanPayloads)(
+        "should return BAD_REQUEST when $description",
+        async ({ payload: invalidData }) => {
+            await postAsAdmin("/checkin/scan/merch")
+                .send(invalidData)
+                .expect(StatusCodes.BAD_REQUEST);
+        }
+    );
 
     it("should return UNAUTHORIZED if QR code has expired", async () => {
         payload.qrCode = EXPIRED_QR_CODE_TEST_ATTENDEE_1;
@@ -464,42 +621,61 @@ describe("POST /checkin/scan/merch", () => {
             .expect(StatusCodes.OK);
         expect(response.body).toBe("nonExistentUserForMerch");
 
-        const nonExistentAttendee = await Database.ATTENDEE.findOne({ userId: "nonExistentUserForMerch" });
+        const nonExistentAttendee = await Database.ATTENDEE.findOne({
+            userId: "nonExistentUserForMerch",
+        });
         expect(nonExistentAttendee).toBeNull();
     });
 
     it("should pass if QR code is valid and expires in 1 second", async () => {
         const mockCurrentTime = NOW_SECONDS;
         const expiryTime = mockCurrentTime + 1;
-        const qrCodeAboutToExpire = generateQrHash(TEST_ATTENDEE_1.userId, expiryTime);
+        const qrCodeAboutToExpire = generateQrHash(
+            TEST_ATTENDEE_1.userId,
+            expiryTime
+        );
         payload.qrCode = qrCodeAboutToExpire;
 
-        jest.spyOn(Date, 'now').mockImplementation(() => mockCurrentTime * 1000);
+        jest.spyOn(Date, "now").mockImplementation(
+            () => mockCurrentTime * 1000
+        );
 
-        const response = await postAsStaff("/checkin/scan/merch").send(payload).expect(StatusCodes.OK);
+        const response = await postAsStaff("/checkin/scan/merch")
+            .send(payload)
+            .expect(StatusCodes.OK);
         expect(response.body).toBe(TEST_ATTENDEE_1.userId);
 
-        jest.spyOn(Date, 'now').mockRestore();
+        jest.spyOn(Date, "now").mockRestore();
     });
 
     it("should fail if QR code is valid but expired 1 second ago", async () => {
         const mockCurrentTime = NOW_SECONDS;
         const expiryTime = mockCurrentTime - 1;
-        const qrCodeJustExpired = generateQrHash(TEST_ATTENDEE_1.userId, expiryTime);
+        const qrCodeJustExpired = generateQrHash(
+            TEST_ATTENDEE_1.userId,
+            expiryTime
+        );
         payload.qrCode = qrCodeJustExpired;
 
-        jest.spyOn(Date, 'now').mockImplementation(() => mockCurrentTime * 1000);
-        
-        const response = await postAsStaff("/checkin/scan/merch").send(payload).expect(StatusCodes.UNAUTHORIZED);
+        jest.spyOn(Date, "now").mockImplementation(
+            () => mockCurrentTime * 1000
+        );
+
+        const response = await postAsStaff("/checkin/scan/merch")
+            .send(payload)
+            .expect(StatusCodes.UNAUTHORIZED);
         expect(response.body).toEqual({ error: "QR code has expired" });
 
-        jest.spyOn(Date, 'now').mockRestore();
+        jest.spyOn(Date, "now").mockRestore();
     });
 });
 
 describe("POST /checkin/", () => {
-    let payload: ScanPayload
-    const QR_CODE_NON_EXISTENT_ATTENDEE = generateQrHash(NON_EXISTENT_ATTENDEE_ID, NOW_SECONDS + ONE_HOUR_SECONDS);
+    let payload: ScanPayload;
+    const QR_CODE_NON_EXISTENT_ATTENDEE = generateQrHash(
+        NON_EXISTENT_ATTENDEE_ID,
+        NOW_SECONDS + ONE_HOUR_SECONDS
+    );
 
     beforeEach(async () => {
         payload = {
@@ -514,15 +690,24 @@ describe("POST /checkin/", () => {
 
     const invalidGeneralCheckinPayloads = [
         { description: "missing qrCode", payload: { eventId: "dummyEvent" } },
-        { description: "qrCode is not a string", payload: { eventId: "dummyEvent", qrCode: 123 } },
-        { description: "qrCode is an empty string", payload: { eventId: "dummyEvent", qrCode: "" } },
+        {
+            description: "qrCode is not a string",
+            payload: { eventId: "dummyEvent", qrCode: 123 },
+        },
+        {
+            description: "qrCode is an empty string",
+            payload: { eventId: "dummyEvent", qrCode: "" },
+        },
     ];
 
-    it.each(invalidGeneralCheckinPayloads)("should return BAD_REQUEST when $description", async ({ payload: invalidData }) => {
-        await postAsAdmin("/checkin/")
-            .send(invalidData)
-            .expect(StatusCodes.BAD_REQUEST);
-    });
+    it.each(invalidGeneralCheckinPayloads)(
+        "should return BAD_REQUEST when $description",
+        async ({ payload: invalidData }) => {
+            await postAsAdmin("/checkin/")
+                .send(invalidData)
+                .expect(StatusCodes.BAD_REQUEST);
+        }
+    );
 
     it("should return UNAUTHORIZED if QR code has expired", async () => {
         payload.qrCode = EXPIRED_QR_CODE_TEST_ATTENDEE_1;
@@ -555,7 +740,10 @@ describe("POST /checkin/", () => {
     });
 
     it("should return BAD_REQUEST if attendee is already generally checked in", async () => {
-        await Database.ATTENDEE.updateOne({ userId: TEST_ATTENDEE_1.userId }, { $set: { hasCheckedIn: true } });
+        await Database.ATTENDEE.updateOne(
+            { userId: TEST_ATTENDEE_1.userId },
+            { $set: { hasCheckedIn: true } }
+        );
 
         payload.qrCode = VALID_QR_CODE_TEST_ATTENDEE_1;
         const response = await postAsAdmin("/checkin/")
@@ -567,7 +755,9 @@ describe("POST /checkin/", () => {
     it("should successfully perform general check-in, update records, and return userId", async () => {
         payload.qrCode = VALID_QR_CODE_TEST_ATTENDEE_1;
 
-        const attendeeBefore = await Database.ATTENDEE.findOne({ userId: TEST_ATTENDEE_1.userId }).lean();
+        const attendeeBefore = await Database.ATTENDEE.findOne({
+            userId: TEST_ATTENDEE_1.userId,
+        }).lean();
         expect(attendeeBefore?.hasCheckedIn).toBe(false);
 
         const response = await postAsAdmin("/checkin/")
@@ -575,39 +765,59 @@ describe("POST /checkin/", () => {
             .expect(StatusCodes.OK);
         expect(response.body).toBe(TEST_ATTENDEE_1.userId);
 
-        const attendeeAfter = await Database.ATTENDEE.findOne({ userId: TEST_ATTENDEE_1.userId }).lean();
+        const attendeeAfter = await Database.ATTENDEE.findOne({
+            userId: TEST_ATTENDEE_1.userId,
+        }).lean();
         expect(attendeeAfter?.hasCheckedIn).toBe(true);
     });
 
     it("should pass if QR code is valid and expires in 1 second", async () => {
         const mockCurrentTime = NOW_SECONDS;
         const expiryTime = mockCurrentTime + 1;
-        const qrCodeAboutToExpire = generateQrHash(TEST_ATTENDEE_1.userId, expiryTime);
+        const qrCodeAboutToExpire = generateQrHash(
+            TEST_ATTENDEE_1.userId,
+            expiryTime
+        );
         payload.qrCode = qrCodeAboutToExpire;
 
-        jest.spyOn(Date, 'now').mockImplementation(() => mockCurrentTime * 1000);
+        jest.spyOn(Date, "now").mockImplementation(
+            () => mockCurrentTime * 1000
+        );
 
-        const response = await postAsStaff("/checkin/").send(payload).expect(StatusCodes.OK);
+        const response = await postAsStaff("/checkin/")
+            .send(payload)
+            .expect(StatusCodes.OK);
         expect(response.body).toBe(TEST_ATTENDEE_1.userId);
-        const attendee = await Database.ATTENDEE.findOne({ userId: TEST_ATTENDEE_1.userId });
+        const attendee = await Database.ATTENDEE.findOne({
+            userId: TEST_ATTENDEE_1.userId,
+        });
         expect(attendee?.hasCheckedIn).toBe(true);
 
-        jest.spyOn(Date, 'now').mockRestore();
+        jest.spyOn(Date, "now").mockRestore();
     });
 
     it("should fail with UNAUTHORIZED if QR code is valid but expired 1 second ago", async () => {
         const mockCurrentTime = NOW_SECONDS;
         const expiryTime = mockCurrentTime - 1;
-        const qrCodeJustExpired = generateQrHash(TEST_ATTENDEE_1.userId, expiryTime);
+        const qrCodeJustExpired = generateQrHash(
+            TEST_ATTENDEE_1.userId,
+            expiryTime
+        );
         payload.qrCode = qrCodeJustExpired;
 
-        jest.spyOn(Date, 'now').mockImplementation(() => mockCurrentTime * 1000);
-        
-        const response = await postAsAdmin("/checkin/").send(payload).expect(StatusCodes.UNAUTHORIZED);
+        jest.spyOn(Date, "now").mockImplementation(
+            () => mockCurrentTime * 1000
+        );
+
+        const response = await postAsAdmin("/checkin/")
+            .send(payload)
+            .expect(StatusCodes.UNAUTHORIZED);
         expect(response.body).toEqual({ error: "QR code has expired" });
-        const attendee = await Database.ATTENDEE.findOne({ userId: TEST_ATTENDEE_1.userId });
+        const attendee = await Database.ATTENDEE.findOne({
+            userId: TEST_ATTENDEE_1.userId,
+        });
         expect(attendee?.hasCheckedIn).toBe(false);
 
-        jest.spyOn(Date, 'now').mockRestore();
+        jest.spyOn(Date, "now").mockRestore();
     });
 });

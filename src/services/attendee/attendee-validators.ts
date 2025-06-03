@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export type AttendeeType = z.infer<typeof AttendeeCreateValidator>
+export type AttendeeType = z.infer<typeof AttendeeCreateValidator>;
 
 // Zod schema for attendee
 export const AttendeeCreateValidator = z.object({

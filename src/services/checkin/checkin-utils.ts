@@ -43,7 +43,6 @@ async function checkForDuplicateAttendance(eventId: string, userId: string) {
 // Update attendee priority for the current day
 async function updateAttendeePriority(userId: string) {
     const day = getCurrentDay();
-    console.log('Day in updateAttendeePriority:', day)
     await Database.ATTENDEE.findOneAndUpdate(
         { userId },
         { $set: { [`hasPriority.${day}`]: true } }
