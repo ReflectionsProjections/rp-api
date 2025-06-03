@@ -2,6 +2,7 @@ import { Database } from "../../database";
 import crypto from "crypto";
 import { Config } from "../../config";
 import { EventType } from "../events/events-schema";
+import { DayKey } from "../attendee/attendee-schema";
 
 export function getCurrentDay() {
     const currDate = new Date();
@@ -9,7 +10,7 @@ export function getCurrentDay() {
         timeZone: "America/Chicago",
         weekday: "short",
     }).format(currDate);
-    return dayString;
+    return dayString as DayKey;
 }
 
 async function checkEventAndAttendeeExist(eventId: string, userId: string) {
@@ -42,6 +43,7 @@ async function checkForDuplicateAttendance(eventId: string, userId: string) {
 // Update attendee priority for the current day
 async function updateAttendeePriority(userId: string) {
     const day = getCurrentDay();
+    console.log('Day in updateAttendeePriority:', day)
     await Database.ATTENDEE.findOneAndUpdate(
         { userId },
         { $set: { [`hasPriority.${day}`]: true } }
