@@ -59,8 +59,9 @@ speakersRouter.put(
         const speakerId = req.params.SPEAKERID;
 
         const validatedData = SpeakerValidator.parse(req.body);
-        // omit speakerId from validatedData to prevent it from overwritting
-        const { speakerId: _, ...updateData } = validatedData;
+
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { speakerId: _, ...updateData } = validatedData; // omit speakerId from validatedData to prevent it from overwritting
 
         const speaker = await Database.SPEAKERS.findOneAndUpdate(
             { speakerId: speakerId },
