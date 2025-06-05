@@ -2,6 +2,8 @@ import { Schema } from "mongoose";
 import { z } from "zod";
 import { v4 as uuidv4 } from "uuid";
 
+export type SpeakerType = z.infer<typeof SpeakerValidator>;
+
 // Zod schema for speaker
 export const SpeakerValidator = z.object({
     speakerId: z.coerce.string().default(() => uuidv4()),
