@@ -29,23 +29,27 @@ speakersRouter.get("/:SPEAKERID", RoleChecker([], true), async (req, res) => {
 });
 
 // Create a new speaker
-speakersRouter.post("/", RoleChecker([Role.Enum.ADMIN, Role.Enum.STAFF]), async (req, res) => {
-    const validatedData = SpeakerValidator.parse(req.body);
+speakersRouter.post(
+    "/",
+    RoleChecker([Role.Enum.ADMIN, Role.Enum.STAFF]),
+    async (req, res) => {
+        const validatedData = SpeakerValidator.parse(req.body);
 
-    const existingSpeaker = await Database.SPEAKERS.findOne({
+        const existingSpeaker = await Database.SPEAKERS.findOne({
             speakerId: validatedData.speakerId,
         });
 
-    if (existingSpeaker) {
-        return res
-            .status(StatusCodes.BAD_REQUEST)
-            .json({ error: "UserAlreadyExists" });
-    }
+        if (existingSpeaker) {
+            return res
+                .status(StatusCodes.BAD_REQUEST)
+                .json({ error: "UserAlreadyExists" });
+        }
 
-    const speaker = new Database.SPEAKERS(validatedData);
-    await speaker.save();
-    return res.status(StatusCodes.CREATED).json(speaker);
-});
+        const speaker = new Database.SPEAKERS(validatedData);
+        await speaker.save();
+        return res.status(StatusCodes.CREATED).json(speaker);
+    }
+);
 
 // Update a speaker
 speakersRouter.put(
@@ -56,7 +60,7 @@ speakersRouter.put(
 
         const validatedData = SpeakerValidator.parse(req.body);
         // omit speakerId from validatedData to prevent it from overwritting
-        const { speakerId: _, ...updateData } = validatedData; 
+        const { speakerId: _, ...updateData } = validatedData;
 
         const speaker = await Database.SPEAKERS.findOneAndUpdate(
             { speakerId: speakerId },
@@ -81,12 +85,14 @@ speakersRouter.delete(
     async (req, res) => {
         const speakerId = req.params.SPEAKERID;
 
-        const deletedSpeaker = await Database.SPEAKERS.findOneAndDelete({ speakerId });
-                if (!deletedSpeaker) {
-                    return res
-                        .status(StatusCodes.NOT_FOUND)
-                        .json({ error: "DoesNotExist" });
-                }
+        const deletedSpeaker = await Database.SPEAKERS.findOneAndDelete({
+            speakerId,
+        });
+        if (!deletedSpeaker) {
+            return res
+                .status(StatusCodes.NOT_FOUND)
+                .json({ error: "DoesNotExist" });
+        }
 
         return res.sendStatus(StatusCodes.NO_CONTENT);
     }

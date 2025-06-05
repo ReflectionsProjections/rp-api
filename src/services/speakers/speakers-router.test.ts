@@ -72,11 +72,11 @@ describe("GET /speakers/", () => {
     it("should return all speakers when speakers exist", async () => {
         const response = await get("/speakers/").expect(StatusCodes.OK);
         expect(response.body).toEqual(
-                        expect.arrayContaining([
-                            expect.objectContaining(SPEAKER_1),
-                            expect.objectContaining(SPEAKER_2),
-                        ])
-                    );
+            expect.arrayContaining([
+                expect.objectContaining(SPEAKER_1),
+                expect.objectContaining(SPEAKER_2),
+            ])
+        );
     });
 
     it("should return an empty array when no speakers exist", async () => {
@@ -88,17 +88,17 @@ describe("GET /speakers/", () => {
 
 describe("GET /speakers/:SPEAKERID", () => {
     it("should return a specific speaker when a valid speakerId is provided", async () => {
-        const response = await get(
-                        `/speakers/${SPEAKER_1.speakerId}`
-                    ).expect(StatusCodes.OK);
-                    expect(response.body).toMatchObject(SPEAKER_1);
+        const response = await get(`/speakers/${SPEAKER_1.speakerId}`).expect(
+            StatusCodes.OK
+        );
+        expect(response.body).toMatchObject(SPEAKER_1);
     });
 
     it("should return NOT_FOUND when speakerId does not exist", async () => {
         const response = await get(
-                    `/speakers/${NON_EXISTENT_SPEAKER_ID}`
-                ).expect(StatusCodes.NOT_FOUND);
-                expect(response.body).toEqual({ error: "DoesNotExist" });
+            `/speakers/${NON_EXISTENT_SPEAKER_ID}`
+        ).expect(StatusCodes.NOT_FOUND);
+        expect(response.body).toEqual({ error: "DoesNotExist" });
     });
 });
 
@@ -110,42 +110,64 @@ describe("POST /speakers/", () => {
     });
 
     it("should create and return a new speaker with auto-generated speakerId when speakerId is not provided in payload", async () => {
-        const response = await postAsAdmin("/speakers/").send(NEW_SPEAKER_PAYLOAD_NO_ID).expect(StatusCodes.CREATED);
+        const response = await postAsAdmin("/speakers/")
+            .send(NEW_SPEAKER_PAYLOAD_NO_ID)
+            .expect(StatusCodes.CREATED);
 
-        expect(response.body).toMatchObject({...NEW_SPEAKER_PAYLOAD_NO_ID, speakerId: response.body.speakerId});
+        expect(response.body).toMatchObject({
+            ...NEW_SPEAKER_PAYLOAD_NO_ID,
+            speakerId: response.body.speakerId,
+        });
 
-        expect(response.body.speakerId).toMatch(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/);
+        expect(response.body.speakerId).toMatch(
+            /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/
+        );
 
         const createdSpeaker = await Database.SPEAKERS.findOne({
-                    speakerId: response.body.speakerId,
-                });
-        expect(createdSpeaker?.toObject()).toMatchObject({...NEW_SPEAKER_PAYLOAD_NO_ID, speakerId: response.body.speakerId});
+            speakerId: response.body.speakerId,
+        });
+        expect(createdSpeaker?.toObject()).toMatchObject({
+            ...NEW_SPEAKER_PAYLOAD_NO_ID,
+            speakerId: response.body.speakerId,
+        });
     });
 
     it("should create and return a new speaker with provided speakerId when valid speakerId is in payload", async () => {
-        const response = await postAsAdmin("/speakers/").send(NEW_SPEAKER_PAYLOAD_WITH_ID).expect(StatusCodes.CREATED);
+        const response = await postAsAdmin("/speakers/")
+            .send(NEW_SPEAKER_PAYLOAD_WITH_ID)
+            .expect(StatusCodes.CREATED);
 
         expect(response.body).toMatchObject(NEW_SPEAKER_PAYLOAD_WITH_ID);
 
         const createdSpeaker = await Database.SPEAKERS.findOne({
-                    speakerId: NEW_SPEAKER_PAYLOAD_WITH_ID.speakerId,
-                });
-        expect(createdSpeaker?.toObject()).toMatchObject(NEW_SPEAKER_PAYLOAD_WITH_ID);
+            speakerId: NEW_SPEAKER_PAYLOAD_WITH_ID.speakerId,
+        });
+        expect(createdSpeaker?.toObject()).toMatchObject(
+            NEW_SPEAKER_PAYLOAD_WITH_ID
+        );
     });
 
     it("should return BAD_REQUEST if trying to create a speaker with an already existing speakerId", async () => {
         const payloadWithExistingId = {
             ...NEW_SPEAKER_PAYLOAD_NO_ID,
             speakerId: SPEAKER_1_ID,
-        }
+        };
 
-        const response = await postAsStaff("/speakers/").send(payloadWithExistingId).expect(StatusCodes.BAD_REQUEST);
+        const response = await postAsStaff("/speakers/")
+            .send(payloadWithExistingId)
+            .expect(StatusCodes.BAD_REQUEST);
         expect(response.body).toEqual({ error: "UserAlreadyExists" });
-    })
+    });
 
     const invalidPayloads = [
-        { description: "missing 'name' field", payload: { ...NEW_SPEAKER_PAYLOAD_NO_ID, name: undefined } },
-        { description: "'name' field is not a string", payload: { ...NEW_SPEAKER_PAYLOAD_NO_ID, name: 12345 } },
+        {
+            description: "missing 'name' field",
+            payload: { ...NEW_SPEAKER_PAYLOAD_NO_ID, name: undefined },
+        },
+        {
+            description: "'name' field is not a string",
+            payload: { ...NEW_SPEAKER_PAYLOAD_NO_ID, name: 12345 },
+        },
         { description: "payload is an empty object", payload: {} },
     ];
 
@@ -162,8 +184,8 @@ describe("POST /speakers/", () => {
 describe("PUT /speakers/:SPEAKERID", () => {
     it("should return UNAUTHORIZED for an unauthenticated user", async () => {
         await put(`/speakers/${SPEAKER_1.speakerId}`).expect(
-                    StatusCodes.UNAUTHORIZED
-                );
+            StatusCodes.UNAUTHORIZED
+        );
     });
 
     it("should update speaker and return 200 OK with updated speaker", async () => {
@@ -171,23 +193,41 @@ describe("PUT /speakers/:SPEAKERID", () => {
             .send(UPDATE_SPEAKER_PAYLOAD)
             .expect(StatusCodes.OK);
 
-        expect(response.body).toMatchObject( {...UPDATE_SPEAKER_PAYLOAD, speakerId: SPEAKER_1_ID} );
+        expect(response.body).toMatchObject({
+            ...UPDATE_SPEAKER_PAYLOAD,
+            speakerId: SPEAKER_1_ID,
+        });
 
         // ensure speakerId was not overwritten
         expect(response.body.speakerId).toBe(SPEAKER_1_ID);
 
-        const speakerAfterUpdate = await Database.SPEAKERS.findOne({ speakerId: response.body.speakerId });
-        expect(speakerAfterUpdate).toMatchObject( {...UPDATE_SPEAKER_PAYLOAD, speakerId: SPEAKER_1.speakerId} );
+        const speakerAfterUpdate = await Database.SPEAKERS.findOne({
+            speakerId: response.body.speakerId,
+        });
+        expect(speakerAfterUpdate).toMatchObject({
+            ...UPDATE_SPEAKER_PAYLOAD,
+            speakerId: SPEAKER_1.speakerId,
+        });
     });
 
-    it("should return 404 NOT_FOUND when trying to update a speaker that does not exist", async()=> {
-        const response = await putAsStaff(`/speakers/${NON_EXISTENT_SPEAKER_ID}`).send(UPDATE_SPEAKER_PAYLOAD).expect(StatusCodes.NOT_FOUND);
+    it("should return 404 NOT_FOUND when trying to update a speaker that does not exist", async () => {
+        const response = await putAsStaff(
+            `/speakers/${NON_EXISTENT_SPEAKER_ID}`
+        )
+            .send(UPDATE_SPEAKER_PAYLOAD)
+            .expect(StatusCodes.NOT_FOUND);
         expect(response.body).toEqual({ error: "DoesNotExist" });
-    })
+    });
 
     const invalidUpdatePayloads = [
-        { description: "missing 'name' field", payload: { ...UPDATE_SPEAKER_PAYLOAD, name: undefined } },
-        { description: "'title' field is not a string", payload: { ...UPDATE_SPEAKER_PAYLOAD, title: 12345 } },
+        {
+            description: "missing 'name' field",
+            payload: { ...UPDATE_SPEAKER_PAYLOAD, name: undefined },
+        },
+        {
+            description: "'title' field is not a string",
+            payload: { ...UPDATE_SPEAKER_PAYLOAD, title: 12345 },
+        },
         { description: "payload is an empty object", payload: {} },
     ];
 
@@ -199,7 +239,6 @@ describe("PUT /speakers/:SPEAKERID", () => {
                 .expect(StatusCodes.BAD_REQUEST);
         }
     );
-    
 });
 
 describe("DELETE /speakers/:SPEAKERID", () => {
@@ -210,16 +249,20 @@ describe("DELETE /speakers/:SPEAKERID", () => {
     });
 
     it("should delete an existing speaker and return 204 NO_CONTENT", async () => {
-        await delAsAdmin(`/speakers/${SPEAKER_1.speakerId}`).expect(StatusCodes.NO_CONTENT);
-        
-        const deletedSpeaker = await Database.SPEAKERS.findOne({ speakerId: SPEAKER_1.speakerId });
+        await delAsAdmin(`/speakers/${SPEAKER_1.speakerId}`).expect(
+            StatusCodes.NO_CONTENT
+        );
+
+        const deletedSpeaker = await Database.SPEAKERS.findOne({
+            speakerId: SPEAKER_1.speakerId,
+        });
         expect(deletedSpeaker).toBeNull();
     });
 
     it("should return NOT_FOUND when trying to delete a speaker that doesn't exist", async () => {
         const response = await delAsStaff(
-                    `/speakers/${NON_EXISTENT_SPEAKER_ID}`
-                ).expect(StatusCodes.NOT_FOUND);
-                expect(response.body).toEqual({ error: "DoesNotExist" });
+            `/speakers/${NON_EXISTENT_SPEAKER_ID}`
+        ).expect(StatusCodes.NOT_FOUND);
+        expect(response.body).toEqual({ error: "DoesNotExist" });
     });
 });
