@@ -37,7 +37,9 @@ describe("POST /puzzlebang", () => {
     });
 
     it("should return 401 if puzzle was already completed", async () => {
-        await Database.ATTENDEE.create(makeTestAttendee({ puzzlesCompleted: [PUZZLE_ID] }));
+        await Database.ATTENDEE.create(
+            makeTestAttendee({ puzzlesCompleted: [PUZZLE_ID] })
+        );
 
         await post("/puzzlebang", Role.enum.PUZZLEBANG)
             .send({ email: TEST_EMAIL, puzzleId: PUZZLE_ID })
