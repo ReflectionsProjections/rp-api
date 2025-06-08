@@ -124,7 +124,7 @@ describe("POST /subscription/", () => {
         expect(dbEntry?.subscriptions).toEqual([EMAIL_1]);
     });
 
-    it("should treat emails with different cases as separate subscriptions", async () => {
+    it("should treat emails with different cases as the same subscription", async () => {
         await post("/subscription/").send({
             email: "test@example.com",
             mailingList: VALID_MAILING_LIST,
