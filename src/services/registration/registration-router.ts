@@ -137,7 +137,9 @@ registrationRouter.get("/", RoleChecker([]), async (req, res) => {
     });
 
     if (!registration) {
-        return { error: "DoesNotExist" };
+        return res.status(StatusCodes.NOT_FOUND).json({
+            error: "DoesNotExist",
+        });
     }
 
     return res.status(StatusCodes.OK).json({ registration });
