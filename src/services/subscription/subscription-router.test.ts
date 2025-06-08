@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@jest/globals";
+import { beforeEach, describe, expect, it } from "@jest/globals";
 import { post } from "../../../testing/testingTools";
 import { StatusCodes } from "http-status-codes";
 import { Database } from "../../database";
@@ -26,6 +26,10 @@ const SUBSCRIPTION_INVALID_LIST = {
     email: EMAIL_1,
     mailingList: INVALID_MAILING_LIST,
 };
+
+beforeEach(async () => {
+    await Database.SUBSCRIPTIONS.deleteMany({});
+});
 
 describe("POST /subscription/", () => {
     it("should create a new subscription for a new mailing list", async () => {
