@@ -43,14 +43,6 @@ beforeEach(async () => {
     await Database.ATTENDEE.deleteMany({});
 });
 
-/*
-Save tests:
-1) Saves a new reg draft for an authenticated user
-2) Fails if already submitted reg
-3) Requires authentication
-4) Registration data is valid
-*/
-
 describe("POST /registration/save", () => {
     it("should save a registration draft for an authenticated user", async () => {
         const response = await post("/registration/save", Role.enum.USER)
@@ -96,17 +88,6 @@ describe("POST /registration/save", () => {
             .expect(StatusCodes.BAD_REQUEST);
     });
 });
-
-/*
-Submit tests:
-1) Submits a new reg for an authenticated user
-2) Fails if already submitted reg
-3) Adds USER role to the submitter
-4) Send confirmation email (mocked)
-5) Creates attendee
-6) Validates the input
-7) Requires authentication
-*/
 
 describe("POST /registration/submit", () => {
     it("should submit registration, create attendee, and assign USER role", async () => {
@@ -160,13 +141,6 @@ describe("POST /registration/submit", () => {
     });
 });
 
-/*
-GET tests:
-1) Get registration data for an authenticated user
-2) Requires authentication
-3) Returns 401 if no registration data found
-*/
-
 describe("GET /registration", () => {
     it("should get registration data for an authenticated user", async () => {
         await Database.REGISTRATION.create({
@@ -194,15 +168,6 @@ describe("GET /registration", () => {
         expect(response.body).toEqual({ error: "DoesNotExist" });
     });
 });
-
-/*
-POST filter pagecount tests:
-1) Should return correct page count for matching filters
-2) Should return 0 pages if no records match filters
-3) Should return 401 for unauthenticated users
-4) Should return 403 for users without ADMIN or CORPORATE role
-5) Should return 400 if invalid filters are sent
-*/
 
 describe("POST /registration/filter/pagecount", () => {
     const NUM_ENTRIES = 53;
