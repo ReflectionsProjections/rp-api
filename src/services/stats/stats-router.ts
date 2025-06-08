@@ -25,8 +25,9 @@ statsRouter.get(
     "/merch-item/:PRICE",
     RoleChecker([Role.enum.STAFF], false),
     async (req, res) => {
-        const price = parseInt(req.params.PRICE, 10);
-        if (!price) {
+        const rawPrice = req.params.PRICE;
+        const price = parseInt(rawPrice, 10);
+        if (!rawPrice) {
             return res
                 .status(StatusCodes.BAD_REQUEST)
                 .json({ error: "MissingPriceParameter" });
