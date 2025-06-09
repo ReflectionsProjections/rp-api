@@ -80,7 +80,7 @@ describe("POST /subscription/", () => {
         expect(dbEntry?.subscriptions).toEqual([EMAIL_1]);
     });
 
-    const invalidPayloads = [
+    it.each([
         {
             description: "missing email",
             payload: { mailingList: VALID_MAILING_LIST },
@@ -97,16 +97,11 @@ describe("POST /subscription/", () => {
             description: "invalid mailingList",
             payload: SUBSCRIPTION_INVALID_LIST,
         },
-    ];
-
-    it.each(invalidPayloads)(
-        "should return BAD_REQUEST when $description",
-        async ({ payload }) => {
-            await post("/subscription/")
-                .send(payload)
-                .expect(StatusCodes.BAD_REQUEST);
-        }
-    );
+    ])("should return BAD_REQUEST when $description", async ({ payload }) => {
+        await post("/subscription/")
+            .send(payload)
+            .expect(StatusCodes.BAD_REQUEST);
+    });
 
     const SUBSCRIPTION_EXTRA = {
         ...SUBSCRIPTION_1,
@@ -138,8 +133,6 @@ describe("POST /subscription/", () => {
         const dbEntry = await Database.SUBSCRIPTIONS.findOne({
             mailingList: VALID_MAILING_LIST,
         });
-        expect(dbEntry?.subscriptions.length).toBe(1);
-        expect(dbEntry?.subscriptions).toContain("test@example.com");
-        expect(dbEntry?.subscriptions).not.toContain("TEST@example.com");
+        expect(dbEntry?.subscriptions).toEqual(["test@example.com"]);
     });
 });
