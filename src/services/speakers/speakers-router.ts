@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { StatusCodes } from "http-status-codes";
-import { SpeakerValidator } from "./speakers-schema";
+import { SpeakerValidator, UpdateSpeakerValidator } from "./speakers-schema";
 import { Database } from "../../database";
 import RoleChecker from "../../middleware/role-checker";
 import { Role } from "../auth/auth-models";
@@ -58,14 +58,11 @@ speakersRouter.put(
     async (req, res) => {
         const speakerId = req.params.SPEAKERID;
 
-        const validatedData = SpeakerValidator.parse(req.body);
-
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { speakerId: _, ...updateData } = validatedData; // omit speakerId from validatedData to prevent it from overwritting
+        const updateData = UpdateSpeakerValidator.parse(req.body);
 
         const speaker = await Database.SPEAKERS.findOneAndUpdate(
             { speakerId: speakerId },
-            { $set: updateData }, // updates all fields besides speakerId
+            { $set: updateData },
             { new: true, runValidators: true }
         );
 
