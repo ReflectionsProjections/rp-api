@@ -3,6 +3,7 @@ import { z } from "zod";
 import { v4 as uuidv4 } from "uuid";
 
 export type SpeakerType = z.infer<typeof SpeakerValidator>;
+export type UpdateSpeakerType = z.infer<typeof UpdateSpeakerValidator>;
 
 // Zod schema for speaker
 export const SpeakerValidator = z.object({
@@ -14,6 +15,11 @@ export const SpeakerValidator = z.object({
     eventDescription: z.string(),
     imgUrl: z.string(),
 });
+
+// Zod schema for updating speaker (omits speakerId)
+export const UpdateSpeakerValidator = SpeakerValidator.omit({
+    speakerId: true,
+}).strict();
 
 // Mongoose schema for speaker
 export const SpeakerSchema = new Schema({
