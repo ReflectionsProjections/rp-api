@@ -14,7 +14,7 @@ import {
 import { StatusCodes } from "http-status-codes";
 import { Database } from "../../database";
 import { v4 as uuidv4 } from "uuid";
-import { SpeakerType } from "./speakers-schema";
+import { SpeakerType, UpdateSpeakerType } from "./speakers-schema";
 
 const SPEAKER_1_ID = uuidv4();
 const SPEAKER_2_ID = uuidv4();
@@ -61,7 +61,7 @@ const UPDATE_SPEAKER_PAYLOAD = {
     eventTitle: "How to Get Goated Like LeBron",
     eventDescription: SPEAKER_1.eventDescription + " and meet and greet",
     imgUrl: "https://example.com/lebron_james_updated.jpg",
-} satisfies Omit<SpeakerType, "speakerId">;
+} satisfies UpdateSpeakerType;
 
 beforeEach(async () => {
     await Database.SPEAKERS.create(SPEAKER_1);
@@ -159,7 +159,7 @@ describe("POST /speakers/", () => {
         expect(response.body).toEqual({ error: "UserAlreadyExists" });
     });
 
-    const invalidPayloads = [
+    it.each([
         {
             description: "missing 'name' field",
             payload: { ...NEW_SPEAKER_PAYLOAD_NO_ID, name: undefined },
@@ -169,9 +169,7 @@ describe("POST /speakers/", () => {
             payload: { ...NEW_SPEAKER_PAYLOAD_NO_ID, name: 12345 },
         },
         { description: "payload is an empty object", payload: {} },
-    ];
-
-    it.each(invalidPayloads)(
+    ])(
         "should return BAD_REQUEST when $description in an invalid payload",
         async ({ payload: invalidData }) => {
             await postAsStaff("/speakers/")
@@ -219,7 +217,18 @@ describe("PUT /speakers/:SPEAKERID", () => {
         expect(response.body).toEqual({ error: "DoesNotExist" });
     });
 
-    const invalidUpdatePayloads = [
+    it("should return BAD_REQUEST when speakerId is included in request body", async () => {
+        const payloadWithSpeakerId = {
+            ...UPDATE_SPEAKER_PAYLOAD,
+            speakerId: uuidv4(),
+        };
+
+        await putAsAdmin(`/speakers/${SPEAKER_1.speakerId}`)
+            .send(payloadWithSpeakerId)
+            .expect(StatusCodes.BAD_REQUEST);
+    });
+
+    it.each([
         {
             description: "missing 'name' field",
             payload: { ...UPDATE_SPEAKER_PAYLOAD, name: undefined },
@@ -229,9 +238,7 @@ describe("PUT /speakers/:SPEAKERID", () => {
             payload: { ...UPDATE_SPEAKER_PAYLOAD, title: 12345 },
         },
         { description: "payload is an empty object", payload: {} },
-    ];
-
-    it.each(invalidUpdatePayloads)(
+    ])(
         "should return BAD_REQUEST when $description when trying to update an existing speaker",
         async ({ payload: invalidData }) => {
             await putAsAdmin(`/speakers/${SPEAKER_1_ID}`)
@@ -248,8 +255,19 @@ describe("DELETE /speakers/:SPEAKERID", () => {
         );
     });
 
-    it("should delete an existing speaker and return 204 NO_CONTENT", async () => {
+    it("should delete an existing speaker and return 204 NO_CONTENT for an ADMIN user", async () => {
         await delAsAdmin(`/speakers/${SPEAKER_1.speakerId}`).expect(
+            StatusCodes.NO_CONTENT
+        );
+
+        const deletedSpeaker = await Database.SPEAKERS.findOne({
+            speakerId: SPEAKER_1.speakerId,
+        });
+        expect(deletedSpeaker).toBeNull();
+    });
+
+    it("should delete an existing speaker and return 204 NO_CONTENT for a STAFF user", async () => {
+        await delAsStaff(`/speakers/${SPEAKER_1.speakerId}`).expect(
             StatusCodes.NO_CONTENT
         );
 
