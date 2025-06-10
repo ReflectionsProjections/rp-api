@@ -5,33 +5,139 @@ import { Role } from "../auth/auth-models";
 import { getAsStaff, get } from "../../../testing/testingTools";
 import { getCurrentDay } from "../checkin/checkin-utils";
 
+const currentDay = getCurrentDay();
+const now = new Date();
+
+const ATTENDEE_RITAM = {
+    userId: "a1",
+    name: "Ritam",
+    email: "ritam@test.com",
+    hasCheckedIn: true,
+    points: 10,
+    hasPriority: { [currentDay]: true },
+};
+
+const ATTENDEE_NATHAN = {
+    userId: "a2",
+    name: "Nathan",
+    email: "nathan@test.com",
+    hasCheckedIn: true,
+    points: 25,
+    hasPriority: { [currentDay]: false },
+};
+
+const ATTENDEE_TIMOTHY = {
+    userId: "a3",
+    name: "Timothy",
+    email: "timothy@test.com",
+    hasCheckedIn: false,
+    points: 20,
+    hasPriority: { [currentDay]: false },
+};
+
+const EVENT_1 = {
+    eventId: "e1",
+    name: "Event 1",
+    startTime: new Date(now.getTime() - 120000),
+    endTime: new Date(now.getTime() - 100000),
+    points: 10,
+    description: "Event 1 description",
+    isVirtual: false,
+    imageUrl: null,
+    location: "Room A",
+    eventType: "SPEAKER",
+    attendanceCount: 20,
+};
+const EVENT_2 = {
+    eventId: "e2",
+    name: "Event 2",
+    startTime: new Date(now.getTime() - 220000),
+    endTime: new Date(now.getTime() - 200000),
+    points: 15,
+    description: "Event 2 description",
+    isVirtual: true,
+    imageUrl: null,
+    location: null,
+    eventType: "SPEAKER",
+    attendanceCount: 50,
+};
+const EVENT_3 = {
+    eventId: "e3",
+    name: "Event 3",
+    startTime: new Date(now.getTime() - 320000),
+    endTime: new Date(now.getTime() - 300000),
+    points: 5,
+    description: "Event 3 description",
+    isVirtual: false,
+    imageUrl: null,
+    location: "Room B",
+    eventType: "SPEAKER",
+    attendanceCount: 35,
+};
+
+const FUTURE_EVENT = {
+    eventId: "future",
+    name: "Future Event",
+    startTime: new Date(Date.now() + 3600000),
+    endTime: new Date(Date.now() + 3600000),
+    points: 5,
+    description: "Future event description",
+    isVirtual: true,
+    imageUrl: null,
+    location: "Room B",
+    eventType: "SPEAKER",
+    attendanceCount: 123,
+};
+
+const ATTENDEES_DIETARY = [
+    {
+        userId: "a1",
+        name: "None",
+        email: "a1@test.com",
+        dietaryRestrictions: [],
+        allergies: [],
+    },
+    {
+        userId: "a2",
+        name: "DietOnly",
+        email: "a2@test.com",
+        dietaryRestrictions: ["Vegetarian"],
+        allergies: [],
+    },
+    {
+        userId: "a3",
+        name: "AllergyOnly",
+        email: "a3@test.com",
+        dietaryRestrictions: [],
+        allergies: ["Peanuts"],
+    },
+    {
+        userId: "a4",
+        name: "Both",
+        email: "a4@test.com",
+        dietaryRestrictions: ["Vegan"],
+        allergies: ["Shellfish"],
+    },
+    {
+        userId: "a5",
+        name: "AllergyAgain",
+        email: "a5@test.com",
+        dietaryRestrictions: ["Vegetarian"],
+        allergies: ["Peanuts"],
+    },
+];
+
 describe("GET /stats/check-in", () => {
     beforeEach(async () => {
         await Database.ATTENDEE.deleteMany({});
+        await Database.ATTENDEE.create([
+            ATTENDEE_RITAM,
+            ATTENDEE_NATHAN,
+            ATTENDEE_TIMOTHY,
+        ]);
     });
 
     it("should return correct count for checked-in attendees", async () => {
-        await Database.ATTENDEE.create([
-            {
-                userId: "a1",
-                name: "Ritam",
-                email: "ritam@test.com",
-                hasCheckedIn: true,
-            },
-            {
-                userId: "a2",
-                name: "Nathan",
-                email: "nathan@test.com",
-                hasCheckedIn: true,
-            },
-            {
-                userId: "a3",
-                name: "Timothy",
-                email: "timothy@test.com",
-                hasCheckedIn: false,
-            },
-        ]);
-
         const response = await getAsStaff("/stats/check-in").expect(
             StatusCodes.OK
         );
@@ -40,14 +146,7 @@ describe("GET /stats/check-in", () => {
     });
 
     it("should return 0 if no attendees are checked in", async () => {
-        await Database.ATTENDEE.create([
-            {
-                userId: "a1",
-                name: "Ritam",
-                email: "ritam@test.com",
-                hasCheckedIn: false,
-            },
-        ]);
+        await Database.ATTENDEE.updateMany({}, { hasCheckedIn: false });
 
         const response = await getAsStaff("/stats/check-in").expect(
             StatusCodes.OK
@@ -70,30 +169,14 @@ describe("GET /stats/check-in", () => {
 describe("GET /stats/merch-item/:PRICE", () => {
     beforeEach(async () => {
         await Database.ATTENDEE.deleteMany({});
+        await Database.ATTENDEE.create([
+            ATTENDEE_RITAM,
+            ATTENDEE_NATHAN,
+            ATTENDEE_TIMOTHY,
+        ]);
     });
 
     it("should return correct count for people with points threshold", async () => {
-        await Database.ATTENDEE.create([
-            {
-                userId: "a1",
-                name: "Ritam",
-                email: "ritam@test.com",
-                points: 10,
-            },
-            {
-                userId: "a2",
-                name: "Nathan",
-                email: "nathan@test.com",
-                points: 25,
-            },
-            {
-                userId: "a3",
-                name: "Timothy",
-                email: "timothy@test.com",
-                points: 20,
-            },
-        ]);
-
         const pointsThreshold = 20;
         const response = await getAsStaff(
             `/stats/merch-item/${pointsThreshold}`
@@ -102,27 +185,6 @@ describe("GET /stats/merch-item/:PRICE", () => {
     });
 
     it("should return 0 if no one has enough points", async () => {
-        await Database.ATTENDEE.create([
-            {
-                userId: "a1",
-                name: "Ritam",
-                email: "ritam@test.com",
-                points: 10,
-            },
-            {
-                userId: "a2",
-                name: "Nathan",
-                email: "nathan@test.com",
-                points: 25,
-            },
-            {
-                userId: "a3",
-                name: "Timothy",
-                email: "timothy@test.com",
-                points: 20,
-            },
-        ]);
-
         const pointsThreshold = 30;
         const response = await getAsStaff(
             `/stats/merch-item/${pointsThreshold}`
@@ -149,31 +211,14 @@ describe("GET /stats/merch-item/:PRICE", () => {
 describe("GET /stats/priority-attendee", () => {
     beforeEach(async () => {
         await Database.ATTENDEE.deleteMany({});
+        await Database.ATTENDEE.create([
+            ATTENDEE_RITAM,
+            ATTENDEE_NATHAN,
+            ATTENDEE_TIMOTHY,
+        ]);
     });
 
     it("should return correct count for people with priority attendance for today", async () => {
-        const currentDay = getCurrentDay();
-        await Database.ATTENDEE.create([
-            {
-                userId: "a1",
-                name: "Ritam",
-                email: "ritam@test.com",
-                hasPriority: { [currentDay]: true },
-            },
-            {
-                userId: "a2",
-                name: "Nathan",
-                email: "nathan@test.com",
-                hasPriority: { [currentDay]: false },
-            },
-            {
-                userId: "a3",
-                name: "Timothy",
-                email: "timothy@test.com",
-                hasPriority: { [currentDay]: false },
-            },
-        ]);
-
         const response = await getAsStaff("/stats/priority-attendee").expect(
             StatusCodes.OK
         );
@@ -181,27 +226,10 @@ describe("GET /stats/priority-attendee", () => {
     });
 
     it("should return 0 if no attendee has priority for today", async () => {
-        const currentDay = getCurrentDay();
-        await Database.ATTENDEE.create([
-            {
-                userId: "a1",
-                name: "Ritam",
-                email: "ritam@test.com",
-                hasPriority: { [currentDay]: false },
-            },
-            {
-                userId: "a2",
-                name: "Nathan",
-                email: "nathan@test.com",
-                hasPriority: { [currentDay]: false },
-            },
-            {
-                userId: "a3",
-                name: "Timothy",
-                email: "timothy@test.com",
-                hasPriority: { [currentDay]: false },
-            },
-        ]);
+        await Database.ATTENDEE.updateMany(
+            {},
+            { hasPriority: { [currentDay]: false } }
+        );
 
         const response = await getAsStaff("/stats/priority-attendee").expect(
             StatusCodes.OK
@@ -226,98 +254,25 @@ describe("GET /stats/attendance/:N", () => {
     });
 
     it("should return attendance counts for the N most recent past events", async () => {
-        const now = new Date();
-        const pastEvents = [
-            {
-                eventId: "e1",
-                name: "Event 1",
-                startTime: new Date(now.getTime() - 120000),
-                endTime: new Date(now.getTime() - 100000),
-                points: 10,
-                description: "Event 1 description",
-                isVirtual: false,
-                imageUrl: null,
-                location: "Room A",
-                eventType: "SPEAKER",
-                attendanceCount: 20,
-            },
-            {
-                eventId: "e2",
-                name: "Event 2",
-                startTime: new Date(now.getTime() - 220000),
-                endTime: new Date(now.getTime() - 200000),
-                points: 15,
-                description: "Event 2 description",
-                isVirtual: true,
-                imageUrl: null,
-                location: null,
-                eventType: "SPEAKER",
-                attendanceCount: 50,
-            },
-            {
-                eventId: "e3",
-                name: "Event 3",
-                startTime: new Date(now.getTime() - 320000),
-                endTime: new Date(now.getTime() - 300000),
-                points: 5,
-                description: "Event 3 description",
-                isVirtual: false,
-                imageUrl: null,
-                location: "Room B",
-                eventType: "SPEAKER",
-                attendanceCount: 35,
-            },
-        ];
-
-        await Database.EVENTS.insertMany(pastEvents);
+        await Database.EVENTS.insertMany([EVENT_1, EVENT_2, EVENT_3]);
 
         const response = await getAsStaff(`/stats/attendance/2`).expect(
             StatusCodes.OK
         );
-
-        // Should return the 2 most recent events in descending order by endTime
         expect(response.body.attendanceCounts).toEqual([20, 50]);
     });
 
     it("should return all past events if fewer than N exist", async () => {
-        const now = new Date();
-        await Database.EVENTS.insertMany([
-            {
-                eventId: "e1",
-                name: "Solo event",
-                startTime: new Date(now.getTime() - 320000),
-                endTime: new Date(now.getTime() - 300000),
-                points: 5,
-                description: "Event 3 description",
-                isVirtual: false,
-                imageUrl: null,
-                location: "Room B",
-                eventType: "SPEAKER",
-                attendanceCount: 99,
-            },
-        ]);
+        await Database.EVENTS.insertMany([EVENT_3]);
 
         const response = await getAsStaff(`/stats/attendance/5`).expect(
             StatusCodes.OK
         );
-        expect(response.body.attendanceCounts).toEqual([99]);
+        expect(response.body.attendanceCounts).toEqual([35]);
     });
 
     it("should return empty array if no past events exist", async () => {
-        const futureTime = new Date(Date.now() + 3600000);
-        await Database.EVENTS.create({
-            eventId: "future",
-            name: "future event",
-            startTime: futureTime,
-            endTime: futureTime,
-            points: 5,
-            description: "future event description",
-            isVirtual: true,
-            imageUrl: null,
-            location: "Room B",
-            eventType: "SPEAKER",
-            attendanceCount: 123,
-        });
+        await Database.EVENTS.insertMany([FUTURE_EVENT]);
 
         const response = await getAsStaff(`/stats/attendance/3`).expect(
             StatusCodes.OK
@@ -329,7 +284,7 @@ describe("GET /stats/attendance/:N", () => {
         await getAsStaff(`/stats/attendance/not-a-number`).expect(
             StatusCodes.BAD_REQUEST
         );
-        await getAsStaff(`/stats/attendance/`).expect(StatusCodes.NOT_FOUND); // No param at all
+        await getAsStaff(`/stats/attendance/`).expect(StatusCodes.NOT_FOUND);
     });
 
     it("should return 401 for unauthenticated users", async () => {
@@ -346,56 +301,10 @@ describe("GET /stats/attendance/:N", () => {
 describe("GET /stats/dietary-restrictions", () => {
     beforeEach(async () => {
         await Database.ATTENDEE.deleteMany({});
+        await Database.ATTENDEE.create(ATTENDEES_DIETARY);
     });
 
     it("should return correct dietary/allergy aggregation counts", async () => {
-        await Database.ATTENDEE.create([
-            // neither
-            {
-                userId: "a1",
-                name: "None",
-                email: "a1@test.com",
-                dietaryRestrictions: [],
-                allergies: [],
-            },
-
-            // only dietary
-            {
-                userId: "a2",
-                name: "DietOnly",
-                email: "a2@test.com",
-                dietaryRestrictions: ["Vegetarian"],
-                allergies: [],
-            },
-
-            // only allergy
-            {
-                userId: "a3",
-                name: "AllergyOnly",
-                email: "a3@test.com",
-                dietaryRestrictions: [],
-                allergies: ["Peanuts"],
-            },
-
-            // both
-            {
-                userId: "a4",
-                name: "Both",
-                email: "a4@test.com",
-                dietaryRestrictions: ["Vegan"],
-                allergies: ["Shellfish"],
-            },
-
-            // duplicates
-            {
-                userId: "a5",
-                name: "AllergyAgain",
-                email: "a5@test.com",
-                dietaryRestrictions: ["Vegetarian"],
-                allergies: ["Peanuts"],
-            },
-        ]);
-
         const response = await get(
             "/stats/dietary-restrictions",
             Role.enum.STAFF
@@ -418,11 +327,12 @@ describe("GET /stats/dietary-restrictions", () => {
     });
 
     it("should return all zeros and empty maps if no attendees exist", async () => {
+        await Database.ATTENDEE.deleteMany({});
+
         const response = await get(
             "/stats/dietary-restrictions",
             Role.enum.STAFF
         ).expect(StatusCodes.OK);
-
         expect(response.body).toEqual({
             none: 0,
             dietaryRestrictions: 0,
