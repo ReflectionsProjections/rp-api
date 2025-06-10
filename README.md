@@ -1,12 +1,5 @@
 # API for Reflections | Projections 2024
 
-Test
+To get started, run `yarn` to install the dependencies.
 
-Contributors:
-
--   Aydan Pirani
--   Divya Koya
--   Riya Patel
--   Jacob Chang
--   Alex Yang
--   Shreenija Daggavolu
+To run the API in development mode, run `yarn dev`.
