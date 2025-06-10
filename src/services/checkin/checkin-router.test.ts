@@ -564,8 +564,8 @@ describe("POST /checkin/event", () => {
             points: attendeeBefore?.points,
             hasCheckedIn: attendeeBefore?.hasCheckedIn,
             hasPriority: {
-                [currentDay]: attendeeBefore?.hasPriority?.[currentDay]
-            }
+                [currentDay]: attendeeBefore?.hasPriority?.[currentDay],
+            },
         });
 
         expect(eventAttendanceAfter).toBe(eventAttendanceBefore);
@@ -710,7 +710,10 @@ describe("POST /checkin/", () => {
     });
 
     it.each([
-        { description: "missing qrCode", payload: { eventId: GENERAL_CHECKIN_EVENT_ID } },
+        {
+            description: "missing qrCode",
+            payload: { eventId: GENERAL_CHECKIN_EVENT_ID },
+        },
         {
             description: "qrCode is not a string",
             payload: { eventId: GENERAL_CHECKIN_EVENT_ID, qrCode: 123 },
