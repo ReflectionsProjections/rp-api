@@ -113,7 +113,7 @@ describe("POST /checkin/scan/staff", () => {
             .expect(StatusCodes.UNAUTHORIZED);
     });
 
-    const invalidBodyPayloads = [
+    it.each([
         {
             description: "missing eventId",
             payload: { qrCode: VALID_QR_CODE_TEST_ATTENDEE_1 },
@@ -130,9 +130,7 @@ describe("POST /checkin/scan/staff", () => {
             description: "qrCode is not a string",
             payload: { eventId: REGULAR_EVENT_FOR_CHECKIN, qrCode: true },
         },
-    ];
-
-    it.each(invalidBodyPayloads)(
+    ])(
         "should return BAD_REQUEST when $description",
         async ({ payload: invalidData }) => {
             await postAsAdmin("/checkin/scan/staff")
@@ -224,10 +222,13 @@ describe("POST /checkin/scan/staff", () => {
         const updatedAttendee = await Database.ATTENDEE.findOne({
             userId: TEST_ATTENDEE_1.userId,
         });
-        expect(updatedAttendee?.points).toBe(REGULAR_EVENT_FOR_CHECKIN.points);
-        expect(updatedAttendee?.hasCheckedIn).toBe(false);
-
-        expect(updatedAttendee?.hasPriority?.[currentDay]).toBe(true);
+        expect(updatedAttendee).toMatchObject({
+            points: REGULAR_EVENT_FOR_CHECKIN.points,
+            hasCheckedIn: false,
+            hasPriority: {
+                [currentDay]: true,
+            },
+        });
     });
 
     it("should successfully check-in user to a CHECKIN type event and update records", async () => {
@@ -259,9 +260,14 @@ describe("POST /checkin/scan/staff", () => {
         const updatedAttendee = await Database.ATTENDEE.findOne({
             userId: TEST_ATTENDEE_1.userId,
         });
-        expect(updatedAttendee?.points).toBe(GENERAL_CHECKIN_EVENT.points);
-        expect(updatedAttendee?.hasCheckedIn).toBe(true);
-        expect(updatedAttendee?.hasPriority?.[currentDay]).toBe(false);
+
+        expect(updatedAttendee).toMatchObject({
+            points: GENERAL_CHECKIN_EVENT.points,
+            hasCheckedIn: true,
+            hasPriority: {
+                [currentDay]: false,
+            },
+        });
     });
 
     it("should successfully check-in user to a MEALS type event and update records", async () => {
@@ -293,9 +299,14 @@ describe("POST /checkin/scan/staff", () => {
         const updatedAttendee = await Database.ATTENDEE.findOne({
             userId: TEST_ATTENDEE_1.userId,
         });
-        expect(updatedAttendee?.points).toBe(MEALS_EVENT.points);
-        expect(updatedAttendee?.hasCheckedIn).toBe(false);
-        expect(updatedAttendee?.hasPriority?.[currentDay]).toBe(false);
+
+        expect(updatedAttendee).toMatchObject({
+            points: MEALS_EVENT.points,
+            hasCheckedIn: false,
+            hasPriority: {
+                [currentDay]: false,
+            },
+        });
     });
 });
 
@@ -317,7 +328,7 @@ describe("POST /checkin/event", () => {
             .expect(StatusCodes.UNAUTHORIZED);
     });
 
-    const invalidEventApiPayloads = [
+    it.each([
         {
             description: "missing eventId",
             payload: { userId: TEST_ATTENDEE_1.userId },
@@ -345,9 +356,7 @@ describe("POST /checkin/event", () => {
             description: "userId is an empty string",
             payload: { eventId: REGULAR_EVENT_FOR_CHECKIN.eventId, userId: "" },
         },
-    ];
-
-    it.each(invalidEventApiPayloads)(
+    ])(
         "should return BAD_REQUEST when $description for an admin user",
         async ({ payload: invalidData }) => {
             await postAsAdmin("/checkin/event")
@@ -385,9 +394,13 @@ describe("POST /checkin/event", () => {
         const updatedAttendee = await Database.ATTENDEE.findOne({
             userId: TEST_ATTENDEE_1.userId,
         });
-        expect(updatedAttendee?.points).toBe(REGULAR_EVENT_FOR_CHECKIN.points);
-        expect(updatedAttendee?.hasCheckedIn).toBe(false);
-        expect(updatedAttendee?.hasPriority?.[currentDay]).toBe(true);
+        expect(updatedAttendee).toMatchObject({
+            points: REGULAR_EVENT_FOR_CHECKIN.points,
+            hasCheckedIn: false,
+            hasPriority: {
+                [currentDay]: true,
+            },
+        });
     });
 
     it("should successfully check-in to a check in event and update records", async () => {
@@ -419,9 +432,14 @@ describe("POST /checkin/event", () => {
         const updatedAttendee = await Database.ATTENDEE.findOne({
             userId: TEST_ATTENDEE_1.userId,
         });
-        expect(updatedAttendee?.hasCheckedIn).toBe(true);
-        expect(updatedAttendee?.points).toBe(GENERAL_CHECKIN_EVENT.points);
-        expect(updatedAttendee?.hasPriority?.[currentDay]).toBe(false);
+
+        expect(updatedAttendee).toMatchObject({
+            points: GENERAL_CHECKIN_EVENT.points,
+            hasCheckedIn: true,
+            hasPriority: {
+                [currentDay]: false,
+            },
+        });
     });
 
     it("should successfully check-in to a meals event and update records", async () => {
@@ -453,9 +471,14 @@ describe("POST /checkin/event", () => {
         const updatedAttendee = await Database.ATTENDEE.findOne({
             userId: TEST_ATTENDEE_1.userId,
         });
-        expect(updatedAttendee?.hasCheckedIn).toBe(false);
-        expect(updatedAttendee?.points).toBe(MEALS_EVENT.points);
-        expect(updatedAttendee?.hasPriority?.[currentDay]).toBe(false);
+
+        expect(updatedAttendee).toMatchObject({
+            points: MEALS_EVENT.points,
+            hasCheckedIn: false,
+            hasPriority: {
+                [currentDay]: false,
+            },
+        });
     });
 
     it("should correctly add points when $role checks in attendee who already has points", async () => {
@@ -537,11 +560,14 @@ describe("POST /checkin/event", () => {
                 userId: TEST_ATTENDEE_1.userId,
             });
 
-        expect(attendeeAfter?.points).toBe(attendeeBefore?.points);
-        expect(attendeeAfter?.hasCheckedIn).toBe(attendeeBefore?.hasCheckedIn);
-        expect(attendeeAfter?.hasPriority?.[currentDay]).toBe(
-            attendeeBefore?.hasPriority?.[currentDay]
-        );
+        expect(attendeeAfter).toMatchObject({
+            points: attendeeBefore?.points,
+            hasCheckedIn: attendeeBefore?.hasCheckedIn,
+            hasPriority: {
+                [currentDay]: attendeeBefore?.hasPriority?.[currentDay]
+            }
+        });
+
         expect(eventAttendanceAfter).toBe(eventAttendanceBefore);
         expect(attendeeEventListAfter?.eventsAttended?.length ?? 0).toBe(
             attendeeEventListBefore?.eventsAttended?.length ?? 0
@@ -569,13 +595,11 @@ describe("POST /checkin/scan/merch", () => {
             .expect(StatusCodes.UNAUTHORIZED);
     });
 
-    const invalidMerchScanPayloads = [
+    it.each([
         { description: "missing qrCode field", payload: {} },
         { description: "qrCode is not a string", payload: { qrCode: 12345 } },
         { description: "qrCode is an empty string", payload: { qrCode: "" } },
-    ];
-
-    it.each(invalidMerchScanPayloads)(
+    ])(
         "should return BAD_REQUEST when $description",
         async ({ payload: invalidData }) => {
             await postAsAdmin("/checkin/scan/merch")
@@ -671,36 +695,31 @@ describe("POST /checkin/scan/merch", () => {
 });
 
 describe("POST /checkin/", () => {
-    let payload: ScanPayload;
+    const GENERAL_CHECKIN_EVENT_ID = "generalCheckinEvent";
     const QR_CODE_NON_EXISTENT_ATTENDEE = generateQrHash(
         NON_EXISTENT_ATTENDEE_ID,
         NOW_SECONDS + ONE_HOUR_SECONDS
     );
 
-    beforeEach(async () => {
-        payload = {
-            eventId: "dummyEventIdForGeneralCheckin",
+    it("should return UNAUTHORIZED for an unauthenticated user", async () => {
+        const payload = {
+            eventId: GENERAL_CHECKIN_EVENT_ID,
             qrCode: VALID_QR_CODE_TEST_ATTENDEE_1,
         };
-    });
-
-    it("should return UNAUTHORIZED for an unauthenticated user", async () => {
         await post("/checkin/").send(payload).expect(StatusCodes.UNAUTHORIZED);
     });
 
-    const invalidGeneralCheckinPayloads = [
-        { description: "missing qrCode", payload: { eventId: "dummyEvent" } },
+    it.each([
+        { description: "missing qrCode", payload: { eventId: GENERAL_CHECKIN_EVENT_ID } },
         {
             description: "qrCode is not a string",
-            payload: { eventId: "dummyEvent", qrCode: 123 },
+            payload: { eventId: GENERAL_CHECKIN_EVENT_ID, qrCode: 123 },
         },
         {
             description: "qrCode is an empty string",
-            payload: { eventId: "dummyEvent", qrCode: "" },
+            payload: { eventId: GENERAL_CHECKIN_EVENT_ID, qrCode: "" },
         },
-    ];
-
-    it.each(invalidGeneralCheckinPayloads)(
+    ])(
         "should return BAD_REQUEST when $description",
         async ({ payload: invalidData }) => {
             await postAsAdmin("/checkin/")
@@ -710,7 +729,10 @@ describe("POST /checkin/", () => {
     );
 
     it("should return UNAUTHORIZED if QR code has expired", async () => {
-        payload.qrCode = EXPIRED_QR_CODE_TEST_ATTENDEE_1;
+        const payload = {
+            eventId: GENERAL_CHECKIN_EVENT_ID,
+            qrCode: EXPIRED_QR_CODE_TEST_ATTENDEE_1,
+        };
         const response = await postAsStaff("/checkin/")
             .send(payload)
             .expect(StatusCodes.UNAUTHORIZED);
@@ -718,21 +740,30 @@ describe("POST /checkin/", () => {
     });
 
     it("should return INTERNAL_SERVER_ERROR for a malformed QR code", async () => {
-        payload.qrCode = MALFORMED_QR_CODE;
+        const payload = {
+            eventId: GENERAL_CHECKIN_EVENT_ID,
+            qrCode: MALFORMED_QR_CODE,
+        };
         await postAsStaff("/checkin/")
             .send(payload)
             .expect(StatusCodes.INTERNAL_SERVER_ERROR);
     });
 
     it("should return INTERNAL_SERVER_ERROR for a QR code with an invalid signature", async () => {
-        payload.qrCode = INVALID_SIGNATURE_QR_CODE;
+        const payload = {
+            eventId: GENERAL_CHECKIN_EVENT_ID,
+            qrCode: INVALID_SIGNATURE_QR_CODE,
+        };
         await postAsStaff("/checkin/")
             .send(payload)
             .expect(StatusCodes.INTERNAL_SERVER_ERROR);
     });
 
     it("should return NOT_FOUND if userId from QR code does not exist in Attendee collection", async () => {
-        payload.qrCode = QR_CODE_NON_EXISTENT_ATTENDEE;
+        const payload = {
+            eventId: GENERAL_CHECKIN_EVENT_ID,
+            qrCode: QR_CODE_NON_EXISTENT_ATTENDEE,
+        };
         const response = await postAsAdmin("/checkin/")
             .send(payload)
             .expect(StatusCodes.NOT_FOUND);
@@ -745,7 +776,10 @@ describe("POST /checkin/", () => {
             { $set: { hasCheckedIn: true } }
         );
 
-        payload.qrCode = VALID_QR_CODE_TEST_ATTENDEE_1;
+        const payload = {
+            eventId: GENERAL_CHECKIN_EVENT_ID,
+            qrCode: VALID_QR_CODE_TEST_ATTENDEE_1,
+        };
         const response = await postAsAdmin("/checkin/")
             .send(payload)
             .expect(StatusCodes.BAD_REQUEST);
@@ -753,7 +787,10 @@ describe("POST /checkin/", () => {
     });
 
     it("should successfully perform general check-in, update records, and return userId", async () => {
-        payload.qrCode = VALID_QR_CODE_TEST_ATTENDEE_1;
+        const payload = {
+            eventId: GENERAL_CHECKIN_EVENT_ID,
+            qrCode: VALID_QR_CODE_TEST_ATTENDEE_1,
+        };
 
         const attendeeBefore = await Database.ATTENDEE.findOne({
             userId: TEST_ATTENDEE_1.userId,
@@ -778,7 +815,10 @@ describe("POST /checkin/", () => {
             TEST_ATTENDEE_1.userId,
             expiryTime
         );
-        payload.qrCode = qrCodeAboutToExpire;
+        const payload = {
+            eventId: GENERAL_CHECKIN_EVENT_ID,
+            qrCode: qrCodeAboutToExpire,
+        };
 
         jest.spyOn(Date, "now").mockImplementation(
             () => mockCurrentTime * 1000
@@ -803,7 +843,10 @@ describe("POST /checkin/", () => {
             TEST_ATTENDEE_1.userId,
             expiryTime
         );
-        payload.qrCode = qrCodeJustExpired;
+        const payload = {
+            eventId: GENERAL_CHECKIN_EVENT_ID,
+            qrCode: qrCodeJustExpired,
+        };
 
         jest.spyOn(Date, "now").mockImplementation(
             () => mockCurrentTime * 1000
