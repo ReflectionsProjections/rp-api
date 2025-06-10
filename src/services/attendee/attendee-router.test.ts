@@ -192,8 +192,10 @@ describe("GET /attendee/favorites", () => {
             Role.enum.USER
         ).expect(StatusCodes.OK);
 
-        expect(response.body.userId).toBe(TESTER.userId);
-        expect(response.body.favorites).toEqual(favorites);
+        expect(response.body).toMatchObject({
+            userId: TESTER.userId,
+            favorites: favorites,
+        });
     });
 
     it("should return an empty favorites array if none are set", async () => {
