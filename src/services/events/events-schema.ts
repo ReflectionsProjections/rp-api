@@ -11,6 +11,8 @@ export const EventType = z.enum([
     "CHECKIN",
 ]);
 
+export type InternalEvent = z.infer<typeof internalEventView>;
+
 export const externalEventView = z.object({
     eventId: z.coerce.string().default(() => uuidv4()),
     name: z.string(),

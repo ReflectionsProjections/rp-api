@@ -1,5 +1,7 @@
 import { Schema } from "mongoose";
 
+export type DayKey = "Mon" | "Tue" | "Wed" | "Thu" | "Fri" | "Sat" | "Sun";
+
 // Mongoose schema for attendee
 export const AttendeeSchema = new Schema({
     userId: { type: String, required: true, unique: true },
