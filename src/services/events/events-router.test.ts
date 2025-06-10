@@ -1,13 +1,9 @@
 import { beforeEach, describe, expect, it } from "@jest/globals";
 import {
     get,
-    getAsStaff,
-    getAsAdmin,
     post,
-    postAsStaff,
     postAsAdmin,
     put,
-    putAsStaff,
     putAsAdmin,
     del,
     delAsStaff,
@@ -22,6 +18,7 @@ import {
     ExternalEventApiResponse,
     InternalEventApiResponse,
 } from "./events-schema";
+import { Role } from "../auth/auth-models";
 
 const NOW = new Date();
 const ONE_HOUR_MS = 1 * 60 * 60 * 1000;
@@ -133,19 +130,10 @@ const EVENT_UPDATE_PARTIAL_PAYLOAD = {
 
 const NON_EXISTENT_EVENT_ID = "event1234566778";
 
-function createExpectedEventObject(
-    eventData: InternalEvent,
-    viewType: "internal"
-): InternalEventApiResponse;
-function createExpectedEventObject(
-    eventData: InternalEvent,
-    viewType: "external"
-): ExternalEventApiResponse;
-function createExpectedEventObject(
-    eventData: InternalEvent,
-    viewType: "internal" | "external"
-): InternalEventApiResponse | ExternalEventApiResponse {
-    const apiOutputObject = {
+function createExternalEventObject(
+    eventData: InternalEvent
+): ExternalEventApiResponse {
+    return {
         eventId: eventData.eventId,
         name: eventData.name,
         startTime: eventData.startTime.toISOString(),
@@ -157,15 +145,16 @@ function createExpectedEventObject(
         location: eventData.location,
         eventType: eventData.eventType,
     };
+}
 
-    if (viewType === "internal") {
-        return {
-            ...apiOutputObject,
-            isVisible: eventData.isVisible,
-            attendanceCount: eventData.attendanceCount,
-        } as InternalEventApiResponse;
-    }
-    return apiOutputObject as ExternalEventApiResponse;
+function createInternalEventObject(
+    eventData: InternalEvent
+): InternalEventApiResponse {
+    return {
+        ...createExternalEventObject(eventData),
+        isVisible: eventData.isVisible,
+        attendanceCount: eventData.attendanceCount,
+    };
 }
 
 beforeEach(async () => {
@@ -250,12 +239,12 @@ describe("GET /events/currentOrNext", () => {
     });
 
     it.each([
-        { role: "ADMIN", description: "an ADMIN user", getter: getAsAdmin },
-        { role: "STAFF", description: "a STAFF user", getter: getAsStaff },
+        { role: Role.enum.ADMIN, description: "an ADMIN user" },
+        { role: Role.enum.STAFF, description: "a STAFF user" },
     ])(
         "should return the soonest future event even if it is hidden for $description",
-        async ({ getter }) => {
-            const response = await getter("/events/currentOrNext").expect(
+        async ({ role }) => {
+            const response = await get("/events/currentOrNext", role).expect(
                 StatusCodes.OK
             );
             expect(response.body).toMatchObject({
@@ -268,16 +257,16 @@ describe("GET /events/currentOrNext", () => {
     );
 
     it.each([
-        { role: "ADMIN", description: "an ADMIN user", getter: getAsAdmin },
-        { role: "STAFF", description: "a STAFF user", getter: getAsStaff },
+        { role: Role.enum.ADMIN, description: "an ADMIN user" },
+        { role: Role.enum.STAFF, description: "a STAFF user" },
     ])(
         "should return the soonest future VISIBLE event if it's earlier than any hidden one for $description",
-        async ({ getter }) => {
+        async ({ role }) => {
             await Database.EVENTS.deleteMany({});
             await Database.EVENTS.create(UPCOMING_EVENT_VISIBLE_SOONEST);
             await Database.EVENTS.create(UPCOMING_EVENT_HIDDEN_EARLIER);
 
-            const response = await getter("/events/currentOrNext").expect(
+            const response = await get("/events/currentOrNext", role).expect(
                 StatusCodes.OK
             );
             expect(response.body).toMatchObject({
@@ -302,18 +291,12 @@ describe("GET /events/", () => {
 
         const response = await get("/events/").expect(StatusCodes.OK);
 
-        expect(response.body).toBeInstanceOf(Array);
-        expect(response.body).toHaveLength(3);
-
-        expect(response.body[0]).toMatchObject(
-            createExpectedEventObject(PAST_EVENT_VISIBLE, "external")
-        );
-        expect(response.body[1]).toMatchObject(
-            createExpectedEventObject(anotherVisibleUpcomingEvent, "external")
-        );
-        expect(response.body[2]).toMatchObject(
-            createExpectedEventObject(UPCOMING_EVENT_VISIBLE_LATER, "external")
-        );
+        const expected = [
+            PAST_EVENT_VISIBLE,
+            anotherVisibleUpcomingEvent,
+            UPCOMING_EVENT_VISIBLE_LATER,
+        ].map((event) => createExternalEventObject(event));
+        expect(response.body).toEqual(expected);
 
         // verify that no hidden fields are present for the external view for a regular user
         response.body.forEach((event: ExternalEventApiResponse) => {
@@ -338,41 +321,24 @@ describe("GET /events/", () => {
     });
 
     it.each([
-        { role: "ADMIN", description: "an ADMIN user", getter: getAsAdmin },
-        { role: "STAFF", description: "a STAFF user", getter: getAsStaff },
+        { role: Role.enum.ADMIN, description: "an ADMIN user" },
+        { role: Role.enum.STAFF, description: "a STAFF user" },
     ])(
         "should return all events, including both visible and hidden, sorted by start time, in an internal view for $description",
-        async ({ getter }) => {
+        async ({ role }) => {
             await Database.EVENTS.create(UPCOMING_EVENT_VISIBLE_SOONEST);
 
             // expected order: PAST_EVENT_VISIBLE, UPCOMING_EVENT_VISIBLE_SOONEST, UPCOMING_EVENT_HIDDEN_EARLIER, UPCOMING_EVENT_VISIBLE_LATER
 
-            const response = await getter("/events/").expect(StatusCodes.OK);
+            const response = await get("/events/", role).expect(StatusCodes.OK);
 
-            expect(response.body).toBeInstanceOf(Array);
-            expect(response.body).toHaveLength(4);
-
-            expect(response.body[0]).toMatchObject(
-                createExpectedEventObject(PAST_EVENT_VISIBLE, "internal")
-            );
-            expect(response.body[1]).toMatchObject(
-                createExpectedEventObject(
-                    UPCOMING_EVENT_VISIBLE_SOONEST,
-                    "internal"
-                )
-            );
-            expect(response.body[2]).toMatchObject(
-                createExpectedEventObject(
-                    UPCOMING_EVENT_HIDDEN_EARLIER,
-                    "internal"
-                )
-            );
-            expect(response.body[3]).toMatchObject(
-                createExpectedEventObject(
-                    UPCOMING_EVENT_VISIBLE_LATER,
-                    "internal"
-                )
-            );
+            const expected = [
+                PAST_EVENT_VISIBLE,
+                UPCOMING_EVENT_VISIBLE_SOONEST,
+                UPCOMING_EVENT_HIDDEN_EARLIER,
+                UPCOMING_EVENT_VISIBLE_LATER,
+            ].map((event) => createInternalEventObject(event));
+            expect(response.body).toEqual(expected);
 
             // verify internal fields are present for the internal view of a staff or admin user
             response.body.forEach((event: InternalEventApiResponse) => {
@@ -383,11 +349,11 @@ describe("GET /events/", () => {
     );
 
     it.each([
-        { role: "ADMIN", description: "an ADMIN user", getter: getAsAdmin },
-        { role: "STAFF", description: "a STAFF user", getter: getAsStaff },
+        { role: Role.enum.ADMIN, description: "an ADMIN user" },
+        { role: Role.enum.STAFF, description: "a STAFF user" },
     ])(
         "should correctly sort all events by startTime (ascending order) then endTime (descending order) for $description",
-        async ({ getter }) => {
+        async ({ role }) => {
             await Database.EVENTS.deleteMany({});
             const eventA = {
                 ...UPCOMING_EVENT_VISIBLE_SOONEST,
@@ -415,13 +381,14 @@ describe("GET /events/", () => {
             await Database.EVENTS.create(eventB); // same start time as A, but ends earlier
             await Database.EVENTS.create(eventC); // starts earliest
 
-            const response = await getter("/events/").expect(StatusCodes.OK);
+            const response = await get("/events/", role).expect(StatusCodes.OK);
             expect(response.body).toHaveLength(3);
 
             // expected sort order: C, A, B
-            expect(response.body[0].eventId).toBe(eventC.eventId);
-            expect(response.body[1].eventId).toBe(eventA.eventId);
-            expect(response.body[2].eventId).toBe(eventB.eventId);
+            const expected = [eventC, eventA, eventB].map((event) =>
+                createInternalEventObject(event)
+            );
+            expect(response.body).toEqual(expected);
         }
     );
 });
@@ -433,7 +400,7 @@ describe("GET /events/:EVENTID", () => {
         ).expect(StatusCodes.OK);
 
         expect(response.body).toEqual(
-            createExpectedEventObject(UPCOMING_EVENT_VISIBLE_LATER, "external")
+            createExternalEventObject(UPCOMING_EVENT_VISIBLE_LATER)
         );
         expect(response.body).not.toHaveProperty("isVisible");
         expect(response.body).not.toHaveProperty("attendanceCount");
@@ -452,20 +419,18 @@ describe("GET /events/:EVENTID", () => {
     });
 
     it.each([
-        { role: "ADMIN", description: "an ADMIN user", getter: getAsAdmin },
-        { role: "STAFF", description: "a STAFF user", getter: getAsStaff },
+        { role: Role.enum.ADMIN, description: "an ADMIN user" },
+        { role: Role.enum.STAFF, description: "a STAFF user" },
     ])(
         "should return a visible event with an internal view when requested by ID for $description",
-        async ({ getter }) => {
-            const response = await getter(
-                `/events/${UPCOMING_EVENT_VISIBLE_LATER.eventId}`
+        async ({ role }) => {
+            const response = await get(
+                `/events/${UPCOMING_EVENT_VISIBLE_LATER.eventId}`,
+                role
             ).expect(StatusCodes.OK);
 
             expect(response.body).toEqual(
-                createExpectedEventObject(
-                    UPCOMING_EVENT_VISIBLE_LATER,
-                    "internal"
-                )
+                createInternalEventObject(UPCOMING_EVENT_VISIBLE_LATER)
             );
             expect(response.body).toHaveProperty(
                 "isVisible",
@@ -479,20 +444,18 @@ describe("GET /events/:EVENTID", () => {
     );
 
     it.each([
-        { role: "ADMIN", description: "an ADMIN user", getter: getAsAdmin },
-        { role: "STAFF", description: "a STAFF user", getter: getAsStaff },
+        { role: Role.enum.ADMIN, description: "an ADMIN user" },
+        { role: Role.enum.STAFF, description: "a STAFF user" },
     ])(
         "should return a hidden event with an internal view when requested by ID for $description",
-        async ({ getter }) => {
-            const response = await getter(
-                `/events/${UPCOMING_EVENT_HIDDEN_EARLIER.eventId}`
+        async ({ role }) => {
+            const response = await get(
+                `/events/${UPCOMING_EVENT_HIDDEN_EARLIER.eventId}`,
+                role
             ).expect(StatusCodes.OK);
 
             expect(response.body).toEqual(
-                createExpectedEventObject(
-                    UPCOMING_EVENT_HIDDEN_EARLIER,
-                    "internal"
-                )
+                createInternalEventObject(UPCOMING_EVENT_HIDDEN_EARLIER)
             );
             expect(response.body).toHaveProperty(
                 "isVisible",
@@ -514,12 +477,12 @@ describe("POST /events/", () => {
     });
 
     it.each([
-        { role: "ADMIN", description: "an ADMIN user", poster: postAsAdmin },
-        { role: "STAFF", description: "a STAFF user", poster: postAsStaff },
+        { role: Role.enum.ADMIN, description: "an ADMIN user" },
+        { role: Role.enum.STAFF, description: "a STAFF user" },
     ])(
         "should create a new event for $description with valid data and return status CREATED",
-        async ({ poster }) => {
-            await poster("/events/")
+        async ({ role }) => {
+            await post("/events/", role)
                 .send(NEW_EVENT_VALID_PAYLOAD)
                 .expect(StatusCodes.CREATED);
 
@@ -536,7 +499,7 @@ describe("POST /events/", () => {
         }
     );
 
-    const invalidPayloads = [
+    it.each([
         {
             description: "missing required 'name' field in payload",
             payload: { ...NEW_EVENT_VALID_PAYLOAD, name: undefined },
@@ -559,9 +522,7 @@ describe("POST /events/", () => {
                 eventId: "clientProvidedId123",
             },
         },
-    ];
-
-    it.each(invalidPayloads)(
+    ])(
         "should return status BAD_REQUEST when $description for an ADMIN user",
         async ({ payload }) => {
             await postAsAdmin("/events/")
@@ -579,12 +540,12 @@ describe("PUT /events/:EVENTID", () => {
     });
 
     it.each([
-        { role: "ADMIN", description: "an ADMIN user", putter: putAsAdmin },
-        { role: "STAFF", description: "a STAFF user", putter: putAsStaff },
+        { role: Role.enum.ADMIN, description: "an ADMIN user" },
+        { role: Role.enum.STAFF, description: "a STAFF user" },
     ])(
         "should update an existing event with a full update payload for $description",
-        async ({ putter }) => {
-            await putter(`/events/${UPCOMING_EVENT_VISIBLE_LATER.eventId}`)
+        async ({ role }) => {
+            await put(`/events/${UPCOMING_EVENT_VISIBLE_LATER.eventId}`, role)
                 .send(EVENT_UPDATE_FULL_PAYLOAD)
                 .expect(StatusCodes.OK);
 
@@ -599,12 +560,12 @@ describe("PUT /events/:EVENTID", () => {
     );
 
     it.each([
-        { role: "ADMIN", description: "an ADMIN user", putter: putAsAdmin },
-        { role: "STAFF", description: "a STAFF user", putter: putAsStaff },
+        { role: Role.enum.ADMIN, description: "an ADMIN user" },
+        { role: Role.enum.STAFF, description: "a STAFF user" },
     ])(
         "should update the specified fields of an existing event with a partial update payload for $description",
-        async ({ putter }) => {
-            await putter(`/events/${UPCOMING_EVENT_HIDDEN_EARLIER.eventId}`)
+        async ({ role }) => {
+            await put(`/events/${UPCOMING_EVENT_HIDDEN_EARLIER.eventId}`, role)
                 .send(EVENT_UPDATE_PARTIAL_PAYLOAD)
                 .expect(StatusCodes.OK);
 
@@ -614,17 +575,9 @@ describe("PUT /events/:EVENTID", () => {
 
             // check to make sure that the fields that were not updated remain the same and that the fields that were updated have been changed
             expect(updatedEventFromDb?.toObject()).toMatchObject({
+                ...UPCOMING_EVENT_HIDDEN_EARLIER,
                 ...EVENT_UPDATE_PARTIAL_PAYLOAD,
                 eventId: UPCOMING_EVENT_HIDDEN_EARLIER.eventId,
-                startTime: UPCOMING_EVENT_HIDDEN_EARLIER.startTime,
-                endTime: UPCOMING_EVENT_HIDDEN_EARLIER.endTime,
-                points: UPCOMING_EVENT_HIDDEN_EARLIER.points,
-                isVirtual: UPCOMING_EVENT_HIDDEN_EARLIER.isVirtual,
-                imageUrl: UPCOMING_EVENT_HIDDEN_EARLIER.imageUrl,
-                location: UPCOMING_EVENT_HIDDEN_EARLIER.location,
-                eventType: UPCOMING_EVENT_HIDDEN_EARLIER.eventType,
-                isVisible: UPCOMING_EVENT_HIDDEN_EARLIER.isVisible,
-                attendanceCount: UPCOMING_EVENT_HIDDEN_EARLIER.attendanceCount,
             });
         }
     );
@@ -635,7 +588,7 @@ describe("PUT /events/:EVENTID", () => {
             .expect(StatusCodes.NOT_FOUND);
     });
 
-    const invalidUpdatePayloads = [
+    it.each([
         {
             description: "undefined 'name' given",
             payload: { ...EVENT_UPDATE_FULL_PAYLOAD, name: undefined },
@@ -651,16 +604,11 @@ describe("PUT /events/:EVENTID", () => {
                 unexpectedField: "should cause error",
             },
         },
-    ];
-
-    it.each(invalidUpdatePayloads)(
-        "should return BAD_REQUEST when $description",
-        async ({ payload }) => {
-            await putAsAdmin(`/events/${UPCOMING_EVENT_VISIBLE_LATER.eventId}`)
-                .send(payload)
-                .expect(StatusCodes.BAD_REQUEST);
-        }
-    );
+    ])("should return BAD_REQUEST when $description", async ({ payload }) => {
+        await putAsAdmin(`/events/${UPCOMING_EVENT_VISIBLE_LATER.eventId}`)
+            .send(payload)
+            .expect(StatusCodes.BAD_REQUEST);
+    });
 });
 
 describe("DELETE /events/:EVENTID", () => {
