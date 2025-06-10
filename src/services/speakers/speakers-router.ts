@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { StatusCodes } from "http-status-codes";
-import { SpeakerValidator } from "./speakers-schema";
+import { SpeakerValidator, UpdateSpeakerValidator } from "./speakers-schema";
 import { Database } from "../../database";
 import RoleChecker from "../../middleware/role-checker";
 import { Role } from "../auth/auth-models";
@@ -29,24 +29,40 @@ speakersRouter.get("/:SPEAKERID", RoleChecker([], true), async (req, res) => {
 });
 
 // Create a new speaker
-speakersRouter.post("/", RoleChecker([Role.Enum.STAFF]), async (req, res) => {
-    const validatedData = SpeakerValidator.parse(req.body);
-    const speaker = new Database.SPEAKERS(validatedData);
-    await speaker.save();
-    return res.status(StatusCodes.CREATED).json(speaker);
-});
+speakersRouter.post(
+    "/",
+    RoleChecker([Role.Enum.ADMIN, Role.Enum.STAFF]),
+    async (req, res) => {
+        const validatedData = SpeakerValidator.parse(req.body);
+
+        const existingSpeaker = await Database.SPEAKERS.findOne({
+            speakerId: validatedData.speakerId,
+        });
+
+        if (existingSpeaker) {
+            return res
+                .status(StatusCodes.BAD_REQUEST)
+                .json({ error: "UserAlreadyExists" });
+        }
+
+        const speaker = new Database.SPEAKERS(validatedData);
+        await speaker.save();
+        return res.status(StatusCodes.CREATED).json(speaker);
+    }
+);
 
 // Update a speaker
 speakersRouter.put(
     "/:SPEAKERID",
-    RoleChecker([Role.Enum.STAFF]),
+    RoleChecker([Role.Enum.ADMIN, Role.Enum.STAFF]),
     async (req, res) => {
         const speakerId = req.params.SPEAKERID;
 
-        const validatedData = SpeakerValidator.parse(req.body);
+        const updateData = UpdateSpeakerValidator.parse(req.body);
+
         const speaker = await Database.SPEAKERS.findOneAndUpdate(
-            { speakerId },
-            { $set: validatedData },
+            { speakerId: speakerId },
+            { $set: updateData },
             { new: true, runValidators: true }
         );
 
@@ -63,11 +79,18 @@ speakersRouter.put(
 // Delete a speaker
 speakersRouter.delete(
     "/:SPEAKERID",
-    RoleChecker([Role.Enum.STAFF]),
+    RoleChecker([Role.Enum.ADMIN, Role.Enum.STAFF]),
     async (req, res) => {
         const speakerId = req.params.SPEAKERID;
 
-        await Database.SPEAKERS.findOneAndDelete({ speakerId });
+        const deletedSpeaker = await Database.SPEAKERS.findOneAndDelete({
+            speakerId,
+        });
+        if (!deletedSpeaker) {
+            return res
+                .status(StatusCodes.NOT_FOUND)
+                .json({ error: "DoesNotExist" });
+        }
 
         return res.sendStatus(StatusCodes.NO_CONTENT);
     }
