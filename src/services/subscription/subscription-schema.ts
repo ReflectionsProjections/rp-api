@@ -2,6 +2,8 @@ import mongoose from "mongoose";
 import { z } from "zod";
 import { MailingListName } from "../../config";
 
+export type IncomingSubscription = z.infer<typeof SubscriptionValidator>;
+
 // Zod schema for incoming user subscriptions
 const SubscriptionValidator = z.object({
     email: z.string().email(),
