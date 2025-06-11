@@ -6,39 +6,38 @@ import { StatusCodes } from "http-status-codes";
 import { Database } from "../../database";
 import { v4 as uuidv4 } from "uuid";
 import { getCurrentDay } from "../checkin/checkin-utils";
+import { AttendeeCreateValidator } from "./attendee-validators";
+import { z } from "zod";
 
-function makeTestAttendee(overrides = {}) {
-    return {
-        userId: TESTER.userId,
-        name: "Test User",
-        email: TESTER.email,
-        favorites: [],
-        dietaryRestrictions: [],
-        allergies: [],
-        hasPriority: {
-            Mon: false,
-            Tue: false,
-            Wed: false,
-            Thu: false,
-            Fri: false,
-            Sat: false,
-            Sun: false,
-        },
-        isEligibleMerch: {
-            Tshirt: true,
-            Cap: false,
-            Tote: false,
-            Button: false,
-        },
-        hasRedeemedMerch: {
-            Tshirt: false,
-            Cap: false,
-            Tote: false,
-            Button: false,
-        },
-        ...overrides,
-    };
-}
+const BASE_TEST_ATTENDEE = {
+    userId: TESTER.userId,
+    name: "Test User",
+    email: TESTER.email,
+    favorites: [],
+    dietaryRestrictions: [],
+    allergies: [],
+    hasPriority: {
+        Mon: false,
+        Tue: false,
+        Wed: false,
+        Thu: false,
+        Fri: false,
+        Sat: false,
+        Sun: false,
+    },
+    isEligibleMerch: {
+        Tshirt: true,
+        Cap: false,
+        Tote: false,
+        Button: false,
+    },
+    hasRedeemedMerch: {
+        Tshirt: false,
+        Cap: false,
+        Tote: false,
+        Button: false,
+    },
+};
 
 describe("POST /attendee/favorites/:eventId", () => {
     const eventId = uuidv4();
@@ -48,7 +47,7 @@ describe("POST /attendee/favorites/:eventId", () => {
     });
 
     it("should add a favorite event ID to the user's attendee profile", async () => {
-        await Database.ATTENDEE.create(makeTestAttendee());
+        await Database.ATTENDEE.create(BASE_TEST_ATTENDEE);
 
         await post(`/attendee/favorites/${eventId}`, Role.enum.USER).expect(
             StatusCodes.OK
@@ -61,9 +60,10 @@ describe("POST /attendee/favorites/:eventId", () => {
     });
 
     it("should not duplicate event ID in favorites", async () => {
-        await Database.ATTENDEE.create(
-            makeTestAttendee({ favorites: [eventId] })
-        );
+        await Database.ATTENDEE.create({
+            ...BASE_TEST_ATTENDEE,
+            favorites: [eventId],
+        });
 
         await post(`/attendee/favorites/${eventId}`, Role.enum.USER).expect(
             StatusCodes.OK
@@ -115,9 +115,10 @@ describe("DELETE /attendee/favorites/:eventId", () => {
     });
 
     it("should remove the event ID from the user's favorites", async () => {
-        await Database.ATTENDEE.create(
-            makeTestAttendee({ favorites: [eventId, "otherEvent"] })
-        );
+        await Database.ATTENDEE.create({
+            ...BASE_TEST_ATTENDEE,
+            favorites: [eventId, "otherEvent"],
+        });
 
         await del(`/attendee/favorites/${eventId}`, Role.enum.USER).expect(
             StatusCodes.OK
@@ -131,9 +132,10 @@ describe("DELETE /attendee/favorites/:eventId", () => {
     });
 
     it("should handle event ID not being in favorites", async () => {
-        await Database.ATTENDEE.create(
-            makeTestAttendee({ favorites: ["otherEvent"] })
-        );
+        await Database.ATTENDEE.create({
+            ...BASE_TEST_ATTENDEE,
+            favorites: ["otherEvent"],
+        });
 
         await del(`/attendee/favorites/${eventId}`, Role.enum.USER).expect(
             StatusCodes.OK
@@ -177,15 +179,16 @@ describe("DELETE /attendee/favorites/:eventId", () => {
 });
 
 describe("GET /attendee/favorites", () => {
-    const uuidEvent = "123e4567-e89b-12d3-a456-426614174000";
+    const uuidEvent1 = uuidv4();
+    const uuidEvent2 = uuidv4();
 
     beforeEach(async () => {
         await Database.ATTENDEE.deleteMany({});
     });
 
     it("should return the attendee with their favorites", async () => {
-        const favorites = [uuidEvent, "f7bd25b0-c749-4900-a56e-4a680e4d79fb"];
-        await Database.ATTENDEE.create(makeTestAttendee({ favorites }));
+        const favorites = [uuidEvent1, uuidEvent2];
+        await Database.ATTENDEE.create({ ...BASE_TEST_ATTENDEE, favorites });
 
         const response = await get(
             "/attendee/favorites",
@@ -199,7 +202,7 @@ describe("GET /attendee/favorites", () => {
     });
 
     it("should return an empty favorites array if none are set", async () => {
-        await Database.ATTENDEE.create(makeTestAttendee());
+        await Database.ATTENDEE.create({ ...BASE_TEST_ATTENDEE });
 
         const response = await get(
             "/attendee/favorites",
@@ -227,13 +230,13 @@ describe("GET /attendee/favorites", () => {
 });
 
 describe("POST /attendee/", () => {
-    const validAttendee = {
+    const validAttendee: z.infer<typeof AttendeeCreateValidator> = {
         userId: "testuser123",
         name: "Test User",
         email: "test@example.com",
         dietaryRestrictions: ["Vegetarian"],
         allergies: ["Peanuts"],
-    };
+    } satisfies z.infer<typeof AttendeeCreateValidator>;
 
     beforeEach(async () => {
         await Database.ATTENDEE.deleteMany({});
@@ -249,12 +252,14 @@ describe("POST /attendee/", () => {
         const inDb = await Database.ATTENDEE.findOne({
             userId: validAttendee.userId,
         });
-        expect(inDb).not.toBeNull();
+
         expect(inDb?.email).toBe(validAttendee.email);
     });
 
     it("should return 400 if required fields are missing", async () => {
-        const invalidAttendee: Partial<typeof validAttendee> = {
+        const invalidAttendee: Partial<
+            z.infer<typeof AttendeeCreateValidator>
+        > = {
             ...validAttendee,
         };
         delete invalidAttendee.email;
@@ -298,7 +303,7 @@ describe("GET /attendee/points", () => {
     });
 
     it("should return the user's points", async () => {
-        await Database.ATTENDEE.create(makeTestAttendee({ points: 42 }));
+        await Database.ATTENDEE.create({ ...BASE_TEST_ATTENDEE, points: 42 });
 
         const response = await get("/attendee/points", Role.enum.USER).expect(
             StatusCodes.OK
@@ -308,7 +313,7 @@ describe("GET /attendee/points", () => {
     });
 
     it("should return 0 points if not explicitly set", async () => {
-        await Database.ATTENDEE.create(makeTestAttendee());
+        await Database.ATTENDEE.create({ ...BASE_TEST_ATTENDEE });
 
         const response = await get("/attendee/points", Role.enum.USER).expect(
             StatusCodes.OK
@@ -342,14 +347,13 @@ describe("GET /attendee/foodwave", () => {
     });
 
     it("should return foodwave 1 if attendee has priority today", async () => {
-        await Database.ATTENDEE.create(
-            makeTestAttendee({
-                hasPriority: {
-                    ...makeTestAttendee().hasPriority,
-                    [currentDay]: true,
-                },
-            })
-        );
+        await Database.ATTENDEE.create({
+            ...BASE_TEST_ATTENDEE,
+            hasPriority: {
+                ...BASE_TEST_ATTENDEE.hasPriority,
+                [currentDay]: true,
+            },
+        });
 
         const response = await get("/attendee/foodwave", Role.enum.USER).expect(
             StatusCodes.OK
@@ -358,11 +362,10 @@ describe("GET /attendee/foodwave", () => {
     });
 
     it("should return foodwave 1 if attendee has dietary restriction VEGAN", async () => {
-        await Database.ATTENDEE.create(
-            makeTestAttendee({
-                dietaryRestrictions: ["VEGAN"],
-            })
-        );
+        await Database.ATTENDEE.create({
+            ...BASE_TEST_ATTENDEE,
+            dietaryRestrictions: ["VEGAN"],
+        });
 
         const response = await get("/attendee/foodwave", Role.enum.USER).expect(
             StatusCodes.OK
@@ -371,11 +374,10 @@ describe("GET /attendee/foodwave", () => {
     });
 
     it("should return foodwave 1 if attendee has dietary restriction GLUTEN-FREE", async () => {
-        await Database.ATTENDEE.create(
-            makeTestAttendee({
-                dietaryRestrictions: ["GLUTEN-FREE"],
-            })
-        );
+        await Database.ATTENDEE.create({
+            ...BASE_TEST_ATTENDEE,
+            dietaryRestrictions: ["GLUTEN-FREE"],
+        });
 
         const response = await get("/attendee/foodwave", Role.enum.USER).expect(
             StatusCodes.OK
@@ -384,7 +386,9 @@ describe("GET /attendee/foodwave", () => {
     });
 
     it("should return foodwave 2 if no priority and no restrictions", async () => {
-        await Database.ATTENDEE.create(makeTestAttendee());
+        await Database.ATTENDEE.create({
+            ...BASE_TEST_ATTENDEE,
+        });
 
         const response = await get("/attendee/foodwave", Role.enum.USER).expect(
             StatusCodes.OK
@@ -415,7 +419,9 @@ describe("GET /attendee/", () => {
     });
 
     it("should return the attendee data for an authenticated USER", async () => {
-        await Database.ATTENDEE.create(makeTestAttendee());
+        await Database.ATTENDEE.create({
+            ...BASE_TEST_ATTENDEE,
+        });
 
         const response = await get("/attendee/", Role.enum.USER).expect(
             StatusCodes.OK
@@ -449,7 +455,10 @@ describe("GET /attendee/id/:USERID", () => {
         { role: Role.enum.STAFF, label: "STAFF" },
         { role: Role.enum.ADMIN, label: "ADMIN" },
     ])("should return attendee info for %s role", async ({ role }) => {
-        await Database.ATTENDEE.create(makeTestAttendee({ userId: targetId }));
+        await Database.ATTENDEE.create({
+            ...BASE_TEST_ATTENDEE,
+            userId: targetId,
+        });
 
         const res = await get(`/attendee/id/${targetId}`, role).expect(
             StatusCodes.OK
@@ -487,8 +496,16 @@ describe("GET /attendee/emails", () => {
         "should return all attendee emails and userIds for %s role",
         async ({ role }) => {
             await Database.ATTENDEE.create([
-                makeTestAttendee({ userId: "u1", email: "u1@example.com" }),
-                makeTestAttendee({ userId: "u2", email: "u2@example.com" }),
+                {
+                    ...BASE_TEST_ATTENDEE,
+                    userId: "u1",
+                    email: "u1@example.com",
+                },
+                {
+                    ...BASE_TEST_ATTENDEE,
+                    userId: "u2",
+                    email: "u2@example.com",
+                },
             ]);
 
             const res = await get("/attendee/emails", role).expect(
@@ -539,7 +556,10 @@ describe("POST /attendee/redeemMerch/:ITEM", () => {
     it.each([{ role: Role.enum.STAFF }, { role: Role.enum.ADMIN }])(
         "should redeem valid item for %s role",
         async ({ role }) => {
-            await Database.ATTENDEE.create(makeTestAttendee());
+            await Database.ATTENDEE.create({
+                ...BASE_TEST_ATTENDEE,
+                userId,
+            });
 
             const res = await post("/attendee/redeemMerch/Tshirt", role)
                 .send({ userId })
@@ -559,7 +579,10 @@ describe("POST /attendee/redeemMerch/:ITEM", () => {
     });
 
     it("should return 400 for invalid item", async () => {
-        await Database.ATTENDEE.create(makeTestAttendee());
+        await Database.ATTENDEE.create({
+            ...BASE_TEST_ATTENDEE,
+            userId,
+        });
 
         await post("/attendee/redeemMerch/InvalidItem", Role.enum.ADMIN)
             .send({ userId })
@@ -567,16 +590,16 @@ describe("POST /attendee/redeemMerch/:ITEM", () => {
     });
 
     it("should return 400 if item already redeemed", async () => {
-        await Database.ATTENDEE.create(
-            makeTestAttendee({
-                hasRedeemedMerch: {
-                    Tshirt: true,
-                    Cap: false,
-                    Tote: false,
-                    Button: false,
-                },
-            })
-        );
+        await Database.ATTENDEE.create({
+            ...BASE_TEST_ATTENDEE,
+            userId,
+            hasRedeemedMerch: {
+                Tshirt: true,
+                Cap: false,
+                Tote: false,
+                Button: false,
+            },
+        });
 
         await post("/attendee/redeemMerch/Tshirt", Role.enum.ADMIN)
             .send({ userId })
@@ -584,7 +607,16 @@ describe("POST /attendee/redeemMerch/:ITEM", () => {
     });
 
     it("should return 400 if user not eligible for item", async () => {
-        await Database.ATTENDEE.create(makeTestAttendee());
+        await Database.ATTENDEE.create({
+            ...BASE_TEST_ATTENDEE,
+            userId,
+            hasRedeemedMerch: {
+                Tshirt: true,
+                Cap: false,
+                Tote: false,
+                Button: false,
+            },
+        });
 
         await post("/attendee/redeemMerch/Cap", Role.enum.STAFF)
             .send({ userId })
@@ -598,7 +630,10 @@ describe("POST /attendee/redeemMerch/:ITEM", () => {
     });
 
     it("should return 403 if user is not STAFF or ADMIN", async () => {
-        await Database.ATTENDEE.create(makeTestAttendee());
+        await Database.ATTENDEE.create({
+            ...BASE_TEST_ATTENDEE,
+            userId,
+        });
 
         await post("/attendee/redeemMerch/Tshirt", Role.enum.USER)
             .send({ userId })
