@@ -12,6 +12,7 @@ export const EventType = z.enum([
 ]);
 
 export type InternalEvent = z.infer<typeof internalEventView>;
+export type EventInputPayload = z.infer<typeof eventInfoValidator>;
 
 export const externalEventView = z.object({
     eventId: z.coerce.string().default(() => uuidv4()),
@@ -30,6 +31,24 @@ export const internalEventView = externalEventView.extend({
     attendanceCount: z.number(),
     isVisible: z.boolean(),
 });
+
+// ApiResponseSchema objects used to create expected internal and external event objects
+const eventTimeExtension = {
+    startTime: z.string(),
+    endTime: z.string(),
+};
+
+export const externalEventApiResponseSchema =
+    externalEventView.extend(eventTimeExtension);
+export type ExternalEventApiResponse = z.infer<
+    typeof externalEventApiResponseSchema
+>;
+
+export const internalEventApiResponseSchema =
+    internalEventView.extend(eventTimeExtension);
+export type InternalEventApiResponse = z.infer<
+    typeof internalEventApiResponseSchema
+>;
 
 export const eventInfoValidator = internalEventView
     .omit({ eventId: true })
