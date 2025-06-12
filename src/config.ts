@@ -26,10 +26,6 @@ const WEB_BASE =
     env === EnvironmentEnum.PRODUCTION
         ? "https://reflectionsprojections.org"
         : "http://localhost:3001";
-const ADMIN_BASE =
-    env === EnvironmentEnum.PRODUCTION
-        ? "https://admin.reflectionsprojections.org"
-        : "http://localhost:3002";
 
 export const Config = {
     ENV: env,
@@ -109,15 +105,6 @@ export const Config = {
     API_RESUME_UPDATE_ROUTE: `${API_BASE}/attendee/resume/update/`,
     WEB_RESUME_REUPLOAD_ROUTE: `${WEB_BASE}/update`,
     OUTGOING_EMAIL_ADDRESSES: z.enum(["no-reply@reflectionsprojections.org"]),
-};
-
-export const DeviceRedirects: Record<string, string> = {
-    web: `${WEB_BASE}/auth/`,
-    dev: `${API_BASE}/auth/dev/`,
-    mobile: "reflectionsprojections://--/Login",
-    admin: `${ADMIN_BASE}/auth/`,
-    // admin: "http://localhost:5173/auth/",
-    pwa: "localhost:8081/Login",
 };
 
 export const ses = new AWS.SES({

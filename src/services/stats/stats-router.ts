@@ -4,6 +4,7 @@ import { Database } from "../../database";
 import RoleChecker from "../../middleware/role-checker";
 import { Role } from "../auth/auth-models";
 import { getCurrentDay } from "../checkin/checkin-utils";
+import { z } from "zod";
 
 const statsRouter = Router();
 
@@ -25,12 +26,22 @@ statsRouter.get(
     "/merch-item/:PRICE",
     RoleChecker([Role.enum.STAFF], false),
     async (req, res) => {
-        const price = req.params.PRICE;
-        if (!price) {
-            return res
-                .status(StatusCodes.BAD_REQUEST)
-                .json({ error: "MissingPriceParameter" });
+        const schema = z.object({
+            PRICE: z.coerce
+                .number()
+                .int()
+                .gte(0, { message: "PRICE must be non-negative" }),
+        });
+
+        const result = schema.safeParse(req.params);
+        if (!result.success) {
+            return res.status(StatusCodes.BAD_REQUEST).json({
+                error: result.error.errors[0].message,
+            });
         }
+
+        const price = result.data.PRICE;
+
         const attendees = await Database.ATTENDEE.find({
             points: { $gte: price },
         });
@@ -59,24 +70,30 @@ statsRouter.get(
     "/attendance/:N",
     RoleChecker([Role.enum.STAFF], false),
     async (req, res) => {
-        const numEvents = req.params.N;
-        if (!numEvents) {
-            return res
-                .status(StatusCodes.BAD_REQUEST)
-                .json({ error: "MissingNParameter" });
+        const schema = z.object({
+            N: z.coerce
+                .number()
+                .int()
+                .gt(0, { message: "N must be greater than 0" }),
+        });
+
+        const result = schema.safeParse(req.params);
+        if (!result.success) {
+            return res.status(StatusCodes.BAD_REQUEST).json({
+                error: result.error.errors[0].message,
+            });
         }
+        const numEvents = result.data.N;
         const currentTime = new Date();
         const events = await Database.EVENTS.find({
             endTime: { $lt: currentTime },
         })
             .sort({ endTime: -1 })
-            .limit(parseInt(numEvents));
+            .limit(numEvents);
 
         const attendanceCounts = events.map((event) => event.attendanceCount);
 
-        return res
-            .status(StatusCodes.OK)
-            .json({ attendanceCounts: attendanceCounts });
+        return res.status(StatusCodes.OK).json({ attendanceCounts });
     }
 );
 

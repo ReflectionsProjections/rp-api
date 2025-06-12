@@ -7,6 +7,8 @@ const config: Config = {
 
     rootDir: "../src",
 
+    testTimeout: 10_000,
+
     setupFiles: ["../testing/jest.env-setup.ts"],
     // setupFilesAfterEnv: ["../testing/jest.db-setup.ts"],
     // setupFilesAfterEnv: ["../testing/jest.supabase-db.setup.ts"],

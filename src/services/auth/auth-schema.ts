@@ -9,6 +9,11 @@ export const RoleValidator = z.object({
     roles: z.array(Role).default([]),
 });
 
+export const AuthLoginValidator = z.object({
+    code: z.string(),
+    redirectUri: z.string(),
+});
+
 export const AuthRoleChangeRequest = z.object({
     email: z.string().email(),
     role: z.string(),

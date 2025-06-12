@@ -1,23 +1,24 @@
 import { Router } from "express";
-import passport from "passport";
-import { Config, DeviceRedirects } from "../../config";
+import { Config } from "../../config";
 import { StatusCodes } from "http-status-codes";
-import { Strategy as GoogleStrategy, Profile } from "passport-google-oauth20";
-import { createGoogleStrategy, getJwtPayloadFromDatabase } from "./auth-utils";
 import jsonwebtoken from "jsonwebtoken";
 import { Database } from "../../database";
 import RoleChecker from "../../middleware/role-checker";
-import { Role, JwtPayloadType } from "../auth/auth-models";
-import { AuthRoleChangeRequest } from "./auth-schema";
+import { JwtPayloadType, Role } from "../auth/auth-models";
+import { AuthLoginValidator, AuthRoleChangeRequest } from "./auth-schema";
 import authSponsorRouter from "./sponsor/sponsor-router";
 import { CorporateDeleteRequest, CorporateValidator } from "./corporate-schema";
-import { isPuzzleBang } from "../auth/auth-utils";
+import { OAuth2Client } from "google-auth-library";
+import {
+    getJwtPayloadFromDatabase,
+    isPuzzleBang,
+    updateDatabaseWithAuthPayload,
+} from "./auth-utils";
 
-const authStrategies: Record<string, GoogleStrategy> = {};
-
-for (const key in DeviceRedirects) {
-    authStrategies[key] = createGoogleStrategy(key);
-}
+const googleOAuthClient = new OAuth2Client({
+    clientId: Config.CLIENT_ID,
+    clientSecret: Config.CLIENT_SECRET,
+});
 
 const authRouter = Router();
 
@@ -63,62 +64,68 @@ authRouter.put("/", RoleChecker([Role.Enum.ADMIN]), async (req, res) => {
     return res.status(StatusCodes.OK).json(user);
 });
 
-authRouter.get("/login/:DEVICE/", (req, res) => {
-    const device = req.params.DEVICE;
-
-    // Check if this is a valid device (i.e. does a redirectURI exist for it)
-    if (!(device in DeviceRedirects)) {
-        return res.status(StatusCodes.BAD_REQUEST).send({ error: "BadDevice" });
-    }
-
-    // Use the pre-created strategy
-    // passport.use(authStrategies[device]);
-
-    return passport.authenticate(authStrategies[device], {
-        scope: ["profile", "email"],
-    })(req, res);
-});
-
-authRouter.get(
-    "/callback/:DEVICE",
-    (req, res, next) =>
-        // Check based on the pre-existing strategy name
-        passport.authenticate(authStrategies[req.params.DEVICE], {
-            session: false,
-        })(req, res, next),
-    async function (req, res) {
-        // Authentication failed - redirect to login
-        if (req.user == undefined) {
-            return res.redirect(`/auth/login/${req.params.DEVICE}`);
-        }
-        const userData = req.user as Profile;
-        const userId = `user${userData.id}`;
-
-        // Generate the JWT, and redirect to JWT initialization
-        const jwtPayload = (
-            await getJwtPayloadFromDatabase(userId)
-        ).toObject() as JwtPayloadType;
-
-        // Check if user has PuzzleBang role
-        const isPB = isPuzzleBang(jwtPayload);
-        const isMobile = req.params.DEVICE == "mobile";
-
-        const token = jsonwebtoken.sign(jwtPayload, Config.JWT_SIGNING_SECRET, {
-            expiresIn: isPB
-                ? Config.PB_JWT_EXPIRATION_TIME
-                : isMobile
-                  ? Config.MOBILE_JWT_EXPIRATION_TIME
-                  : Config.JWT_EXPIRATION_TIME,
+const getAuthPayloadFromCode = async (code: string, redirect_uri: string) => {
+    //
+    try {
+        const { tokens } = await googleOAuthClient.getToken({
+            code,
+            redirect_uri,
         });
-        const redirectUri =
-            DeviceRedirects[req.params.DEVICE] + `?token=${token}`;
-        console.log(redirectUri);
-        return res.redirect(redirectUri);
-    }
-);
+        if (!tokens.id_token) {
+            throw new Error("Invalid token");
+        }
+        const ticket = await googleOAuthClient.verifyIdToken({
+            idToken: tokens.id_token,
+        });
+        const payload = ticket.getPayload();
+        if (!payload) {
+            throw new Error("Invalid payload");
+        }
 
-authRouter.get("/dev/", (req, res) => {
-    return res.status(StatusCodes.OK).json(req.query);
+        return payload;
+    } catch (error) {
+        console.error("AUTH ERROR:", error);
+        return undefined;
+    }
+};
+
+authRouter.post("/login/", async (req, res) => {
+    // Convert id to token
+    const { code, redirectUri } = AuthLoginValidator.parse(req.body);
+    const authPayload = await getAuthPayloadFromCode(code, redirectUri);
+
+    if (!authPayload) {
+        return res
+            .status(StatusCodes.BAD_REQUEST)
+            .send({ error: "InvalidToken" });
+    }
+
+    const properScopes =
+        "email" in authPayload && "sub" in authPayload && "name" in authPayload;
+    if (!properScopes) {
+        return res
+            .status(StatusCodes.BAD_REQUEST)
+            .send({ error: "InvalidScopes" });
+    }
+
+    // Update database by payload
+    await updateDatabaseWithAuthPayload(authPayload);
+
+    // Generate the JWT
+    const jwtPayload = (
+        await getJwtPayloadFromDatabase(`user${authPayload.sub}`)
+    ).toObject() as JwtPayloadType;
+
+    // Check if user has PuzzleBang role
+    const isPB = isPuzzleBang(jwtPayload);
+
+    const jwtToken = jsonwebtoken.sign(jwtPayload, Config.JWT_SIGNING_SECRET, {
+        expiresIn: isPB
+            ? Config.PB_JWT_EXPIRATION_TIME
+            : Config.JWT_EXPIRATION_TIME,
+    });
+
+    return res.status(StatusCodes.OK).send({ token: jwtToken });
 });
 
 authRouter.get(
