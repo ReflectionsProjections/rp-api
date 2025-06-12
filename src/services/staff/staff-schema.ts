@@ -3,14 +3,11 @@ import { z } from "zod";
 import { v4 as uuidv4 } from "uuid";
 import { CommitteeTypes } from "../../supabase";
 
-
-
-
 // Zod schema for staff
 export const StaffValidator = z.object({
     email: z.coerce.string(),
     name: z.string(),
-    team: z.nativeEnum(CommitteeTypes), 
+    team: z.nativeEnum(CommitteeTypes),
 
     // add preprocessor to convert a map into a plain javascript object
     attendances: z

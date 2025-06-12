@@ -39,5 +39,5 @@ export const CommitteeTypes: Record<
     DEV: "DEV",
     FULLTEAM: "FULL TEAM",
     MARKETING: "MARKETING",
-    OPERATIONS: "OPERATIONS"
+    OPERATIONS: "OPERATIONS",
 };

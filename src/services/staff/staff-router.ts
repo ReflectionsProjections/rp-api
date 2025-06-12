@@ -7,7 +7,7 @@ import {
     UpdateStaffAttendanceValidator,
     AttendancesMap,
 } from "./staff-schema";
-import { SupabaseDB } from "../../supabase"
+import { SupabaseDB } from "../../supabase";
 import RoleChecker from "../../middleware/role-checker";
 import { JwtPayloadType, Role } from "../auth/auth-models";
 import Config from "../../config";
@@ -23,21 +23,19 @@ staffRouter.post(
         const { email } = res.locals.payload as JwtPayloadType;
         const { meetingId } = CheckInValidator.parse(req.body);
 
-        const { data: meeting, error } = await SupabaseDB
-                    .MEETINGS
-                    .select('*')
-                    .eq('meeting_id', meetingId)
-                    .single();
+        const { data: meeting, error } = await SupabaseDB.MEETINGS.select("*")
+            .eq("meeting_id", meetingId)
+            .single();
 
         if (error || !meeting) {
             return res.status(StatusCodes.NOT_FOUND).send({
                 error: "NotFound",
-                message: "Meeting not found"
+                message: "Meeting not found",
             });
         }
 
         const { data: staff, error: staffError } =
-                await SupabaseDB.STAFF.select("*").eq("email", email).single();
+            await SupabaseDB.STAFF.select("*").eq("email", email).single();
 
         if (!staff || staffError) {
             throw new Error(`Could not find staff for ${email}`);
@@ -54,7 +52,9 @@ staffRouter.post(
         }
 
         // Must be within a certain range of meeting time
-        const diffSeconds = Math.abs(Date.now() - new Date(meeting.start_time).getTime()) / 1000;
+        const diffSeconds =
+            Math.abs(Date.now() - new Date(meeting.start_time).getTime()) /
+            1000;
         if (diffSeconds >= Config.STAFF_MEETING_CHECK_IN_WINDOW_SECONDS) {
             return res.status(StatusCodes.BAD_REQUEST).send({
                 error: "Expired",
@@ -64,15 +64,16 @@ staffRouter.post(
         }
 
         const { data: updateStaff, error: updateError } =
-            await SupabaseDB.STAFF
-                .update({ attendances: {
+            await SupabaseDB.STAFF.update({
+                attendances: {
                     ...(staff.attendances as AttendancesMap),
                     [meetingId]: StaffAttendanceTypeEnum.PRESENT,
-                } })
+                },
+            })
                 .eq("email", email)
                 .select()
                 .single();
-      
+
         if (updateError || !updateStaff) {
             return next(updateError);
         }
@@ -91,50 +92,41 @@ staffRouter.post(
         const { meetingId, attendanceType } =
             UpdateStaffAttendanceValidator.parse(req.body);
 
-        const { data: meeting, error } = await SupabaseDB
-                    .MEETINGS
-                    .select('*')
-                    .eq('meeting_id', meetingId)
-                    .single();
+        const { data: meeting, error } = await SupabaseDB.MEETINGS.select("*")
+            .eq("meeting_id", meetingId)
+            .single();
 
         if (error || !meeting) {
             return res.status(StatusCodes.NOT_FOUND).send({
                 error: "NotFound",
-                message: "Meeting not found"
+                message: "Meeting not found",
             });
         }
 
         const { data: staff, error: staffError } =
-                await SupabaseDB
-                    .STAFF
-                    .select("attendances")
-                    .eq("email", userEmail)
-                    .single();
-
+            await SupabaseDB.STAFF.select("attendances")
+                .eq("email", userEmail)
+                .single();
 
         if (!staff || staffError) {
             return res
-            .status(StatusCodes.NOT_FOUND)
-            .send({ error: "NotFound", message: "Staff not found" });
+                .status(StatusCodes.NOT_FOUND)
+                .send({ error: "NotFound", message: "Staff not found" });
         }
-
 
         const updatedAttendances = {
             ...(staff.attendances as AttendancesMap),
             [meetingId]: attendanceType,
-        }
-
+        };
 
         const { data: updateStaff, error: updateError } =
-            await SupabaseDB.STAFF
-                .update({ attendances: updatedAttendances })
+            await SupabaseDB.STAFF.update({ attendances: updatedAttendances })
                 .eq("email", userEmail)
                 .select()
                 .single();
 
-
         if (updateError || !updateStaff) {
-            return next(updateError)
+            return next(updateError);
         }
 
         const updatedStaff = await StaffValidator.parse(updateStaff);
@@ -147,7 +139,8 @@ staffRouter.get(
     "/",
     RoleChecker([Role.Enum.STAFF, Role.Enum.ADMIN]),
     async (req, res) => {
-        const { data: staffRecords, error } = await SupabaseDB.STAFF.select('*')
+        const { data: staffRecords, error } =
+            await SupabaseDB.STAFF.select("*");
         if (error) {
             return res
                 .status(StatusCodes.INTERNAL_SERVER_ERROR)
@@ -165,7 +158,7 @@ staffRouter.get(
         const userEmail = req.params.EMAIL;
 
         const { data: staffData, error: staffError } =
-                await SupabaseDB.STAFF.select("*").eq("email", userEmail).single();
+            await SupabaseDB.STAFF.select("*").eq("email", userEmail).single();
 
         if (staffError) {
             return res
@@ -173,7 +166,6 @@ staffRouter.get(
                 .json({ error: "UserNotFound" });
         }
         const user = StaffValidator.parse(staffData);
-
 
         return res.status(StatusCodes.OK).json(user);
     }
@@ -197,7 +189,10 @@ staffRouter.delete(
     async (req, res) => {
         const email = req.params.EMAIL;
         const { data: deletedStaff, error: staffError } =
-            await SupabaseDB.STAFF.delete().eq("email", email).select().single();
+            await SupabaseDB.STAFF.delete()
+                .eq("email", email)
+                .select()
+                .single();
 
         if (staffError || !deletedStaff) {
             return res

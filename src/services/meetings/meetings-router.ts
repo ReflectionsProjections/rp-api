@@ -1,6 +1,12 @@
 import { Router } from "express";
 import { StatusCodes } from "http-status-codes";
-import { getAllMeetings, getMeetingById, createMeeting, updateMeeting, deleteMeeting } from "./meetings-util";
+import {
+    getAllMeetings,
+    getMeetingById,
+    createMeeting,
+    updateMeeting,
+    deleteMeeting,
+} from "./meetings-util";
 import RoleChecker from "../../middleware/role-checker";
 import { Role } from "../auth/auth-models";
 
@@ -27,7 +33,8 @@ meetingsRouter.get(
         try {
             const meeting = await getMeetingById(req.params.meetingId);
             if (!meeting) {
-                return res.status(StatusCodes.NOT_FOUND)
+                return res
+                    .status(StatusCodes.NOT_FOUND)
                     .json({ message: "Meeting not found" });
             }
             res.status(StatusCodes.OK).json(meeting);
@@ -59,7 +66,8 @@ meetingsRouter.put(
         try {
             const meeting = await updateMeeting(req.params.meetingId, req.body);
             if (!meeting) {
-                return res.status(StatusCodes.NOT_FOUND)
+                return res
+                    .status(StatusCodes.NOT_FOUND)
                     .json({ message: "Meeting not found" });
             }
             res.status(StatusCodes.OK).json(meeting);
@@ -77,7 +85,8 @@ meetingsRouter.delete(
         try {
             const deleted = await deleteMeeting(req.params.meetingId);
             if (!deleted) {
-                return res.status(StatusCodes.NOT_FOUND)
+                return res
+                    .status(StatusCodes.NOT_FOUND)
                     .json({ message: "Meeting not found" });
             }
             res.status(StatusCodes.NO_CONTENT).send();

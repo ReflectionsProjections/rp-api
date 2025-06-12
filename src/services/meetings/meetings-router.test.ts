@@ -15,7 +15,7 @@ import {
 } from "../../../testing/testingTools";
 import { StatusCodes } from "http-status-codes";
 import { CommitteeTypes } from "../../supabase";
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4 } from "uuid";
 import { SupabaseDB } from "../../supabase";
 
 const TEST_MEETING_1_ID = uuidv4();
@@ -50,20 +50,23 @@ const UNREAL_MEETING_ID = uuidv4();
 // Runs these before running the tests
 beforeEach(async () => {
     // Clear existing meetings
-    await SupabaseDB.MEETINGS.delete().neq('meeting_id', '00000000-0000-0000-0000-000000000000');
-    
+    await SupabaseDB.MEETINGS.delete().neq(
+        "meeting_id",
+        "00000000-0000-0000-0000-000000000000"
+    );
+
     // Insert test meetings
     await SupabaseDB.MEETINGS.insert([
         {
             meeting_id: TEST_MEETING_1.meetingId,
             committee_type: TEST_MEETING_1.committeeType,
-            start_time: TEST_MEETING_1.startTime
+            start_time: TEST_MEETING_1.startTime,
         },
         {
             meeting_id: TEST_MEETING_2.meetingId,
             committee_type: TEST_MEETING_2.committeeType,
-            start_time: TEST_MEETING_2.startTime
-        }
+            start_time: TEST_MEETING_2.startTime,
+        },
     ]);
 });
 
@@ -86,7 +89,10 @@ describe("GET /meetings/", () => {
     });
 
     it("should return empty array if no meetings exist", async () => {
-        await SupabaseDB.MEETINGS.delete().neq('meeting_id', '00000000-0000-0000-0000-000000000000');
+        await SupabaseDB.MEETINGS.delete().neq(
+            "meeting_id",
+            "00000000-0000-0000-0000-000000000000"
+        );
         const response = await getAsAdmin("/meetings").expect(StatusCodes.OK);
         expect(response.body).toEqual([]);
     });
@@ -147,19 +153,18 @@ describe("POST /meetings/", () => {
         expect(response.body).toHaveProperty("meetingId");
 
         // Verify the meeting was actually created in the database
-        const { data: result, error } = await SupabaseDB.MEETINGS
-            .select('*')
-            .eq('meeting_id', response.body.meetingId)
+        const { data: result, error } = await SupabaseDB.MEETINGS.select("*")
+            .eq("meeting_id", response.body.meetingId)
             .single();
-        
+
         if (error) throw error;
-        
+
         const dbMeeting = {
             meetingId: result.meeting_id,
             committeeType: result.committee_type,
-            startTime: result.start_time.toISOString()
+            startTime: result.start_time.toISOString(),
         };
-        
+
         expect(dbMeeting).toMatchObject(newMeetingData);
     });
 
