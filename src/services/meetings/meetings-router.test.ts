@@ -16,16 +16,7 @@ import {
 import { StatusCodes } from "http-status-codes";
 import { CommitteeTypes } from "../../supabase";
 import { v4 as uuidv4 } from 'uuid';
-import { supabase, SupabaseDB } from "../../supabase";
-
-const url = process.env.SUPABASE_URL;
-const anonKey = process.env.SUPABASE_ANON_KEY;
-const env = process.env.ENV;
-
-console.log("url", url);
-console.log("anonKey", anonKey);
-console.log("supabase", supabase);
-console.log("env", env);
+import { SupabaseDB } from "../../supabase";
 
 const TEST_MEETING_1_ID = uuidv4();
 const TEST_MEETING_2_ID = uuidv4();
