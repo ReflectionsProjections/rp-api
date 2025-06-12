@@ -6,12 +6,6 @@ import { Role } from "../auth/auth-models";
 
 const meetingsRouter = Router();
 
-// GET endpoints: get all meetings, get specific meeting
-// POST endpoints: create a meeting
-// PUT endpoints: edit a meeting
-// DELETE endpoints: delete a meeting
-
-// get all events
 meetingsRouter.get(
     "/",
     RoleChecker([Role.enum.STAFF, Role.enum.ADMIN]),

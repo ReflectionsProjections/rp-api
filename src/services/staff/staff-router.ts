@@ -7,7 +7,6 @@ import {
     UpdateStaffAttendanceValidator,
     AttendancesMap,
 } from "./staff-schema";
-// import { Database } from "../../database";
 import { SupabaseDB } from "../../supabase"
 import RoleChecker from "../../middleware/role-checker";
 import { JwtPayloadType, Role } from "../auth/auth-models";
@@ -24,12 +23,6 @@ staffRouter.post(
         const { email } = res.locals.payload as JwtPayloadType;
         const { meetingId } = CheckInValidator.parse(req.body);
 
-        // const meeting = await Database.MEETINGS.findOne({ meetingId });
-        // if (!meeting) {
-        //     return res
-        //         .status(StatusCodes.NOT_FOUND)
-        //         .send({ error: "NotFound", message: "Meeting not found" });
-        // }
         const { data: meeting, error } = await SupabaseDB
                     .MEETINGS
                     .select('*')
@@ -46,14 +39,11 @@ staffRouter.post(
         const { data: staff, error: staffError } =
                 await SupabaseDB.STAFF.select("*").eq("email", email).single();
 
-        // const staff = await Database.STAFF.findOne({ userId });
         if (!staff || staffError) {
             throw new Error(`Could not find staff for ${email}`);
         }
 
-        // Haven't already checked in
         if (
-            // staff.attendances.get(meetingId) == StaffAttendanceTypeEnum.PRESENT
             (staff.attendances as AttendancesMap)[meetingId] ===
             StaffAttendanceTypeEnum.PRESENT
         ) {
@@ -73,7 +63,6 @@ staffRouter.post(
             });
         }
 
-        // Otherwise, we're good!
         const { data: updateStaff, error: updateError } =
             await SupabaseDB.STAFF
                 .update({ attendances: {
@@ -83,10 +72,7 @@ staffRouter.post(
                 .eq("email", email)
                 .select()
                 .single();
-        // staff.attendances.set(meetingId, StaffAttendanceTypeEnum.PRESENT);
-        // await staff.save();
-
-
+      
         if (updateError || !updateStaff) {
             return next(updateError);
         }
@@ -104,13 +90,6 @@ staffRouter.post(
         const userEmail = req.params.EMAIL;
         const { meetingId, attendanceType } =
             UpdateStaffAttendanceValidator.parse(req.body);
-
-        // const meeting = await Database.MEETINGS.findOne({ meetingId });
-        // if (!meeting) {
-        //     return res
-        //         .status(StatusCodes.NOT_FOUND)
-        //         .send({ error: "NotFound", message: "Meeting not found" });
-        // }
 
         const { data: meeting, error } = await SupabaseDB
                     .MEETINGS
@@ -158,16 +137,6 @@ staffRouter.post(
             return next(updateError)
         }
 
-
-        // if (!staff) {
-        //     return res
-        //         .status(StatusCodes.NOT_FOUND)
-        //         .send({ error: "NotFound", message: "Staff not found" });
-        // }
-
-        // staff.attendances.set(meetingId, attendanceType);
-        // await staff.save();
-
         const updatedStaff = await StaffValidator.parse(updateStaff);
         return res.status(StatusCodes.OK).send(updatedStaff);
     }
@@ -178,7 +147,6 @@ staffRouter.get(
     "/",
     RoleChecker([Role.Enum.STAFF, Role.Enum.ADMIN]),
     async (req, res) => {
-        // const staffRecords = await Database.STAFF.find({});
         const { data: staffRecords, error } = await SupabaseDB.STAFF.select('*')
         if (error) {
             return res
@@ -206,14 +174,6 @@ staffRouter.get(
         }
         const user = StaffValidator.parse(staffData);
 
-        // check if the user exists in the database
-        // const user = await Database.STAFF.findOne({ userId });
-
-        // if (!user) {
-        //     return res
-        //         .status(StatusCodes.NOT_FOUND)
-        //         .json({ error: "UserNotFound" });
-        // }
 
         return res.status(StatusCodes.OK).json(user);
     }
@@ -227,9 +187,6 @@ staffRouter.post("/", RoleChecker([Role.Enum.ADMIN]), async (req, res) => {
         await SupabaseDB.STAFF.insert([staffData]).select("*").single();
     if (staffError) throw staffError;
 
-    // const staff = new Database.STAFF(staffData);
-    // const savedStaff = await staff.save();
-
     return res.status(StatusCodes.CREATED).json(savedStaff);
 });
 
@@ -239,10 +196,6 @@ staffRouter.delete(
     RoleChecker([Role.Enum.ADMIN]),
     async (req, res) => {
         const email = req.params.EMAIL;
-        // delete staff member
-        // const deletedStaff = await Database.STAFF.findOneAndDelete({
-        //     userId: userId,
-        // });
         const { data: deletedStaff, error: staffError } =
             await SupabaseDB.STAFF.delete().eq("email", email).select().single();
 
