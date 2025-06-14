@@ -65,7 +65,6 @@ authRouter.put("/", RoleChecker([Role.Enum.ADMIN]), async (req, res) => {
 });
 
 const getAuthPayloadFromCode = async (code: string, redirect_uri: string) => {
-    //
     try {
         const { tokens } = await googleOAuthClient.getToken({
             code,
