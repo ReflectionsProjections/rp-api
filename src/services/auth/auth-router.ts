@@ -55,12 +55,6 @@ authRouter.put("/", RoleChecker([Role.Enum.ADMIN]), async (req, res) => {
         { new: true, upsert: true }
     );
 
-    if (!user) {
-        return res.status(StatusCodes.NOT_FOUND).json({
-            error: "UserNotFound",
-        });
-    }
-
     return res.status(StatusCodes.OK).json(user);
 });
 
