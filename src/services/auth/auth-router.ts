@@ -105,18 +105,7 @@ authRouter.post("/login/", async (req, res) => {
     await updateDatabaseWithAuthPayload(authPayload);
 
     // Generate the JWT
-    const jwtPayload = (
-        await getJwtPayloadFromDatabase(`user${authPayload.sub}`)
-    ).toObject() as JwtPayloadType;
-
-    // Check if user has PuzzleBang role
-    const isPB = isPuzzleBang(jwtPayload);
-
-    const jwtToken = jsonwebtoken.sign(jwtPayload, Config.JWT_SIGNING_SECRET, {
-        expiresIn: isPB
-            ? Config.PB_JWT_EXPIRATION_TIME
-            : Config.JWT_EXPIRATION_TIME,
-    });
+    const jwtToken = await generateJWT(`user${authPayload.sub}`);
 
     return res.status(StatusCodes.OK).send({ token: jwtToken });
 });
