@@ -42,6 +42,10 @@ export function get(url: string, role?: RoleType): request.Test {
     return setRole(request(app()).get(url), role);
 }
 
+export function getAsUser(url: string): request.Test {
+    return get(url, Role.enum.USER);
+}
+
 export function getAsStaff(url: string): request.Test {
     return get(url, Role.enum.STAFF);
 }
@@ -52,6 +56,10 @@ export function getAsAdmin(url: string): request.Test {
 
 export function post(url: string, role?: RoleType): request.Test {
     return setRole(request(app()).post(url), role);
+}
+
+export function postAsUser(url: string): request.Test {
+    return post(url, Role.enum.USER);
 }
 
 export function postAsStaff(url: string): request.Test {
@@ -66,6 +74,10 @@ export function put(url: string, role?: RoleType): request.Test {
     return setRole(request(app()).put(url), role);
 }
 
+export function putAsUser(url: string): request.Test {
+    return put(url, Role.enum.USER);
+}
+
 export function putAsStaff(url: string): request.Test {
     return put(url, Role.enum.STAFF);
 }
@@ -78,6 +90,10 @@ export function patch(url: string, role?: RoleType): request.Test {
     return setRole(request(app()).patch(url), role);
 }
 
+export function patchAsUser(url: string): request.Test {
+    return patch(url, Role.enum.USER);
+}
+
 export function patchAsStaff(url: string): request.Test {
     return patch(url, Role.enum.STAFF);
 }
@@ -88,6 +104,10 @@ export function patchAsAdmin(url: string): request.Test {
 
 export function del(url: string, role?: RoleType): request.Test {
     return setRole(request(app()).delete(url), role);
+}
+
+export function delAsUser(url: string): request.Test {
+    return del(url, Role.enum.USER);
 }
 
 export function delAsStaff(url: string): request.Test {
