@@ -7,7 +7,7 @@ import { JwtPayloadType, Role } from "../src/services/auth/auth-models";
 type RoleType = z.infer<typeof Role>;
 
 export const TESTER = {
-    userId: "lforger132",
+    userId: "user123",
     roles: [],
     displayName: "Loid Forger",
     email: "loid.forger@testing.com",

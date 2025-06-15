@@ -1,19 +1,14 @@
 import { Router } from "express";
 import { Config } from "../../config";
 import { StatusCodes } from "http-status-codes";
-import jsonwebtoken from "jsonwebtoken";
 import { Database } from "../../database";
 import RoleChecker from "../../middleware/role-checker";
-import { JwtPayloadType, Role } from "../auth/auth-models";
+import { Role } from "../auth/auth-models";
 import { AuthLoginValidator, AuthRoleChangeRequest } from "./auth-schema";
 import authSponsorRouter from "./sponsor/sponsor-router";
 import { CorporateDeleteRequest, CorporateValidator } from "./corporate-schema";
 import { OAuth2Client } from "google-auth-library";
-import {
-    getJwtPayloadFromDatabase,
-    isPuzzleBang,
-    updateDatabaseWithAuthPayload,
-} from "./auth-utils";
+import { generateJWT, updateDatabaseWithAuthPayload } from "./auth-utils";
 
 const googleOAuthClient = new OAuth2Client({
     clientId: Config.CLIENT_ID,
@@ -125,8 +120,15 @@ authRouter.post(
     RoleChecker([Role.Enum.ADMIN]),
     async (req, res) => {
         const attendeeData = CorporateValidator.parse(req.body);
-        const corporate = new Database.CORPORATE(attendeeData);
-        await corporate.save();
+        const existing = await Database.CORPORATE.findOne({
+            email: attendeeData.email,
+        });
+        if (existing) {
+            return res.status(StatusCodes.BAD_REQUEST).send({
+                error: "AlreadyExists",
+            });
+        }
+        const corporate = await Database.CORPORATE.create(attendeeData);
 
         return res.status(StatusCodes.CREATED).json(corporate);
     }
@@ -136,9 +138,16 @@ authRouter.delete(
     "/corporate",
     RoleChecker([Role.Enum.ADMIN]),
     async (req, res) => {
-        const attendeeData = CorporateDeleteRequest.parse(req.body);
-        const email = attendeeData.email;
-        await Database.CORPORATE.findOneAndDelete({ email: email });
+        const { email } = CorporateDeleteRequest.parse(req.body);
+        const result = await Database.CORPORATE.findOneAndDelete({
+            email: email,
+        });
+
+        if (!result) {
+            return res
+                .status(StatusCodes.BAD_REQUEST)
+                .send({ error: "NotFound" });
+        }
 
         return res.sendStatus(StatusCodes.NO_CONTENT);
     }
@@ -149,6 +158,8 @@ authRouter.get("/info", RoleChecker([]), async (req, res) => {
     const user = await Database.ROLES.findOne({ userId }).select({
         displayName: true,
         roles: true,
+        userId: true,
+        email: true,
         _id: false,
     });
     return res.status(StatusCodes.OK).json(user);
