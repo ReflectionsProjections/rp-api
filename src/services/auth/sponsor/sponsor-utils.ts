@@ -1,5 +1,4 @@
 import * as bcrypt from "bcrypt";
-import { Database } from "../../../database";
 import { Config } from "../../../config";
 
 export function createSixDigitCode() {
@@ -14,10 +13,4 @@ export function createSixDigitCode() {
 export function encryptSixDigitCode(sixDigitCode: string): string {
     const hash = bcrypt.hashSync(sixDigitCode, Config.HASH_SALT_ROUNDS);
     return hash;
-}
-
-export async function sponsorExists(email: string) {
-    const response = await Database.CORPORATE.findOne({ email: email });
-    if (!response) return false;
-    return true;
 }

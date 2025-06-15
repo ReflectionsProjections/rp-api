@@ -1,4 +1,4 @@
-import { Schema } from "mongoose";
+import { InferSchemaType, Schema } from "mongoose";
 import { z } from "zod";
 import { Role } from "./auth-models";
 
@@ -42,3 +42,4 @@ export const RoleSchema = new Schema(
     },
     { timestamps: { createdAt: "createdAt" } }
 );
+export type Roles = InferSchemaType<typeof RoleSchema>;

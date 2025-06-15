@@ -8,11 +8,7 @@ import { Role } from "../../auth/auth-models";
 import mustache from "mustache";
 import templates from "../../../templates/templates";
 
-import {
-    createSixDigitCode,
-    encryptSixDigitCode,
-    sponsorExists,
-} from "./sponsor-utils";
+import { createSixDigitCode, encryptSixDigitCode } from "./sponsor-utils";
 import * as bcrypt from "bcrypt";
 import {
     AuthSponsorLoginValidator,
@@ -23,7 +19,8 @@ const authSponsorRouter = Router();
 
 authSponsorRouter.post("/login", async (req, res) => {
     const { email } = AuthSponsorLoginValidator.parse(req.body);
-    if (!(await sponsorExists(email))) {
+    const existing = await Database.CORPORATE.findOne({ email: email });
+    if (!existing) {
         return res.sendStatus(StatusCodes.UNAUTHORIZED);
     }
 
@@ -55,19 +52,29 @@ authSponsorRouter.post("/verify", async (req, res) => {
     const corpResponse = await Database.CORPORATE.findOne({
         email: email,
     });
+
     if (!sponsorData) {
-        return res.sendStatus(StatusCodes.UNAUTHORIZED);
+        return res.status(StatusCodes.UNAUTHORIZED).send({
+            error: "InvalidCode",
+        });
     }
-    if (Math.floor(Date.now() / 1000) > sponsorData.expTime) {
-        return res.sendStatus(StatusCodes.GONE);
-    }
+
     const match = bcrypt.compareSync(
         sixDigitCode,
         sponsorData.hashedVerificationCode
     );
     if (!match) {
-        return res.sendStatus(StatusCodes.UNAUTHORIZED);
+        return res.status(StatusCodes.UNAUTHORIZED).send({
+            error: "InvalidCode",
+        });
     }
+
+    if (Math.floor(Date.now() / 1000) > sponsorData.expTime) {
+        return res.status(StatusCodes.UNAUTHORIZED).send({
+            error: "ExpiredCode",
+        });
+    }
+
     const token = jsonwebtoken.sign(
         {
             userId: email,
