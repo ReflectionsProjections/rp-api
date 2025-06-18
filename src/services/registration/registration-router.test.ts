@@ -1,10 +1,8 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
-import { post, get } from "../../../testing/testingTools";
-import { TESTER } from "../../../testing/testingTools";
 import { StatusCodes } from "http-status-codes";
+import { get, post, TESTER } from "../../../testing/testingTools";
 import { Database } from "../../database";
 import { Role } from "../auth/auth-models";
-import Config from "../../config";
 import { sendHTMLEmail } from "../ses/ses-utils";
 
 jest.mock("../ses/ses-utils", () => ({
@@ -210,34 +208,23 @@ describe("GET /registration/all", () => {
             degrees: ["Bachelor"],
         };
 
-        const response = await get("/registration/filter/1", Role.enum.ADMIN)
+        const response = await get("/registration/all", Role.enum.ADMIN)
             .send(filters)
             .expect(StatusCodes.OK);
 
-        expect(response.body.page).toBe(1);
         expect(response.body.registrants.length).toBe(10);
         expect(response.body.registrants[0]).toHaveProperty("userId");
     });
 
     it("should return 401 if unauthenticated", async () => {
-        await post("/registration/filter/1")
+        await get("/registration/all")
             .send({})
             .expect(StatusCodes.UNAUTHORIZED);
     });
 
     it("should return 403 if user is not ADMIN or CORPORATE", async () => {
-        await post("/registration/filter/1", Role.enum.USER)
+        await get("/registration/all", Role.enum.USER)
             .send({})
             .expect(StatusCodes.FORBIDDEN);
-    });
-
-    it("should return 400 for invalid filter schema", async () => {
-        const badFilters = {
-            graduations: "not-an-array", // should be array
-        };
-
-        await post("/registration/filter/1", Role.enum.ADMIN)
-            .send(badFilters)
-            .expect(StatusCodes.BAD_REQUEST);
     });
 });
