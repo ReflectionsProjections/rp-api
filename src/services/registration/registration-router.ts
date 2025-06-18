@@ -1,16 +1,15 @@
+import cors from "cors";
 import { Router } from "express";
 import { StatusCodes } from "http-status-codes";
-import {
-    RegistrationFilterValidator,
-    RegistrationValidator,
-} from "./registration-schema";
+import Config from "../../config";
 import { Database } from "../../database";
 import RoleChecker from "../../middleware/role-checker";
-import { Role } from "../auth/auth-models";
 import { AttendeeCreateValidator } from "../attendee/attendee-validators";
-import { registrationExists, generateEncryptedId } from "./registration-utils";
-import cors from "cors";
-import Config from "../../config";
+import { Role } from "../auth/auth-models";
+import {
+    RegistrationValidator
+} from "./registration-schema";
+import { generateEncryptedId, registrationExists } from "./registration-utils";
 
 import Mustache from "mustache";
 import { sendHTMLEmail } from "../ses/ses-utils";
@@ -137,30 +136,19 @@ registrationRouter.get("/", RoleChecker([]), async (req, res) => {
     });
 
     if (!registration) {
-        return res.status(StatusCodes.NOT_FOUND).json({
-            error: "DoesNotExist",
-        });
+        return { error: "DoesNotExist" };
     }
 
     return res.status(StatusCodes.OK).json({ registration });
 });
 
-registrationRouter.post(
-    "/filter/pagecount",
+registrationRouter.get(
+    "/all",
     RoleChecker([Role.Enum.ADMIN, Role.Enum.CORPORATE]),
     async (req, res) => {
-        const { graduations, majors, jobInterests, degrees } =
-            RegistrationFilterValidator.parse(req.body);
-
         const query = {
             hasSubmitted: true,
             hasResume: true,
-            ...(graduations && { graduation: { $in: graduations } }),
-            ...(majors && { major: { $in: majors } }),
-            ...(degrees && { degree: { $in: degrees } }),
-            ...(jobInterests && {
-                jobInterest: { $elemMatch: { $in: jobInterests } },
-            }),
         };
 
         const projection = {
@@ -175,58 +163,7 @@ registrationRouter.post(
 
         const registrants = await Database.REGISTRATION.find(query, projection);
 
-        return res.status(StatusCodes.OK).json({
-            pagecount: Math.floor(
-                (registrants.length + Config.SPONSOR_ENTIRES_PER_PAGE - 1) /
-                    Config.SPONSOR_ENTIRES_PER_PAGE
-            ),
-        });
-    }
-);
-
-registrationRouter.post(
-    "/filter/:PAGE",
-    RoleChecker([Role.Enum.ADMIN, Role.Enum.CORPORATE]),
-    async (req, res) => {
-        const page = parseInt(req.params.PAGE, 10);
-        const { graduations, majors, jobInterests, degrees } =
-            RegistrationFilterValidator.parse(req.body);
-
-        if (!page || page <= 0) {
-            return res.status(StatusCodes.BAD_REQUEST).send("Invalid Page");
-        }
-
-        const query = {
-            hasSubmitted: true,
-            hasResume: true,
-            ...(graduations && { graduation: { $in: graduations } }),
-            ...(majors && { major: { $in: majors } }),
-            ...(degrees && { degree: { $in: degrees } }),
-            ...(jobInterests && {
-                jobInterest: { $elemMatch: { $in: jobInterests } },
-            }),
-        };
-
-        const projection = {
-            userId: 1,
-            name: 1,
-            major: 1,
-            graduation: 1,
-            degree: 1,
-            jobInterest: 1,
-            portfolios: 1,
-        };
-
-        const registrants = await Database.REGISTRATION.find(
-            query,
-            projection,
-            {
-                skip: Config.SPONSOR_ENTIRES_PER_PAGE * (page - 1),
-                limit: Config.SPONSOR_ENTIRES_PER_PAGE,
-            }
-        );
-
-        return res.status(StatusCodes.OK).json({ registrants, page });
+        return res.status(StatusCodes.OK).json({ registrants });
     }
 );
 
