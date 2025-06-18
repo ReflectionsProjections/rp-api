@@ -227,4 +227,39 @@ describe("GET /registration/all", () => {
             .send({})
             .expect(StatusCodes.FORBIDDEN);
     });
+    it("should not return registrants who do not match hasSubmitted and hasResume filters", async () => {
+        await Database.REGISTRATION.insertMany([
+            {
+                ...baseRegistration,
+                userId: "valid-user",
+                email: "validfellow@test.com",
+                hasResume: true,
+                hasSubmitted: true,
+            },
+            {
+                ...baseRegistration,
+                userId: "no-resume",
+                email: "noresume@test.com",
+                hasResume: false,
+                hasSubmitted: true,
+            },
+            {
+                ...baseRegistration,
+                userId: "not-submitted",
+                email: "notsubmitted@test.com",
+                hasResume: true,
+                hasSubmitted: false,
+            },
+        ]);
+
+        const response = await get("/registration/all", Role.enum.ADMIN).expect(
+            StatusCodes.OK
+        );
+
+        const userIds = response.body.registrants.map((r: any) => r.userId);
+        expect(userIds).toContain("valid-user");
+        expect(userIds).not.toContain("no-resume");
+        expect(userIds).not.toContain("not-submitted");
+    });
 });
+
