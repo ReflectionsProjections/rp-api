@@ -6,9 +6,7 @@ import { Database } from "../../database";
 import RoleChecker from "../../middleware/role-checker";
 import { AttendeeCreateValidator } from "../attendee/attendee-validators";
 import { Role } from "../auth/auth-models";
-import {
-    RegistrationValidator
-} from "./registration-schema";
+import { RegistrationValidator } from "./registration-schema";
 import { generateEncryptedId, registrationExists } from "./registration-utils";
 
 import Mustache from "mustache";
@@ -136,7 +134,9 @@ registrationRouter.get("/", RoleChecker([]), async (req, res) => {
     });
 
     if (!registration) {
-        return { error: "DoesNotExist" };
+        return res.status(StatusCodes.NOT_FOUND).json({
+            error: "DoesNotExist",
+        });
     }
 
     return res.status(StatusCodes.OK).json({ registration });
