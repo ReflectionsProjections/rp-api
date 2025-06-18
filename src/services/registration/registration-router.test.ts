@@ -192,8 +192,8 @@ describe("GET /registration/all", () => {
         await Database.REGISTRATION.deleteMany({});
     });
 
-    it("should return registrants for matching filters on page 1", async () => {
-        const docs = Array.from({ length: 10 }, (_, i) => ({
+    it("should return registrants for matching filters", async () => {
+        const docs = Array.from({ length: 1000 }, (_, i) => ({
             ...baseRegistration,
             userId: `filter-user-${i}`,
             email: `filter-user-${i}@test.com`,
@@ -212,7 +212,7 @@ describe("GET /registration/all", () => {
             .send(filters)
             .expect(StatusCodes.OK);
 
-        expect(response.body.registrants.length).toBe(10);
+        expect(response.body.registrants.length).toBe(1000);
         expect(response.body.registrants[0]).toHaveProperty("userId");
     });
 
