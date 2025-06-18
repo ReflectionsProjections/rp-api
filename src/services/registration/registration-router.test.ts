@@ -256,7 +256,9 @@ describe("GET /registration/all", () => {
             StatusCodes.OK
         );
 
-        const userIds = response.body.registrants.map((r: any) => r.userId);
+        const userIds = response.body.registrants.map(
+            (r: { userId: string }) => r.userId
+        );
         expect(userIds).toContain("valid-user");
         expect(userIds).not.toContain("no-resume");
         expect(userIds).not.toContain("not-submitted");
