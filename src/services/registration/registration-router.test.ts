@@ -262,4 +262,3 @@ describe("GET /registration/all", () => {
         expect(userIds).not.toContain("not-submitted");
     });
 });
-
