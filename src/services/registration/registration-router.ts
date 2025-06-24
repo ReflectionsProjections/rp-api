@@ -1,13 +1,13 @@
 import cors from "cors";
 import { Router } from "express";
 import { StatusCodes } from "http-status-codes";
-import Config from "../../config";
 import { Database } from "../../database";
 import RoleChecker from "../../middleware/role-checker";
-import { AttendeeCreateValidator } from "../attendee/attendee-validators";
 import { Role } from "../auth/auth-models";
-import { RegistrationValidator } from "./registration-schema";
-import { generateEncryptedId, registrationExists } from "./registration-utils";
+import {
+    RegistrationDraftValidator,
+    RegistrationValidator,
+} from "./registration-schema";
 
 import Mustache from "mustache";
 import { sendHTMLEmail } from "../ses/ses-utils";
@@ -17,151 +17,136 @@ import templates from "../../templates/templates";
 const registrationRouter = Router();
 registrationRouter.use(cors());
 
-// A database upsert operation to save registration mid-progress
-registrationRouter.post("/save", RoleChecker([]), async (req, res) => {
-    const payload = res.locals.payload;
-    const existingRegistration = await registrationExists(payload.userId);
+registrationRouter.post("/drafts", RoleChecker([]), async (req, res) => {
+    const { userId } = res.locals.payload;
 
-    if (existingRegistration) {
-        return res.status(StatusCodes.CONFLICT).json({
-            error: "AlreadySubmitted",
-        });
+    const result = RegistrationDraftValidator.safeParse(req.body);
+    if (!result.success) {
+        return res
+            .status(StatusCodes.BAD_REQUEST)
+            .json({ error: result.error.format() });
     }
 
-    const registrationData = RegistrationValidator.parse({
-        ...req.body,
-        userId: payload.userId,
-    });
+    const data = result.data;
 
-    await Database.REGISTRATION.findOneAndUpdate(
-        { userId: res.locals.payload.userId },
-        {
-            ...registrationData,
-            hasSubmitted: false,
-        },
-        { upsert: true, new: true, setDefaultsOnInsert: true }
-    );
+    const existing = await Database.DRAFT_REGISTRATION.findOne({ userId });
+    if (existing) {
+        existing.set({ ...data, lastUpdated: new Date() });
+        await existing.save();
+        return res.status(StatusCodes.OK).json({ message: "Draft updated" });
+    }
 
-    return res.status(StatusCodes.OK).json(registrationData);
+    await Database.DRAFT_REGISTRATION.create({ ...data, userId });
+    return res.status(StatusCodes.CREATED).json({ message: "Draft created" });
+});
+
+registrationRouter.get("/drafts", RoleChecker([]), async (req, res) => {
+    const { userId } = res.locals.payload;
+
+    const draft = await Database.DRAFT_REGISTRATION.findOne({ userId });
+    if (!draft) {
+        return res.status(StatusCodes.NOT_FOUND).json({ error: "NotFound" });
+    }
+
+    return res.status(StatusCodes.OK).json(draft);
 });
 
 registrationRouter.post("/submit", RoleChecker([]), async (req, res) => {
-    const payload = res.locals.payload;
-    const existingRegistration = await registrationExists(payload.userId);
+    const { userId, displayName, email } = res.locals.payload;
 
-    if (existingRegistration) {
-        return res.status(StatusCodes.CONFLICT).json({
-            error: "AlreadySubmitted",
-        });
+    const result = RegistrationValidator.safeParse(req.body);
+    if (!result.success) {
+        return res
+            .status(StatusCodes.BAD_REQUEST)
+            .json({ error: result.error.format() });
     }
 
-    const registrationData = RegistrationValidator.parse({
-        ...req.body,
-        userId: payload.userId,
-    });
+    const data = result.data;
 
-    await Database.REGISTRATION.findOneAndUpdate(
-        { userId: payload.userId },
-        {
-            ...registrationData,
-            hasSubmitted: true,
-        },
-        { upsert: true, new: true, setDefaultsOnInsert: true }
-    );
+    const existing = await Database.REGISTRATION.findOne({ userId });
+    if (existing) {
+        existing.set({ ...data, submittedAt: new Date() });
+        await existing.save();
+        return res
+            .status(StatusCodes.OK)
+            .json({ message: "Registration updated" });
+    }
 
-    await Database.ROLES.findOneAndUpdate(
-        { userId: payload.userId },
-        {
-            $addToSet: {
-                roles: Role.Values.USER,
+    await Promise.all([
+        Database.REGISTRATION.create({ ...data, userId }),
+        Database.ATTENDEE.findOneAndUpdate(
+            { userId },
+            {
+                userId,
+                name: displayName,
+                email,
+                dietaryRestrictions: result.data.dietaryRestrictions ?? [],
+                allergies: result.data.allergies ?? [],
             },
-        },
-        { upsert: true }
-    );
-
-    const attendeeData = AttendeeCreateValidator.parse(registrationData);
-
-    await Database.ATTENDEE.findOneAndUpdate(
-        { userId: payload.userId },
-        attendeeData,
-        { upsert: true, setDefaultsOnInsert: true }
-    );
-
-    const encryptedId = await generateEncryptedId(payload.userId);
-    const redirect = Config.API_RESUME_UPDATE_ROUTE + `${encryptedId}`;
+            { upsert: true }
+        ),
+        Database.ROLES.findOneAndUpdate(
+            { userId },
+            { $addToSet: { roles: Role.Values.USER } },
+            { upsert: true }
+        ),
+    ]);
 
     const substitution = {
-        magic_link: redirect,
-        name: registrationData.name || "N/A",
-        email: registrationData.email || "N/A",
-        university: registrationData.university || "N/A",
-        major: registrationData.major || "N/A",
-        degree: registrationData.degree || "N/A",
-        graduation: registrationData.graduation || "N/A",
+        name: data.name,
+        school: data.school,
+        educationLevel: data.educationLevel,
+        major: data.major,
+        graduationYear: data.graduationYear,
         dietaryRestrictions:
-            registrationData.dietaryRestrictions.length > 0
-                ? registrationData.dietaryRestrictions
+            data.dietaryRestrictions && data.dietaryRestrictions.length > 0
+                ? data.dietaryRestrictions.join(", ")
                 : "N/A",
         allergies:
-            registrationData.allergies.length > 0
-                ? registrationData.allergies
+            data.allergies && data.allergies.length > 0
+                ? data.allergies.join(", ")
                 : "N/A",
-        gender: registrationData.gender || "N/A",
-        ethnicity: registrationData.ethnicity || "N/A",
-        portfolios:
-            registrationData.portfolios.length > 0
-                ? registrationData.portfolios
+        gender: data.gender ?? "N/A",
+        ethnicity: data.ethnicity ?? "N/A",
+        personalLinks:
+            data.personalLinks && data.personalLinks.length > 0
+                ? data.personalLinks.join(", ")
                 : "N/A",
-        jobInterest:
-            (registrationData?.jobInterest ?? []).length > 0
-                ? registrationData.jobInterest
+        tags: data.tags && data.tags.length > 0 ? data.tags.join(", ") : "N/A",
+        opportunities:
+            data.opportunities && data.opportunities.length > 0
+                ? data.opportunities.join(", ")
                 : "N/A",
     };
 
     await sendHTMLEmail(
-        payload.email,
-        "Reflections Projections 2024 Confirmation!",
+        email,
+        "Reflections Projections 2025 Confirmation!",
         Mustache.render(templates.REGISTRATION_CONFIRMATION, substitution)
     );
 
-    return res.status(StatusCodes.OK).json(registrationData);
-});
-
-// Retrieve registration fields both to repopulate registration info for a user
-registrationRouter.get("/", RoleChecker([]), async (req, res) => {
-    const registration = await Database.REGISTRATION.findOne({
-        userId: res.locals.payload.userId,
-    });
-
-    if (!registration) {
-        return res.status(StatusCodes.NOT_FOUND).json({
-            error: "DoesNotExist",
-        });
-    }
-
-    return res.status(StatusCodes.OK).json({ registration });
+    return res
+        .status(StatusCodes.CREATED)
+        .json({ message: "Registration submitted" });
 });
 
 registrationRouter.get(
     "/all",
     RoleChecker([Role.Enum.ADMIN, Role.Enum.CORPORATE]),
     async (req, res) => {
-        const query = {
-            hasSubmitted: true,
-            hasResume: true,
-        };
-
-        const projection = {
-            userId: 1,
-            name: 1,
-            major: 1,
-            graduation: 1,
-            degree: 1,
-            jobInterest: 1,
-            portfolios: 1,
-        };
-
-        const registrants = await Database.REGISTRATION.find(query, projection);
+        const registrants = await Database.REGISTRATION.find(
+            { hasResume: true },
+            {
+                userId: 1,
+                name: 1,
+                major: 1,
+                graduationYear: 1,
+                educationLevel: 1,
+                opportunities: 1,
+                personalLinks: 1,
+                _id: 0,
+            }
+        );
 
         return res.status(StatusCodes.OK).json({ registrants });
     }

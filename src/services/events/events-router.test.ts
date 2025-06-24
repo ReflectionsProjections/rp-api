@@ -244,9 +244,9 @@ describe("GET /events/currentOrNext", () => {
     ])(
         "should return the soonest future event even if it is hidden for $description",
         async ({ role }) => {
-            const response = await get("/events/currentOrNext", role).expect(
-                StatusCodes.OK
-            );
+            const response = await get("/events/currentOrNext", true, [
+                role,
+            ]).expect(StatusCodes.OK);
             expect(response.body).toMatchObject({
                 ...UPCOMING_EVENT_HIDDEN_EARLIER,
                 startTime:
@@ -266,9 +266,9 @@ describe("GET /events/currentOrNext", () => {
             await Database.EVENTS.create(UPCOMING_EVENT_VISIBLE_SOONEST);
             await Database.EVENTS.create(UPCOMING_EVENT_HIDDEN_EARLIER);
 
-            const response = await get("/events/currentOrNext", role).expect(
-                StatusCodes.OK
-            );
+            const response = await get("/events/currentOrNext", true, [
+                role,
+            ]).expect(StatusCodes.OK);
             expect(response.body).toMatchObject({
                 ...UPCOMING_EVENT_VISIBLE_SOONEST,
                 startTime:
@@ -330,7 +330,9 @@ describe("GET /events/", () => {
 
             // expected order: PAST_EVENT_VISIBLE, UPCOMING_EVENT_VISIBLE_SOONEST, UPCOMING_EVENT_HIDDEN_EARLIER, UPCOMING_EVENT_VISIBLE_LATER
 
-            const response = await get("/events/", role).expect(StatusCodes.OK);
+            const response = await get("/events/", true, [role]).expect(
+                StatusCodes.OK
+            );
 
             const expected = [
                 PAST_EVENT_VISIBLE,
@@ -381,7 +383,9 @@ describe("GET /events/", () => {
             await Database.EVENTS.create(eventB); // same start time as A, but ends earlier
             await Database.EVENTS.create(eventC); // starts earliest
 
-            const response = await get("/events/", role).expect(StatusCodes.OK);
+            const response = await get("/events/", true, [role]).expect(
+                StatusCodes.OK
+            );
             expect(response.body).toHaveLength(3);
 
             // expected sort order: C, A, B
@@ -426,7 +430,8 @@ describe("GET /events/:EVENTID", () => {
         async ({ role }) => {
             const response = await get(
                 `/events/${UPCOMING_EVENT_VISIBLE_LATER.eventId}`,
-                role
+                true,
+                [role]
             ).expect(StatusCodes.OK);
 
             expect(response.body).toEqual(
@@ -451,7 +456,8 @@ describe("GET /events/:EVENTID", () => {
         async ({ role }) => {
             const response = await get(
                 `/events/${UPCOMING_EVENT_HIDDEN_EARLIER.eventId}`,
-                role
+                true,
+                [role]
             ).expect(StatusCodes.OK);
 
             expect(response.body).toEqual(
@@ -482,7 +488,7 @@ describe("POST /events/", () => {
     ])(
         "should create a new event for $description with valid data and return status CREATED",
         async ({ role }) => {
-            await post("/events/", role)
+            await post("/events/", true, [role])
                 .send(NEW_EVENT_VALID_PAYLOAD)
                 .expect(StatusCodes.CREATED);
 
@@ -545,7 +551,9 @@ describe("PUT /events/:EVENTID", () => {
     ])(
         "should update an existing event with a full update payload for $description",
         async ({ role }) => {
-            await put(`/events/${UPCOMING_EVENT_VISIBLE_LATER.eventId}`, role)
+            await put(`/events/${UPCOMING_EVENT_VISIBLE_LATER.eventId}`, true, [
+                role,
+            ])
                 .send(EVENT_UPDATE_FULL_PAYLOAD)
                 .expect(StatusCodes.OK);
 
@@ -565,7 +573,11 @@ describe("PUT /events/:EVENTID", () => {
     ])(
         "should update the specified fields of an existing event with a partial update payload for $description",
         async ({ role }) => {
-            await put(`/events/${UPCOMING_EVENT_HIDDEN_EARLIER.eventId}`, role)
+            await put(
+                `/events/${UPCOMING_EVENT_HIDDEN_EARLIER.eventId}`,
+                true,
+                [role]
+            )
                 .send(EVENT_UPDATE_PARTIAL_PAYLOAD)
                 .expect(StatusCodes.OK);
 

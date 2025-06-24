@@ -27,7 +27,7 @@ describe("POST /puzzlebang", () => {
     it("should complete puzzle and increment points for PUZZLEBANG role", async () => {
         await Database.ATTENDEE.create(makeTestAttendee());
 
-        await post("/puzzlebang", Role.enum.PUZZLEBANG)
+        await post("/puzzlebang", true, [Role.enum.PUZZLEBANG])
             .send({ email: TEST_EMAIL, puzzleId: PUZZLE_ID })
             .expect(StatusCodes.OK);
 
@@ -41,13 +41,13 @@ describe("POST /puzzlebang", () => {
             makeTestAttendee({ puzzlesCompleted: [PUZZLE_ID] })
         );
 
-        await post("/puzzlebang", Role.enum.PUZZLEBANG)
+        await post("/puzzlebang", true, [Role.enum.PUZZLEBANG])
             .send({ email: TEST_EMAIL, puzzleId: PUZZLE_ID })
             .expect(StatusCodes.UNAUTHORIZED);
     });
 
     it("should return 404 if attendee not found", async () => {
-        await post("/puzzlebang", Role.enum.PUZZLEBANG)
+        await post("/puzzlebang", true, [Role.enum.PUZZLEBANG])
             .send({ email: "fake_nathan@test.com", puzzleId: PUZZLE_ID })
             .expect(StatusCodes.NOT_FOUND);
     });
@@ -55,7 +55,7 @@ describe("POST /puzzlebang", () => {
     it("should return 403 if user does not have PUZZLEBANG role", async () => {
         await Database.ATTENDEE.create(makeTestAttendee());
 
-        await post("/puzzlebang", Role.enum.USER)
+        await post("/puzzlebang", true, [Role.enum.USER])
             .send({ email: TEST_EMAIL, puzzleId: PUZZLE_ID })
             .expect(StatusCodes.FORBIDDEN);
     });
@@ -67,11 +67,11 @@ describe("POST /puzzlebang", () => {
     });
 
     it("should return 400 if body is missing fields", async () => {
-        await post("/puzzlebang", Role.enum.PUZZLEBANG)
+        await post("/puzzlebang", true, [Role.enum.PUZZLEBANG])
             .send({ email: TEST_EMAIL }) // missing puzzleId
             .expect(StatusCodes.BAD_REQUEST);
 
-        await post("/puzzlebang", Role.enum.PUZZLEBANG)
+        await post("/puzzlebang", true, [Role.enum.PUZZLEBANG])
             .send({ puzzleId: PUZZLE_ID }) // missing email
             .expect(StatusCodes.BAD_REQUEST);
     });

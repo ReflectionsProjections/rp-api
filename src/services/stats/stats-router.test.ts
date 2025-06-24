@@ -160,7 +160,7 @@ describe("GET /stats/check-in", () => {
     });
 
     it("should return 403 for users without STAFF access", async () => {
-        await get("/stats/check-in", Role.enum.USER).expect(
+        await get("/stats/check-in", true, [Role.enum.USER]).expect(
             StatusCodes.FORBIDDEN
         );
     });
@@ -197,7 +197,7 @@ describe("GET /stats/merch-item/:PRICE", () => {
     });
 
     it("should return 403 for users without STAFF access", async () => {
-        await get("/stats/merch-item/20", Role.enum.USER).expect(
+        await get("/stats/merch-item/20", true, [Role.enum.USER]).expect(
             StatusCodes.FORBIDDEN
         );
     });
@@ -242,7 +242,7 @@ describe("GET /stats/priority-attendee", () => {
     });
 
     it("should return 403 for users without STAFF role", async () => {
-        await get("/stats/priority-attendee", Role.enum.USER).expect(
+        await get("/stats/priority-attendee", true, [Role.enum.USER]).expect(
             StatusCodes.FORBIDDEN
         );
     });
@@ -292,7 +292,7 @@ describe("GET /stats/attendance/:N", () => {
     });
 
     it("should return 403 for users without STAFF access", async () => {
-        await get(`/stats/attendance/2`, Role.enum.USER).expect(
+        await get(`/stats/attendance/2`, true, [Role.enum.USER]).expect(
             StatusCodes.FORBIDDEN
         );
     });
@@ -305,10 +305,9 @@ describe("GET /stats/dietary-restrictions", () => {
     });
 
     it("should return correct dietary/allergy aggregation counts", async () => {
-        const response = await get(
-            "/stats/dietary-restrictions",
-            Role.enum.STAFF
-        ).expect(StatusCodes.OK);
+        const response = await get("/stats/dietary-restrictions", true, [
+            Role.enum.STAFF,
+        ]).expect(StatusCodes.OK);
 
         expect(response.body).toEqual({
             none: 1,
@@ -329,10 +328,9 @@ describe("GET /stats/dietary-restrictions", () => {
     it("should return all zeros and empty maps if no attendees exist", async () => {
         await Database.ATTENDEE.deleteMany({});
 
-        const response = await get(
-            "/stats/dietary-restrictions",
-            Role.enum.STAFF
-        ).expect(StatusCodes.OK);
+        const response = await get("/stats/dietary-restrictions", true, [
+            Role.enum.STAFF,
+        ]).expect(StatusCodes.OK);
         expect(response.body).toEqual({
             none: 0,
             dietaryRestrictions: 0,
@@ -350,7 +348,7 @@ describe("GET /stats/dietary-restrictions", () => {
     });
 
     it("should return 403 for users without STAFF role", async () => {
-        await get("/stats/dietary-restrictions", Role.enum.USER).expect(
+        await get("/stats/dietary-restrictions", true, [Role.enum.USER]).expect(
             StatusCodes.FORBIDDEN
         );
     });
