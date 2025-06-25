@@ -43,7 +43,7 @@ export const Config = {
 
     CLIENT_ID: getEnv("OAUTH_GOOGLE_CLIENT_ID"),
     CLIENT_SECRET: getEnv("OAUTH_GOOGLE_CLIENT_SECRET"),
-
+    IOS_CLIENT_ID: getEnv("IOS_OAUTH_GOOGLE_CLIENT_ID"),
     AUTH_CALLBACK_URI_BASE: `${API_BASE}/auth/callback/`,
 
     // prettier-ignore

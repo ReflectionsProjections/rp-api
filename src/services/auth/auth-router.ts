@@ -105,6 +105,32 @@ authRouter.post("/login/", async (req, res) => {
     return res.status(StatusCodes.OK).send({ token: jwtToken });
 });
 
+authRouter.post("/login/mobile", async (req, res) => {
+    const { idToken } = req.body;
+    let authPayload;
+    const ticket = await googleOAuthClient.verifyIdToken({
+        idToken,
+        audience: Config.IOS_CLIENT_ID,
+    });
+    authPayload = ticket.getPayload();
+    if (!authPayload) {
+        return res.status(StatusCodes.BAD_REQUEST).send({ error: "InvalidToken" });
+    }
+    const properScopes =
+        "email" in authPayload && "sub" in authPayload && "name" in authPayload;
+    if (!properScopes) {
+        return res.status(StatusCodes.BAD_REQUEST).send({ error: "InvalidScopes" });
+    }
+
+    // Update database by payload
+    await updateDatabaseWithAuthPayload(authPayload);
+
+    // Generate the JWT
+    const jwtToken = await generateJWT(`user${authPayload.sub}`);
+
+    return res.status(StatusCodes.OK).send({ token: jwtToken });
+});
+
 authRouter.get(
     "/corporate",
     RoleChecker([Role.Enum.ADMIN]),
