@@ -9,11 +9,6 @@ import RoleChecker from "../../middleware/role-checker";
 import { Role } from "../auth/auth-models";
 import { generateQrHash, getCurrentDay } from "../checkin/checkin-utils";
 
-import { decryptId } from "./attendee-utils";
-
-import { generateJWT } from "../auth/auth-utils";
-import Config from "../../config";
-
 const attendeeRouter = Router();
 
 // Favorite an event for an attendee
@@ -274,13 +269,5 @@ attendeeRouter.post(
         }
     }
 );
-
-attendeeRouter.get("/resume/update/:ENCODED_ID", async (req, res) => {
-    const ENCODED_ID = req.params.ENCODED_ID;
-    const decrypted_id = await decryptId(ENCODED_ID);
-    const token = await generateJWT(decrypted_id);
-    const uploadURL = Config.WEB_RESUME_REUPLOAD_ROUTE + `?token=${token}`;
-    return res.redirect(uploadURL);
-});
 
 export default attendeeRouter;
