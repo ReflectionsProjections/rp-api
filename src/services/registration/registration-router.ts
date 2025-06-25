@@ -52,7 +52,7 @@ registrationRouter.get("/drafts", RoleChecker([]), async (req, res) => {
 });
 
 registrationRouter.post("/submit", RoleChecker([]), async (req, res) => {
-    const { userId, displayName, email } = res.locals.payload;
+    const { userId, email } = res.locals.payload;
 
     const result = RegistrationValidator.safeParse(req.body);
     if (!result.success) {
@@ -78,7 +78,7 @@ registrationRouter.post("/submit", RoleChecker([]), async (req, res) => {
             { userId },
             {
                 userId,
-                name: displayName,
+                name: data.name,
                 email,
                 dietaryRestrictions: result.data.dietaryRestrictions ?? [],
                 allergies: result.data.allergies ?? [],
