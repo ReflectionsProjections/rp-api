@@ -12,44 +12,47 @@ import {
     TESTER,
 } from "../../../testing/testingTools";
 import { StatusCodes } from "http-status-codes";
-import { Database } from "../../database";
+import { SupabaseDB } from "../../supabase";
 import Config from "../../config";
-import { CommitteeNames, Meeting } from "../meetings/meetings-schema";
+import { CommitteeNames } from "../meetings/meetings-schema";
 import { Staff, StaffAttendanceTypeEnum, StaffValidator } from "./staff-schema";
+import { v4 as uuidv4 } from "uuid";
 
 const TESTER_STAFF = {
-    userId: TESTER.userId,
+    email: TESTER.email,
     name: TESTER.displayName,
     team: CommitteeNames.Enum.DEV,
     attendances: {},
 } satisfies Staff;
 
 const MEETING = {
-    meetingId: "meeting-abc123",
-    committeeType: "DEV",
-    startTime: new Date(),
-} satisfies Meeting;
+    meeting_id: uuidv4(),
+    committee_type: CommitteeNames.Enum.DEV,
+    start_time: new Date(),
+};
 
 const OTHER_STAFF = {
-    userId: "other-staff-user123",
+    email: "other_staff@test.com",
     name: "other-staff",
     team: CommitteeNames.Enum.DEV,
     attendances: {},
 } satisfies Staff;
 
 const NEW_STAFF_VALID = {
-    userId: "userNew789",
+    email: "new_staff@test.com",
     name: "New Staff User 789",
     team: CommitteeNames.Enum.MARKETING,
     attendances: {},
 } satisfies Staff;
 
-const NON_EXISTENT_USERID = "nonExistentUser789";
+const NON_EXISTENT_EMAIL = "nonExistentEmail@test.com";
 
 beforeEach(async () => {
-    await Database.MEETINGS.create(MEETING);
-    await Database.STAFF.create(StaffValidator.parse(TESTER_STAFF));
-    await Database.STAFF.create(StaffValidator.parse(OTHER_STAFF));
+    await SupabaseDB.STAFF.delete().neq("email", "a_non_existent_email_to_delete_all");
+    await SupabaseDB.MEETINGS.delete().neq("meeting_id", "a_non_existent_id_to_delete_all");
+    await SupabaseDB.MEETINGS.insert(MEETING);
+    await SupabaseDB.STAFF.insert(StaffValidator.parse(TESTER_STAFF));
+    await SupabaseDB.STAFF.insert(StaffValidator.parse(OTHER_STAFF));
 });
 
 describe("GET /staff/", () => {
@@ -68,7 +71,7 @@ describe("GET /staff/", () => {
                     expect.objectContaining(OTHER_STAFF),
                 ])
             );
-        }
+        }, 20000
     );
 
     it("should return an unauthorized error for an unauthenticated user", async () => {
@@ -76,7 +79,7 @@ describe("GET /staff/", () => {
     });
 
     it("should return an empty array if no staff records exist", async () => {
-        await Database.STAFF.deleteMany({});
+        await SupabaseDB.STAFF.delete().neq("email", "");
         const response = await getAsAdmin("/staff/").expect(StatusCodes.OK);
         expect(response.body).toEqual([]);
     });
@@ -90,21 +93,21 @@ describe("GET /staff/:USERID", () => {
         "should return correct staff data for $description requesting existing user",
         async ({ getter }) => {
             const response = await getter(
-                `/staff/${TESTER_STAFF.userId}`
+                `/staff/${TESTER_STAFF.email}`
             ).expect(StatusCodes.OK);
             expect(response.body).toMatchObject(TESTER_STAFF);
         }
     );
 
     it("should return an unauthorized error for an unauthenticated user", async () => {
-        await get(`/staff/${TESTER_STAFF.userId}`).expect(
+        await get(`/staff/${TESTER_STAFF.email}`).expect(
             StatusCodes.UNAUTHORIZED
         );
     });
 
     it("should return not found for a non-existent user", async () => {
         const response = await getAsAdmin(
-            `/staff/${NON_EXISTENT_USERID}`
+            `/staff/${NON_EXISTENT_EMAIL}`
         ).expect(StatusCodes.NOT_FOUND);
         expect(response.body).toEqual({ error: "UserNotFound" });
     });
@@ -118,10 +121,8 @@ describe("POST /staff/", () => {
             .expect(StatusCodes.CREATED);
         expect(response.body).toMatchObject(NEW_STAFF_VALID);
 
-        const createdStaff = await Database.STAFF.findOne({
-            userId: NEW_STAFF_VALID.userId,
-        });
-        expect(createdStaff?.toObject()).toMatchObject(NEW_STAFF_VALID);
+        const createdStaff = await SupabaseDB.STAFF.select().eq("email", NEW_STAFF_VALID.email).single();
+        expect(createdStaff.data).toMatchObject(NEW_STAFF_VALID);
     });
 
     // auth tests
@@ -142,7 +143,7 @@ describe("POST /staff/", () => {
         {
             description: "missing a required field",
             payload: {
-                userId: NEW_STAFF_VALID.userId,
+                userId: NEW_STAFF_VALID.email,
                 name: NEW_STAFF_VALID.name,
             },
         },
@@ -170,10 +171,9 @@ describe("POST /staff/", () => {
         await postAsAdmin("/staff/")
             .send(payloadWithExtra)
             .expect(StatusCodes.CREATED);
-        const createdStaff = await Database.STAFF.findOne({
-            userId: NEW_STAFF_VALID.userId,
-        });
-        expect(createdStaff?.toObject()).toMatchObject(NEW_STAFF_VALID);
+        
+        const createdStaff = await SupabaseDB.STAFF.select().eq("email", NEW_STAFF_VALID.email).single();
+        expect(createdStaff.data).toMatchObject(NEW_STAFF_VALID);
     });
 
     // conflict request test
@@ -181,31 +181,29 @@ describe("POST /staff/", () => {
         const response = await postAsAdmin("/staff/")
             .send(TESTER_STAFF)
             .expect(StatusCodes.BAD_REQUEST);
-        expect(response.body).toEqual({ error: "UserAlreadyExists" });
+        expect(response.body).toMatchObject({ error: "UserAlreadyExists" });
     });
 });
 
 describe("DELETE /staff/:USERID", () => {
     // success case
     it("should delete existing staff member and return NO_CONTENT", async () => {
-        await delAsAdmin(`/staff/${TESTER_STAFF.userId}`).expect(
+        await delAsAdmin(`/staff/${TESTER_STAFF.email}`).expect(
             StatusCodes.NO_CONTENT
         );
-        const deletedStaff = await Database.STAFF.findOne({
-            userId: TESTER_STAFF.userId,
-        });
-        expect(deletedStaff).toBeNull();
+        const deletedStaff = await SupabaseDB.STAFF.select().eq("email", TESTER_STAFF.email).single();
+        expect(deletedStaff.data).toBeNull();
     });
 
     // auth tests
     it("should return UNAUTHORIZED for an unauthenticated user", async () => {
-        await del(`/staff/${TESTER_STAFF.userId}`).expect(
+        await del(`/staff/${TESTER_STAFF.email}`).expect(
             StatusCodes.UNAUTHORIZED
         );
     });
 
     it("should return FORBIDDEN for STAFF user", async () => {
-        await delAsStaff(`/staff/${TESTER_STAFF.userId}`).expect(
+        await delAsStaff(`/staff/${TESTER_STAFF.email}`).expect(
             StatusCodes.FORBIDDEN
         );
     });
@@ -213,7 +211,7 @@ describe("DELETE /staff/:USERID", () => {
     // not found test
     it("should return NOT_FOUND when trying to delete a staff member that doesn't exist", async () => {
         const response = await delAsAdmin(
-            `/staff/${NON_EXISTENT_USERID}`
+            `/staff/${NON_EXISTENT_EMAIL}`
         ).expect(StatusCodes.NOT_FOUND);
         expect(response.body).toEqual({ error: "UserNotFound" });
     });
@@ -229,38 +227,32 @@ describe("POST /staff/check-in", () => {
         expect(res.body.error).toBe("NotFound");
     });
 
-    it("fails if staff is already checked in", async () => {
-        await Database.STAFF.updateOne(
-            { userId: TESTER_STAFF.userId },
-            {
-                attendances: {
-                    [MEETING.meetingId]: StaffAttendanceTypeEnum.PRESENT,
-                },
-            }
-        );
+    it("fails if staff is already checked in", async () => {      
+
+        await SupabaseDB.STAFF.update({ attendances: { [MEETING.meeting_id]: StaffAttendanceTypeEnum.PRESENT } }).eq("email", TESTER_STAFF.email).single();  
 
         const res = await postAsStaff("/staff/check-in")
             .send({
-                meetingId: MEETING.meetingId,
+                meetingId: MEETING.meeting_id,
             })
             .expect(StatusCodes.BAD_REQUEST);
         expect(res.body.error).toBe("AlreadyCheckedIn");
     });
 
     it("fails if meeting is outside check-in window", async () => {
-        await Database.MEETINGS.updateOne(
-            { meetingId: MEETING.meetingId },
-            {
-                startTime: new Date(
+        await SupabaseDB.MEETINGS
+            .update({
+                start_time: new Date(
                     Date.now() -
                         Config.STAFF_MEETING_CHECK_IN_WINDOW_SECONDS * 1000 * 2
                 ),
-            }
-        );
+            })
+            .eq("meeting_id", MEETING.meeting_id)
+            .select();
 
         const res = await postAsStaff("/staff/check-in")
             .send({
-                meetingId: MEETING.meetingId,
+                meetingId: MEETING.meeting_id,
             })
             .expect(StatusCodes.BAD_REQUEST);
         expect(res.body.error).toBe("Expired");
@@ -268,37 +260,35 @@ describe("POST /staff/check-in", () => {
 
     it("successfully checks in", async () => {
         // Should still check in, even if close to end of check in window
-        await Database.MEETINGS.updateOne(
-            { meetingId: MEETING.meetingId },
-            {
-                startTime: new Date(
+
+        await SupabaseDB.MEETINGS
+            .update({
+                start_time: new Date(
                     Date.now() -
                         (Config.STAFF_MEETING_CHECK_IN_WINDOW_SECONDS / 2) *
                             1000
                 ),
-            }
-        );
+            })
+            .eq("meeting_id", MEETING.meeting_id)
+            .select();
 
         const res = await postAsStaff("/staff/check-in").send({
-            meetingId: MEETING.meetingId,
+            meetingId: MEETING.meeting_id,
         });
         expect(res.status).toBe(StatusCodes.OK);
-
-        const updated = await Database.STAFF.findOne({
-            userId: TESTER_STAFF.userId,
-        });
-        expect(updated?.toObject()).toMatchObject({
+        const updated = await SupabaseDB.STAFF.select().eq("email", TESTER_STAFF.email).single();
+        expect(updated.data).toMatchObject({
             ...TESTER_STAFF,
-            attendances: new Map([
-                [MEETING.meetingId, StaffAttendanceTypeEnum.PRESENT],
-            ]),
+            attendances: {
+                [MEETING.meeting_id]: StaffAttendanceTypeEnum.PRESENT,
+            },
         });
     });
 });
 
 describe("POST /staff/:USERID/attendance", () => {
     it("fails if meeting is not found", async () => {
-        const res = await postAsAdmin(`/staff/${OTHER_STAFF.userId}/attendance`)
+        const res = await postAsAdmin(`/staff/${OTHER_STAFF.email}/attendance`)
             .send({
                 meetingId: "invalid-id",
                 attendanceType: StaffAttendanceTypeEnum.EXCUSED,
@@ -311,7 +301,7 @@ describe("POST /staff/:USERID/attendance", () => {
     it("fails if staff is not found", async () => {
         const res = await postAsAdmin(`/staff/invalid-id/attendance`)
             .send({
-                meetingId: MEETING.meetingId,
+                meetingId: MEETING.meeting_id,
                 attendanceType: StaffAttendanceTypeEnum.EXCUSED,
             })
             .expect(StatusCodes.NOT_FOUND);
@@ -321,53 +311,45 @@ describe("POST /staff/:USERID/attendance", () => {
 
     it("adds attendance successfully", async () => {
         const res = await postAsAdmin(
-            `/staff/${OTHER_STAFF.userId}/attendance`
+            `/staff/${OTHER_STAFF.email}/attendance`
         ).send({
-            meetingId: MEETING.meetingId,
+            meetingId: MEETING.meeting_id,
             attendanceType: StaffAttendanceTypeEnum.EXCUSED,
         });
 
         expect(res.status).toBe(StatusCodes.OK);
-
-        const updated = await Database.STAFF.findOne({
-            userId: OTHER_STAFF.userId,
-        });
-        expect(updated?.toObject()).toMatchObject({
+        const updated = await SupabaseDB.STAFF.select().eq("email", OTHER_STAFF.email).single();
+        expect(updated.data).toMatchObject({
             ...OTHER_STAFF,
-            attendances: new Map([
-                [MEETING.meetingId, StaffAttendanceTypeEnum.EXCUSED],
-            ]),
+            attendances: {
+                [MEETING.meeting_id]: StaffAttendanceTypeEnum.EXCUSED,
+            },
         });
     });
 
     it("updates attendance successfully", async () => {
         const EXISTING_ATTENDANCES = {
-            [MEETING.meetingId]: StaffAttendanceTypeEnum.PRESENT,
+            [MEETING.meeting_id]: StaffAttendanceTypeEnum.PRESENT,
         };
-        await Database.STAFF.updateOne(
-            { userId: OTHER_STAFF.userId },
-            {
-                attendances: EXISTING_ATTENDANCES,
-            }
-        );
+        await SupabaseDB.STAFF.update({
+            attendances: EXISTING_ATTENDANCES,
+        }).eq("email", OTHER_STAFF.email).single();
 
         const res = await postAsAdmin(
-            `/staff/${OTHER_STAFF.userId}/attendance`
+            `/staff/${OTHER_STAFF.email}/attendance`
         ).send({
-            meetingId: MEETING.meetingId,
+            meetingId: MEETING.meeting_id,
             attendanceType: StaffAttendanceTypeEnum.EXCUSED,
         });
 
         expect(res.status).toBe(StatusCodes.OK);
 
-        const updated = await Database.STAFF.findOne({
-            userId: OTHER_STAFF.userId,
-        });
-        expect(updated?.toObject()).toMatchObject({
+        const updated = await SupabaseDB.STAFF.select().eq("email", OTHER_STAFF.email).single();
+        expect(updated.data).toMatchObject({
             ...OTHER_STAFF,
             attendances: new Map([
                 ...Object.entries(EXISTING_ATTENDANCES),
-                [MEETING.meetingId, StaffAttendanceTypeEnum.EXCUSED],
+                [MEETING.meeting_id, StaffAttendanceTypeEnum.EXCUSED],
             ]),
         });
     });

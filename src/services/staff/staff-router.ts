@@ -174,10 +174,42 @@ staffRouter.get(
 // Create new staff member
 staffRouter.post("/", RoleChecker([Role.Enum.ADMIN]), async (req, res) => {
     // validate input using StaffValidator
-    const staffData = StaffValidator.parse(req.body);
+    const validationResult = StaffValidator.safeParse(req.body);
+
+    if (!validationResult .success) {
+        return res.status(StatusCodes.BAD_REQUEST).json({
+            error: "ValidationError",
+            message: validationResult .error.errors.map((e) => e.message).join(", "),
+        });
+    }
+
+    const staffData = validationResult.data;
+    // Check if staff member already exists
+    const { data: existingStaff, error: existingError } =
+        await SupabaseDB.STAFF.select("email").eq("email", staffData.email).maybeSingle();
+
+    if (existingError) {
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+            error: "DatabaseError",
+            message: existingError.message,
+        });
+    }
+
+    if (existingStaff) {
+        return res.status(StatusCodes.BAD_REQUEST).json({
+            error: "UserAlreadyExists",
+            message: "Staff member with this email already exists",
+        });
+    }
+
     const { data: savedStaff, error: staffError } =
-        await SupabaseDB.STAFF.insert([staffData]).select("*").single();
-    if (staffError) throw staffError;
+        await SupabaseDB.STAFF.insert([staffData]).select().single();
+    if (staffError) {
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+            error: "DatabaseError",
+            message: staffError.message,
+        });
+    }
 
     return res.status(StatusCodes.CREATED).json(savedStaff);
 });
