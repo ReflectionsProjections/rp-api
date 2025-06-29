@@ -16,12 +16,12 @@ subscriptionRouter.post("/", cors(), async (req, res) => {
 
     const { mailing_list } = subscriptionData;
 
-    const { data: list, error: findError } = await SupabaseDB.SUBSCRIPTIONS
-        .select('subscriptions')
-        .eq('mailing_list', mailing_list)
-        .single();
+    const { data: list, error: findError } =
+        await SupabaseDB.SUBSCRIPTIONS.select("subscriptions")
+            .eq("mailing_list", mailing_list)
+            .single();
 
-    if (findError && findError.code !== 'PGRST116') {
+    if (findError && findError.code !== "PGRST116") {
         throw findError;
     }
 
@@ -33,23 +33,21 @@ subscriptionRouter.post("/", cors(), async (req, res) => {
         if (!subscriptions.includes(lowerCaseEmail)) {
             const updatedSubs = [...subscriptions, lowerCaseEmail];
 
-            const { error: updateError } = await SupabaseDB.SUBSCRIPTIONS
-                .update({ subscriptions: updatedSubs })
-                .eq('mailing_list', mailing_list);
-            
-                if (updateError) {
-                    throw updateError;
-                }
+            const { error: updateError } =
+                await SupabaseDB.SUBSCRIPTIONS.update({
+                    subscriptions: updatedSubs,
+                }).eq("mailing_list", mailing_list);
 
+            if (updateError) {
+                throw updateError;
+            }
         }
-
     } else {
         // if the list was not found, we need to create it
-        const { error: insertError } = await SupabaseDB.SUBSCRIPTIONS
-            .insert({
-                mailing_list: mailing_list,
-                subscriptions: [lowerCaseEmail]
-            });
+        const { error: insertError } = await SupabaseDB.SUBSCRIPTIONS.insert({
+            mailing_list: mailing_list,
+            subscriptions: [lowerCaseEmail],
+        });
         if (insertError) {
             // This can fail due to the race condition if another request
             // created the list in the meantime.
