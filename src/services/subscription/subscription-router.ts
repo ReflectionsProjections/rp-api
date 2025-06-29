@@ -1,8 +1,7 @@
 import { Router } from "express";
 import { StatusCodes } from "http-status-codes";
 import { SubscriptionValidator } from "./subscription-schema";
-import { Database } from "../../database";
-// import corsMiddleware from "../../middleware/cors-middleware";
+import { SupabaseDB } from "../../supabase";
 import cors from "cors";
 
 const subscriptionRouter = Router();
@@ -15,12 +14,49 @@ subscriptionRouter.post("/", cors(), async (req, res) => {
     // normalize the email to prevent case sensitivity duplicates
     const lowerCaseEmail = subscriptionData.email.toLowerCase();
 
-    // Upsert the user info into the corresponding Subscription collection
-    await Database.SUBSCRIPTIONS.findOneAndUpdate(
-        { mailingList: subscriptionData.mailingList },
-        { $addToSet: { subscriptions: lowerCaseEmail } },
-        { upsert: true, new: true }
-    );
+    const { mailing_list } = subscriptionData;
+
+    const { data: list, error: findError } = await SupabaseDB.SUBSCRIPTIONS
+        .select('subscriptions')
+        .eq('mailing_list', mailing_list)
+        .single();
+
+    if (findError && findError.code !== 'PGRST116') {
+        throw findError;
+    }
+
+    if (list) {
+        const subscriptions = list.subscriptions || [];
+
+        // We only want to update if the email isn't in there already
+
+        if (!subscriptions.includes(lowerCaseEmail)) {
+            const updatedSubs = [...subscriptions, lowerCaseEmail];
+
+            const { error: updateError } = await SupabaseDB.SUBSCRIPTIONS
+                .update({ subscriptions: updatedSubs })
+                .eq('mailing_list', mailing_list);
+            
+                if (updateError) {
+                    throw updateError;
+                }
+
+        }
+
+    } else {
+        // if the list was not found, we need to create it
+        const { error: insertError } = await SupabaseDB.SUBSCRIPTIONS
+            .insert({
+                mailing_list: mailing_list,
+                subscriptions: [lowerCaseEmail]
+            });
+        if (insertError) {
+            // This can fail due to the race condition if another request
+            // created the list in the meantime.
+            throw insertError;
+        }
+    }
+
     return res.status(StatusCodes.CREATED).json(subscriptionData);
 });
 
