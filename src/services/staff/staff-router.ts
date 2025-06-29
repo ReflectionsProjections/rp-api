@@ -176,17 +176,21 @@ staffRouter.post("/", RoleChecker([Role.Enum.ADMIN]), async (req, res) => {
     // validate input using StaffValidator
     const validationResult = StaffValidator.safeParse(req.body);
 
-    if (!validationResult .success) {
+    if (!validationResult.success) {
         return res.status(StatusCodes.BAD_REQUEST).json({
             error: "ValidationError",
-            message: validationResult .error.errors.map((e) => e.message).join(", "),
+            message: validationResult.error.errors
+                .map((e) => e.message)
+                .join(", "),
         });
     }
 
     const staffData = validationResult.data;
     // Check if staff member already exists
     const { data: existingStaff, error: existingError } =
-        await SupabaseDB.STAFF.select("email").eq("email", staffData.email).maybeSingle();
+        await SupabaseDB.STAFF.select("email")
+            .eq("email", staffData.email)
+            .maybeSingle();
 
     if (existingError) {
         return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
