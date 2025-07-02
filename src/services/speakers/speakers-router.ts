@@ -1,53 +1,110 @@
 import { Router } from "express";
 import { StatusCodes } from "http-status-codes";
 import { SpeakerValidator, UpdateSpeakerValidator } from "./speakers-schema";
-import { Database } from "../../database";
 import RoleChecker from "../../middleware/role-checker";
 import { Role } from "../auth/auth-models";
+import { SupabaseDB } from "../../supabase";
 
 const speakersRouter = Router();
 
 // Get all speakers
 speakersRouter.get("/", RoleChecker([], true), async (req, res) => {
-    const speakers = await Database.SPEAKERS.find();
-    return res.status(StatusCodes.OK).json(speakers);
+    const { data: speakers } = await SupabaseDB.SPEAKERS.select(
+        "*"
+    ).throwOnError();
+
+    const responseSpeakers = (speakers || []).map((speaker) => ({
+        speakerId: speaker.speaker_id,
+        name: speaker.name,
+        title: speaker.title,
+        bio: speaker.bio,
+        eventTitle: speaker.event_title,
+        eventDescription: speaker.event_description,
+        imgUrl: speaker.img_url,
+    }));
+
+    return res.status(StatusCodes.OK).json(responseSpeakers);
 });
 
 // Get a specific speaker
-speakersRouter.get("/:SPEAKERID", RoleChecker([], true), async (req, res) => {
-    const speakerId = req.params.SPEAKERID;
+speakersRouter.get(
+    "/:SPEAKERID",
+    RoleChecker([], true),
+    async (req, res) => {
+        const speakerId = req.params.SPEAKERID;
 
-    const speaker = await Database.SPEAKERS.findOne({ speakerId });
+        const { data: speaker } = await SupabaseDB.SPEAKERS.select("*")
+            .eq("speaker_id", speakerId)
+            .maybeSingle()
+            .throwOnError();
 
-    if (!speaker) {
-        return res
-            .status(StatusCodes.NOT_FOUND)
-            .json({ error: "DoesNotExist" });
+        if (!speaker) {
+            return res
+                .status(StatusCodes.NOT_FOUND)
+                .json({ error: "DoesNotExist" });
+        }
+
+        const responseSpeaker = {
+            speakerId: speaker.speaker_id,
+            name: speaker.name,
+            title: speaker.title,
+            bio: speaker.bio,
+            eventTitle: speaker.event_title,
+            eventDescription: speaker.event_description,
+            imgUrl: speaker.img_url,
+        };
+
+        return res.status(StatusCodes.OK).json(responseSpeaker);
     }
-
-    return res.status(StatusCodes.OK).json(speaker);
-});
+);
 
 // Create a new speaker
 speakersRouter.post(
     "/",
     RoleChecker([Role.Enum.ADMIN, Role.Enum.STAFF]),
-    async (req, res) => {
-        const validatedData = SpeakerValidator.parse(req.body);
+    async (req, res, next) => {
+        try {
+            const validatedData = SpeakerValidator.parse(req.body);
 
-        const existingSpeaker = await Database.SPEAKERS.findOne({
-            speakerId: validatedData.speakerId,
-        });
+            // Map from camelCase to snake_case for the database
+            const newSpeakerData = {
+                speaker_id: validatedData.speakerId,
+                name: validatedData.name,
+                title: validatedData.title,
+                bio: validatedData.bio,
+                event_title: validatedData.eventTitle,
+                event_description: validatedData.eventDescription,
+                img_url: validatedData.imgUrl,
+            };
 
-        if (existingSpeaker) {
-            return res
-                .status(StatusCodes.BAD_REQUEST)
-                .json({ error: "UserAlreadyExists" });
+            const { data: newSpeaker } = await SupabaseDB.SPEAKERS.insert(newSpeakerData)
+                .select()
+                .single()
+                .throwOnError();
+
+            // Map back from snake_case to camelCase for the API response
+            const responseSpeaker = {
+                speakerId: newSpeaker.speaker_id,
+                name: newSpeaker.name,
+                title: newSpeaker.title,
+                bio: newSpeaker.bio,
+                eventTitle: newSpeaker.event_title,
+                eventDescription: newSpeaker.event_description,
+                imgUrl: newSpeaker.img_url,
+            };
+
+            return res.status(StatusCodes.CREATED).json(responseSpeaker);
+        } catch (error: any) { // TODO: fix this type safety later
+            // Check for Postgres's unique violation error code
+            if (error && error.code === "23505") {
+                return res
+                    .status(StatusCodes.BAD_REQUEST)
+                    .json({ error: "UserAlreadyExists" });
+            }
+
+            // For all other errors (including Zod validation), pass to middleware
+            return next(error);
         }
-
-        const speaker = new Database.SPEAKERS(validatedData);
-        await speaker.save();
-        return res.status(StatusCodes.CREATED).json(speaker);
     }
 );
 
@@ -57,22 +114,44 @@ speakersRouter.put(
     RoleChecker([Role.Enum.ADMIN, Role.Enum.STAFF]),
     async (req, res) => {
         const speakerId = req.params.SPEAKERID;
+        const validatedData = UpdateSpeakerValidator.parse(req.body);
 
-        const updateData = UpdateSpeakerValidator.parse(req.body);
+        // Map from camelCase to snake_case for the database
+        const updateDataForDB = {
+            name: validatedData.name,
+            title: validatedData.title,
+            bio: validatedData.bio,
+            event_title: validatedData.eventTitle,
+            event_description: validatedData.eventDescription,
+            img_url: validatedData.imgUrl,
+        };
 
-        const speaker = await Database.SPEAKERS.findOneAndUpdate(
-            { speakerId: speakerId },
-            { $set: updateData },
-            { new: true, runValidators: true }
-        );
+        const { data: updatedSpeaker } = await SupabaseDB.SPEAKERS.update(
+            updateDataForDB
+        )
+            .eq("speaker_id", speakerId)
+            .select()
+            .maybeSingle()
+            .throwOnError();
 
-        if (!speaker) {
+        if (!updatedSpeaker) {
             return res
                 .status(StatusCodes.NOT_FOUND)
                 .json({ error: "DoesNotExist" });
         }
 
-        return res.status(StatusCodes.OK).json(speaker);
+        // Map back from snake_case to camelCase for the API response
+        const responseSpeaker = {
+            speakerId: updatedSpeaker.speaker_id,
+            name: updatedSpeaker.name,
+            title: updatedSpeaker.title,
+            bio: updatedSpeaker.bio,
+            eventTitle: updatedSpeaker.event_title,
+            eventDescription: updatedSpeaker.event_description,
+            imgUrl: updatedSpeaker.img_url,
+        };
+
+        return res.status(StatusCodes.OK).json(responseSpeaker);
     }
 );
 
@@ -83,9 +162,12 @@ speakersRouter.delete(
     async (req, res) => {
         const speakerId = req.params.SPEAKERID;
 
-        const deletedSpeaker = await Database.SPEAKERS.findOneAndDelete({
-            speakerId,
-        });
+        const { data: deletedSpeaker } = await SupabaseDB.SPEAKERS.delete()
+            .eq("speaker_id", speakerId)
+            .select()
+            .maybeSingle()
+            .throwOnError();
+
         if (!deletedSpeaker) {
             return res
                 .status(StatusCodes.NOT_FOUND)
