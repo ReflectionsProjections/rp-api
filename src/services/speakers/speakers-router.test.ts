@@ -152,9 +152,10 @@ describe("POST /speakers/", () => {
         );
 
         // Verify the speaker was actually created by attempting to fetch it
-        const createdSpeakerResponse = await get(`/speakers/${response.body.speakerId}`)
-            .expect(StatusCodes.OK);
-        
+        const createdSpeakerResponse = await get(
+            `/speakers/${response.body.speakerId}`
+        ).expect(StatusCodes.OK);
+
         expect(createdSpeakerResponse.body).toMatchObject({
             ...NEW_SPEAKER_PAYLOAD_NO_ID,
             speakerId: response.body.speakerId,
@@ -168,8 +169,9 @@ describe("POST /speakers/", () => {
 
         expect(response.body).toMatchObject(NEW_SPEAKER_PAYLOAD_WITH_ID);
 
-        const createdSpeakerResponse = await get(`/speakers/${response.body.speakerId}`)
-            .expect(StatusCodes.OK);
+        const createdSpeakerResponse = await get(
+            `/speakers/${response.body.speakerId}`
+        ).expect(StatusCodes.OK);
 
         expect(createdSpeakerResponse.body).toMatchObject(
             NEW_SPEAKER_PAYLOAD_WITH_ID
@@ -228,8 +230,9 @@ describe("PUT /speakers/:SPEAKERID", () => {
         // ensure speakerId was not overwritten
         expect(response.body.speakerId).toBe(SPEAKER_1_ID);
 
-        const speakerAfterUpdateResponse = await get(`/speakers/${response.body.speakerId}`)
-            .expect(StatusCodes.OK);
+        const speakerAfterUpdateResponse = await get(
+            `/speakers/${response.body.speakerId}`
+        ).expect(StatusCodes.OK);
 
         expect(speakerAfterUpdateResponse.body).toMatchObject({
             ...UPDATE_SPEAKER_PAYLOAD,
@@ -289,8 +292,9 @@ describe("DELETE /speakers/:SPEAKERID", () => {
             StatusCodes.NO_CONTENT
         );
 
-        const deletedSpeakerResponse = await get(`/speakers/${SPEAKER_1.speakerId}`)
-            .expect(StatusCodes.NOT_FOUND);
+        const deletedSpeakerResponse = await get(
+            `/speakers/${SPEAKER_1.speakerId}`
+        ).expect(StatusCodes.NOT_FOUND);
         expect(deletedSpeakerResponse.body).toEqual({ error: "DoesNotExist" });
     });
 
@@ -299,8 +303,9 @@ describe("DELETE /speakers/:SPEAKERID", () => {
             StatusCodes.NO_CONTENT
         );
 
-        const deletedSpeakerResponse = await get(`/speakers/${SPEAKER_1.speakerId}`)
-            .expect(StatusCodes.NOT_FOUND);
+        const deletedSpeakerResponse = await get(
+            `/speakers/${SPEAKER_1.speakerId}`
+        ).expect(StatusCodes.NOT_FOUND);
         expect(deletedSpeakerResponse.body).toEqual({ error: "DoesNotExist" });
     });
 

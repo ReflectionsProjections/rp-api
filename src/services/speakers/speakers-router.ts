@@ -9,9 +9,8 @@ const speakersRouter = Router();
 
 // Get all speakers
 speakersRouter.get("/", RoleChecker([], true), async (req, res) => {
-    const { data: speakers } = await SupabaseDB.SPEAKERS.select(
-        "*"
-    ).throwOnError();
+    const { data: speakers } =
+        await SupabaseDB.SPEAKERS.select("*").throwOnError();
 
     const responseSpeakers = (speakers || []).map((speaker) => ({
         speakerId: speaker.speaker_id,
@@ -27,36 +26,32 @@ speakersRouter.get("/", RoleChecker([], true), async (req, res) => {
 });
 
 // Get a specific speaker
-speakersRouter.get(
-    "/:SPEAKERID",
-    RoleChecker([], true),
-    async (req, res) => {
-        const speakerId = req.params.SPEAKERID;
+speakersRouter.get("/:SPEAKERID", RoleChecker([], true), async (req, res) => {
+    const speakerId = req.params.SPEAKERID;
 
-        const { data: speaker } = await SupabaseDB.SPEAKERS.select("*")
-            .eq("speaker_id", speakerId)
-            .maybeSingle()
-            .throwOnError();
+    const { data: speaker } = await SupabaseDB.SPEAKERS.select("*")
+        .eq("speaker_id", speakerId)
+        .maybeSingle()
+        .throwOnError();
 
-        if (!speaker) {
-            return res
-                .status(StatusCodes.NOT_FOUND)
-                .json({ error: "DoesNotExist" });
-        }
-
-        const responseSpeaker = {
-            speakerId: speaker.speaker_id,
-            name: speaker.name,
-            title: speaker.title,
-            bio: speaker.bio,
-            eventTitle: speaker.event_title,
-            eventDescription: speaker.event_description,
-            imgUrl: speaker.img_url,
-        };
-
-        return res.status(StatusCodes.OK).json(responseSpeaker);
+    if (!speaker) {
+        return res
+            .status(StatusCodes.NOT_FOUND)
+            .json({ error: "DoesNotExist" });
     }
-);
+
+    const responseSpeaker = {
+        speakerId: speaker.speaker_id,
+        name: speaker.name,
+        title: speaker.title,
+        bio: speaker.bio,
+        eventTitle: speaker.event_title,
+        eventDescription: speaker.event_description,
+        imgUrl: speaker.img_url,
+    };
+
+    return res.status(StatusCodes.OK).json(responseSpeaker);
+});
 
 // Create a new speaker
 speakersRouter.post(
@@ -77,7 +72,9 @@ speakersRouter.post(
                 img_url: validatedData.imgUrl,
             };
 
-            const { data: newSpeaker } = await SupabaseDB.SPEAKERS.insert(newSpeakerData)
+            const { data: newSpeaker } = await SupabaseDB.SPEAKERS.insert(
+                newSpeakerData
+            )
                 .select()
                 .single()
                 .throwOnError();
@@ -94,7 +91,8 @@ speakersRouter.post(
             };
 
             return res.status(StatusCodes.CREATED).json(responseSpeaker);
-        } catch (error: any) { // TODO: fix this type safety later
+        } catch (error: any) {
+            // TODO: fix this type safety later
             // Check for Postgres's unique violation error code
             if (error && error.code === "23505") {
                 return res
