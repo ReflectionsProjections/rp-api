@@ -53,7 +53,7 @@ if (Config.ENV !== EnvironmentEnum.TESTING) {
 app.use(bodyParser.json());
 
 // Database
-app.use(databaseMiddleware);
+// app.use(databaseMiddleware);
 
 // API routes
 app.use("/attendee", attendeeRouter);
