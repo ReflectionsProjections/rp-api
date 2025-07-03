@@ -4,7 +4,7 @@ import { Config, EnvironmentEnum } from "./config";
 import { isTest } from "./utilities";
 import AWS from "aws-sdk";
 
-import databaseMiddleware from "./middleware/database-middleware";
+// import databaseMiddleware from "./middleware/database-middleware";
 // import customCors from "./middleware/cors-middleware";
 import morgan from "morgan";
 import bodyParser from "body-parser";

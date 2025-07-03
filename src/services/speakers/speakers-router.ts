@@ -57,52 +57,39 @@ speakersRouter.get("/:SPEAKERID", RoleChecker([], true), async (req, res) => {
 speakersRouter.post(
     "/",
     RoleChecker([Role.Enum.ADMIN, Role.Enum.STAFF]),
-    async (req, res, next) => {
-        try {
-            const validatedData = SpeakerValidator.parse(req.body);
+    async (req, res) => {
+        const validatedData = SpeakerValidator.parse(req.body);
 
-            // Map from camelCase to snake_case for the database
-            const newSpeakerData = {
-                speaker_id: validatedData.speakerId,
-                name: validatedData.name,
-                title: validatedData.title,
-                bio: validatedData.bio,
-                event_title: validatedData.eventTitle,
-                event_description: validatedData.eventDescription,
-                img_url: validatedData.imgUrl,
-            };
+        // Map from camelCase to snake_case for the database
+        const newSpeakerData = {
+            speaker_id: validatedData.speakerId,
+            name: validatedData.name,
+            title: validatedData.title,
+            bio: validatedData.bio,
+            event_title: validatedData.eventTitle,
+            event_description: validatedData.eventDescription,
+            img_url: validatedData.imgUrl,
+        };
 
-            const { data: newSpeaker } = await SupabaseDB.SPEAKERS.insert(
-                newSpeakerData
-            )
-                .select()
-                .single()
-                .throwOnError();
+        const { data: newSpeaker } = await SupabaseDB.SPEAKERS.insert(
+            newSpeakerData
+        )
+            .select()
+            .single()
+            .throwOnError();
 
-            // Map back from snake_case to camelCase for the API response
-            const responseSpeaker = {
-                speakerId: newSpeaker.speaker_id,
-                name: newSpeaker.name,
-                title: newSpeaker.title,
-                bio: newSpeaker.bio,
-                eventTitle: newSpeaker.event_title,
-                eventDescription: newSpeaker.event_description,
-                imgUrl: newSpeaker.img_url,
-            };
+        // Map back from snake_case to camelCase for the API response
+        const responseSpeaker = {
+            speakerId: newSpeaker.speaker_id,
+            name: newSpeaker.name,
+            title: newSpeaker.title,
+            bio: newSpeaker.bio,
+            eventTitle: newSpeaker.event_title,
+            eventDescription: newSpeaker.event_description,
+            imgUrl: newSpeaker.img_url,
+        };
 
-            return res.status(StatusCodes.CREATED).json(responseSpeaker);
-        } catch (error: any) {
-            // TODO: fix this type safety later
-            // Check for Postgres's unique violation error code
-            if (error && error.code === "23505") {
-                return res
-                    .status(StatusCodes.BAD_REQUEST)
-                    .json({ error: "UserAlreadyExists" });
-            }
-
-            // For all other errors (including Zod validation), pass to middleware
-            return next(error);
-        }
+        return res.status(StatusCodes.CREATED).json(responseSpeaker);
     }
 );
 
