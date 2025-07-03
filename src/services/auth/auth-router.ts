@@ -4,18 +4,38 @@ import { StatusCodes } from "http-status-codes";
 import { Database } from "../../database";
 import RoleChecker from "../../middleware/role-checker";
 import { Role } from "../auth/auth-models";
-import { AuthLoginValidator, AuthRoleChangeRequest } from "./auth-schema";
+import { AuthLoginValidator, AuthRoleChangeRequest, PlatformValidator } from "./auth-schema";
 import authSponsorRouter from "./sponsor/sponsor-router";
 import { CorporateDeleteRequest, CorporateValidator } from "./corporate-schema";
 import { OAuth2Client } from "google-auth-library";
 import { generateJWT, updateDatabaseWithAuthPayload } from "./auth-utils";
 
-const googleOAuthClient = new OAuth2Client({
-    clientId: Config.CLIENT_ID,
-    clientSecret: Config.CLIENT_SECRET,
-});
+const createOAuthClient = (clientId: string, clientSecret?: string) => {
+    return new OAuth2Client({
+        clientId,
+        clientSecret,
+    });
+};
+
+const oauthClients = {
+    web: createOAuthClient(Config.CLIENT_ID, Config.CLIENT_SECRET),
+    ios: createOAuthClient(Config.IOS_CLIENT_ID),
+    // android: createOAuthClient(Config.ANDROID_CLIENT_ID),
+};
+
+
+const getOAuthClient = (platform: string) => {
+    const client = oauthClients[platform as keyof typeof oauthClients];
+    if (!client) {
+        console.warn(`Unknown platform: ${platform}, falling back to web client`);
+        return oauthClients.web;
+    }
+
+    return client;
+};
 
 const authRouter = Router();
+
 
 authRouter.use("/sponsor", authSponsorRouter);
 
@@ -53,16 +73,23 @@ authRouter.put("/", RoleChecker([Role.Enum.ADMIN]), async (req, res) => {
     return res.status(StatusCodes.OK).json(user);
 });
 
-const getAuthPayloadFromCode = async (code: string, redirect_uri: string) => {
+const getAuthPayloadFromCode = async (
+    code: string, 
+    redirect_uri: string, 
+    platform: string = 'web',
+    code_verifier?: string
+) => {
     try {
-        const { tokens } = await googleOAuthClient.getToken({
+        const oauthClient = getOAuthClient(platform);
+        const { tokens } = await oauthClient.getToken({
             code,
             redirect_uri,
+            codeVerifier: code_verifier, // only for mobile apps
         });
         if (!tokens.id_token) {
             throw new Error("Invalid token");
         }
-        const ticket = await googleOAuthClient.verifyIdToken({
+        const ticket = await oauthClient.verifyIdToken({
             idToken: tokens.id_token,
         });
         const payload = ticket.getPayload();
@@ -77,10 +104,12 @@ const getAuthPayloadFromCode = async (code: string, redirect_uri: string) => {
     }
 };
 
-authRouter.post("/login/", async (req, res) => {
-    // Convert id to token
-    const { code, redirectUri } = AuthLoginValidator.parse(req.body);
-    const authPayload = await getAuthPayloadFromCode(code, redirectUri);
+authRouter.post("/login/:platform", async (req, res) => {
+    try {
+        const { code, redirectUri, codeVerifier } = AuthLoginValidator.parse(req.body);
+        const platform = PlatformValidator.parse(req.params.platform);
+        
+        const authPayload = await getAuthPayloadFromCode(code, redirectUri, platform, codeVerifier);
 
     if (!authPayload) {
         return res
@@ -103,23 +132,32 @@ authRouter.post("/login/", async (req, res) => {
     const jwtToken = await generateJWT(`user${authPayload.sub}`);
 
     return res.status(StatusCodes.OK).send({ token: jwtToken });
+    } catch (error) {
+        console.error("Error in platform login:", error);
+        return res.status(StatusCodes.BAD_REQUEST).send({ 
+            error: "InvalidRequest",
+            details: error instanceof Error ? error.message : "Unknown error"
+        });
+    }
 });
 
-authRouter.post("/login/mobile", async (req, res) => {
-    const { idToken } = req.body;
-    let authPayload;
-    const ticket = await googleOAuthClient.verifyIdToken({
-        idToken,
-        audience: Config.IOS_CLIENT_ID,
-    });
-    authPayload = ticket.getPayload();
+
+authRouter.post("/login/", async (req, res) => {
+    const { code, redirectUri } = AuthLoginValidator.parse(req.body);
+    const authPayload = await getAuthPayloadFromCode(code, redirectUri, 'web');
+
     if (!authPayload) {
-        return res.status(StatusCodes.BAD_REQUEST).send({ error: "InvalidToken" });
+        return res
+            .status(StatusCodes.BAD_REQUEST)
+            .send({ error: "InvalidToken" });
     }
+
     const properScopes =
         "email" in authPayload && "sub" in authPayload && "name" in authPayload;
     if (!properScopes) {
-        return res.status(StatusCodes.BAD_REQUEST).send({ error: "InvalidScopes" });
+        return res
+            .status(StatusCodes.BAD_REQUEST)
+            .send({ error: "InvalidScopes" });
     }
 
     // Update database by payload
