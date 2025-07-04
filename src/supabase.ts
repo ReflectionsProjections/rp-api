@@ -16,6 +16,21 @@ export const SupabaseDB = {
     get MEETINGS() {
         return supabase.from("meetings");
     },
+    get ATTENDEES() {
+        return supabase.from("attendees");
+    },
+    get EVENTS() {
+        return supabase.from("events");
+    },
+    get EVENT_ATTENDANCE() {
+        return supabase.from("event_attendance");
+    },
+    get ATTENDEE_ATTENDANCE() {
+        return supabase.from("attendee_attendance");
+    },
+    get REGISTRATIONS() {
+        return supabase.from("registrations");
+    }
 };
 
 export const RoleTypes: Record<

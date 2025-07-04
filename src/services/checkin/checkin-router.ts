@@ -7,9 +7,8 @@ import {
 } from "./checkin-schema";
 import RoleChecker from "../../middleware/role-checker";
 import { Role } from "../auth/auth-models";
-import { validateQrHash } from "./checkin-utils";
-import { checkInUserToEvent } from "./checkin-utils";
-import { Database } from "../../database";
+import { validateQrHash, checkInUserToEvent } from "./checkin-utils";
+import { SupabaseDB } from "../../supabase";
 
 const checkinRouter = Router();
 
@@ -17,9 +16,9 @@ checkinRouter.post(
     "/scan/staff",
     RoleChecker([Role.Enum.ADMIN, Role.Enum.STAFF]),
     async (req, res) => {
-        const { eventId, qrCode } = ScanValidator.parse(req.body);
+        const { event_id, qrCode } = ScanValidator.parse(req.body);
 
-        const { userId, expTime } = validateQrHash(qrCode);
+        const { user_id, expTime } = validateQrHash(qrCode);
 
         if (Date.now() / 1000 > expTime) {
             return res
@@ -28,8 +27,9 @@ checkinRouter.post(
         }
 
         try {
-            await checkInUserToEvent(eventId, userId);
+            await checkInUserToEvent(event_id, user_id);
         } catch (error: unknown) {
+            console.error("Check-in failed:", error);
             if (error instanceof Error && error.message == "IsDuplicate") {
                 return res
                     .status(StatusCodes.FORBIDDEN)
@@ -38,7 +38,7 @@ checkinRouter.post(
             return res.sendStatus(StatusCodes.INTERNAL_SERVER_ERROR);
         }
 
-        return res.status(StatusCodes.OK).json(userId);
+        return res.status(StatusCodes.OK).json(user_id);
     }
 );
 
@@ -46,10 +46,10 @@ checkinRouter.post(
     "/event",
     RoleChecker([Role.Enum.ADMIN, Role.Enum.STAFF]),
     async (req, res) => {
-        const { eventId, userId } = EventValidator.parse(req.body);
+        const { event_id, user_id } = EventValidator.parse(req.body);
 
         try {
-            await checkInUserToEvent(eventId, userId);
+            await checkInUserToEvent(event_id, user_id);
         } catch (error: unknown) {
             if (error instanceof Error && error.message == "IsDuplicate") {
                 return res
@@ -58,7 +58,7 @@ checkinRouter.post(
             }
             return res.sendStatus(StatusCodes.INTERNAL_SERVER_ERROR);
         }
-        return res.status(StatusCodes.OK).json(userId);
+        return res.status(StatusCodes.OK).json(user_id);
     }
 );
 
@@ -68,7 +68,7 @@ checkinRouter.post(
     async (req, res) => {
         const { qrCode } = MerchScanValidator.parse(req.body);
 
-        const { userId, expTime } = validateQrHash(qrCode);
+        const { user_id, expTime } = validateQrHash(qrCode);
 
         if (Date.now() / 1000 > expTime) {
             return res
@@ -76,7 +76,7 @@ checkinRouter.post(
                 .json({ error: "QR code has expired" });
         }
 
-        return res.status(StatusCodes.OK).json(userId);
+        return res.status(StatusCodes.OK).json(user_id);
     }
 );
 
@@ -86,7 +86,7 @@ checkinRouter.post(
     async (req, res) => {
         const { qrCode } = ScanValidator.parse(req.body);
 
-        const { userId, expTime } = validateQrHash(qrCode);
+        const { user_id, expTime } = validateQrHash(qrCode);
 
         if (Date.now() / 1000 > expTime) {
             return res
@@ -94,23 +94,30 @@ checkinRouter.post(
                 .json({ error: "QR code has expired" });
         }
 
-        const attendee = await Database.ATTENDEE.findOne({ userId });
+        const user = await SupabaseDB.ATTENDEES.select()
+            .eq("user_id", user_id)
+            .single();
+
+        const attendee = user.data;
         if (!attendee) {
             return res
                 .status(StatusCodes.NOT_FOUND)
                 .json({ error: "UserNotFound" });
         }
-        if (attendee.hasCheckedIn) {
+        if (attendee.has_checked_in) {
             return res
                 .status(StatusCodes.BAD_REQUEST)
                 .json({ error: "AlreadyCheckedIn" });
         }
-        await Database.ATTENDEE.updateOne(
-            { userId: userId },
-            { $set: { hasCheckedIn: true } }
-        );
 
-        return res.status(StatusCodes.OK).json(userId);
+        await SupabaseDB.ATTENDEES.update({
+            has_checked_in: true,
+        })
+            .eq("user_id", user_id)
+            .select()
+            .single();
+
+        return res.status(StatusCodes.OK).json(user_id);
     }
 );
 

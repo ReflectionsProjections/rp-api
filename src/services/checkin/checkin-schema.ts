@@ -5,7 +5,7 @@ export type MerchScanPayload = z.infer<typeof MerchScanValidator>;
 export type CheckinEventPayload = z.infer<typeof EventValidator>;
 
 const ScanValidator = z.object({
-    eventId: z.string().min(1, { message: "Event ID cannot be empty" }),
+    event_id: z.string().min(1, { message: "Event ID cannot be empty" }),
     qrCode: z.string().min(1, { message: "QR Code cannot be empty" }),
 });
 
@@ -14,8 +14,8 @@ const MerchScanValidator = z.object({
 });
 
 const EventValidator = z.object({
-    eventId: z.string().min(1, { message: "Event ID cannot be empty" }),
-    userId: z.string().min(1, { message: "User ID cannot be empty" }),
+    event_id: z.string().min(1, { message: "Event ID cannot be empty" }),
+    user_id: z.string().min(1, { message: "User ID cannot be empty" }),
 });
 
 export { ScanValidator, MerchScanValidator, EventValidator };

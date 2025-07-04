@@ -4,13 +4,13 @@ export type DayKey = "Mon" | "Tue" | "Wed" | "Thu" | "Fri" | "Sat" | "Sun";
 
 // Mongoose schema for attendee
 export const AttendeeSchema = new Schema({
-    userId: { type: String, required: true, unique: true },
+    user_id: { type: String, required: true, unique: true },
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     events: [{ type: String, ref: "Event", default: [] }],
     dietaryRestrictions: { type: [String], required: true },
     allergies: { type: [String], required: true },
-    hasCheckedIn: { type: Boolean, default: false },
+    has_checked_in: { type: Boolean, default: false },
     points: { type: Number, default: 0 },
     hasPriority: {
         type: new Schema(
@@ -75,7 +75,7 @@ export const AttendeeSchema = new Schema({
 });
 
 export const AttendeeAttendanceSchema = new Schema({
-    userId: {
+    user_id: {
         type: String,
         ref: "Attendee",
         required: true,
