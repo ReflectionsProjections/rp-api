@@ -13,8 +13,9 @@ statsRouter.get(
     "/check-in",
     RoleChecker([Role.enum.STAFF], false),
     async (req, res) => {
-        const { data: checkinEvents } = await SupabaseDB.EVENTS
-            .select("event_id")
+        const { data: checkinEvents } = await SupabaseDB.EVENTS.select(
+            "event_id"
+        )
             .eq("event_type", "CHECKIN")
             .throwOnError();
 
@@ -22,17 +23,19 @@ statsRouter.get(
             return res.status(StatusCodes.OK).json({ count: 0 });
         }
 
-        const checkinEventIds = checkinEvents.map(event => event.event_id);
+        const checkinEventIds = checkinEvents.map((event) => event.event_id);
 
-        const { data: attendanceRecords } = await SupabaseDB.EVENT_ATTENDANCE
-            .select("attendee")
-            .in("event_id", checkinEventIds)
-            .throwOnError();
+        const { data: attendanceRecords } =
+            await SupabaseDB.EVENT_ATTENDANCE.select("attendee")
+                .in("event_id", checkinEventIds)
+                .throwOnError();
 
-        const uniqueAttendees = new Set(attendanceRecords?.map(record => record.attendee) || []);
+        const uniqueAttendees = new Set(
+            attendanceRecords?.map((record) => record.attendee) || []
+        );
 
-        return res.status(StatusCodes.OK).json({ 
-            count: uniqueAttendees.size 
+        return res.status(StatusCodes.OK).json({
+            count: uniqueAttendees.size,
         });
     }
 );
@@ -58,8 +61,10 @@ statsRouter.get(
 
         const price = result.data.PRICE;
 
-        const { count } = await SupabaseDB.ATTENDEES
-            .select("*", { count: "exact", head: true })
+        const { count } = await SupabaseDB.ATTENDEES.select("*", {
+            count: "exact",
+            head: true,
+        })
             .gte("points", price)
             .throwOnError();
 
@@ -75,19 +80,21 @@ statsRouter.get(
         const day = getCurrentDay();
 
         const dayFieldMap: Record<string, string> = {
-            "Mon": "has_priority_mon",
-            "Tue": "has_priority_tue", 
-            "Wed": "has_priority_wed",
-            "Thu": "has_priority_thu",
-            "Fri": "has_priority_fri",
-            "Sat": "has_priority_sat",
-            "Sun": "has_priority_sun"
+            Mon: "has_priority_mon",
+            Tue: "has_priority_tue",
+            Wed: "has_priority_wed",
+            Thu: "has_priority_thu",
+            Fri: "has_priority_fri",
+            Sat: "has_priority_sat",
+            Sun: "has_priority_sun",
         };
-        
+
         const postgresField = dayFieldMap[day];
-        
-        const { count } = await SupabaseDB.ATTENDEES
-            .select("*", { count: "exact", head: true })
+
+        const { count } = await SupabaseDB.ATTENDEES.select("*", {
+            count: "exact",
+            head: true,
+        })
             .eq(postgresField, true)
             .throwOnError();
 
@@ -115,15 +122,17 @@ statsRouter.get(
         }
         const numEvents = result.data.N;
         const currentTime = new Date();
-        
-        const { data: events } = await SupabaseDB.EVENTS
-            .select("attendance_count")
+
+        const { data: events } = await SupabaseDB.EVENTS.select(
+            "attendance_count"
+        )
             .lt("end_time", currentTime.toISOString())
             .order("end_time", { ascending: false })
             .limit(numEvents)
             .throwOnError();
 
-        const attendanceCounts = events?.map((event) => event.attendance_count) || [];
+        const attendanceCounts =
+            events?.map((event) => event.attendance_count) || [];
 
         return res.status(StatusCodes.OK).json({ attendanceCounts });
     }
@@ -140,61 +149,58 @@ statsRouter.get(
             { count: allergiesOnlyCount },
             { count: bothCount },
             { data: allergiesData },
-            { data: dietaryRestrictionsData }
+            { data: dietaryRestrictionsData },
         ] = await Promise.all([
-                // None: empty arrays for both allergies and dietary_restrictions  
-                SupabaseDB.REGISTRATIONS
-                    .select("*", { count: "exact", head: true })
-                    .filter("allergies", "eq", "{}")
-                    .filter("dietary_restrictions", "eq", "{}")
-                    .throwOnError(),
-                
-                // Dietary restrictions only: empty allergies, non-empty dietary_restrictions
-                SupabaseDB.REGISTRATIONS
-                    .select("*", { count: "exact", head: true })
-                    .filter("allergies", "eq", "{}")
-                    .filter("dietary_restrictions", "neq", "{}")
-                    .throwOnError(),
-                
-                // Allergies only: non-empty allergies, empty dietary_restrictions
-                SupabaseDB.REGISTRATIONS
-                    .select("*", { count: "exact", head: true })
-                    .filter("allergies", "neq", "{}")
-                    .filter("dietary_restrictions", "eq", "{}")
-                    .throwOnError(),
-                
-                // Both: non-empty arrays for both
-                SupabaseDB.REGISTRATIONS
-                    .select("*", { count: "exact", head: true })
-                    .filter("allergies", "neq", "{}")
-                    .filter("dietary_restrictions", "neq", "{}")
-                    .throwOnError(),
-                
-                // Get all allergies to count individual types
-                SupabaseDB.REGISTRATIONS
-                    .select("allergies")
-                    .filter("allergies", "neq", "{}")
-                    .throwOnError(),
-                    
-                // Get all dietary restrictions to count individual types
-                SupabaseDB.REGISTRATIONS
-                    .select("dietary_restrictions")
-                    .filter("dietary_restrictions", "neq", "{}")
-                    .throwOnError(),
-            ]);
+            // None: empty arrays for both allergies and dietary_restrictions
+            SupabaseDB.REGISTRATIONS.select("*", { count: "exact", head: true })
+                .filter("allergies", "eq", "{}")
+                .filter("dietary_restrictions", "eq", "{}")
+                .throwOnError(),
+
+            // Dietary restrictions only: empty allergies, non-empty dietary_restrictions
+            SupabaseDB.REGISTRATIONS.select("*", { count: "exact", head: true })
+                .filter("allergies", "eq", "{}")
+                .filter("dietary_restrictions", "neq", "{}")
+                .throwOnError(),
+
+            // Allergies only: non-empty allergies, empty dietary_restrictions
+            SupabaseDB.REGISTRATIONS.select("*", { count: "exact", head: true })
+                .filter("allergies", "neq", "{}")
+                .filter("dietary_restrictions", "eq", "{}")
+                .throwOnError(),
+
+            // Both: non-empty arrays for both
+            SupabaseDB.REGISTRATIONS.select("*", { count: "exact", head: true })
+                .filter("allergies", "neq", "{}")
+                .filter("dietary_restrictions", "neq", "{}")
+                .throwOnError(),
+
+            // Get all allergies to count individual types
+            SupabaseDB.REGISTRATIONS.select("allergies")
+                .filter("allergies", "neq", "{}")
+                .throwOnError(),
+
+            // Get all dietary restrictions to count individual types
+            SupabaseDB.REGISTRATIONS.select("dietary_restrictions")
+                .filter("dietary_restrictions", "neq", "{}")
+                .throwOnError(),
+        ]);
 
         const allergyCounts: { [key: string]: number } = {};
-        allergiesData?.forEach(registration => {
+        allergiesData?.forEach((registration) => {
             registration.allergies?.forEach((allergy: string) => {
                 allergyCounts[allergy] = (allergyCounts[allergy] || 0) + 1;
             });
         });
 
         const dietaryRestrictionCounts: { [key: string]: number } = {};
-        dietaryRestrictionsData?.forEach(registration => {
-            registration.dietary_restrictions?.forEach((restriction: string) => {
-                dietaryRestrictionCounts[restriction] = (dietaryRestrictionCounts[restriction] || 0) + 1;
-            });
+        dietaryRestrictionsData?.forEach((registration) => {
+            registration.dietary_restrictions?.forEach(
+                (restriction: string) => {
+                    dietaryRestrictionCounts[restriction] =
+                        (dietaryRestrictionCounts[restriction] || 0) + 1;
+                }
+            );
         });
 
         return res.status(StatusCodes.OK).json({

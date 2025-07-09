@@ -14,7 +14,7 @@ const ATTENDEE_RITAM = {
     user_id: "a1",
     points: 10,
     has_priority_mon: currentDay === "Mon",
-    has_priority_tue: currentDay === "Tue", 
+    has_priority_tue: currentDay === "Tue",
     has_priority_wed: currentDay === "Wed",
     has_priority_thu: currentDay === "Thu",
     has_priority_fri: currentDay === "Fri",
@@ -85,7 +85,7 @@ const ROLE_RITAM = {
 };
 
 const ROLE_NATHAN = {
-    user_id: "a2", 
+    user_id: "a2",
     display_name: "Nathan Test",
     email: "nathan@test.com",
     roles: [Role.enum.USER],
@@ -93,7 +93,7 @@ const ROLE_NATHAN = {
 
 const ROLE_TIMOTHY = {
     user_id: "a3",
-    display_name: "Timothy Test", 
+    display_name: "Timothy Test",
     email: "timothy@test.com",
     roles: [Role.enum.USER],
 };
@@ -251,7 +251,7 @@ const ATTENDEES_DIETARY = [
         has_submitted: false,
     },
     {
-        user_id: "a2", 
+        user_id: "a2",
         name: "Test User 2",
         email: "a2@test.com",
         university: "University of Illinois",
@@ -351,20 +351,16 @@ describe("GET /stats/check-in", () => {
             "00000000-0000-0000-0000-000000000000"
         );
 
-        await SupabaseDB.ROLES.insert([
-            ROLE_RITAM,
-            ROLE_NATHAN,
-            ROLE_TIMOTHY,
-        ]);
-        
+        await SupabaseDB.ROLES.insert([ROLE_RITAM, ROLE_NATHAN, ROLE_TIMOTHY]);
+
         await SupabaseDB.ATTENDEES.insert([
             ATTENDEE_RITAM,
             ATTENDEE_NATHAN,
             ATTENDEE_TIMOTHY,
         ]);
-        
+
         await SupabaseDB.EVENTS.insert([CHECKIN_EVENT]);
-        
+
         await SupabaseDB.EVENT_ATTENDANCE.insert([
             EVENT_ATTENDANCE_RITAM,
             EVENT_ATTENDANCE_NATHAN,
@@ -410,11 +406,7 @@ describe("GET /stats/check-in", () => {
             "00000000-0000-0000-0000-000000000000"
         );
 
-        await SupabaseDB.ROLES.insert([
-            ROLE_RITAM,
-            ROLE_NATHAN,
-            ROLE_TIMOTHY,
-        ]);
+        await SupabaseDB.ROLES.insert([ROLE_RITAM, ROLE_NATHAN, ROLE_TIMOTHY]);
         await SupabaseDB.ATTENDEES.insert([
             ATTENDEE_RITAM,
             ATTENDEE_NATHAN,
@@ -430,8 +422,10 @@ describe("GET /stats/check-in", () => {
 
     it("should count unique attendees even if they checked into multiple CHECKIN events", async () => {
         await SupabaseDB.EVENTS.insert([SECOND_CHECKIN_EVENT]);
-        
-        await SupabaseDB.EVENT_ATTENDANCE.insert([EVENT_ATTENDANCE_RITAM_SECOND_CHECKIN]);
+
+        await SupabaseDB.EVENT_ATTENDANCE.insert([
+            EVENT_ATTENDANCE_RITAM_SECOND_CHECKIN,
+        ]);
 
         const response = await getAsStaff("/stats/check-in").expect(
             StatusCodes.OK
@@ -442,8 +436,10 @@ describe("GET /stats/check-in", () => {
 
     it("should only count attendees who checked into CHECKIN events, not other event types", async () => {
         await SupabaseDB.EVENTS.insert([SPEAKER_EVENT]);
-        
-        await SupabaseDB.EVENT_ATTENDANCE.insert([EVENT_ATTENDANCE_TIMOTHY_SPEAKER]);
+
+        await SupabaseDB.EVENT_ATTENDANCE.insert([
+            EVENT_ATTENDANCE_TIMOTHY_SPEAKER,
+        ]);
 
         const response = await getAsStaff("/stats/check-in").expect(
             StatusCodes.OK
@@ -474,12 +470,8 @@ describe("GET /stats/merch-item/:PRICE", () => {
             "00000000-0000-0000-0000-000000000000"
         );
 
-        await SupabaseDB.ROLES.insert([
-            ROLE_RITAM,
-            ROLE_NATHAN,
-            ROLE_TIMOTHY,
-        ]);
-        
+        await SupabaseDB.ROLES.insert([ROLE_RITAM, ROLE_NATHAN, ROLE_TIMOTHY]);
+
         await SupabaseDB.ATTENDEES.insert([
             ATTENDEE_RITAM,
             ATTENDEE_NATHAN,
@@ -492,7 +484,7 @@ describe("GET /stats/merch-item/:PRICE", () => {
         const response = await getAsStaff(
             `/stats/merch-item/${pointsThreshold}`
         ).expect(StatusCodes.OK);
-        
+
         expect(response.body).toEqual({ count: 2 });
     });
 
@@ -501,7 +493,7 @@ describe("GET /stats/merch-item/:PRICE", () => {
         const response = await getAsStaff(
             `/stats/merch-item/${pointsThreshold}`
         ).expect(StatusCodes.OK);
-        
+
         expect(response.body).toEqual({ count: 0 });
     });
 
@@ -510,7 +502,7 @@ describe("GET /stats/merch-item/:PRICE", () => {
         const response = await getAsStaff(
             `/stats/merch-item/${pointsThreshold}`
         ).expect(StatusCodes.OK);
-        
+
         expect(response.body).toEqual({ count: 3 });
     });
 
@@ -519,15 +511,15 @@ describe("GET /stats/merch-item/:PRICE", () => {
         const response = await getAsStaff(
             `/stats/merch-item/${pointsThreshold}`
         ).expect(StatusCodes.OK);
-        
+
         expect(response.body).toEqual({ count: 3 });
     });
 
     it("should return 400 if PRICE is not a number", async () => {
-        const response = await getAsStaff(`/stats/merch-item/notanumber`).expect(
-            StatusCodes.BAD_REQUEST
-        );
-        
+        const response = await getAsStaff(
+            `/stats/merch-item/notanumber`
+        ).expect(StatusCodes.BAD_REQUEST);
+
         expect(response.body).toHaveProperty("error");
     });
 
@@ -535,7 +527,7 @@ describe("GET /stats/merch-item/:PRICE", () => {
         const response = await getAsStaff(`/stats/merch-item/-5`).expect(
             StatusCodes.BAD_REQUEST
         );
-        
+
         expect(response.body).toHaveProperty("error");
         expect(response.body.error).toContain("non-negative");
     });
@@ -544,7 +536,7 @@ describe("GET /stats/merch-item/:PRICE", () => {
         const response = await getAsStaff(`/stats/merch-item/10.5`).expect(
             StatusCodes.BAD_REQUEST
         );
-        
+
         expect(response.body).toHaveProperty("error");
     });
 
@@ -570,11 +562,7 @@ describe("GET /stats/priority-attendee", () => {
             "00000000-0000-0000-0000-000000000000"
         );
 
-        await SupabaseDB.ROLES.insert([
-            ROLE_RITAM,
-            ROLE_NATHAN,
-            ROLE_TIMOTHY,
-        ]);
+        await SupabaseDB.ROLES.insert([ROLE_RITAM, ROLE_NATHAN, ROLE_TIMOTHY]);
 
         await SupabaseDB.ATTENDEES.insert([
             ATTENDEE_RITAM,
@@ -592,17 +580,17 @@ describe("GET /stats/priority-attendee", () => {
 
     it("should return 0 if no attendee has priority for today", async () => {
         const dayFieldMap = {
-            "Mon": "has_priority_mon",
-            "Tue": "has_priority_tue", 
-            "Wed": "has_priority_wed",
-            "Thu": "has_priority_thu",
-            "Fri": "has_priority_fri",
-            "Sat": "has_priority_sat",
-            "Sun": "has_priority_sun"
+            Mon: "has_priority_mon",
+            Tue: "has_priority_tue",
+            Wed: "has_priority_wed",
+            Thu: "has_priority_thu",
+            Fri: "has_priority_fri",
+            Sat: "has_priority_sat",
+            Sun: "has_priority_sun",
         };
-        
+
         const updateData = Object.fromEntries(
-            Object.values(dayFieldMap).map(field => [field, false])
+            Object.values(dayFieldMap).map((field) => [field, false])
         );
 
         await SupabaseDB.ATTENDEES.update(updateData).neq(
@@ -628,12 +616,12 @@ describe("GET /stats/priority-attendee", () => {
 });
 
 describe("GET /stats/attendance/:N", () => {
-    beforeEach(async () => {    
+    beforeEach(async () => {
         await SupabaseDB.EVENT_ATTENDANCE.delete().neq(
             "event_id",
             "00000000-0000-0000-0000-000000000000"
         );
-        
+
         await SupabaseDB.EVENTS.delete().neq(
             "event_id",
             "00000000-0000-0000-0000-000000000000"
@@ -702,15 +690,15 @@ describe("GET /stats/dietary-restrictions", () => {
             "00000000-0000-0000-0000-000000000000"
         );
 
-        const requiredRoles = ATTENDEES_DIETARY.map(attendee => ({
+        const requiredRoles = ATTENDEES_DIETARY.map((attendee) => ({
             user_id: attendee.user_id,
             display_name: attendee.name,
             email: attendee.email,
             roles: [Role.enum.USER],
         }));
-        
+
         await SupabaseDB.ROLES.insert(requiredRoles);
-        
+
         await SupabaseDB.REGISTRATIONS.insert(ATTENDEES_DIETARY);
     });
 
