@@ -162,7 +162,7 @@ describe("POST /meetings/", () => {
         const dbMeeting = {
             meetingId: result.meeting_id,
             committeeType: result.committee_type,
-            startTime: result.start_time.toISOString(),
+            startTime: new Date(result.start_time).toISOString(),
         };
 
         expect(dbMeeting).toMatchObject(newMeetingData);
@@ -291,7 +291,7 @@ describe("PUT /meetings/:meetingId", () => {
             startTime: new Date().toISOString(),
         };
 
-        await putAsAdmin(`/meetings/nonexistent-id`)
+        await putAsAdmin(`/meetings/${UNREAL_MEETING_ID}`)
             .send(updateData)
             .expect(StatusCodes.NOT_FOUND);
     });
@@ -353,7 +353,7 @@ describe("DELETE /meetings/:meetingId", () => {
     );
 
     it("should return 404 Not Found if meeting does not exist", async () => {
-        await delAsAdmin(`/meetings/nonexistent-id`).expect(
+        await delAsAdmin(`/meetings/${UNREAL_MEETING_ID}`).expect(
             StatusCodes.NOT_FOUND
         );
     });
