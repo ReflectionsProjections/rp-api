@@ -4,7 +4,7 @@ import {
     AttendeeCreateValidator,
     EventIdValidator,
 } from "./attendee-validators";
-import { Database } from "../../database";
+import { SupabaseDB } from "../../supabase";
 import RoleChecker from "../../middleware/role-checker";
 import { Role } from "../auth/auth-models";
 import { generateQrHash, getCurrentDay } from "../checkin/checkin-utils";
@@ -18,53 +18,56 @@ const attendeeRouter = Router();
 
 // Favorite an event for an attendee
 attendeeRouter.post(
-    "/favorites/:eventId",
+    "/favorites/:event_id",
     RoleChecker([Role.Enum.USER]),
     async (req, res) => {
         const payload = res.locals.payload;
-        const userId = payload.userId;
-        const { eventId } = EventIdValidator.parse(req.params);
+        const user_id = payload.user_id;
+        const { event_id } = EventIdValidator.parse(req.params);
 
-        const attendee = await Database.ATTENDEE.findOne({ userId });
+        const { data: attendee } = await SupabaseDB.ATTENDEES
+            .select("favorite_events")
+            .eq("user_id", user_id)
+            .maybeSingle().throwOnError();
 
         if (!attendee) {
-            return res
-                .status(StatusCodes.NOT_FOUND)
-                .json({ error: "UserNotFound" });
+            return res.status(StatusCodes.NOT_FOUND).json({ error: "UserNotFound" });
         }
 
-        await Database.ATTENDEE.updateOne(
-            { userId: userId },
-            { $addToSet: { favorites: eventId } }
-        );
+        const newFavorites = attendee.favorite_events.includes(event_id)
+            ? attendee.favorite_events
+            : [...attendee.favorite_events, event_id];
+        
+        await SupabaseDB.ATTENDEES
+            .update({ favorite_events: newFavorites })
+            .eq("user_id", user_id)
+            .throwOnError();
 
-        return res.status(StatusCodes.OK).json(attendee);
+        return res.status(StatusCodes.OK).json({ favorites: newFavorites });
     }
 );
 
 // Unfavorite an event for an attendee
 attendeeRouter.delete(
-    "/favorites/:eventId",
+    "/favorites/:event_id",
     RoleChecker([Role.Enum.USER]),
     async (req, res) => {
         const payload = res.locals.payload;
-        const userId = payload.userId;
-        const { eventId } = EventIdValidator.parse(req.params);
+        const user_id = payload.user_id;
+        const { event_id } = EventIdValidator.parse(req.params);
 
-        const attendee = await Database.ATTENDEE.findOne({ userId });
-
+        const {data: attendee} = await SupabaseDB.ATTENDEES
+            .select("favorite_events")
+            .eq("user_id", user_id)
+            .maybeSingle().throwOnError();
+        
         if (!attendee) {
-            return res
-                .status(StatusCodes.NOT_FOUND)
-                .json({ error: "UserNotFound" });
+            return res.status(StatusCodes.NOT_FOUND).json({ error: "UserNotFound" });
         }
 
-        await Database.ATTENDEE.updateOne(
-            { userId: userId },
-            { $pull: { favorites: eventId } }
-        );
-
-        return res.status(StatusCodes.OK).json(attendee);
+        const updatedFavorites = (attendee?.favorite_events || []).filter((id) => id !== event_id);
+        await SupabaseDB.ATTENDEES.update({ favorite_events: updatedFavorites }).eq("user_id", user_id);
+        return res.status(StatusCodes.OK).json({ favorites: updatedFavorites });
     }
 );
 
@@ -74,36 +77,62 @@ attendeeRouter.get(
     RoleChecker([Role.Enum.USER]),
     async (req, res) => {
         const payload = res.locals.payload;
-        const userId = payload.userId;
+        const user_id = payload.user_id;
 
-        const attendee = await Database.ATTENDEE.findOne({ userId });
-
+        const { data: attendee } = await SupabaseDB.ATTENDEES
+            .select("favorite_events")
+            .eq("user_id", user_id)
+            .maybeSingle().throwOnError();
+        
         if (!attendee) {
-            return res
-                .status(StatusCodes.NOT_FOUND)
-                .json({ error: "UserNotFound" });
+            return res.status(StatusCodes.NOT_FOUND).json({ error: "UserNotFound" });
         }
 
-        return res.status(StatusCodes.OK).json(attendee);
+        return res.status(StatusCodes.OK).json({
+            user_id: user_id,
+            favorite_events: attendee.favorite_events,
+        });
     }
 );
 
 // Create a new attendee
 attendeeRouter.post("/", async (req, res) => {
-    const attendeeData = AttendeeCreateValidator.parse(req.body);
-    const attendee = new Database.ATTENDEE(attendeeData);
-    await attendee.save();
+    const { user_id } = AttendeeCreateValidator.parse(req.body);
 
-    return res.status(StatusCodes.CREATED).json(attendeeData);
+    const newAttendee = {
+        user_id: user_id,
+        points: 0,
+        favorite_events: [],
+        puzzles_completed: [],
+        is_eligible_tshirt: false,
+        is_eligible_cap: false,
+        is_eligible_tote: false,
+        is_eligible_button: false,
+        has_redeemed_tshirt: false,
+        has_redeemed_cap: false,
+        has_redeemed_tote: false,
+        has_redeemed_button: false,
+        has_priority_mon: false,
+        has_priority_tue: false,
+        has_priority_wed: false,
+        has_priority_thu: false,
+        has_priority_fri: false,
+        has_priority_sat: false,
+        has_priority_sun: false,
+    };
+
+    await SupabaseDB.ATTENDEES.insert(newAttendee).throwOnError();
+    
+    return res.status(StatusCodes.CREATED).json({ user_id: user_id });
 });
 
 // generates a unique QR code for each attendee
 attendeeRouter.get("/qr/", RoleChecker([Role.Enum.USER]), async (req, res) => {
     const payload = res.locals.payload;
 
-    const userId = payload.userId;
+    const user_id = payload.user_id;
     const expTime = Math.floor(Date.now() / 1000) + 20; // Current epoch time in seconds + 20 seconds
-    const qrCodeString = generateQrHash(userId, expTime);
+    const qrCodeString = generateQrHash(user_id, expTime);
     return res.status(StatusCodes.OK).json({ qrCode: qrCodeString });
 });
 
@@ -112,15 +141,14 @@ attendeeRouter.get(
     RoleChecker([Role.Enum.USER]),
     async (req, res) => {
         const payload = res.locals.payload;
-        const userId = payload.userId;
+        const user_id = payload.user_id;
 
         // Check if the user exists in the database
-        const user = await Database.ATTENDEE.findOne({ userId });
+        const { data: user } = await SupabaseDB.ATTENDEES.select("points")
+            .eq("user_id", user_id).maybeSingle().throwOnError();
 
-        if (!user) {
-            return res
-                .status(StatusCodes.NOT_FOUND)
-                .json({ error: "UserNotFound" });
+        if (!user) { // adding because user could be null is an error
+            return res.status(StatusCodes.NOT_FOUND).json({ error: "UserNotFound" });
         }
 
         return res.status(StatusCodes.OK).json({ points: user.points });
@@ -132,75 +160,58 @@ attendeeRouter.get(
     RoleChecker([Role.Enum.USER]),
     async (req, res) => {
         const payload = res.locals.payload;
-        const userId = payload.userId;
+        const user_id = payload.user_id;
 
         // Check if the user exists in the database
-        const user = await Database.ATTENDEE.findOne({ userId });
+        const { data: user } = await SupabaseDB.ATTENDEES.select().eq("user_id", user_id).maybeSingle().throwOnError();
 
-        if (!user) {
-            return res
-                .status(StatusCodes.NOT_FOUND)
-                .json({ error: "UserNotFound" });
-        }
+        const { data: registration } = await SupabaseDB.REGISTRATIONS
+            .select("dietary_restrictions")
+            .eq("user_id", user_id)
+            .maybeSingle().throwOnError();
 
         // check if true for cur day
-        const day = getCurrentDay();
-        let hasPriority = null;
-        if (day === "Mon") {
-            hasPriority = user.hasPriority.Mon;
-        } else if (day === "Tue") {
-            hasPriority = user.hasPriority.Tue;
-        } else if (day === "Wed") {
-            hasPriority = user.hasPriority.Wed;
-        } else if (day === "Thu") {
-            hasPriority = user.hasPriority.Thu;
-        } else if (day === "Fri") {
-            hasPriority = user.hasPriority.Fri;
-        } else if (day === "Sat") {
-            hasPriority = user.hasPriority.Sat;
-        } else if (day === "Sun") {
-            hasPriority = user.hasPriority.Sun;
+        const day = getCurrentDay().toLowerCase(); // Ensure day is lowercase
+        const priorityKey = `has_priority_${day}`;
+        if (!user) {
+            return res.status(StatusCodes.NOT_FOUND).json({ error: "UserNotFound" });
         }
-
-        const hasFoodRestrictions =
-            user.dietaryRestrictions.includes("VEGAN") ||
-            user.dietaryRestrictions.includes("GLUTEN-FREE");
+        const hasPriority = (user as Record<string, any>)[priorityKey];
+        const dietary = registration?.dietary_restrictions || [];
+        const hasFoodRestrictions = ["VEGAN", "GLUTEN-FREE"].some((r) =>
+            dietary.includes(r)
+        );
         const foodwave = hasPriority || hasFoodRestrictions ? 1 : 2;
 
-        return res.status(StatusCodes.OK).json({ foodwave: foodwave });
+        return res.status(StatusCodes.OK).json({ foodwave });
     }
 );
 
 attendeeRouter.get("/", RoleChecker([Role.Enum.USER]), async (req, res) => {
     const payload = res.locals.payload;
-    const userId = payload.userId;
+    const user_id = payload.user_id;
 
     // Check if the user exists in the database
-    const user = await Database.ATTENDEE.findOne({ userId });
+    const { data: user } = await SupabaseDB.ATTENDEES.select().eq("user_id", user_id).maybeSingle().throwOnError();
 
     if (!user) {
-        return res
-            .status(StatusCodes.NOT_FOUND)
-            .json({ error: "UserNotFound" });
+        return res.status(StatusCodes.NOT_FOUND).json({ error: "UserNotFound" });
     }
 
     return res.status(StatusCodes.OK).json(user);
 });
 
-// Get attendee info via userId
+// Get attendee info via user_id
 attendeeRouter.get(
-    "/id/:USERID",
+    "/id/:user_id",
     RoleChecker([Role.Enum.STAFF, Role.Enum.ADMIN]),
     async (req, res) => {
-        const userId = req.params.USERID;
+        const user_id = req.params.user_id;
 
         // Check if the user exists in the database
-        const user = await Database.ATTENDEE.findOne({ userId });
-
+        const { data: user } = await SupabaseDB.ATTENDEES.select().eq("user_id", user_id).maybeSingle().throwOnError();
         if (!user) {
-            return res
-                .status(StatusCodes.NOT_FOUND)
-                .json({ error: "UserNotFound" });
+            return res.status(StatusCodes.NOT_FOUND).json({ error: "UserNotFound" });
         }
 
         return res.status(StatusCodes.OK).json(user);
@@ -210,70 +221,70 @@ attendeeRouter.get(
 attendeeRouter.get(
     "/emails",
     RoleChecker([Role.Enum.STAFF, Role.Enum.ADMIN]),
-    async (req, res) => {
-        const projection = {
-            email: 1,
-            userId: 1,
-        };
-        const registrations = await Database.ATTENDEE.find({}, projection);
+    async (_req, res) => {
+        const { data, error } = await SupabaseDB.REGISTRATIONS
+            .select("email, user_id");
 
-        return res.status(StatusCodes.OK).json(registrations);
+        if (error) {
+            return res
+                .status(StatusCodes.INTERNAL_SERVER_ERROR)
+                .json({ error: error.message });
+        }
+
+        return res.status(StatusCodes.OK).json(data);
     }
 );
+
 
 attendeeRouter.post(
     "/redeemMerch/:ITEM",
     RoleChecker([Role.Enum.STAFF, Role.Enum.ADMIN]),
     async (req, res) => {
-        const userId = req.body.userId;
-        const merchItem = req.params.ITEM;
+        const user_id = req.body.user_id;
+        const merchItem = req.params.ITEM.toLowerCase();
+        const validItems = ["tshirt", "cap", "tote", "button"];
 
-        // Check if the user exists in the database
-        const user = await Database.ATTENDEE.findOne({ userId });
-
-        if (!user) {
-            return res
-                .status(StatusCodes.NOT_FOUND)
-                .json({ error: "UserNotFound" });
-        }
-
-        if (!user) {
-            return res
-                .status(StatusCodes.NOT_FOUND)
-                .json({ error: "UserNotFound" });
-        }
-
-        if (
-            merchItem == "Tshirt" ||
-            merchItem == "Cap" ||
-            merchItem == "Tote" ||
-            merchItem == "Button"
-        ) {
-            if (!user.isEligibleMerch![merchItem]) {
-                return res
-                    .status(StatusCodes.BAD_REQUEST)
-                    .json({ error: "Too few points" });
-            } else if (user.hasRedeemedMerch![merchItem]) {
-                return res
-                    .status(StatusCodes.BAD_REQUEST)
-                    .json({ error: "Item already redeemed" });
-            } else {
-                await Database.ATTENDEE.updateOne(
-                    { userId },
-                    { $set: { [`hasRedeemedMerch.${merchItem}`]: true } }
-                );
-
-                return res
-                    .status(StatusCodes.OK)
-                    .json({ message: "Item Redeemed!" });
-            }
-        } else {
+        if (!validItems.includes(merchItem)) {
             return res
                 .status(StatusCodes.BAD_REQUEST)
                 .json({ error: "Not a valid item" });
         }
+
+        const { data: user } = await SupabaseDB.ATTENDEES
+            .select()
+            .eq("user_id", user_id)
+            .maybeSingle()
+            .throwOnError();
+        
+        if (!user) {
+            return res.status(StatusCodes.NOT_FOUND).json({ error: "UserNotFound" });
+        }
+
+
+        const eligibleKey = `is_eligible_${merchItem}`;
+        const redeemedKey = `has_redeemed_${merchItem}`;
+
+        if (!(user as Record<string, any>)[eligibleKey]) {
+            return res
+                .status(StatusCodes.BAD_REQUEST)
+                .json({ error: "Too few points" });
+        }
+
+        if ((user as Record<string, any>)[redeemedKey]) {
+            return res
+                .status(StatusCodes.BAD_REQUEST)
+                .json({ error: "Item already redeemed" });
+        }
+
+        await SupabaseDB.ATTENDEES
+            .update({ [redeemedKey]: true })
+            .eq("user_id", user_id)
+            .throwOnError();
+
+        return res.status(StatusCodes.OK).json({ message: "Item Redeemed!" });
     }
 );
+
 
 attendeeRouter.get("/resume/update/:ENCODED_ID", async (req, res) => {
     const ENCODED_ID = req.params.ENCODED_ID;
