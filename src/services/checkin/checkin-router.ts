@@ -96,7 +96,8 @@ checkinRouter.post(
 
         const user = await SupabaseDB.ATTENDEES.select()
             .eq("user_id", user_id)
-            .single();
+            .maybeSingle()
+            .throwOnError();
 
         const attendee = user.data;
         if (!attendee) {
@@ -115,7 +116,8 @@ checkinRouter.post(
         })
             .eq("user_id", user_id)
             .select()
-            .single();
+            .single()
+            .throwOnError();
 
         return res.status(StatusCodes.OK).json(user_id);
     }

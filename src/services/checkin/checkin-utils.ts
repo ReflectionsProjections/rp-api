@@ -53,12 +53,11 @@ async function updateAttendeePriority(user_id: string) {
 }
 
 async function updateAttendanceRecords(event_id: string, user_id: string) {
-    const { data: attendeeAttendance, error: readError } =
+    const { data: attendeeAttendance } =
         await SupabaseDB.ATTENDEE_ATTENDANCE.select("events_attended")
             .eq("user_id", user_id)
-            .maybeSingle();
-
-    if (readError) throw readError;
+            .maybeSingle()
+            .throwOnError();
 
     const eventsAttended = attendeeAttendance?.events_attended || [];
 
