@@ -79,7 +79,6 @@ export type Database = {
                     puzzles_completed: string[];
                     user_id: string;
                     has_checked_in?: boolean;
-
                 };
                 Insert: {
                     favorite_events?: string[];

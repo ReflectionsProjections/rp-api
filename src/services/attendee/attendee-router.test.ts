@@ -9,7 +9,9 @@ import { getCurrentDay } from "../checkin/checkin-utils";
 
 const otherEvent = uuidv4();
 
-export async function insertTestAttendee(overrides: { registration?: any; attendee?: any } = {}) {
+export async function insertTestAttendee(
+    overrides: { registration?: any; attendee?: any } = {}
+) {
     const user_id = TESTER.user_id;
     const email = TESTER.email;
 
@@ -22,83 +24,76 @@ export async function insertTestAttendee(overrides: { registration?: any; attend
     }).throwOnError();
 
     // Insert registration
-    await SupabaseDB.REGISTRATIONS
-        .insert({
-            user_id,
-            email,
-            name: "Test User",
-            university: "UIUC", // default test value
-            degree: "BS",       // default test value
-            is_interested_mech_mania: true,
-            is_interested_puzzle_bang: false,
-            dietary_restrictions: [],
-            allergies: [],
-            ...overrides.registration,
-        })
-        .throwOnError();
+    await SupabaseDB.REGISTRATIONS.insert({
+        user_id,
+        email,
+        name: "Test User",
+        university: "UIUC", // default test value
+        degree: "BS", // default test value
+        is_interested_mech_mania: true,
+        is_interested_puzzle_bang: false,
+        dietary_restrictions: [],
+        allergies: [],
+        ...overrides.registration,
+    }).throwOnError();
     // Insert attendee
-    await SupabaseDB.ATTENDEES
-        .insert({
-            user_id,
-            // name: "Test User",
-            points: 0,
-            favorite_events: [],
-            is_eligible_tshirt: true,
-            is_eligible_cap: false,
-            is_eligible_tote: false,
-            is_eligible_button: false,
-            has_redeemed_tshirt: false,
-            has_redeemed_cap: false,
-            has_redeemed_tote: false,
-            has_redeemed_button: false,
-            has_priority_mon: false,
-            has_priority_tue: false,
-            has_priority_wed: false,
-            has_priority_thu: false,
-            has_priority_fri: false,
-            has_priority_sat: false,
-            has_priority_sun: false,
-            puzzles_completed: [],
-            ...overrides.attendee,
-        })
-        .throwOnError();
+    await SupabaseDB.ATTENDEES.insert({
+        user_id,
+        // name: "Test User",
+        points: 0,
+        favorite_events: [],
+        is_eligible_tshirt: true,
+        is_eligible_cap: false,
+        is_eligible_tote: false,
+        is_eligible_button: false,
+        has_redeemed_tshirt: false,
+        has_redeemed_cap: false,
+        has_redeemed_tote: false,
+        has_redeemed_button: false,
+        has_priority_mon: false,
+        has_priority_tue: false,
+        has_priority_wed: false,
+        has_priority_thu: false,
+        has_priority_fri: false,
+        has_priority_sat: false,
+        has_priority_sun: false,
+        puzzles_completed: [],
+        ...overrides.attendee,
+    }).throwOnError();
 }
-
 
 const BASE_TEST_ATTENDEE = {
     user_id: TESTER.user_id,
     points: 0,
     // has_checked_in: false,
     puzzles_completed: [],
-    
 };
 
 let eventId: string;
-    beforeEach(async () => {
-        eventId = uuidv4();
-        await SupabaseDB.EVENT_ATTENDANCE.delete().neq("attendee", "");
-        await SupabaseDB.ATTENDEE_ATTENDANCE.delete().neq("user_id", "");
-        await SupabaseDB.EVENTS.delete().neq("event_id", "");
-        await SupabaseDB.ATTENDEES.delete().neq("user_id", "");
-        await SupabaseDB.REGISTRATIONS.delete().neq("user_id", "");
-        await SupabaseDB.ROLES.delete().neq("user_id", "");
+beforeEach(async () => {
+    eventId = uuidv4();
+    await SupabaseDB.EVENT_ATTENDANCE.delete().neq("attendee", "");
+    await SupabaseDB.ATTENDEE_ATTENDANCE.delete().neq("user_id", "");
+    await SupabaseDB.EVENTS.delete().neq("event_id", "");
+    await SupabaseDB.ATTENDEES.delete().neq("user_id", "");
+    await SupabaseDB.REGISTRATIONS.delete().neq("user_id", "");
+    await SupabaseDB.ROLES.delete().neq("user_id", "");
 
-        await SupabaseDB.EVENTS.insert({
-            event_id: eventId,
-            name: "Test Event",
-            description: "Description",
-            start_time: new Date().toISOString(),
-            end_time: new Date(Date.now() + 3600000).toISOString(), // +1hr
-            event_type: "SPECIAL", // use one of the allowed enums
-            is_virtual: false,
-            is_visible: true,
-            location: "Test Location",
-            points: 10,
-        }).throwOnError();
-    });
+    await SupabaseDB.EVENTS.insert({
+        event_id: eventId,
+        name: "Test Event",
+        description: "Description",
+        start_time: new Date().toISOString(),
+        end_time: new Date(Date.now() + 3600000).toISOString(), // +1hr
+        event_type: "SPECIAL", // use one of the allowed enums
+        is_virtual: false,
+        is_visible: true,
+        location: "Test Location",
+        points: 10,
+    }).throwOnError();
+});
 
 describe("POST /attendee/favorites/:eventId", () => {
-
     it("should add a favorite event ID to the user's attendee profile", async () => {
         await insertTestAttendee();
 
@@ -106,7 +101,10 @@ describe("POST /attendee/favorites/:eventId", () => {
             StatusCodes.OK
         );
 
-        const updated = await SupabaseDB.ATTENDEES.select("favorite_events").eq("user_id", TESTER.user_id);
+        const updated = await SupabaseDB.ATTENDEES.select("favorite_events").eq(
+            "user_id",
+            TESTER.user_id
+        );
 
         expect(updated.data?.[0]?.favorite_events).toContain(eventId);
     }, 50000);
@@ -122,7 +120,10 @@ describe("POST /attendee/favorites/:eventId", () => {
             StatusCodes.OK
         );
 
-        const updated = await SupabaseDB.ATTENDEES.select("favorite_events").eq("user_id", TESTER.user_id);
+        const updated = await SupabaseDB.ATTENDEES.select("favorite_events").eq(
+            "user_id",
+            TESTER.user_id
+        );
 
         expect(updated.data?.[0]?.favorite_events.length).toBe(1); // still only one
         expect(updated.data?.[0]?.favorite_events).toContain(eventId);
@@ -162,12 +163,11 @@ describe("POST /attendee/favorites/:eventId", () => {
 describe("DELETE /attendee/favorites/:eventId", () => {
     const eventId = uuidv4();
 
-// beforeEach(async () => {
-//     await SupabaseDB.ATTENDEES.delete().neq("user_id", "").throwOnError();
-//     await SupabaseDB.REGISTRATIONS.delete().neq("user_id", "").throwOnError();
-//     await SupabaseDB.ROLES.delete().neq("user_id", "").throwOnError();
-// });
-
+    // beforeEach(async () => {
+    //     await SupabaseDB.ATTENDEES.delete().neq("user_id", "").throwOnError();
+    //     await SupabaseDB.REGISTRATIONS.delete().neq("user_id", "").throwOnError();
+    //     await SupabaseDB.ROLES.delete().neq("user_id", "").throwOnError();
+    // });
 
     it("should remove the event ID from the user's favorite_events", async () => {
         await insertTestAttendee({
@@ -180,7 +180,10 @@ describe("DELETE /attendee/favorites/:eventId", () => {
             StatusCodes.OK
         );
 
-        const updated = await SupabaseDB.ATTENDEES.select("favorite_events").eq("user_id", TESTER.user_id);
+        const updated = await SupabaseDB.ATTENDEES.select("favorite_events").eq(
+            "user_id",
+            TESTER.user_id
+        );
         expect(updated.data?.[0]?.favorite_events).not.toContain(eventId);
         expect(updated.data?.[0]?.favorite_events).toContain(otherEvent);
     });
@@ -196,7 +199,10 @@ describe("DELETE /attendee/favorites/:eventId", () => {
             StatusCodes.OK
         );
 
-        const updated = await SupabaseDB.ATTENDEES.select("favorite_events").eq("user_id", TESTER.user_id);
+        const updated = await SupabaseDB.ATTENDEES.select("favorite_events").eq(
+            "user_id",
+            TESTER.user_id
+        );
         expect(updated.data?.[0]?.favorite_events).toEqual([otherEvent]);
     });
 
@@ -235,12 +241,11 @@ describe("GET /attendee/favorites", () => {
     const uuidEvent1 = uuidv4();
     const uuidEvent2 = uuidv4();
 
-// beforeEach(async () => {
-//     await SupabaseDB.ATTENDEES.delete().neq("user_id", "").throwOnError();
-//     await SupabaseDB.REGISTRATIONS.delete().neq("user_id", "").throwOnError();
-//     await SupabaseDB.ROLES.delete().neq("user_id", "").throwOnError();
-// });
-
+    // beforeEach(async () => {
+    //     await SupabaseDB.ATTENDEES.delete().neq("user_id", "").throwOnError();
+    //     await SupabaseDB.REGISTRATIONS.delete().neq("user_id", "").throwOnError();
+    //     await SupabaseDB.ROLES.delete().neq("user_id", "").throwOnError();
+    // });
 
     it("should return the attendee with their favorite_events", async () => {
         const favorite_events = [uuidEvent1, uuidEvent2];
@@ -325,12 +330,11 @@ describe("POST /attendee/", () => {
 });
 
 describe("GET /attendee/points", () => {
-// beforeEach(async () => {
-//     await SupabaseDB.ATTENDEES.delete().neq("user_id", "").throwOnError();
-//     await SupabaseDB.REGISTRATIONS.delete().neq("user_id", "").throwOnError();
-//     await SupabaseDB.ROLES.delete().neq("user_id", "").throwOnError();
-// });
-
+    // beforeEach(async () => {
+    //     await SupabaseDB.ATTENDEES.delete().neq("user_id", "").throwOnError();
+    //     await SupabaseDB.REGISTRATIONS.delete().neq("user_id", "").throwOnError();
+    //     await SupabaseDB.ROLES.delete().neq("user_id", "").throwOnError();
+    // });
 
     it("should return the user's points", async () => {
         await insertTestAttendee({
@@ -380,15 +384,13 @@ describe("GET /attendee/points", () => {
 describe("GET /attendee/foodwave", () => {
     const currentDay = getCurrentDay().toLowerCase();
 
-// beforeEach(async () => {
-//     await SupabaseDB.ATTENDEES.delete().neq("user_id", "").throwOnError();
-//     await SupabaseDB.REGISTRATIONS.delete().neq("user_id", "").throwOnError();
-//     await SupabaseDB.ROLES.delete().neq("user_id", "").throwOnError();
-// });
-
+    // beforeEach(async () => {
+    //     await SupabaseDB.ATTENDEES.delete().neq("user_id", "").throwOnError();
+    //     await SupabaseDB.REGISTRATIONS.delete().neq("user_id", "").throwOnError();
+    //     await SupabaseDB.ROLES.delete().neq("user_id", "").throwOnError();
+    // });
 
     it("should return foodwave 1 if attendee has priority today", async () => {
-
         await insertTestAttendee({
             attendee: {
                 user_id: BASE_TEST_ATTENDEE.user_id,
@@ -417,7 +419,6 @@ describe("GET /attendee/foodwave", () => {
     });
 
     it("should return foodwave 1 if attendee has dietary restriction GLUTEN-FREE", async () => {
-
         await insertTestAttendee({
             registration: {
                 user_id: BASE_TEST_ATTENDEE.user_id,
@@ -462,12 +463,11 @@ describe("GET /attendee/foodwave", () => {
 });
 
 describe("GET /attendee/", () => {
-// beforeEach(async () => {
-//     await SupabaseDB.ATTENDEES.delete().neq("user_id", "").throwOnError();
-//     await SupabaseDB.REGISTRATIONS.delete().neq("user_id", "").throwOnError();
-//     await SupabaseDB.ROLES.delete().neq("user_id", "").throwOnError();
-// });
-
+    // beforeEach(async () => {
+    //     await SupabaseDB.ATTENDEES.delete().neq("user_id", "").throwOnError();
+    //     await SupabaseDB.REGISTRATIONS.delete().neq("user_id", "").throwOnError();
+    //     await SupabaseDB.ROLES.delete().neq("user_id", "").throwOnError();
+    // });
 
     it("should return the attendee data for an authenticated USER", async () => {
         await insertTestAttendee({
@@ -498,11 +498,11 @@ describe("GET /attendee/", () => {
 
 describe("GET /attendee/id/:user_id", () => {
     const targetId = "some-user-id";
-// beforeEach(async () => {
-//     await SupabaseDB.ATTENDEES.delete().neq("user_id", "").throwOnError();
-//     await SupabaseDB.REGISTRATIONS.delete().neq("user_id", "").throwOnError();
-//     await SupabaseDB.ROLES.delete().neq("user_id", "").throwOnError();
-// });
+    // beforeEach(async () => {
+    //     await SupabaseDB.ATTENDEES.delete().neq("user_id", "").throwOnError();
+    //     await SupabaseDB.REGISTRATIONS.delete().neq("user_id", "").throwOnError();
+    //     await SupabaseDB.ROLES.delete().neq("user_id", "").throwOnError();
+    // });
 
     beforeEach(async () => {
         await SupabaseDB.ROLES.insert({
@@ -512,7 +512,6 @@ describe("GET /attendee/id/:user_id", () => {
             roles: [Role.Enum.USER],
         });
     });
-
 
     it.each([
         { role: Role.enum.STAFF, label: "STAFF" },
@@ -547,57 +546,76 @@ describe("GET /attendee/id/:user_id", () => {
 });
 
 describe("GET /attendee/emails", () => {
-// beforeEach(async () => {
-//     await SupabaseDB.ATTENDEES.delete().neq("user_id", "").throwOnError();
-//     await SupabaseDB.REGISTRATIONS.delete().neq("user_id", "").throwOnError();
-//     await SupabaseDB.ROLES.delete().neq("user_id", "").throwOnError();
-// });
+    // beforeEach(async () => {
+    //     await SupabaseDB.ATTENDEES.delete().neq("user_id", "").throwOnError();
+    //     await SupabaseDB.REGISTRATIONS.delete().neq("user_id", "").throwOnError();
+    //     await SupabaseDB.ROLES.delete().neq("user_id", "").throwOnError();
+    // });
 
     it.each([
         { role: Role.enum.STAFF, label: "STAFF" },
         { role: Role.enum.ADMIN, label: "ADMIN" },
-    ])("should return all attendee emails and user_ids for %s role", async ({ role }) => {
+    ])(
+        "should return all attendee emails and user_ids for %s role",
+        async ({ role }) => {
+            await SupabaseDB.ROLES.insert([
+                {
+                    user_id: "u1",
+                    email: "u1@example.com",
+                    display_name: "User One",
+                    roles: [],
+                },
+                {
+                    user_id: "u2",
+                    email: "u2@example.com",
+                    display_name: "User Two",
+                    roles: [],
+                },
+            ]).throwOnError();
 
-        await SupabaseDB.ROLES.insert([
-            { user_id: "u1", email: "u1@example.com", display_name: "User One", roles: [] },
-            { user_id: "u2", email: "u2@example.com", display_name: "User Two", roles: [] },
-        ]).throwOnError();
+            await SupabaseDB.REGISTRATIONS.insert([
+                {
+                    user_id: "u1",
+                    name: "User One",
+                    email: "u1@example.com",
+                    university: "N/A",
+                    degree: "N/A",
+                    is_interested_mech_mania: false,
+                    is_interested_puzzle_bang: false,
+                    dietary_restrictions: [],
+                    allergies: [],
+                },
+                {
+                    user_id: "u2",
+                    name: "User Two",
+                    email: "u2@example.com",
+                    university: "N/A",
+                    degree: "N/A",
+                    is_interested_mech_mania: false,
+                    is_interested_puzzle_bang: false,
+                    dietary_restrictions: [],
+                    allergies: [],
+                },
+            ]).throwOnError();
 
-        await SupabaseDB.REGISTRATIONS.insert([
-            {
-                user_id: "u1",
-                name: "User One",
-                email: "u1@example.com",
-                university: "N/A",
-                degree: "N/A",
-                is_interested_mech_mania: false,
-                is_interested_puzzle_bang: false,
-                dietary_restrictions: [],
-                allergies: [],
-            },
-            {
-                user_id: "u2",
-                name: "User Two",
-                email: "u2@example.com",
-                university: "N/A",
-                degree: "N/A",
-                is_interested_mech_mania: false,
-                is_interested_puzzle_bang: false,
-                dietary_restrictions: [],
-                allergies: [],
-            },
-        ]).throwOnError();
+            const res = await get("/attendee/emails", role).expect(
+                StatusCodes.OK
+            );
 
-
-        const res = await get("/attendee/emails", role).expect(StatusCodes.OK);
-
-        expect(res.body).toEqual(
-            expect.arrayContaining([
-                expect.objectContaining({ user_id: "u1", email: "u1@example.com" }),
-                expect.objectContaining({ user_id: "u2", email: "u2@example.com" }),
-            ])
-        );
-    });
+            expect(res.body).toEqual(
+                expect.arrayContaining([
+                    expect.objectContaining({
+                        user_id: "u1",
+                        email: "u1@example.com",
+                    }),
+                    expect.objectContaining({
+                        user_id: "u2",
+                        email: "u2@example.com",
+                    }),
+                ])
+            );
+        }
+    );
 
     it("should return empty array if no attendees exist", async () => {
         const res = await get("/attendee/emails", Role.enum.ADMIN).expect(
@@ -621,17 +639,15 @@ describe("GET /attendee/emails", () => {
 describe("POST /attendee/redeemMerch/:ITEM", () => {
     const user_id = TESTER.user_id;
 
-// beforeEach(async () => {
-//     await SupabaseDB.ATTENDEES.delete().neq("user_id", "").throwOnError();
-//     await SupabaseDB.REGISTRATIONS.delete().neq("user_id", "").throwOnError();
-//     await SupabaseDB.ROLES.delete().neq("user_id", "").throwOnError();
-// });
-
+    // beforeEach(async () => {
+    //     await SupabaseDB.ATTENDEES.delete().neq("user_id", "").throwOnError();
+    //     await SupabaseDB.REGISTRATIONS.delete().neq("user_id", "").throwOnError();
+    //     await SupabaseDB.ROLES.delete().neq("user_id", "").throwOnError();
+    // });
 
     it.each([{ role: Role.enum.STAFF }, { role: Role.enum.ADMIN }])(
         "should redeem valid item for %s role",
         async ({ role }) => {
-
             await insertTestAttendee({
                 attendee: { ...BASE_TEST_ATTENDEE, user_id },
             });
@@ -642,7 +658,12 @@ describe("POST /attendee/redeemMerch/:ITEM", () => {
 
             expect(res.body).toEqual({ message: "Item Redeemed!" });
 
-            const updated = await SupabaseDB.ATTENDEES.select("has_redeemed_tshirt").eq("user_id", user_id).maybeSingle().throwOnError();
+            const updated = await SupabaseDB.ATTENDEES.select(
+                "has_redeemed_tshirt"
+            )
+                .eq("user_id", user_id)
+                .maybeSingle()
+                .throwOnError();
 
             expect(updated.data?.has_redeemed_tshirt).toBe(true);
         }
@@ -656,15 +677,14 @@ describe("POST /attendee/redeemMerch/:ITEM", () => {
 
     it("should return 400 for invalid item", async () => {
         await insertTestAttendee({
-                attendee: { ...BASE_TEST_ATTENDEE, user_id },
-            });
+            attendee: { ...BASE_TEST_ATTENDEE, user_id },
+        });
         await post("/attendee/redeemMerch/InvalidItem", Role.enum.ADMIN)
             .send({ user_id })
             .expect(StatusCodes.BAD_REQUEST);
     });
 
     it("should return 400 if item already redeemed", async () => {
-
         await insertTestAttendee({
             attendee: {
                 ...BASE_TEST_ATTENDEE,
@@ -679,7 +699,6 @@ describe("POST /attendee/redeemMerch/:ITEM", () => {
     });
 
     it("should return 400 if user not eligible for item", async () => {
-
         await insertTestAttendee({
             attendee: {
                 ...BASE_TEST_ATTENDEE,
@@ -701,8 +720,8 @@ describe("POST /attendee/redeemMerch/:ITEM", () => {
 
     it("should return 403 if user is not STAFF or ADMIN", async () => {
         await insertTestAttendee({
-                attendee: { ...BASE_TEST_ATTENDEE, user_id },
-    });
+            attendee: { ...BASE_TEST_ATTENDEE, user_id },
+        });
 
         await post("/attendee/redeemMerch/Tshirt", Role.enum.USER)
             .send({ user_id })
