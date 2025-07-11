@@ -92,7 +92,7 @@ describe("GET /staff/", () => {
     });
 });
 
-describe("GET /staff/:USERID", () => {
+describe("GET /staff/:EMAIL", () => {
     it.each([
         { role: "ADMIN", description: "an ADMIN user", getter: getAsAdmin },
         { role: "STAFF", description: "a STAFF user", getter: getAsStaff },
@@ -196,7 +196,7 @@ describe("POST /staff/", () => {
     });
 });
 
-describe("DELETE /staff/:USERID", () => {
+describe("DELETE /staff/:EMAIL", () => {
     // success case
     it("should delete existing staff member and return NO_CONTENT", async () => {
         await delAsAdmin(`/staff/${TESTER_STAFF.email}`).expect(
@@ -234,7 +234,7 @@ describe("POST /staff/check-in", () => {
     it("fails if meeting is not found", async () => {
         const res = await postAsStaff("/staff/check-in")
             .send({
-                meetingId: "nonexistent-id",
+                meetingId: uuidv4(),
             })
             .expect(StatusCodes.NOT_FOUND);
         expect(res.body.error).toBe("NotFound");
@@ -303,11 +303,11 @@ describe("POST /staff/check-in", () => {
     });
 });
 
-describe("POST /staff/:USERID/attendance", () => {
+describe("POST /staff/:EMAIL/attendance", () => {
     it("fails if meeting is not found", async () => {
         const res = await postAsAdmin(`/staff/${OTHER_STAFF.email}/attendance`)
             .send({
-                meetingId: "invalid-id",
+                meetingId: uuidv4(),
                 attendanceType: StaffAttendanceTypeEnum.EXCUSED,
             })
             .expect(StatusCodes.NOT_FOUND);
