@@ -31,7 +31,7 @@ function setRole(request: request.Test, role?: RoleType) {
     } satisfies JwtPayloadType;
 
     const jwt = jsonwebtoken.sign(payload, Config.JWT_SIGNING_SECRET, {
-        expiresIn: "1 day",
+        expiresIn: Config.JWT_EXPIRATION_TIME,
     });
 
     return request.set("Authorization", jwt as string);
