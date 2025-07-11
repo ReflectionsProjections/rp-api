@@ -77,7 +77,9 @@ attendeeRouter.delete(
         );
         await SupabaseDB.ATTENDEES.update({
             favorite_events: updatedFavorites,
-        }).eq("user_id", user_id);
+        })
+            .eq("user_id", user_id)
+            .throwOnError();
         return res.status(StatusCodes.OK).json({ favorites: updatedFavorites });
     }
 );
@@ -259,14 +261,10 @@ attendeeRouter.get(
     "/emails",
     RoleChecker([Role.Enum.STAFF, Role.Enum.ADMIN]),
     async (_req, res) => {
-        const { data, error } =
-            await SupabaseDB.REGISTRATIONS.select("email, user_id");
-
-        if (error) {
-            return res
-                .status(StatusCodes.INTERNAL_SERVER_ERROR)
-                .json({ error: error.message });
-        }
+        const { data } =
+            await SupabaseDB.REGISTRATIONS.select(
+                "email, user_id"
+            ).throwOnError();
 
         return res.status(StatusCodes.OK).json(data);
     }

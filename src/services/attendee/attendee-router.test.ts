@@ -163,12 +163,6 @@ describe("POST /attendee/favorites/:eventId", () => {
 describe("DELETE /attendee/favorites/:eventId", () => {
     const eventId = uuidv4();
 
-    // beforeEach(async () => {
-    //     await SupabaseDB.ATTENDEES.delete().neq("user_id", "").throwOnError();
-    //     await SupabaseDB.REGISTRATIONS.delete().neq("user_id", "").throwOnError();
-    //     await SupabaseDB.ROLES.delete().neq("user_id", "").throwOnError();
-    // });
-
     it("should remove the event ID from the user's favorite_events", async () => {
         await insertTestAttendee({
             attendee: {
@@ -240,12 +234,6 @@ describe("DELETE /attendee/favorites/:eventId", () => {
 describe("GET /attendee/favorites", () => {
     const uuidEvent1 = uuidv4();
     const uuidEvent2 = uuidv4();
-
-    // beforeEach(async () => {
-    //     await SupabaseDB.ATTENDEES.delete().neq("user_id", "").throwOnError();
-    //     await SupabaseDB.REGISTRATIONS.delete().neq("user_id", "").throwOnError();
-    //     await SupabaseDB.ROLES.delete().neq("user_id", "").throwOnError();
-    // });
 
     it("should return the attendee with their favorite_events", async () => {
         const favorite_events = [uuidEvent1, uuidEvent2];
@@ -330,12 +318,6 @@ describe("POST /attendee/", () => {
 });
 
 describe("GET /attendee/points", () => {
-    // beforeEach(async () => {
-    //     await SupabaseDB.ATTENDEES.delete().neq("user_id", "").throwOnError();
-    //     await SupabaseDB.REGISTRATIONS.delete().neq("user_id", "").throwOnError();
-    //     await SupabaseDB.ROLES.delete().neq("user_id", "").throwOnError();
-    // });
-
     it("should return the user's points", async () => {
         await insertTestAttendee({
             attendee: {
@@ -383,12 +365,6 @@ describe("GET /attendee/points", () => {
 
 describe("GET /attendee/foodwave", () => {
     const currentDay = getCurrentDay().toLowerCase();
-
-    // beforeEach(async () => {
-    //     await SupabaseDB.ATTENDEES.delete().neq("user_id", "").throwOnError();
-    //     await SupabaseDB.REGISTRATIONS.delete().neq("user_id", "").throwOnError();
-    //     await SupabaseDB.ROLES.delete().neq("user_id", "").throwOnError();
-    // });
 
     it("should return foodwave 1 if attendee has priority today", async () => {
         await insertTestAttendee({
@@ -463,12 +439,6 @@ describe("GET /attendee/foodwave", () => {
 });
 
 describe("GET /attendee/", () => {
-    // beforeEach(async () => {
-    //     await SupabaseDB.ATTENDEES.delete().neq("user_id", "").throwOnError();
-    //     await SupabaseDB.REGISTRATIONS.delete().neq("user_id", "").throwOnError();
-    //     await SupabaseDB.ROLES.delete().neq("user_id", "").throwOnError();
-    // });
-
     it("should return the attendee data for an authenticated USER", async () => {
         await insertTestAttendee({
             attendee: {
@@ -498,11 +468,6 @@ describe("GET /attendee/", () => {
 
 describe("GET /attendee/id/:user_id", () => {
     const targetId = "some-user-id";
-    // beforeEach(async () => {
-    //     await SupabaseDB.ATTENDEES.delete().neq("user_id", "").throwOnError();
-    //     await SupabaseDB.REGISTRATIONS.delete().neq("user_id", "").throwOnError();
-    //     await SupabaseDB.ROLES.delete().neq("user_id", "").throwOnError();
-    // });
 
     beforeEach(async () => {
         await SupabaseDB.ROLES.insert({
@@ -546,12 +511,6 @@ describe("GET /attendee/id/:user_id", () => {
 });
 
 describe("GET /attendee/emails", () => {
-    // beforeEach(async () => {
-    //     await SupabaseDB.ATTENDEES.delete().neq("user_id", "").throwOnError();
-    //     await SupabaseDB.REGISTRATIONS.delete().neq("user_id", "").throwOnError();
-    //     await SupabaseDB.ROLES.delete().neq("user_id", "").throwOnError();
-    // });
-
     it.each([
         { role: Role.enum.STAFF, label: "STAFF" },
         { role: Role.enum.ADMIN, label: "ADMIN" },
@@ -638,12 +597,6 @@ describe("GET /attendee/emails", () => {
 
 describe("POST /attendee/redeemMerch/:ITEM", () => {
     const user_id = TESTER.user_id;
-
-    // beforeEach(async () => {
-    //     await SupabaseDB.ATTENDEES.delete().neq("user_id", "").throwOnError();
-    //     await SupabaseDB.REGISTRATIONS.delete().neq("user_id", "").throwOnError();
-    //     await SupabaseDB.ROLES.delete().neq("user_id", "").throwOnError();
-    // });
 
     it.each([{ role: Role.enum.STAFF }, { role: Role.enum.ADMIN }])(
         "should redeem valid item for %s role",
