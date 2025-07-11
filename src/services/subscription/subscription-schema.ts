@@ -7,18 +7,18 @@ export type IncomingSubscription = z.infer<typeof SubscriptionValidator>;
 // Zod schema for incoming user subscriptions
 const SubscriptionValidator = z.object({
     email: z.string().email(),
-    mailingList: MailingListName,
+    mailing_list: MailingListName,
 });
 
 // Zod schema for validating subscription lists
 const SubscriptionSchemaValidator = z.object({
-    mailingList: MailingListName,
+    mailing_list: MailingListName,
     subscriptions: z.array(z.string().email()),
 });
 
 // Mongoose schema for subscription
 const SubscriptionSchema = new mongoose.Schema({
-    mailingList: { type: String, required: true },
+    mailing_list: { type: String, required: true },
     subscriptions: [{ type: String, required: true }],
 });
 
