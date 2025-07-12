@@ -4,10 +4,8 @@ import { Database } from "../../database";
 import Config from "../../config";
 import RoleChecker from "../../middleware/role-checker";
 import { Platform, Role } from "../auth/auth-models";
-import {
-    AuthLoginValidator,
-    AuthRoleChangeRequest,
-} from "./auth-schema";
+import { ZodError } from "zod";
+import { AuthLoginValidator, AuthRoleChangeRequest } from "./auth-schema";
 import authSponsorRouter from "./sponsor/sponsor-router";
 import { CorporateDeleteRequest, CorporateValidator } from "./corporate-schema";
 import {
@@ -19,7 +17,10 @@ import {
 const authRouter = Router();
 
 const oauthClients = {
-    [Platform.Enum.WEB]: createOAuthClient(Config.CLIENT_ID, Config.CLIENT_SECRET),
+    [Platform.Enum.WEB]: createOAuthClient(
+        Config.CLIENT_ID,
+        Config.CLIENT_SECRET
+    ),
     [Platform.Enum.IOS]: createOAuthClient(Config.IOS_CLIENT_ID),
     // TODO: add android client
 };
@@ -94,12 +95,15 @@ const getAuthPayloadFromCode = async (
 authRouter.post("/login/:PLATFORM", async (req, res) => {
     try {
         const platform = Platform.parse(req.params.PLATFORM);
-        
+
         const requestBody = { ...req.body, platform };
         const validatedData = AuthLoginValidator.parse(requestBody);
-        
+
         const { code, redirectUri } = validatedData;
-        const codeVerifier = 'codeVerifier' in validatedData ? validatedData.codeVerifier : undefined;
+        const codeVerifier =
+            "codeVerifier" in validatedData
+                ? validatedData.codeVerifier
+                : undefined;
 
         const authPayload = await getAuthPayloadFromCode(
             code,
@@ -132,6 +136,14 @@ authRouter.post("/login/:PLATFORM", async (req, res) => {
 
         return res.status(StatusCodes.OK).send({ token: jwtToken });
     } catch (error) {
+        if (error instanceof ZodError) {
+            return res.status(StatusCodes.BAD_REQUEST).send({
+                error: "InvalidRequest",
+                details: "Validation failed",
+            });
+        }
+
+        // Handle other errors
         console.error("Error in platform login:", error);
         return res.status(StatusCodes.BAD_REQUEST).send({
             error: "InvalidRequest",
@@ -139,7 +151,6 @@ authRouter.post("/login/:PLATFORM", async (req, res) => {
         });
     }
 });
-
 
 authRouter.get(
     "/corporate",

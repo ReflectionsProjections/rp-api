@@ -216,7 +216,7 @@ describe("POST /auth/login/:PLATFORM", () => {
                 redirectUri: "http://localhost/redirect",
             })
             .expect(StatusCodes.NOT_FOUND);
-        expect(res.body).toHaveProperty("error", "NotFound");
+        expect(res.body).toHaveProperty("error", "EndpointNotFound");
     });
 
     // Web platform tests
