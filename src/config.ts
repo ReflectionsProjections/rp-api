@@ -1,7 +1,6 @@
 import dotenv from "dotenv";
 
 import { z } from "zod";
-import { getEnv } from "./utilities";
 
 import AWS from "aws-sdk";
 
@@ -16,6 +15,14 @@ export enum EnvironmentEnum {
 export const Environment = z.nativeEnum(EnvironmentEnum);
 
 export const MailingListName = z.enum(["rp_interest"]);
+
+function getEnv(key: string): string {
+    const val = process.env[key];
+    if (val === undefined) {
+        throw new Error(`env value ${key} not found, exiting...`);
+    }
+    return val;
+}
 
 const env = Environment.parse(getEnv("ENV"));
 const API_BASE =
