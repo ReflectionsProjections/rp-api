@@ -95,57 +95,6 @@ const getAuthPayloadFromCode = async (
 authRouter.post("/login/:PLATFORM", async (req, res) => {
     try {
         const platform = Platform.parse(req.params.PLATFORM);
-        const requestBody = { ...req.body, platform };
-        const validatedData = AuthLoginValidator.parse(requestBody);
-
-        const { code, redirectUri } = validatedData;
-        const codeVerifier =
-            "codeVerifier" in validatedData
-                ? validatedData.codeVerifier
-                : undefined;
-
-        const authPayload = await getAuthPayloadFromCode(
-            code,
-            redirectUri,
-            platform,
-            codeVerifier
-        );
-
-        if (!authPayload) {
-            return res
-                .status(StatusCodes.BAD_REQUEST)
-                .send({ error: "InvalidToken" });
-        }
-
-        const properScopes =
-            "email" in authPayload &&
-            "sub" in authPayload &&
-            "name" in authPayload;
-        if (!properScopes) {
-            return res
-                .status(StatusCodes.BAD_REQUEST)
-                .send({ error: "InvalidScopes" });
-        }
-
-        // Update database by payload
-        await updateDatabaseWithAuthPayload(authPayload);
-
-        // Generate the JWT
-        const jwtToken = await generateJWT(`user${authPayload.sub}`);
-
-        return res.status(StatusCodes.OK).send({ token: jwtToken });
-    } catch (error) {
-        console.error("Error in platform login:", error);
-        return res.status(StatusCodes.BAD_REQUEST).send({
-            error: "InvalidRequest",
-            details: error instanceof Error ? error.message : "Unknown error",
-        });
-    }
-});
-
-authRouter.post("/login/:PLATFORM", async (req, res) => {
-    try {
-        const platform = Platform.parse(req.params.PLATFORM);
 
         const requestBody = { ...req.body, platform };
         const validatedData = AuthLoginValidator.parse(requestBody);
