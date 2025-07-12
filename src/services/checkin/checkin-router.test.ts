@@ -19,7 +19,6 @@ const ONE_HOUR_SECONDS = 3600;
 const TEST_ATTENDEE_1 = {
     user_id: "attendee001",
     points: 0,
-    has_checked_in: false,
     puzzles_completed: [],
 };
 
@@ -116,7 +115,6 @@ async function insertTestAttendee(
             user_id: userId,
             points: 0,
             puzzles_completed: [],
-            has_checked_in: false,
             has_priority_fri: false,
             has_priority_mon: false,
             has_priority_sat: false,
@@ -188,7 +186,6 @@ describe("POST /checkin/scan/staff", () => {
         // Reset attendee fields
         await SupabaseDB.ATTENDEES.update({
             points: 0,
-            has_checked_in: false,
             has_priority_mon: false,
             has_priority_tue: false,
             has_priority_wed: false,
@@ -345,7 +342,6 @@ describe("POST /checkin/scan/staff", () => {
         expect(attendeeError).toBeNull();
         expect(updatedAttendee).toMatchObject({
             points: TEST_ATTENDEE_1.points + REGULAR_EVENT_FOR_CHECKIN.points,
-            has_checked_in: false, // Not a general check-in event
             [`has_priority_${currentDay}`.toLowerCase()]: true,
         });
     }, 100000);
@@ -399,7 +395,6 @@ describe("POST /checkin/scan/staff", () => {
         expect(attendeeError).toBeNull();
         expect(updatedAttendee).toMatchObject({
             points: TEST_ATTENDEE_1.points + GENERAL_CHECKIN_EVENT.points,
-            has_checked_in: true, // Specific to CHECKIN event type
             [`has_priority_${currentDay}`.toLowerCase()]: false,
         });
     });
@@ -452,7 +447,6 @@ describe("POST /checkin/scan/staff", () => {
         expect(attendeeError).toBeNull();
         expect(updatedAttendee).toMatchObject({
             points: TEST_ATTENDEE_1.points + MEALS_EVENT.points,
-            has_checked_in: false, // Not changed for MEALS event
             [`has_priority_${currentDay}`.toLowerCase()]: false,
         });
     });
@@ -490,7 +484,6 @@ describe("POST /checkin/event", () => {
         // Reset static test attendee
         await SupabaseDB.ATTENDEES.update({
             points: 0,
-            has_checked_in: false,
             has_priority_mon: false,
             has_priority_tue: false,
             has_priority_wed: false,
@@ -590,7 +583,6 @@ describe("POST /checkin/event", () => {
             .single();
         expect(updatedAttendee).toMatchObject({
             points: TEST_ATTENDEE_1.points + REGULAR_EVENT_FOR_CHECKIN.points,
-            has_checked_in: false,
             [`has_priority_${currentDay}`.toLowerCase()]: true,
         });
     });
@@ -637,7 +629,6 @@ describe("POST /checkin/event", () => {
             .single();
         expect(updatedAttendee).toMatchObject({
             points: TEST_ATTENDEE_1.points + GENERAL_CHECKIN_EVENT.points,
-            has_checked_in: true,
             [`has_priority_${currentDay}`.toLowerCase()]: false,
         });
     });
@@ -683,7 +674,6 @@ describe("POST /checkin/event", () => {
             .single();
         expect(updatedAttendee).toMatchObject({
             points: TEST_ATTENDEE_1.points + MEALS_EVENT.points,
-            has_checked_in: false,
             [`has_priority_${currentDay}`.toLowerCase()]: false,
         });
     });
@@ -880,198 +870,6 @@ describe("POST /checkin/scan/merch", () => {
             .send(payload)
             .expect(StatusCodes.UNAUTHORIZED);
         expect(response.body).toEqual({ error: "QR code has expired" });
-
-        jest.spyOn(Date, "now").mockRestore();
-    });
-});
-
-describe("POST /checkin/", () => {
-    beforeEach(async () => {
-        await SupabaseDB.ATTENDEES.update({
-            points: 0,
-            has_checked_in: false,
-            has_priority_mon: false,
-            has_priority_tue: false,
-            has_priority_wed: false,
-            has_priority_thu: false,
-            has_priority_fri: false,
-            has_priority_sat: false,
-            has_priority_sun: false,
-        }).eq("user_id", TEST_ATTENDEE_1.user_id);
-    });
-
-    const GENERAL_CHECKIN_EVENT_ID = "generalCheckinEvent";
-    const QR_CODE_NON_EXISTENT_ATTENDEE = generateQrHash(
-        NON_EXISTENT_ATTENDEE_ID,
-        NOW_SECONDS + ONE_HOUR_SECONDS
-    );
-
-    it("should return UNAUTHORIZED for an unauthenticated user", async () => {
-        const payload = {
-            event_id: GENERAL_CHECKIN_EVENT_ID,
-            qrCode: VALID_QR_CODE_TEST_ATTENDEE_1,
-        };
-        await post("/checkin/").send(payload).expect(StatusCodes.UNAUTHORIZED);
-    }, 50000);
-
-    it.each([
-        {
-            description: "missing qrCode",
-            payload: { event_id: GENERAL_CHECKIN_EVENT_ID },
-        },
-        {
-            description: "qrCode is not a string",
-            payload: { event_id: GENERAL_CHECKIN_EVENT_ID, qrCode: 123 },
-        },
-        {
-            description: "qrCode is an empty string",
-            payload: { event_id: GENERAL_CHECKIN_EVENT_ID, qrCode: "" },
-        },
-    ])(
-        "should return BAD_REQUEST when $description",
-        async ({ payload: invalidData }) => {
-            await postAsAdmin("/checkin/")
-                .send(invalidData)
-                .expect(StatusCodes.BAD_REQUEST);
-        }
-    );
-
-    it("should return UNAUTHORIZED if QR code has expired", async () => {
-        const payload = {
-            event_id: GENERAL_CHECKIN_EVENT_ID,
-            qrCode: EXPIRED_QR_CODE_TEST_ATTENDEE_1,
-        };
-        const response = await postAsStaff("/checkin/")
-            .send(payload)
-            .expect(StatusCodes.UNAUTHORIZED);
-        expect(response.body).toEqual({ error: "QR code has expired" });
-    });
-
-    it("should return INTERNAL_SERVER_ERROR for a malformed QR code", async () => {
-        const payload = {
-            event_id: GENERAL_CHECKIN_EVENT_ID,
-            qrCode: MALFORMED_QR_CODE,
-        };
-        await postAsStaff("/checkin/")
-            .send(payload)
-            .expect(StatusCodes.INTERNAL_SERVER_ERROR);
-    });
-
-    it("should return INTERNAL_SERVER_ERROR for a QR code with an invalid signature", async () => {
-        const payload = {
-            event_id: GENERAL_CHECKIN_EVENT_ID,
-            qrCode: INVALID_SIGNATURE_QR_CODE,
-        };
-        await postAsStaff("/checkin/")
-            .send(payload)
-            .expect(StatusCodes.INTERNAL_SERVER_ERROR);
-    });
-
-    it("should return NOT_FOUND if user_id from QR code does not exist in Attendee collection", async () => {
-        const payload = {
-            event_id: GENERAL_CHECKIN_EVENT_ID,
-            qrCode: QR_CODE_NON_EXISTENT_ATTENDEE,
-        };
-        const response = await postAsAdmin("/checkin/")
-            .send(payload)
-            .expect(StatusCodes.NOT_FOUND);
-        expect(response.body).toEqual({ error: "UserNotFound" });
-    });
-
-    it("should return BAD_REQUEST if attendee is already generally checked in", async () => {
-        await SupabaseDB.ATTENDEES.update({ has_checked_in: true }).eq(
-            "user_id",
-            TEST_ATTENDEE_1.user_id
-        );
-        const payload = {
-            event_id: GENERAL_CHECKIN_EVENT_ID,
-            qrCode: VALID_QR_CODE_TEST_ATTENDEE_1,
-        };
-        const response = await postAsAdmin("/checkin/")
-            .send(payload)
-            .expect(StatusCodes.BAD_REQUEST);
-        expect(response.body).toEqual({ error: "AlreadyCheckedIn" });
-    });
-
-    it("should successfully perform general check-in, update records, and return user_id", async () => {
-        const payload = {
-            event_id: GENERAL_CHECKIN_EVENT_ID,
-            qrCode: VALID_QR_CODE_TEST_ATTENDEE_1,
-        };
-
-        const { data: attendeeBefore } = await SupabaseDB.ATTENDEES.select()
-            .eq("user_id", TEST_ATTENDEE_1.user_id)
-            .maybeSingle();
-        expect(attendeeBefore?.has_checked_in).toBe(false);
-
-        const response = await postAsAdmin("/checkin/")
-            .send(payload)
-            .expect(StatusCodes.OK);
-        expect(response.body).toBe(TEST_ATTENDEE_1.user_id);
-
-        const { data: attendeeAfter } = await SupabaseDB.ATTENDEES.select()
-            .eq("user_id", TEST_ATTENDEE_1.user_id)
-            .maybeSingle();
-        expect(attendeeAfter?.has_checked_in).toBe(true);
-    });
-
-    it("should pass if QR code is valid and expires in 1 second", async () => {
-        const mockCurrentTime = NOW_SECONDS;
-        const expiryTime = mockCurrentTime + 1;
-        const qrCodeAboutToExpire = generateQrHash(
-            TEST_ATTENDEE_1.user_id,
-            expiryTime
-        );
-        const payload = {
-            event_id: GENERAL_CHECKIN_EVENT_ID,
-            qrCode: qrCodeAboutToExpire,
-        };
-
-        jest.spyOn(Date, "now").mockImplementation(
-            () => mockCurrentTime * 1000
-        );
-
-        const { data: attendeeBefore } = await SupabaseDB.ATTENDEES.select()
-            .eq("user_id", TEST_ATTENDEE_1.user_id)
-            .maybeSingle();
-        expect(attendeeBefore?.has_checked_in).toBe(false);
-
-        const response = await postAsStaff("/checkin/")
-            .send(payload)
-            .expect(StatusCodes.OK);
-        expect(response.body).toBe(TEST_ATTENDEE_1.user_id);
-        const { data: attendeeAfter } = await SupabaseDB.ATTENDEES.select()
-            .eq("user_id", TEST_ATTENDEE_1.user_id)
-            .maybeSingle();
-        expect(attendeeAfter?.has_checked_in).toBe(true);
-
-        jest.spyOn(Date, "now").mockRestore();
-    });
-
-    it("should fail with UNAUTHORIZED if QR code is valid but expired 1 second ago", async () => {
-        const mockCurrentTime = NOW_SECONDS;
-        const expiryTime = mockCurrentTime - 1;
-        const qrCodeJustExpired = generateQrHash(
-            TEST_ATTENDEE_1.user_id,
-            expiryTime
-        );
-        const payload = {
-            event_id: GENERAL_CHECKIN_EVENT_ID,
-            qrCode: qrCodeJustExpired,
-        };
-
-        jest.spyOn(Date, "now").mockImplementation(
-            () => mockCurrentTime * 1000
-        );
-
-        const response = await postAsAdmin("/checkin/")
-            .send(payload)
-            .expect(StatusCodes.UNAUTHORIZED);
-        expect(response.body).toEqual({ error: "QR code has expired" });
-        const { data: attendee } = await SupabaseDB.ATTENDEES.select()
-            .eq("user_id", TEST_ATTENDEE_1.user_id)
-            .maybeSingle();
-        expect(attendee?.has_checked_in).toBe(false);
 
         jest.spyOn(Date, "now").mockRestore();
     });

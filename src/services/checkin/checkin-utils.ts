@@ -46,7 +46,6 @@ async function updateAttendeePriority(user_id: string) {
     const day = getCurrentDay();
     await SupabaseDB.ATTENDEES.update({
         [`has_priority_${day}`.toLowerCase()]: true,
-        has_checked_in: false,
     })
         .eq("user_id", user_id)
         .throwOnError();
@@ -108,12 +107,6 @@ async function assignPixelsToUser(user_id: string, pixels: number) {
         .throwOnError();
 }
 
-async function markUserAsCheckedIn(user_id: string) {
-    await SupabaseDB.ATTENDEES.update({ has_checked_in: true })
-        .eq("user_id", user_id)
-        .throwOnError();
-}
-
 export async function checkInUserToEvent(event_id: string, user_id: string) {
     await checkEventAndAttendeeExist(event_id, user_id);
     await checkForDuplicateAttendance(event_id, user_id);
@@ -123,9 +116,7 @@ export async function checkInUserToEvent(event_id: string, user_id: string) {
         .single()
         .throwOnError();
 
-    if (event.event_type === EventType.Enum.CHECKIN) {
-        await markUserAsCheckedIn(user_id);
-    } else if (event.event_type !== EventType.Enum.MEALS) {
+    if (event.event_type !== EventType.Enum.MEALS) {
         await updateAttendeePriority(user_id);
     }
 
