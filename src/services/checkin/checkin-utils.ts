@@ -116,7 +116,10 @@ export async function checkInUserToEvent(event_id: string, user_id: string) {
         .single()
         .throwOnError();
 
-    if (event.event_type !== EventType.Enum.MEALS) {
+    if (
+        event.event_type !== EventType.Enum.MEALS &&
+        event.event_type !== EventType.Enum.CHECKIN
+    ) {
         await updateAttendeePriority(user_id);
     }
 
