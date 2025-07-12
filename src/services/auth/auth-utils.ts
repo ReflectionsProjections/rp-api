@@ -5,28 +5,11 @@ import { Database } from "../../database";
 import { JwtPayloadType, Role } from "./auth-models";
 import jsonwebtoken from "jsonwebtoken";
 
-const createOAuthClient = (clientId: string, clientSecret?: string) => {
+export const createOAuthClient = (clientId: string, clientSecret?: string) => {
     return new OAuth2Client({
         clientId,
         clientSecret,
     });
-};
-
-const oauthClients = {
-    web: createOAuthClient(Config.CLIENT_ID, Config.CLIENT_SECRET),
-    ios: createOAuthClient(Config.IOS_CLIENT_ID),
-};
-
-export const getOAuthClient = (platform: string) => {
-    const client = oauthClients[platform as keyof typeof oauthClients];
-    if (!client) {
-        console.warn(
-            `Unknown platform: ${platform}, falling back to web client`
-        );
-        return oauthClients.web;
-    }
-
-    return client;
 };
 
 export async function updateDatabaseWithAuthPayload(payload: TokenPayload) {
