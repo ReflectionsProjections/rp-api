@@ -78,7 +78,6 @@ export type Database = {
                     points: number;
                     puzzles_completed: string[];
                     user_id: string;
-                    has_checked_in?: boolean;
                 };
                 Insert: {
                     favorite_events?: string[];
@@ -100,7 +99,6 @@ export type Database = {
                     points?: number;
                     puzzles_completed?: string[];
                     user_id: string;
-                    has_checked_in?: boolean;
                 };
                 Update: {
                     favorite_events?: string[];
@@ -122,7 +120,6 @@ export type Database = {
                     points?: number;
                     puzzles_completed?: string[];
                     user_id?: string;
-                    has_checked_in?: boolean;
                 };
                 Relationships: [
                     {

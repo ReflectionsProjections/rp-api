@@ -65,7 +65,6 @@ export async function insertTestAttendee(
 const BASE_TEST_ATTENDEE = {
     user_id: TESTER.user_id,
     points: 0,
-    // has_checked_in: false,
     puzzles_completed: [],
 };
 
