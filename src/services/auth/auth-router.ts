@@ -1,22 +1,29 @@
 import { Router } from "express";
 import { StatusCodes } from "http-status-codes";
 import { Database } from "../../database";
+import Config from "../../config";
 import RoleChecker from "../../middleware/role-checker";
-import { Role } from "../auth/auth-models";
-import {
-    AuthLoginValidator,
-    AuthRoleChangeRequest,
-    PlatformValidator,
-} from "./auth-schema";
+import { Platform, Role } from "../auth/auth-models";
+import { ZodError } from "zod";
+import { AuthLoginValidator, AuthRoleChangeRequest } from "./auth-schema";
 import authSponsorRouter from "./sponsor/sponsor-router";
 import { CorporateDeleteRequest, CorporateValidator } from "./corporate-schema";
 import {
     generateJWT,
-    getOAuthClient,
     updateDatabaseWithAuthPayload,
+    createOAuthClient,
 } from "./auth-utils";
 
 const authRouter = Router();
+
+const oauthClients = {
+    [Platform.Enum.WEB]: createOAuthClient(
+        Config.CLIENT_ID,
+        Config.CLIENT_SECRET
+    ),
+    [Platform.Enum.IOS]: createOAuthClient(Config.IOS_CLIENT_ID),
+    // TODO: add android client
+};
 
 authRouter.use("/sponsor", authSponsorRouter);
 
@@ -57,12 +64,12 @@ authRouter.put("/", RoleChecker([Role.Enum.ADMIN]), async (req, res) => {
 const getAuthPayloadFromCode = async (
     code: string,
     redirect_uri: string,
-    platform: string = "web",
+    platform: Platform,
     code_verifier?: string
 ) => {
     try {
-        const oauthClient = getOAuthClient(platform);
-        const { tokens } = await oauthClient.getToken({
+        const googleOAuthClient = oauthClients[platform];
+        const { tokens } = await googleOAuthClient.getToken({
             code,
             redirect_uri,
             codeVerifier: code_verifier, // only for mobile apps
@@ -70,7 +77,7 @@ const getAuthPayloadFromCode = async (
         if (!tokens.id_token) {
             throw new Error("Invalid token");
         }
-        const ticket = await oauthClient.verifyIdToken({
+        const ticket = await googleOAuthClient.verifyIdToken({
             idToken: tokens.id_token,
         });
         const payload = ticket.getPayload();
@@ -85,12 +92,17 @@ const getAuthPayloadFromCode = async (
     }
 };
 
-authRouter.post("/login/:platform", async (req, res) => {
+authRouter.post("/login/:PLATFORM", async (req, res) => {
     try {
-        const { code, redirectUri, codeVerifier } = AuthLoginValidator.parse(
-            req.body
-        );
-        const platform = PlatformValidator.parse(req.params.platform);
+        const platform = Platform.parse(req.params.PLATFORM);
+        const requestBody = { ...req.body, platform };
+        const validatedData = AuthLoginValidator.parse(requestBody);
+
+        const { code, redirectUri } = validatedData;
+        const codeVerifier =
+            "codeVerifier" in validatedData
+                ? validatedData.codeVerifier
+                : undefined;
 
         const authPayload = await getAuthPayloadFromCode(
             code,
@@ -131,31 +143,64 @@ authRouter.post("/login/:platform", async (req, res) => {
     }
 });
 
-authRouter.post("/login/", async (req, res) => {
-    const { code, redirectUri } = AuthLoginValidator.parse(req.body);
-    const authPayload = await getAuthPayloadFromCode(code, redirectUri, "web");
+authRouter.post("/login/:PLATFORM", async (req, res) => {
+    try {
+        const platform = Platform.parse(req.params.PLATFORM);
 
-    if (!authPayload) {
-        return res
-            .status(StatusCodes.BAD_REQUEST)
-            .send({ error: "InvalidToken" });
+        const requestBody = { ...req.body, platform };
+        const validatedData = AuthLoginValidator.parse(requestBody);
+
+        const { code, redirectUri } = validatedData;
+        const codeVerifier =
+            "codeVerifier" in validatedData
+                ? validatedData.codeVerifier
+                : undefined;
+
+        const authPayload = await getAuthPayloadFromCode(
+            code,
+            redirectUri,
+            platform,
+            codeVerifier
+        );
+
+        if (!authPayload) {
+            return res
+                .status(StatusCodes.BAD_REQUEST)
+                .send({ error: "InvalidToken" });
+        }
+
+        const properScopes =
+            "email" in authPayload &&
+            "sub" in authPayload &&
+            "name" in authPayload;
+        if (!properScopes) {
+            return res
+                .status(StatusCodes.BAD_REQUEST)
+                .send({ error: "InvalidScopes" });
+        }
+
+        // Update database by payload
+        await updateDatabaseWithAuthPayload(authPayload);
+
+        // Generate the JWT
+        const jwtToken = await generateJWT(`user${authPayload.sub}`);
+
+        return res.status(StatusCodes.OK).send({ token: jwtToken });
+    } catch (error) {
+        if (error instanceof ZodError) {
+            return res.status(StatusCodes.BAD_REQUEST).send({
+                error: "InvalidRequest",
+                details: "Validation failed",
+            });
+        }
+
+        // Handle other errors
+        console.error("Error in platform login:", error);
+        return res.status(StatusCodes.BAD_REQUEST).send({
+            error: "InvalidRequest",
+            details: error instanceof Error ? error.message : "Unknown error",
+        });
     }
-
-    const properScopes =
-        "email" in authPayload && "sub" in authPayload && "name" in authPayload;
-    if (!properScopes) {
-        return res
-            .status(StatusCodes.BAD_REQUEST)
-            .send({ error: "InvalidScopes" });
-    }
-
-    // Update database by payload
-    await updateDatabaseWithAuthPayload(authPayload);
-
-    // Generate the JWT
-    const jwtToken = await generateJWT(`user${authPayload.sub}`);
-
-    return res.status(StatusCodes.OK).send({ token: jwtToken });
 });
 
 authRouter.get(
