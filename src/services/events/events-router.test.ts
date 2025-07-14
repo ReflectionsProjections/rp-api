@@ -10,7 +10,7 @@ import {
     delAsAdmin,
 } from "../../../testing/testingTools";
 import { StatusCodes } from "http-status-codes";
-import { Database } from "../../database";
+import { SupabaseDB } from "../../supabase";
 import {
     EventType,
     InternalEvent,
@@ -19,12 +19,18 @@ import {
     InternalEventApiResponse,
 } from "./events-schema";
 import { Role } from "../auth/auth-models";
+import { v4 as uuidv4 } from "uuid";
 
 const NOW = new Date();
 const ONE_HOUR_MS = 1 * 60 * 60 * 1000;
 
+const TEST_PAST_EVENT_VISIBLE_ID = uuidv4();
+const TEST_UPCOMING_EVENT_VISIBLE_LATER_ID = uuidv4();
+const TEST_UPCOMING_EVENT_HIDDEN_EARLIER_ID = uuidv4();
+const TEST_UPCOMING_EVENT_VISIBLE_SOONEST_ID = uuidv4();
+
 const PAST_EVENT_VISIBLE = {
-    eventId: "pastEvent001",
+    eventId: TEST_PAST_EVENT_VISIBLE_ID,
     name: "Past Visible Event",
     startTime: new Date(NOW.getTime() - 2 * ONE_HOUR_MS),
     endTime: new Date(NOW.getTime() - 1 * ONE_HOUR_MS),
@@ -39,7 +45,7 @@ const PAST_EVENT_VISIBLE = {
 } satisfies InternalEvent;
 
 const UPCOMING_EVENT_VISIBLE_LATER = {
-    eventId: "upcomingEvent002",
+    eventId: TEST_UPCOMING_EVENT_VISIBLE_LATER_ID,
     name: "Upcoming Visible Event Later",
     startTime: new Date(NOW.getTime() + 2 * ONE_HOUR_MS),
     endTime: new Date(NOW.getTime() + 3 * ONE_HOUR_MS),
@@ -54,7 +60,7 @@ const UPCOMING_EVENT_VISIBLE_LATER = {
 } satisfies InternalEvent;
 
 const UPCOMING_EVENT_HIDDEN_EARLIER = {
-    eventId: "upcomingHiddenEvent003",
+    eventId: TEST_UPCOMING_EVENT_HIDDEN_EARLIER_ID,
     name: "Upcoming Hidden Event Earlier",
     startTime: new Date(NOW.getTime() + 1 * ONE_HOUR_MS),
     endTime: new Date(NOW.getTime() + 1.5 * ONE_HOUR_MS),
@@ -69,7 +75,7 @@ const UPCOMING_EVENT_HIDDEN_EARLIER = {
 } satisfies InternalEvent;
 
 const UPCOMING_EVENT_VISIBLE_SOONEST = {
-    eventId: "upcomingEvent004",
+    eventId: TEST_UPCOMING_EVENT_VISIBLE_SOONEST_ID,
     name: "Upcoming Visible Event Soonest",
     startTime: new Date(NOW.getTime() + 0.5 * ONE_HOUR_MS),
     endTime: new Date(NOW.getTime() + 1.5 * ONE_HOUR_MS),
@@ -128,7 +134,36 @@ const EVENT_UPDATE_PARTIAL_PAYLOAD = {
     description: "Only name and description were meant to be updated.",
 } satisfies EventInputPayload;
 
-const NON_EXISTENT_EVENT_ID = "event1234566778";
+const NON_EXISTENT_EVENT_ID = uuidv4();
+
+function transformEventForDB(event: InternalEvent) {
+    return {
+        event_id: event.eventId,
+        name: event.name,
+        start_time: event.startTime.toISOString(),
+        end_time: event.endTime.toISOString(),
+        points: event.points,
+        description: event.description,
+        is_virtual: event.isVirtual,
+        image_url: event.imageUrl,
+        location: event.location,
+        is_visible: event.isVisible,
+        attendance_count: event.attendanceCount,
+        event_type: event.eventType,
+    };
+}
+
+async function insertTestEvents(events: InternalEvent[]) {
+    const dbEvents = events.map(transformEventForDB);
+    await SupabaseDB.EVENTS.insert(dbEvents);
+}
+
+async function clearAllTestEvents() {
+    await SupabaseDB.EVENTS.delete().neq(
+        "event_id",
+        "00000000-0000-0000-0000-000000000000"
+    );
+}
 
 function createExternalEventObject(
     eventData: InternalEvent
@@ -158,84 +193,91 @@ function createInternalEventObject(
 }
 
 beforeEach(async () => {
-    await Database.EVENTS.create(PAST_EVENT_VISIBLE);
-    await Database.EVENTS.create(UPCOMING_EVENT_VISIBLE_LATER);
-    await Database.EVENTS.create(UPCOMING_EVENT_HIDDEN_EARLIER);
+    await clearAllTestEvents();
+
+    await insertTestEvents([
+        PAST_EVENT_VISIBLE,
+        UPCOMING_EVENT_VISIBLE_LATER,
+        UPCOMING_EVENT_HIDDEN_EARLIER,
+    ]);
 });
 
 describe("GET /events/currentOrNext", () => {
     it("should return the soonest future visible event if one exists for a regular, non-staff or non-admin user", async () => {
-        // create an event that is the soonest and check if it is returned
-        await Database.EVENTS.create(UPCOMING_EVENT_VISIBLE_SOONEST);
+        await insertTestEvents([UPCOMING_EVENT_VISIBLE_SOONEST]);
 
         const response = await get("/events/currentOrNext").expect(
             StatusCodes.OK
         );
-        expect(response.body).toMatchObject({
-            ...UPCOMING_EVENT_VISIBLE_SOONEST,
-            startTime: UPCOMING_EVENT_VISIBLE_SOONEST.startTime.toISOString(),
-            endTime: UPCOMING_EVENT_VISIBLE_SOONEST.endTime.toISOString(),
-        });
+        const { startTime, endTime, ...expectedWithoutTimes } = UPCOMING_EVENT_VISIBLE_SOONEST;
+        expect(response.body).toMatchObject(expectedWithoutTimes);
+        expect(new Date(response.body.startTime).toISOString()).toBe(
+            new Date(UPCOMING_EVENT_VISIBLE_SOONEST.startTime).toISOString()
+        );
+        expect(new Date(response.body.endTime).toISOString()).toBe(
+            new Date(UPCOMING_EVENT_VISIBLE_SOONEST.endTime).toISOString()
+        );
     });
 
     it("should return the later future visible event if it's the only future visible event for a regular, non-staff or non-admin user", async () => {
         const response = await get("/events/currentOrNext").expect(
             StatusCodes.OK
         );
-        // should ignore the earlier, hidden event and return the later, visible event
-        expect(response.body).toMatchObject({
-            ...UPCOMING_EVENT_VISIBLE_LATER,
-            startTime: UPCOMING_EVENT_VISIBLE_LATER.startTime.toISOString(),
-            endTime: UPCOMING_EVENT_VISIBLE_LATER.endTime.toISOString(),
-        });
+        const { startTime, endTime, ...expectedWithoutTimes } = UPCOMING_EVENT_VISIBLE_LATER;
+        expect(response.body).toMatchObject(expectedWithoutTimes);
+        expect(new Date(response.body.startTime).toISOString()).toBe(
+            new Date(UPCOMING_EVENT_VISIBLE_LATER.startTime).toISOString()
+        );
+        expect(new Date(response.body.endTime).toISOString()).toBe(
+            new Date(UPCOMING_EVENT_VISIBLE_LATER.endTime).toISOString()
+        );
     });
 
     it("should return status 204 NO CONTENT if the only events in the future are hidden events for a regular, non-staff or non-admin user", async () => {
-        // delete the existing events
-        await Database.EVENTS.deleteMany({});
-
-        // add a future hidden event and a past visible event
-        await Database.EVENTS.create(UPCOMING_EVENT_HIDDEN_EARLIER);
-        await Database.EVENTS.create(PAST_EVENT_VISIBLE);
+        await clearAllTestEvents();
+        await insertTestEvents([UPCOMING_EVENT_HIDDEN_EARLIER, PAST_EVENT_VISIBLE]);
 
         await get("/events/currentOrNext").expect(StatusCodes.NO_CONTENT);
     });
 
     it("should return status 204 NO CONTENT if only past events exist", async () => {
-        await Database.EVENTS.deleteMany({});
-        await Database.EVENTS.create(PAST_EVENT_VISIBLE);
+        await clearAllTestEvents();
+        await insertTestEvents([PAST_EVENT_VISIBLE]);
 
         await get("/events/currentOrNext").expect(StatusCodes.NO_CONTENT);
     });
 
     it("should return 204 NO CONTENT if NO events exist", async () => {
-        await Database.EVENTS.deleteMany({});
+        await clearAllTestEvents();
 
         await get("/events/currentOrNext").expect(StatusCodes.NO_CONTENT);
     });
 
     it("should return an event starting now if it's visible", async () => {
-        await Database.EVENTS.deleteMany({});
+        await clearAllTestEvents();
 
         const testCaseStartTime = new Date();
 
         const eventStartingNow = {
             ...UPCOMING_EVENT_VISIBLE_SOONEST,
-            eventId: "eventNow123",
+            eventId: TEST_UPCOMING_EVENT_VISIBLE_SOONEST_ID,
             startTime: new Date(testCaseStartTime.getTime() + 100),
             endTime: new Date(testCaseStartTime.getTime() + ONE_HOUR_MS + 100),
         } satisfies InternalEvent;
 
-        await Database.EVENTS.create(eventStartingNow);
+        await insertTestEvents([eventStartingNow]);
 
         const response = await get("/events/currentOrNext").expect(
             StatusCodes.OK
         );
-        expect(response.body).toMatchObject({
-            ...eventStartingNow,
-            startTime: eventStartingNow.startTime.toISOString(),
-            endTime: eventStartingNow.endTime.toISOString(),
-        });
+        const { startTime, endTime, ...expectedWithoutTimes } = eventStartingNow;
+        expect(response.body).toMatchObject(expectedWithoutTimes);
+        expect(new Date(response.body.startTime).toISOString()).toBe(
+            new Date(eventStartingNow.startTime).toISOString()
+        );
+        expect(new Date(response.body.endTime).toISOString()).toBe(
+            new Date(eventStartingNow.endTime).toISOString()
+        );
     });
 
     it.each([
@@ -247,12 +289,14 @@ describe("GET /events/currentOrNext", () => {
             const response = await get("/events/currentOrNext", role).expect(
                 StatusCodes.OK
             );
-            expect(response.body).toMatchObject({
-                ...UPCOMING_EVENT_HIDDEN_EARLIER,
-                startTime:
-                    UPCOMING_EVENT_HIDDEN_EARLIER.startTime.toISOString(),
-                endTime: UPCOMING_EVENT_HIDDEN_EARLIER.endTime.toISOString(),
-            });
+            const { startTime, endTime, ...expectedWithoutTimes } = UPCOMING_EVENT_HIDDEN_EARLIER;
+            expect(response.body).toMatchObject(expectedWithoutTimes);
+            expect(new Date(response.body.startTime).toISOString()).toBe(
+                new Date(UPCOMING_EVENT_HIDDEN_EARLIER.startTime).toISOString()
+            );
+            expect(new Date(response.body.endTime).toISOString()).toBe(
+                new Date(UPCOMING_EVENT_HIDDEN_EARLIER.endTime).toISOString()
+            );
         }
     );
 
@@ -262,19 +306,20 @@ describe("GET /events/currentOrNext", () => {
     ])(
         "should return the soonest future VISIBLE event if it's earlier than any hidden one for $description",
         async ({ role }) => {
-            await Database.EVENTS.deleteMany({});
-            await Database.EVENTS.create(UPCOMING_EVENT_VISIBLE_SOONEST);
-            await Database.EVENTS.create(UPCOMING_EVENT_HIDDEN_EARLIER);
+            await clearAllTestEvents();
+            await insertTestEvents([UPCOMING_EVENT_VISIBLE_SOONEST, UPCOMING_EVENT_HIDDEN_EARLIER]);
 
             const response = await get("/events/currentOrNext", role).expect(
                 StatusCodes.OK
             );
-            expect(response.body).toMatchObject({
-                ...UPCOMING_EVENT_VISIBLE_SOONEST,
-                startTime:
-                    UPCOMING_EVENT_VISIBLE_SOONEST.startTime.toISOString(),
-                endTime: UPCOMING_EVENT_VISIBLE_SOONEST.endTime.toISOString(),
-            });
+            const { startTime, endTime, ...expectedWithoutTimes } = UPCOMING_EVENT_VISIBLE_SOONEST;
+            expect(response.body).toMatchObject(expectedWithoutTimes);
+            expect(new Date(response.body.startTime).toISOString()).toBe(
+                new Date(UPCOMING_EVENT_VISIBLE_SOONEST.startTime).toISOString()
+            );
+            expect(new Date(response.body.endTime).toISOString()).toBe(
+                new Date(UPCOMING_EVENT_VISIBLE_SOONEST.endTime).toISOString()
+            );
         }
     );
 });
@@ -283,11 +328,9 @@ describe("GET /events/", () => {
     it("should return only visible events, sorted by startTime then endTime, in a external view for a regular, non-staff or non-admin user", async () => {
         const anotherVisibleUpcomingEvent = {
             ...UPCOMING_EVENT_VISIBLE_SOONEST,
-            eventId: "anotherVisibleEvent005",
+            eventId: TEST_UPCOMING_EVENT_VISIBLE_SOONEST_ID,
         } satisfies InternalEvent;
-        await Database.EVENTS.create(anotherVisibleUpcomingEvent);
-
-        // expected visible events in order: PAST_EVENT_VISIBLE, antotherVisibleUpcoming, UPCOMING_EVENT_VISIBLE_LATER
+        await insertTestEvents([anotherVisibleUpcomingEvent]);
 
         const response = await get("/events/").expect(StatusCodes.OK);
 
@@ -298,7 +341,6 @@ describe("GET /events/", () => {
         ].map((event) => createExternalEventObject(event));
         expect(response.body).toEqual(expected);
 
-        // verify that no hidden fields are present for the external view for a regular user
         response.body.forEach((event: ExternalEventApiResponse) => {
             expect(event).not.toHaveProperty("isVisible");
             expect(event).not.toHaveProperty("attendanceCount");
@@ -306,15 +348,15 @@ describe("GET /events/", () => {
     });
 
     it("should return an empty array if only hidden events exist for a regular, non-staff or non-admin user", async () => {
-        await Database.EVENTS.deleteMany({});
-        await Database.EVENTS.create(UPCOMING_EVENT_HIDDEN_EARLIER);
+        await clearAllTestEvents();
+        await insertTestEvents([UPCOMING_EVENT_HIDDEN_EARLIER]);
 
         const response = await get("/events/").expect(StatusCodes.OK);
         expect(response.body).toEqual([]);
     });
 
     it("should return an empty array if no events exist", async () => {
-        await Database.EVENTS.deleteMany({});
+        await clearAllTestEvents();
 
         const response = await get("/events/").expect(StatusCodes.OK);
         expect(response.body).toEqual([]);
@@ -326,7 +368,9 @@ describe("GET /events/", () => {
     ])(
         "should return all events, including both visible and hidden, sorted by start time, in an internal view for $description",
         async ({ role }) => {
-            await Database.EVENTS.create(UPCOMING_EVENT_VISIBLE_SOONEST);
+            await insertTestEvents([
+                UPCOMING_EVENT_VISIBLE_SOONEST,
+            ]);
 
             // expected order: PAST_EVENT_VISIBLE, UPCOMING_EVENT_VISIBLE_SOONEST, UPCOMING_EVENT_HIDDEN_EARLIER, UPCOMING_EVENT_VISIBLE_LATER
 
@@ -340,7 +384,6 @@ describe("GET /events/", () => {
             ].map((event) => createInternalEventObject(event));
             expect(response.body).toEqual(expected);
 
-            // verify internal fields are present for the internal view of a staff or admin user
             response.body.forEach((event: InternalEventApiResponse) => {
                 expect(event).toHaveProperty("isVisible");
                 expect(event).toHaveProperty("attendanceCount");
@@ -354,32 +397,31 @@ describe("GET /events/", () => {
     ])(
         "should correctly sort all events by startTime (ascending order) then endTime (descending order) for $description",
         async ({ role }) => {
-            await Database.EVENTS.deleteMany({});
+            await clearAllTestEvents();
+
             const eventA = {
                 ...UPCOMING_EVENT_VISIBLE_SOONEST,
-                eventId: "eventA",
+                eventId: uuidv4(),
                 name: "A",
                 startTime: new Date(NOW.getTime() + ONE_HOUR_MS),
                 endTime: new Date(NOW.getTime() + 3 * ONE_HOUR_MS),
             };
             const eventB = {
                 ...UPCOMING_EVENT_VISIBLE_SOONEST,
-                eventId: "eventB",
+                eventId: uuidv4(),
                 name: "B",
                 startTime: new Date(NOW.getTime() + ONE_HOUR_MS),
                 endTime: new Date(NOW.getTime() + 2 * ONE_HOUR_MS),
             };
             const eventC = {
                 ...UPCOMING_EVENT_VISIBLE_SOONEST,
-                eventId: "eventC",
+                eventId: uuidv4(),
                 name: "C",
                 startTime: new Date(NOW.getTime() + 0.5 * ONE_HOUR_MS),
                 endTime: new Date(NOW.getTime() + 1.5 * ONE_HOUR_MS),
             };
 
-            await Database.EVENTS.create(eventA); // same start time as B, but ends later
-            await Database.EVENTS.create(eventB); // same start time as A, but ends earlier
-            await Database.EVENTS.create(eventC); // starts earliest
+            await insertTestEvents([eventA, eventB, eventC]);
 
             const response = await get("/events/", role).expect(StatusCodes.OK);
             expect(response.body).toHaveLength(3);
@@ -486,16 +528,31 @@ describe("POST /events/", () => {
                 .send(NEW_EVENT_VALID_PAYLOAD)
                 .expect(StatusCodes.CREATED);
 
-            // must query by name and start time because eventId is generated upon creation
-            const createdEvent = await Database.EVENTS.findOne({
-                name: NEW_EVENT_VALID_PAYLOAD.name,
-                startTime: NEW_EVENT_VALID_PAYLOAD.startTime,
-            });
+            const { data: createdEvent } = await SupabaseDB.EVENTS
+                .select("*")
+                .eq("name", NEW_EVENT_VALID_PAYLOAD.name)
+                .eq("start_time", NEW_EVENT_VALID_PAYLOAD.startTime.toISOString())
+                .single()
+                .throwOnError();
 
-            expect(createdEvent?.toObject()).toMatchObject({
-                ...NEW_EVENT_VALID_PAYLOAD,
-                eventId: createdEvent?.eventId,
+            expect(createdEvent).toMatchObject({
+                name: NEW_EVENT_VALID_PAYLOAD.name,
+                points: NEW_EVENT_VALID_PAYLOAD.points,
+                description: NEW_EVENT_VALID_PAYLOAD.description,
+                is_virtual: NEW_EVENT_VALID_PAYLOAD.isVirtual,
+                image_url: NEW_EVENT_VALID_PAYLOAD.imageUrl,
+                location: NEW_EVENT_VALID_PAYLOAD.location,
+                is_visible: NEW_EVENT_VALID_PAYLOAD.isVisible,
+                attendance_count: NEW_EVENT_VALID_PAYLOAD.attendanceCount,
+                event_type: NEW_EVENT_VALID_PAYLOAD.eventType,
             });
+            
+            expect(new Date(createdEvent.start_time).toISOString()).toBe(
+                NEW_EVENT_VALID_PAYLOAD.startTime.toISOString()
+            );
+            expect(new Date(createdEvent.end_time).toISOString()).toBe(
+                NEW_EVENT_VALID_PAYLOAD.endTime.toISOString()
+            );
         }
     );
 
@@ -549,13 +606,31 @@ describe("PUT /events/:EVENTID", () => {
                 .send(EVENT_UPDATE_FULL_PAYLOAD)
                 .expect(StatusCodes.OK);
 
-            const updatedEventFromDb = await Database.EVENTS.findOne({
-                eventId: UPCOMING_EVENT_VISIBLE_LATER.eventId,
+            const { data: updatedEventFromDb } = await SupabaseDB.EVENTS
+                .select("*")
+                .eq("event_id", UPCOMING_EVENT_VISIBLE_LATER.eventId)
+                .single()
+                .throwOnError();
+            
+            expect(updatedEventFromDb).toMatchObject({
+                name: EVENT_UPDATE_FULL_PAYLOAD.name,
+                points: EVENT_UPDATE_FULL_PAYLOAD.points,
+                description: EVENT_UPDATE_FULL_PAYLOAD.description,
+                is_virtual: EVENT_UPDATE_FULL_PAYLOAD.isVirtual,
+                image_url: EVENT_UPDATE_FULL_PAYLOAD.imageUrl,
+                location: EVENT_UPDATE_FULL_PAYLOAD.location,
+                is_visible: EVENT_UPDATE_FULL_PAYLOAD.isVisible,
+                attendance_count: EVENT_UPDATE_FULL_PAYLOAD.attendanceCount,
+                event_type: EVENT_UPDATE_FULL_PAYLOAD.eventType,
+                event_id: UPCOMING_EVENT_VISIBLE_LATER.eventId,
             });
-            expect(updatedEventFromDb?.toObject()).toMatchObject({
-                ...EVENT_UPDATE_FULL_PAYLOAD,
-                eventId: UPCOMING_EVENT_VISIBLE_LATER.eventId,
-            });
+            
+            expect(new Date(updatedEventFromDb.start_time).toISOString()).toBe(
+                EVENT_UPDATE_FULL_PAYLOAD.startTime.toISOString()
+            );
+            expect(new Date(updatedEventFromDb.end_time).toISOString()).toBe(
+                EVENT_UPDATE_FULL_PAYLOAD.endTime.toISOString()
+            );
         }
     );
 
@@ -569,16 +644,31 @@ describe("PUT /events/:EVENTID", () => {
                 .send(EVENT_UPDATE_PARTIAL_PAYLOAD)
                 .expect(StatusCodes.OK);
 
-            const updatedEventFromDb = await Database.EVENTS.findOne({
-                eventId: UPCOMING_EVENT_HIDDEN_EARLIER.eventId,
-            });
+            const { data: updatedEventFromDb } = await SupabaseDB.EVENTS
+                .select("*")
+                .eq("event_id", UPCOMING_EVENT_HIDDEN_EARLIER.eventId)
+                .single()
+                .throwOnError();
 
-            // check to make sure that the fields that were not updated remain the same and that the fields that were updated have been changed
-            expect(updatedEventFromDb?.toObject()).toMatchObject({
-                ...UPCOMING_EVENT_HIDDEN_EARLIER,
-                ...EVENT_UPDATE_PARTIAL_PAYLOAD,
-                eventId: UPCOMING_EVENT_HIDDEN_EARLIER.eventId,
+            expect(updatedEventFromDb).toMatchObject({
+                name: EVENT_UPDATE_PARTIAL_PAYLOAD.name,
+                description: EVENT_UPDATE_PARTIAL_PAYLOAD.description,
+                points: EVENT_UPDATE_PARTIAL_PAYLOAD.points,
+                is_virtual: EVENT_UPDATE_PARTIAL_PAYLOAD.isVirtual,
+                image_url: EVENT_UPDATE_PARTIAL_PAYLOAD.imageUrl,
+                location: EVENT_UPDATE_PARTIAL_PAYLOAD.location,
+                is_visible: EVENT_UPDATE_PARTIAL_PAYLOAD.isVisible,
+                attendance_count: EVENT_UPDATE_PARTIAL_PAYLOAD.attendanceCount,
+                event_type: EVENT_UPDATE_PARTIAL_PAYLOAD.eventType,
+                event_id: UPCOMING_EVENT_HIDDEN_EARLIER.eventId,
             });
+            
+            expect(new Date(updatedEventFromDb.start_time).toISOString()).toBe(
+                EVENT_UPDATE_PARTIAL_PAYLOAD.startTime.toISOString()
+            );
+            expect(new Date(updatedEventFromDb.end_time).toISOString()).toBe(
+                EVENT_UPDATE_PARTIAL_PAYLOAD.endTime.toISOString()
+            );
         }
     );
 
@@ -616,9 +706,10 @@ describe("DELETE /events/:EVENTID", () => {
         await delAsAdmin(
             `/events/${UPCOMING_EVENT_VISIBLE_LATER.eventId}`
         ).expect(StatusCodes.NO_CONTENT);
-        const deletedEvent = await Database.EVENTS.findOne({
-            eventId: UPCOMING_EVENT_VISIBLE_LATER.eventId,
-        });
+        const { data: deletedEvent } = await SupabaseDB.EVENTS
+            .select("*")
+            .eq("event_id", UPCOMING_EVENT_VISIBLE_LATER.eventId)
+            .maybeSingle();
         expect(deletedEvent).toBeNull();
     });
 
