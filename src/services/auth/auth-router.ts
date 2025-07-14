@@ -4,25 +4,25 @@ import { Database } from "../../database";
 import Config from "../../config";
 import RoleChecker from "../../middleware/role-checker";
 import { Platform, Role } from "../auth/auth-models";
-import { ZodError } from "zod";
 import { AuthLoginValidator, AuthRoleChangeRequest } from "./auth-schema";
 import authSponsorRouter from "./sponsor/sponsor-router";
 import { CorporateDeleteRequest, CorporateValidator } from "./corporate-schema";
-import {
-    generateJWT,
-    updateDatabaseWithAuthPayload,
-    createOAuthClient,
-} from "./auth-utils";
+import { generateJWT, updateDatabaseWithAuthPayload } from "./auth-utils";
+import { OAuth2Client } from "google-auth-library";
 
 const authRouter = Router();
 
 const oauthClients = {
-    [Platform.Enum.WEB]: createOAuthClient(
-        Config.CLIENT_ID,
-        Config.CLIENT_SECRET
-    ),
-    [Platform.Enum.IOS]: createOAuthClient(Config.IOS_CLIENT_ID),
-    // TODO: add android client
+    [Platform.WEB]: new OAuth2Client({
+        clientId: Config.CLIENT_ID,
+        clientSecret: Config.CLIENT_SECRET,
+    }),
+    [Platform.IOS]: new OAuth2Client({
+        clientId: Config.IOS_CLIENT_ID,
+    }),
+    [Platform.ANDROID]: new OAuth2Client({
+        clientId: Config.ANDROID_CLIENT_ID,
+    }),
 };
 
 authRouter.use("/sponsor", authSponsorRouter);
@@ -65,14 +65,14 @@ const getAuthPayloadFromCode = async (
     code: string,
     redirect_uri: string,
     platform: Platform,
-    code_verifier?: string
+    codeVerifier?: string
 ) => {
     try {
         const googleOAuthClient = oauthClients[platform];
         const { tokens } = await googleOAuthClient.getToken({
             code,
             redirect_uri,
-            codeVerifier: code_verifier, // only for mobile apps
+            codeVerifier, // only for mobile apps
         });
         if (!tokens.id_token) {
             throw new Error("Invalid token");
@@ -94,12 +94,12 @@ const getAuthPayloadFromCode = async (
 
 authRouter.post("/login/:PLATFORM", async (req, res) => {
     try {
-        const platform = Platform.parse(req.params.PLATFORM);
+        const validatedData = AuthLoginValidator.parse({
+            ...req.body,
+            platform: req.params.PLATFORM,
+        });
 
-        const requestBody = { ...req.body, platform };
-        const validatedData = AuthLoginValidator.parse(requestBody);
-
-        const { code, redirectUri } = validatedData;
+        const { code, redirectUri, platform } = validatedData;
         const codeVerifier =
             "codeVerifier" in validatedData
                 ? validatedData.codeVerifier
@@ -136,14 +136,6 @@ authRouter.post("/login/:PLATFORM", async (req, res) => {
 
         return res.status(StatusCodes.OK).send({ token: jwtToken });
     } catch (error) {
-        if (error instanceof ZodError) {
-            return res.status(StatusCodes.BAD_REQUEST).send({
-                error: "InvalidRequest",
-                details: "Validation failed",
-            });
-        }
-
-        // Handle other errors
         console.error("Error in platform login:", error);
         return res.status(StatusCodes.BAD_REQUEST).send({
             error: "InvalidRequest",

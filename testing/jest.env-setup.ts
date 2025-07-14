@@ -4,7 +4,8 @@ process.env.DATABASE_USERNAME = "urmom";
 process.env.DATABASE_PASSWORD = "alsourmom";
 process.env.DATABASE_HOST = "urmomisthebomb.com";
 
-process.env.IOS_OAUTH_GOOGLE_CLIENT_ID = "beepbeepimasheep";
+process.env.IOS_OAUTH_GOOGLE_CLIENT_ID = "beepbeepimasheepforapple";
+process.env.ANDROID_OAUTH_GOOGLE_CLIENT_ID = "beepbeepimasheepforandroid";
 process.env.OAUTH_GOOGLE_CLIENT_ID = "beepbeepimasheep";
 process.env.OAUTH_GOOGLE_CLIENT_SECRET = "isaidbeepbeepimasheep";
 

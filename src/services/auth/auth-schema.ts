@@ -1,6 +1,6 @@
 import { InferSchemaType, Schema } from "mongoose";
 import { z } from "zod";
-import { Role, Platform } from "./auth-models";
+import { Platform, Role } from "./auth-models";
 
 export const RoleValidator = z.object({
     userId: z.coerce.string(),
@@ -14,14 +14,17 @@ export const AuthLoginValidator = z.union([
     z.object({
         code: z.string(),
         redirectUri: z.string(),
-        platform: z.literal(Platform.Enum.WEB),
+        platform: z.literal(Platform.WEB),
     }),
     // iOS/Android - codeVerifier is required
     z.object({
         code: z.string(),
         redirectUri: z.string(),
         codeVerifier: z.string(),
-        platform: z.literal(Platform.Enum.IOS), // TODO: add ANDROID
+        platform: z.union([
+            z.literal(Platform.IOS),
+            z.literal(Platform.ANDROID),
+        ]),
     }),
 ]);
 

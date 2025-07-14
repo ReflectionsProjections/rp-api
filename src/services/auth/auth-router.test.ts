@@ -142,17 +142,6 @@ describe("PUT /auth/", () => {
 });
 
 describe("POST /auth/login/:PLATFORM", () => {
-    const WEB_LOGIN_REQUEST = {
-        code: "loginCode",
-        redirectUri: "http://localhost/redirect",
-        platform: Platform.Enum.WEB,
-    };
-    const IOS_LOGIN_REQUEST = {
-        code: "loginCode",
-        redirectUri: "http://localhost/redirect",
-        codeVerifier: "codeVerifier123",
-        platform: Platform.Enum.IOS,
-    };
     const ID_TOKEN = "IdToken";
     const AUTH_PAYLOAD = {
         email: TESTER.email,
@@ -194,7 +183,10 @@ describe("POST /auth/login/:PLATFORM", () => {
     // Generic tests
     it("should fail to login with an invalid platform (case sensitive)", async () => {
         const res = await post("/auth/login/web")
-            .send(WEB_LOGIN_REQUEST)
+            .send({
+                code: "loginCode",
+                redirectUri: "http://localhost/redirect",
+            })
             .expect(StatusCodes.BAD_REQUEST);
         expect(res.body).toHaveProperty("error", "InvalidRequest");
     });
@@ -219,312 +211,224 @@ describe("POST /auth/login/:PLATFORM", () => {
         expect(res.body).toHaveProperty("error", "EndpointNotFound");
     });
 
-    // Web platform tests
-    it("should login with a valid code for web platform", async () => {
-        const start = Math.floor(Date.now() / 1000);
-        const res = await post("/auth/login/WEB")
-            .send(WEB_LOGIN_REQUEST)
-            .expect(StatusCodes.OK);
-
-        expect(mockOAuth2Client).toHaveBeenCalledWith({
-            clientId: Config.CLIENT_ID,
-            clientSecret: Config.CLIENT_SECRET,
-        });
-        expect(mockGetToken).toHaveBeenCalledWith({
-            code: WEB_LOGIN_REQUEST.code,
-            redirect_uri: WEB_LOGIN_REQUEST.redirectUri,
-        });
-        expect(mockVerifyIdToken).toHaveBeenCalledWith({
-            idToken: ID_TOKEN,
-        });
-
-        expect(res.body).toHaveProperty("token");
-        const jwtPayload = jsonwebtoken.verify(
-            res.body.token,
-            Config.JWT_SIGNING_SECRET
-        ) as JwtPayload;
-
-        const expected = {
-            email: TESTER.email,
-            displayName: TESTER.displayName,
-            roles: [],
-            userId: TESTER.userId,
-        };
-        expect(jwtPayload).toMatchObject(expected);
-        expect(jwtPayload.iat).toBeGreaterThanOrEqual(start);
-
-        const stored = await Database.ROLES.findOne({ userId: TESTER.userId });
-        expect(stored?.toObject()).toMatchObject(expected);
-    });
-
-    it("fails to login with an invalid code for web platform", async () => {
-        mockGetToken.mockImplementation(() => {
-            throw new Error("Test invalid code");
-        });
-        const res = await post("/auth/login/WEB")
-            .send(WEB_LOGIN_REQUEST)
-            .expect(StatusCodes.BAD_REQUEST);
-
-        expect(mockOAuth2Client).toHaveBeenCalledWith({
-            clientId: Config.CLIENT_ID,
-            clientSecret: Config.CLIENT_SECRET,
-        });
-        expect(mockGetToken).toHaveBeenCalledWith({
-            code: WEB_LOGIN_REQUEST.code,
-            redirect_uri: WEB_LOGIN_REQUEST.redirectUri,
-        });
-        expect(mockVerifyIdToken).not.toHaveBeenCalled();
-
-        expect(res.body).toHaveProperty("error", "InvalidToken");
-
-        const stored = await Database.ROLES.findOne({ userId: TESTER.userId });
-        expect(stored).toBeNull();
-    });
-
-    it("fails to login with no id token for web platform", async () => {
-        mockGetToken.mockImplementation(() => ({ tokens: {} }));
-        const res = await post("/auth/login/WEB")
-            .send(WEB_LOGIN_REQUEST)
-            .expect(StatusCodes.BAD_REQUEST);
-
-        expect(mockOAuth2Client).toHaveBeenCalledWith({
-            clientId: Config.CLIENT_ID,
-            clientSecret: Config.CLIENT_SECRET,
-        });
-        expect(mockGetToken).toHaveBeenCalledWith({
-            code: WEB_LOGIN_REQUEST.code,
-            redirect_uri: WEB_LOGIN_REQUEST.redirectUri,
-        });
-        expect(mockVerifyIdToken).not.toHaveBeenCalled();
-
-        expect(res.body).toHaveProperty("error", "InvalidToken");
-
-        const stored = await Database.ROLES.findOne({ userId: TESTER.userId });
-        expect(stored).toBeNull();
-    });
-
-    it("fails to login when ticket has no payload for web platform", async () => {
-        mockVerifyIdToken.mockImplementation(() => ({
-            getPayload: () => undefined,
-        }));
-        const res = await post("/auth/login/WEB")
-            .send(WEB_LOGIN_REQUEST)
-            .expect(StatusCodes.BAD_REQUEST);
-
-        expect(mockOAuth2Client).toHaveBeenCalledWith({
-            clientId: Config.CLIENT_ID,
-            clientSecret: Config.CLIENT_SECRET,
-        });
-        expect(mockGetToken).toHaveBeenCalledWith({
-            code: WEB_LOGIN_REQUEST.code,
-            redirect_uri: WEB_LOGIN_REQUEST.redirectUri,
-        });
-        expect(mockVerifyIdToken).toHaveBeenCalledWith({
-            idToken: ID_TOKEN,
-        });
-
-        expect(res.body).toHaveProperty("error", "InvalidToken");
-
-        const stored = await Database.ROLES.findOne({ userId: TESTER.userId });
-        expect(stored).toBeNull();
-    });
-
-    it.each(["email", "sub", "name"])(
-        "fails to login when missing scopes for web platform (missing payload.%s)",
-        async (payloadProp) => {
-            mockVerifyIdToken.mockImplementation(() => ({
-                getPayload: () => {
-                    const payload = {
-                        ...AUTH_PAYLOAD,
-                    };
-                    delete payload[payloadProp as keyof typeof payload];
-                    return payload;
-                },
-            }));
-            const res = await post("/auth/login/WEB")
-                .send(WEB_LOGIN_REQUEST)
-                .expect(StatusCodes.BAD_REQUEST);
-
-            expect(mockOAuth2Client).toHaveBeenCalledWith({
+    // Platform-specific tests
+    describe.each([
+        {
+            platform: Platform.WEB,
+            loginRequest: {
+                code: "loginCode",
+                redirectUri: "http://localhost/redirect",
+            },
+            expectedOAuthConfig: {
                 clientId: Config.CLIENT_ID,
                 clientSecret: Config.CLIENT_SECRET,
-            });
-            expect(mockGetToken).toHaveBeenCalledWith({
-                code: WEB_LOGIN_REQUEST.code,
-                redirect_uri: WEB_LOGIN_REQUEST.redirectUri,
-            });
-            expect(mockVerifyIdToken).toHaveBeenCalledWith({
-                idToken: ID_TOKEN,
+            },
+            expectedGetTokenParams: {
+                code: "loginCode",
+                redirect_uri: "http://localhost/redirect",
+            },
+        },
+        {
+            platform: Platform.IOS,
+            loginRequest: {
+                code: "loginCode",
+                redirectUri: "http://localhost/redirect",
+                codeVerifier: "codeVerifier123",
+            },
+            expectedOAuthConfig: {
+                clientId: Config.IOS_CLIENT_ID,
+            },
+            expectedGetTokenParams: {
+                code: "loginCode",
+                redirect_uri: "http://localhost/redirect",
+                codeVerifier: "codeVerifier123",
+            },
+        },
+        {
+            platform: Platform.ANDROID,
+            loginRequest: {
+                code: "loginCode",
+                redirectUri: "http://localhost/redirect",
+                codeVerifier: "codeVerifier123",
+            },
+            expectedOAuthConfig: {
+                clientId: Config.ANDROID_CLIENT_ID,
+            },
+            expectedGetTokenParams: {
+                code: "loginCode",
+                redirect_uri: "http://localhost/redirect",
+                codeVerifier: "codeVerifier123",
+            },
+        },
+    ])(
+        "for $platform platform",
+        ({
+            platform,
+            loginRequest,
+            expectedOAuthConfig,
+            expectedGetTokenParams,
+        }) => {
+            it("should login with a valid code", async () => {
+                const start = Math.floor(Date.now() / 1000);
+                const res = await post(`/auth/login/${platform}`)
+                    .send(loginRequest)
+                    .expect(StatusCodes.OK);
+
+                expect(mockOAuth2Client).toHaveBeenCalledWith(
+                    expectedOAuthConfig
+                );
+                expect(mockGetToken).toHaveBeenCalledWith(
+                    expectedGetTokenParams
+                );
+                expect(mockVerifyIdToken).toHaveBeenCalledWith({
+                    idToken: ID_TOKEN,
+                });
+
+                expect(res.body).toHaveProperty("token");
+                const jwtPayload = jsonwebtoken.verify(
+                    res.body.token,
+                    Config.JWT_SIGNING_SECRET
+                ) as JwtPayload;
+
+                const expected = {
+                    email: TESTER.email,
+                    displayName: TESTER.displayName,
+                    roles: [],
+                    userId: TESTER.userId,
+                };
+                expect(jwtPayload).toMatchObject(expected);
+                expect(jwtPayload.iat).toBeGreaterThanOrEqual(start);
+
+                const stored = await Database.ROLES.findOne({
+                    userId: TESTER.userId,
+                });
+                expect(stored?.toObject()).toMatchObject(expected);
             });
 
-            expect(res.body).toHaveProperty("error", "InvalidScopes");
+            it("fails to login with an invalid code", async () => {
+                mockGetToken.mockImplementation(() => {
+                    throw new Error("Test invalid code");
+                });
+                const res = await post(`/auth/login/${platform}`)
+                    .send(loginRequest)
+                    .expect(StatusCodes.BAD_REQUEST);
 
-            const stored = await Database.ROLES.findOne({
-                userId: TESTER.userId,
+                expect(mockOAuth2Client).toHaveBeenCalledWith(
+                    expectedOAuthConfig
+                );
+                expect(mockGetToken).toHaveBeenCalledWith(
+                    expectedGetTokenParams
+                );
+                expect(mockVerifyIdToken).not.toHaveBeenCalled();
+
+                expect(res.body).toHaveProperty("error", "InvalidToken");
+
+                const stored = await Database.ROLES.findOne({
+                    userId: TESTER.userId,
+                });
+                expect(stored).toBeNull();
             });
-            expect(stored).toBeNull();
+
+            it("fails to login with no id token", async () => {
+                mockGetToken.mockImplementation(() => ({ tokens: {} }));
+                const res = await post(`/auth/login/${platform}`)
+                    .send(loginRequest)
+                    .expect(StatusCodes.BAD_REQUEST);
+
+                expect(mockOAuth2Client).toHaveBeenCalledWith(
+                    expectedOAuthConfig
+                );
+                expect(mockGetToken).toHaveBeenCalledWith(
+                    expectedGetTokenParams
+                );
+                expect(mockVerifyIdToken).not.toHaveBeenCalled();
+
+                expect(res.body).toHaveProperty("error", "InvalidToken");
+
+                const stored = await Database.ROLES.findOne({
+                    userId: TESTER.userId,
+                });
+                expect(stored).toBeNull();
+            });
+
+            it("fails to login when ticket has no payload", async () => {
+                mockVerifyIdToken.mockImplementation(() => ({
+                    getPayload: () => undefined,
+                }));
+                const res = await post(`/auth/login/${platform}`)
+                    .send(loginRequest)
+                    .expect(StatusCodes.BAD_REQUEST);
+
+                expect(mockOAuth2Client).toHaveBeenCalledWith(
+                    expectedOAuthConfig
+                );
+                expect(mockGetToken).toHaveBeenCalledWith(
+                    expectedGetTokenParams
+                );
+                expect(mockVerifyIdToken).toHaveBeenCalledWith({
+                    idToken: ID_TOKEN,
+                });
+
+                expect(res.body).toHaveProperty("error", "InvalidToken");
+
+                const stored = await Database.ROLES.findOne({
+                    userId: TESTER.userId,
+                });
+                expect(stored).toBeNull();
+            });
+
+            it.each(["email", "sub", "name"])(
+                "fails to login when missing scopes (missing payload.%s)",
+                async (payloadProp) => {
+                    mockVerifyIdToken.mockImplementation(() => ({
+                        getPayload: () => {
+                            const payload = {
+                                ...AUTH_PAYLOAD,
+                            };
+                            delete payload[payloadProp as keyof typeof payload];
+                            return payload;
+                        },
+                    }));
+                    const res = await post(`/auth/login/${platform}`)
+                        .send(loginRequest)
+                        .expect(StatusCodes.BAD_REQUEST);
+
+                    expect(mockOAuth2Client).toHaveBeenCalledWith(
+                        expectedOAuthConfig
+                    );
+                    expect(mockGetToken).toHaveBeenCalledWith(
+                        expectedGetTokenParams
+                    );
+                    expect(mockVerifyIdToken).toHaveBeenCalledWith({
+                        idToken: ID_TOKEN,
+                    });
+
+                    expect(res.body).toHaveProperty("error", "InvalidScopes");
+
+                    const stored = await Database.ROLES.findOne({
+                        userId: TESTER.userId,
+                    });
+                    expect(stored).toBeNull();
+                }
+            );
         }
     );
 
-    // iOS platform tests
-    it("should login with a valid code for iOS platform", async () => {
-        const start = Math.floor(Date.now() / 1000);
-        const res = await post("/auth/login/IOS")
-            .send(IOS_LOGIN_REQUEST)
-            .expect(StatusCodes.OK);
-
-        expect(mockOAuth2Client).toHaveBeenCalledWith({
-            clientId: Config.IOS_CLIENT_ID,
-        });
-        expect(mockGetToken).toHaveBeenCalledWith({
-            code: IOS_LOGIN_REQUEST.code,
-            redirect_uri: IOS_LOGIN_REQUEST.redirectUri,
-            codeVerifier: IOS_LOGIN_REQUEST.codeVerifier,
-        });
-        expect(mockVerifyIdToken).toHaveBeenCalledWith({
-            idToken: ID_TOKEN,
-        });
-
-        expect(res.body).toHaveProperty("token");
-        const jwtPayload = jsonwebtoken.verify(
-            res.body.token,
-            Config.JWT_SIGNING_SECRET
-        ) as JwtPayload;
-
-        const expected = {
-            email: TESTER.email,
-            displayName: TESTER.displayName,
-            roles: [],
-            userId: TESTER.userId,
-        };
-        expect(jwtPayload).toMatchObject(expected);
-        expect(jwtPayload.iat).toBeGreaterThanOrEqual(start);
-
-        const stored = await Database.ROLES.findOne({ userId: TESTER.userId });
-        expect(stored?.toObject()).toMatchObject(expected);
-    });
-
-    it("fails to login with an invalid code for ios platform", async () => {
-        mockGetToken.mockImplementation(() => {
-            throw new Error("Test invalid code");
-        });
-        const res = await post("/auth/login/IOS")
-            .send(IOS_LOGIN_REQUEST)
-            .expect(StatusCodes.BAD_REQUEST);
-
-        expect(mockOAuth2Client).toHaveBeenCalledWith({
-            clientId: Config.IOS_CLIENT_ID,
-        });
-        expect(mockGetToken).toHaveBeenCalledWith({
-            code: IOS_LOGIN_REQUEST.code,
-            redirect_uri: IOS_LOGIN_REQUEST.redirectUri,
-            codeVerifier: IOS_LOGIN_REQUEST.codeVerifier,
-        });
-        expect(mockVerifyIdToken).not.toHaveBeenCalled();
-
-        expect(res.body).toHaveProperty("error", "InvalidToken");
-
-        const stored = await Database.ROLES.findOne({ userId: TESTER.userId });
-        expect(stored).toBeNull();
-    });
-
-    it("fails to login with no id token for ios platform", async () => {
-        mockGetToken.mockImplementation(() => ({ tokens: {} }));
-        const res = await post("/auth/login/IOS")
-            .send(IOS_LOGIN_REQUEST)
-            .expect(StatusCodes.BAD_REQUEST);
-
-        expect(mockOAuth2Client).toHaveBeenCalledWith({
-            clientId: Config.IOS_CLIENT_ID,
-        });
-        expect(mockGetToken).toHaveBeenCalledWith({
-            code: IOS_LOGIN_REQUEST.code,
-            redirect_uri: IOS_LOGIN_REQUEST.redirectUri,
-            codeVerifier: IOS_LOGIN_REQUEST.codeVerifier,
-        });
-        expect(mockVerifyIdToken).not.toHaveBeenCalled();
-
-        expect(res.body).toHaveProperty("error", "InvalidToken");
-
-        const stored = await Database.ROLES.findOne({ userId: TESTER.userId });
-        expect(stored).toBeNull();
-    });
-
-    it("fails to login when ticket has no payload for ios platform", async () => {
-        mockVerifyIdToken.mockImplementation(() => ({
-            getPayload: () => undefined,
-        }));
-        const res = await post("/auth/login/IOS")
-            .send(IOS_LOGIN_REQUEST)
-            .expect(StatusCodes.BAD_REQUEST);
-
-        expect(mockOAuth2Client).toHaveBeenCalledWith({
-            clientId: Config.IOS_CLIENT_ID,
-        });
-        expect(mockGetToken).toHaveBeenCalledWith({
-            code: IOS_LOGIN_REQUEST.code,
-            redirect_uri: IOS_LOGIN_REQUEST.redirectUri,
-            codeVerifier: IOS_LOGIN_REQUEST.codeVerifier,
-        });
-        expect(mockVerifyIdToken).toHaveBeenCalledWith({
-            idToken: ID_TOKEN,
-        });
-
-        expect(res.body).toHaveProperty("error", "InvalidToken");
-
-        const stored = await Database.ROLES.findOne({ userId: TESTER.userId });
-        expect(stored).toBeNull();
-    });
-
-    it.each(["email", "sub", "name"])(
-        "fails to login when missing scopes for ios platform (missing payload.%s)",
-        async (payloadProp) => {
-            mockVerifyIdToken.mockImplementation(() => ({
-                getPayload: () => {
-                    const payload = {
-                        ...AUTH_PAYLOAD,
-                    };
-                    delete payload[payloadProp as keyof typeof payload];
-                    return payload;
-                },
-            }));
-            const res = await post("/auth/login/IOS")
-                .send(IOS_LOGIN_REQUEST)
+    // Mobile platform-specific test for missing codeVerifier
+    it.each([Platform.IOS, Platform.ANDROID])(
+        "fails to login for %s when codeVerifier is missing",
+        async (platform) => {
+            const invalidRequest = {
+                code: "loginCode",
+                redirectUri: "http://localhost/redirect",
+            };
+            const res = await post(`/auth/login/${platform}`)
+                .send(invalidRequest)
                 .expect(StatusCodes.BAD_REQUEST);
 
-            expect(mockOAuth2Client).toHaveBeenCalledWith({
-                clientId: Config.IOS_CLIENT_ID,
-            });
-            expect(mockGetToken).toHaveBeenCalledWith({
-                code: IOS_LOGIN_REQUEST.code,
-                redirect_uri: IOS_LOGIN_REQUEST.redirectUri,
-                codeVerifier: IOS_LOGIN_REQUEST.codeVerifier,
-            });
-            expect(mockVerifyIdToken).toHaveBeenCalledWith({
-                idToken: ID_TOKEN,
-            });
-
-            expect(res.body).toHaveProperty("error", "InvalidScopes");
-
-            const stored = await Database.ROLES.findOne({
-                userId: TESTER.userId,
-            });
-            expect(stored).toBeNull();
+            expect(res.body).toHaveProperty("error", "InvalidRequest");
         }
     );
-
-    it("fails to login for iOS when codeVerifier is missing", async () => {
-        const invalidRequest = {
-            code: "loginCode",
-            redirectUri: "http://localhost/redirect",
-            platform: Platform.Enum.IOS,
-        };
-        const res = await post("/auth/login/IOS")
-            .send(invalidRequest)
-            .expect(StatusCodes.BAD_REQUEST);
-
-        expect(res.body).toHaveProperty("error", "InvalidRequest");
-    });
 });
 
 describe("GET /auth/corporate", () => {

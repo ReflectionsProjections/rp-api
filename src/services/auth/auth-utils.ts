@@ -1,16 +1,9 @@
 // Create a function to generate GoogleStrategy instances
-import { OAuth2Client, TokenPayload } from "google-auth-library";
+import { TokenPayload } from "google-auth-library";
 import { Config } from "../../config";
 import { Database } from "../../database";
 import { JwtPayloadType, Role } from "./auth-models";
 import jsonwebtoken from "jsonwebtoken";
-
-export const createOAuthClient = (clientId: string, clientSecret?: string) => {
-    return new OAuth2Client({
-        clientId,
-        clientSecret,
-    });
-};
 
 export async function updateDatabaseWithAuthPayload(payload: TokenPayload) {
     const userId = `user${payload.sub}`;
