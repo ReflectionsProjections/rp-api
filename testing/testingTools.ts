@@ -19,14 +19,18 @@ function app() {
     return appExports.default;
 }
 
-function setRole(request: request.Test, role?: RoleType) {
-    if (!role) {
+function setRole(
+    request: request.Test,
+    authenticated: boolean,
+    roles: RoleType[]
+) {
+    if (!authenticated) {
         return request;
     }
 
     const payload = {
         userId: TESTER.userId,
-        roles: [role],
+        roles,
         displayName: TESTER.displayName,
         email: TESTER.email,
     } satisfies JwtPayloadType;
@@ -38,82 +42,102 @@ function setRole(request: request.Test, role?: RoleType) {
     return request.set("Authorization", jwt as string);
 }
 
-export function get(url: string, role?: RoleType): request.Test {
-    return setRole(request(app()).get(url), role);
+export function get(
+    url: string,
+    authenticated: boolean = false,
+    roles: RoleType[] = []
+): request.Test {
+    return setRole(request(app()).get(url), authenticated, roles);
 }
 
 export function getAsUser(url: string): request.Test {
-    return get(url, Role.enum.USER);
+    return get(url, true, [Role.enum.USER]);
 }
 
 export function getAsStaff(url: string): request.Test {
-    return get(url, Role.enum.STAFF);
+    return get(url, true, [Role.enum.STAFF]);
 }
 
 export function getAsAdmin(url: string): request.Test {
-    return get(url, Role.enum.ADMIN);
+    return get(url, true, [Role.enum.ADMIN]);
 }
 
-export function post(url: string, role?: RoleType): request.Test {
-    return setRole(request(app()).post(url), role);
+export function post(
+    url: string,
+    authenticated: boolean = false,
+    roles: RoleType[] = []
+): request.Test {
+    return setRole(request(app()).post(url), authenticated, roles);
 }
 
 export function postAsUser(url: string): request.Test {
-    return post(url, Role.enum.USER);
+    return post(url, true, [Role.enum.USER]);
 }
 
 export function postAsStaff(url: string): request.Test {
-    return post(url, Role.enum.STAFF);
+    return post(url, true, [Role.enum.STAFF]);
 }
 
 export function postAsAdmin(url: string): request.Test {
-    return post(url, Role.enum.ADMIN);
+    return post(url, true, [Role.enum.ADMIN]);
 }
 
-export function put(url: string, role?: RoleType): request.Test {
-    return setRole(request(app()).put(url), role);
+export function put(
+    url: string,
+    authenticated: boolean = false,
+    roles: RoleType[] = []
+): request.Test {
+    return setRole(request(app()).put(url), authenticated, roles);
 }
 
 export function putAsUser(url: string): request.Test {
-    return put(url, Role.enum.USER);
+    return put(url, true, [Role.enum.USER]);
 }
 
 export function putAsStaff(url: string): request.Test {
-    return put(url, Role.enum.STAFF);
+    return put(url, true, [Role.enum.STAFF]);
 }
 
 export function putAsAdmin(url: string): request.Test {
-    return put(url, Role.enum.ADMIN);
+    return put(url, true, [Role.enum.ADMIN]);
 }
 
-export function patch(url: string, role?: RoleType): request.Test {
-    return setRole(request(app()).patch(url), role);
+export function patch(
+    url: string,
+    authenticated: boolean = false,
+    roles: RoleType[] = []
+): request.Test {
+    return setRole(request(app()).patch(url), authenticated, roles);
 }
 
 export function patchAsUser(url: string): request.Test {
-    return patch(url, Role.enum.USER);
+    return patch(url, true, [Role.enum.USER]);
 }
 
 export function patchAsStaff(url: string): request.Test {
-    return patch(url, Role.enum.STAFF);
+    return patch(url, true, [Role.enum.STAFF]);
 }
 
 export function patchAsAdmin(url: string): request.Test {
-    return patch(url, Role.enum.ADMIN);
+    return patch(url, true, [Role.enum.ADMIN]);
 }
 
-export function del(url: string, role?: RoleType): request.Test {
-    return setRole(request(app()).delete(url), role);
+export function del(
+    url: string,
+    authenticated: boolean = false,
+    roles: RoleType[] = []
+): request.Test {
+    return setRole(request(app()).delete(url), authenticated, roles);
 }
 
 export function delAsUser(url: string): request.Test {
-    return del(url, Role.enum.USER);
+    return del(url, true, [Role.enum.USER]);
 }
 
 export function delAsStaff(url: string): request.Test {
-    return del(url, Role.enum.STAFF);
+    return del(url, true, [Role.enum.STAFF]);
 }
 
 export function delAsAdmin(url: string): request.Test {
-    return del(url, Role.enum.ADMIN);
+    return del(url, true, [Role.enum.ADMIN]);
 }

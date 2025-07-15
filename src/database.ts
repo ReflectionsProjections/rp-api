@@ -14,6 +14,8 @@ import {
 } from "./services/events/events-schema";
 import { RoleValidator, RoleSchema } from "./services/auth/auth-schema";
 import {
+    RegistrationDraftSchema,
+    RegistrationDraftValidator,
     RegistrationSchema,
     RegistrationValidator,
 } from "./services/registration/registration-schema";
@@ -90,6 +92,11 @@ export const Database = {
         "subscriptions",
         SubscriptionSchema,
         SubscriptionSchemaValidator
+    ),
+    DRAFT_REGISTRATION: initializeModel(
+        "draft_registration",
+        RegistrationDraftSchema,
+        RegistrationDraftValidator
     ),
     REGISTRATION: initializeModel(
         "registration",

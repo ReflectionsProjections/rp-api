@@ -49,9 +49,9 @@ describe("POST /attendee/favorites/:eventId", () => {
     it("should add a favorite event ID to the user's attendee profile", async () => {
         await Database.ATTENDEE.create(BASE_TEST_ATTENDEE);
 
-        await post(`/attendee/favorites/${eventId}`, Role.enum.USER).expect(
-            StatusCodes.OK
-        );
+        await post(`/attendee/favorites/${eventId}`, true, [
+            Role.enum.USER,
+        ]).expect(StatusCodes.OK);
 
         const updated = await Database.ATTENDEE.findOne({
             userId: TESTER.userId,
@@ -65,9 +65,9 @@ describe("POST /attendee/favorites/:eventId", () => {
             favorites: [eventId],
         });
 
-        await post(`/attendee/favorites/${eventId}`, Role.enum.USER).expect(
-            StatusCodes.OK
-        );
+        await post(`/attendee/favorites/${eventId}`, true, [
+            Role.enum.USER,
+        ]).expect(StatusCodes.OK);
 
         const updated = await Database.ATTENDEE.findOne({
             userId: TESTER.userId,
@@ -77,10 +77,9 @@ describe("POST /attendee/favorites/:eventId", () => {
     });
 
     it("should return 404 if attendee is not found", async () => {
-        const res = await post(
-            `/attendee/favorites/${eventId}`,
-            Role.enum.USER
-        ).expect(StatusCodes.NOT_FOUND);
+        const res = await post(`/attendee/favorites/${eventId}`, true, [
+            Role.enum.USER,
+        ]).expect(StatusCodes.NOT_FOUND);
 
         expect(res.body).toEqual({ error: "UserNotFound" });
     });
@@ -92,18 +91,17 @@ describe("POST /attendee/favorites/:eventId", () => {
     });
 
     it("should return 403 if user does not have USER role", async () => {
-        await post(`/attendee/favorites/${eventId}`, Role.enum.STAFF).expect(
-            StatusCodes.FORBIDDEN
-        );
+        await post(`/attendee/favorites/${eventId}`, true, [
+            Role.enum.STAFF,
+        ]).expect(StatusCodes.FORBIDDEN);
     });
 
     it("should return 400 for invalid event ID", async () => {
         const invalidEventId = "this-is-not-a-valid-uuid";
 
-        await post(
-            `/attendee/favorites/${invalidEventId}`,
-            Role.enum.USER
-        ).expect(StatusCodes.BAD_REQUEST);
+        await post(`/attendee/favorites/${invalidEventId}`, true, [
+            Role.enum.USER,
+        ]).expect(StatusCodes.BAD_REQUEST);
     });
 });
 
@@ -120,9 +118,9 @@ describe("DELETE /attendee/favorites/:eventId", () => {
             favorites: [eventId, "otherEvent"],
         });
 
-        await del(`/attendee/favorites/${eventId}`, Role.enum.USER).expect(
-            StatusCodes.OK
-        );
+        await del(`/attendee/favorites/${eventId}`, true, [
+            Role.enum.USER,
+        ]).expect(StatusCodes.OK);
 
         const updated = await Database.ATTENDEE.findOne({
             userId: TESTER.userId,
@@ -137,9 +135,9 @@ describe("DELETE /attendee/favorites/:eventId", () => {
             favorites: ["otherEvent"],
         });
 
-        await del(`/attendee/favorites/${eventId}`, Role.enum.USER).expect(
-            StatusCodes.OK
-        );
+        await del(`/attendee/favorites/${eventId}`, true, [
+            Role.enum.USER,
+        ]).expect(StatusCodes.OK);
 
         const updated = await Database.ATTENDEE.findOne({
             userId: TESTER.userId,
@@ -148,10 +146,9 @@ describe("DELETE /attendee/favorites/:eventId", () => {
     });
 
     it("should return 404 if attendee is not found", async () => {
-        const res = await del(
-            `/attendee/favorites/${eventId}`,
-            Role.enum.USER
-        ).expect(StatusCodes.NOT_FOUND);
+        const res = await del(`/attendee/favorites/${eventId}`, true, [
+            Role.enum.USER,
+        ]).expect(StatusCodes.NOT_FOUND);
 
         expect(res.body).toEqual({ error: "UserNotFound" });
     });
@@ -163,18 +160,17 @@ describe("DELETE /attendee/favorites/:eventId", () => {
     });
 
     it("should return 403 if user does not have USER role", async () => {
-        await del(`/attendee/favorites/${eventId}`, Role.enum.STAFF).expect(
-            StatusCodes.FORBIDDEN
-        );
+        await del(`/attendee/favorites/${eventId}`, true, [
+            Role.enum.STAFF,
+        ]).expect(StatusCodes.FORBIDDEN);
     });
 
     it("should return 400 for invalid event ID", async () => {
         const invalidEventId = "this-is-not-a-valid-uuid";
 
-        await del(
-            `/attendee/favorites/${invalidEventId}`,
-            Role.enum.USER
-        ).expect(StatusCodes.BAD_REQUEST);
+        await del(`/attendee/favorites/${invalidEventId}`, true, [
+            Role.enum.USER,
+        ]).expect(StatusCodes.BAD_REQUEST);
     });
 });
 
@@ -190,10 +186,9 @@ describe("GET /attendee/favorites", () => {
         const favorites = [uuidEvent1, uuidEvent2];
         await Database.ATTENDEE.create({ ...BASE_TEST_ATTENDEE, favorites });
 
-        const response = await get(
-            "/attendee/favorites",
-            Role.enum.USER
-        ).expect(StatusCodes.OK);
+        const response = await get("/attendee/favorites", true, [
+            Role.enum.USER,
+        ]).expect(StatusCodes.OK);
 
         expect(response.body).toMatchObject({
             userId: TESTER.userId,
@@ -204,16 +199,15 @@ describe("GET /attendee/favorites", () => {
     it("should return an empty favorites array if none are set", async () => {
         await Database.ATTENDEE.create({ ...BASE_TEST_ATTENDEE });
 
-        const response = await get(
-            "/attendee/favorites",
-            Role.enum.USER
-        ).expect(StatusCodes.OK);
+        const response = await get("/attendee/favorites", true, [
+            Role.enum.USER,
+        ]).expect(StatusCodes.OK);
 
         expect(response.body.favorites).toEqual([]);
     });
 
     it("should return 404 if attendee is not found", async () => {
-        await get("/attendee/favorites", Role.enum.USER).expect(
+        await get("/attendee/favorites", true, [Role.enum.USER]).expect(
             StatusCodes.NOT_FOUND
         );
     });
@@ -223,7 +217,7 @@ describe("GET /attendee/favorites", () => {
     });
 
     it("should return 403 if user does not have USER role", async () => {
-        await get("/attendee/favorites", Role.enum.STAFF).expect(
+        await get("/attendee/favorites", true, [Role.enum.STAFF]).expect(
             StatusCodes.FORBIDDEN
         );
     });
@@ -305,9 +299,9 @@ describe("GET /attendee/points", () => {
     it("should return the user's points", async () => {
         await Database.ATTENDEE.create({ ...BASE_TEST_ATTENDEE, points: 42 });
 
-        const response = await get("/attendee/points", Role.enum.USER).expect(
-            StatusCodes.OK
-        );
+        const response = await get("/attendee/points", true, [
+            Role.enum.USER,
+        ]).expect(StatusCodes.OK);
 
         expect(response.body).toEqual({ points: 42 });
     });
@@ -315,15 +309,15 @@ describe("GET /attendee/points", () => {
     it("should return 0 points if not explicitly set", async () => {
         await Database.ATTENDEE.create({ ...BASE_TEST_ATTENDEE });
 
-        const response = await get("/attendee/points", Role.enum.USER).expect(
-            StatusCodes.OK
-        );
+        const response = await get("/attendee/points", true, [
+            Role.enum.USER,
+        ]).expect(StatusCodes.OK);
 
         expect(response.body).toEqual({ points: 0 });
     });
 
     it("should return 404 if attendee is not found", async () => {
-        await get("/attendee/points", Role.enum.USER).expect(
+        await get("/attendee/points", true, [Role.enum.USER]).expect(
             StatusCodes.NOT_FOUND
         );
     });
@@ -333,7 +327,7 @@ describe("GET /attendee/points", () => {
     });
 
     it("should return 403 if user does not have USER role", async () => {
-        await get("/attendee/points", Role.enum.STAFF).expect(
+        await get("/attendee/points", true, [Role.enum.STAFF]).expect(
             StatusCodes.FORBIDDEN
         );
     });
@@ -355,9 +349,9 @@ describe("GET /attendee/foodwave", () => {
             },
         });
 
-        const response = await get("/attendee/foodwave", Role.enum.USER).expect(
-            StatusCodes.OK
-        );
+        const response = await get("/attendee/foodwave", true, [
+            Role.enum.USER,
+        ]).expect(StatusCodes.OK);
         expect(response.body).toEqual({ foodwave: 1 });
     });
 
@@ -367,9 +361,9 @@ describe("GET /attendee/foodwave", () => {
             dietaryRestrictions: ["VEGAN"],
         });
 
-        const response = await get("/attendee/foodwave", Role.enum.USER).expect(
-            StatusCodes.OK
-        );
+        const response = await get("/attendee/foodwave", true, [
+            Role.enum.USER,
+        ]).expect(StatusCodes.OK);
         expect(response.body).toEqual({ foodwave: 1 });
     });
 
@@ -379,9 +373,9 @@ describe("GET /attendee/foodwave", () => {
             dietaryRestrictions: ["GLUTEN-FREE"],
         });
 
-        const response = await get("/attendee/foodwave", Role.enum.USER).expect(
-            StatusCodes.OK
-        );
+        const response = await get("/attendee/foodwave", true, [
+            Role.enum.USER,
+        ]).expect(StatusCodes.OK);
         expect(response.body).toEqual({ foodwave: 1 });
     });
 
@@ -390,14 +384,14 @@ describe("GET /attendee/foodwave", () => {
             ...BASE_TEST_ATTENDEE,
         });
 
-        const response = await get("/attendee/foodwave", Role.enum.USER).expect(
-            StatusCodes.OK
-        );
+        const response = await get("/attendee/foodwave", true, [
+            Role.enum.USER,
+        ]).expect(StatusCodes.OK);
         expect(response.body).toEqual({ foodwave: 2 });
     });
 
     it("should return 404 if attendee not found", async () => {
-        await get("/attendee/foodwave", Role.enum.USER).expect(
+        await get("/attendee/foodwave", true, [Role.enum.USER]).expect(
             StatusCodes.NOT_FOUND
         );
     });
@@ -407,7 +401,7 @@ describe("GET /attendee/foodwave", () => {
     });
 
     it("should return 403 if user does not have USER role", async () => {
-        await get("/attendee/foodwave", Role.enum.STAFF).expect(
+        await get("/attendee/foodwave", true, [Role.enum.STAFF]).expect(
             StatusCodes.FORBIDDEN
         );
     });
@@ -423,7 +417,7 @@ describe("GET /attendee/", () => {
             ...BASE_TEST_ATTENDEE,
         });
 
-        const response = await get("/attendee/", Role.enum.USER).expect(
+        const response = await get("/attendee/", true, [Role.enum.USER]).expect(
             StatusCodes.OK
         );
 
@@ -432,7 +426,9 @@ describe("GET /attendee/", () => {
     });
 
     it("should return 404 if attendee not found", async () => {
-        await get("/attendee/", Role.enum.USER).expect(StatusCodes.NOT_FOUND);
+        await get("/attendee/", true, [Role.enum.USER]).expect(
+            StatusCodes.NOT_FOUND
+        );
     });
 
     it("should return 401 if unauthenticated", async () => {
@@ -440,7 +436,9 @@ describe("GET /attendee/", () => {
     });
 
     it("should return 403 if not a USER", async () => {
-        await get("/attendee/", Role.enum.STAFF).expect(StatusCodes.FORBIDDEN);
+        await get("/attendee/", true, [Role.enum.STAFF]).expect(
+            StatusCodes.FORBIDDEN
+        );
     });
 });
 
@@ -460,7 +458,7 @@ describe("GET /attendee/id/:USERID", () => {
             userId: targetId,
         });
 
-        const res = await get(`/attendee/id/${targetId}`, role).expect(
+        const res = await get(`/attendee/id/${targetId}`, true, [role]).expect(
             StatusCodes.OK
         );
 
@@ -468,7 +466,7 @@ describe("GET /attendee/id/:USERID", () => {
     });
 
     it("should return 404 if attendee not found", async () => {
-        await get(`/attendee/id/unknown-id`, Role.enum.STAFF).expect(
+        await get(`/attendee/id/unknown-id`, true, [Role.enum.STAFF]).expect(
             StatusCodes.NOT_FOUND
         );
     });
@@ -478,7 +476,7 @@ describe("GET /attendee/id/:USERID", () => {
     });
 
     it("should return 403 if user does not have STAFF or ADMIN role", async () => {
-        await get(`/attendee/id/${targetId}`, Role.enum.USER).expect(
+        await get(`/attendee/id/${targetId}`, true, [Role.enum.USER]).expect(
             StatusCodes.FORBIDDEN
         );
     });
@@ -508,7 +506,7 @@ describe("GET /attendee/emails", () => {
                 },
             ]);
 
-            const res = await get("/attendee/emails", role).expect(
+            const res = await get("/attendee/emails", true, [role]).expect(
                 StatusCodes.OK
             );
 
@@ -528,9 +526,9 @@ describe("GET /attendee/emails", () => {
     );
 
     it("should return empty array if no attendees exist", async () => {
-        const res = await get("/attendee/emails", Role.enum.ADMIN).expect(
-            StatusCodes.OK
-        );
+        const res = await get("/attendee/emails", true, [
+            Role.enum.ADMIN,
+        ]).expect(StatusCodes.OK);
 
         expect(res.body).toEqual([]);
     });
@@ -540,7 +538,7 @@ describe("GET /attendee/emails", () => {
     });
 
     it("should return 403 if user is not STAFF or ADMIN", async () => {
-        await get("/attendee/emails", Role.enum.USER).expect(
+        await get("/attendee/emails", true, [Role.enum.USER]).expect(
             StatusCodes.FORBIDDEN
         );
     });
@@ -561,7 +559,7 @@ describe("POST /attendee/redeemMerch/:ITEM", () => {
                 userId,
             });
 
-            const res = await post("/attendee/redeemMerch/Tshirt", role)
+            const res = await post("/attendee/redeemMerch/Tshirt", true, [role])
                 .send({ userId })
                 .expect(StatusCodes.OK);
 
@@ -573,7 +571,7 @@ describe("POST /attendee/redeemMerch/:ITEM", () => {
     );
 
     it("should return 404 if user not found", async () => {
-        await post("/attendee/redeemMerch/Tshirt", Role.enum.STAFF)
+        await post("/attendee/redeemMerch/Tshirt", true, [Role.enum.STAFF])
             .send({ userId: "notreal" })
             .expect(StatusCodes.NOT_FOUND);
     });
@@ -584,7 +582,7 @@ describe("POST /attendee/redeemMerch/:ITEM", () => {
             userId,
         });
 
-        await post("/attendee/redeemMerch/InvalidItem", Role.enum.ADMIN)
+        await post("/attendee/redeemMerch/InvalidItem", true, [Role.enum.ADMIN])
             .send({ userId })
             .expect(StatusCodes.BAD_REQUEST);
     });
@@ -601,7 +599,7 @@ describe("POST /attendee/redeemMerch/:ITEM", () => {
             },
         });
 
-        await post("/attendee/redeemMerch/Tshirt", Role.enum.ADMIN)
+        await post("/attendee/redeemMerch/Tshirt", true, [Role.enum.ADMIN])
             .send({ userId })
             .expect(StatusCodes.BAD_REQUEST);
     });
@@ -618,7 +616,7 @@ describe("POST /attendee/redeemMerch/:ITEM", () => {
             },
         });
 
-        await post("/attendee/redeemMerch/Cap", Role.enum.STAFF)
+        await post("/attendee/redeemMerch/Cap", true, [Role.enum.STAFF])
             .send({ userId })
             .expect(StatusCodes.BAD_REQUEST);
     });
@@ -635,7 +633,7 @@ describe("POST /attendee/redeemMerch/:ITEM", () => {
             userId,
         });
 
-        await post("/attendee/redeemMerch/Tshirt", Role.enum.USER)
+        await post("/attendee/redeemMerch/Tshirt", true, [Role.enum.USER])
             .send({ userId })
             .expect(StatusCodes.FORBIDDEN);
     });
