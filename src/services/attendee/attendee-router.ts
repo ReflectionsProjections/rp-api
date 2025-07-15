@@ -4,7 +4,7 @@ import {
     AttendeeCreateValidator,
     EventIdValidator,
 } from "./attendee-validators";
-import { SupabaseDB } from "../../supabase";
+import { SupabaseDB, User } from "../../supabase";
 import RoleChecker from "../../middleware/role-checker";
 import { Role } from "../auth/auth-models";
 import { generateQrHash, getCurrentDay } from "../checkin/checkin-utils";
@@ -205,7 +205,7 @@ attendeeRouter.get(
                 .status(StatusCodes.NOT_FOUND)
                 .json({ error: "UserNotFound" });
         }
-        const hasPriority = (user as Record<string, any>)[priorityKey];
+        const hasPriority = user[priorityKey as keyof User];
         const dietary = registration?.dietary_restrictions || [];
         const hasFoodRestrictions = ["VEGAN", "GLUTEN-FREE"].some((r) =>
             dietary.includes(r)
@@ -295,16 +295,16 @@ attendeeRouter.post(
                 .json({ error: "UserNotFound" });
         }
 
-        const eligibleKey = `is_eligible_${merchItem}`;
-        const redeemedKey = `has_redeemed_${merchItem}`;
+        const eligibleKey = `is_eligible_${merchItem}` as keyof User;
+        const redeemedKey = `has_redeemed_${merchItem}` as keyof User;
 
-        if (!(user as Record<string, any>)[eligibleKey]) {
+        if (!user[eligibleKey]) {
             return res
                 .status(StatusCodes.BAD_REQUEST)
                 .json({ error: "Too few points" });
         }
 
-        if ((user as Record<string, any>)[redeemedKey]) {
+        if (user[redeemedKey]) {
             return res
                 .status(StatusCodes.BAD_REQUEST)
                 .json({ error: "Item already redeemed" });

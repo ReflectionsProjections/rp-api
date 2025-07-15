@@ -9,8 +9,47 @@ import { getCurrentDay } from "../checkin/checkin-utils";
 
 const otherEvent = uuidv4();
 
+type RegistrationOverride = {
+    user_id?: string;
+    display_name?: string;
+    email?: string;
+    name?: string;
+    university?: string;
+    degree?: string;
+    is_interested_mech_mania?: boolean;
+    is_interested_puzzle_bang?: boolean;
+    dietary_restrictions?: string[];
+    allergies?: string[];
+};
+
+type AttendeeOverride = {
+    user_id?: string;
+    display_name?: string;
+    points?: number;
+    favorite_events?: string[];
+    is_eligible_tshirt?: boolean;
+    is_eligible_cap?: boolean;
+    is_eligible_tote?: boolean;
+    is_eligible_button?: boolean;
+    has_redeemed_tshirt?: boolean;
+    has_redeemed_cap?: boolean;
+    has_redeemed_tote?: boolean;
+    has_redeemed_button?: boolean;
+    has_priority_mon?: boolean;
+    has_priority_tue?: boolean;
+    has_priority_wed?: boolean;
+    has_priority_thu?: boolean;
+    has_priority_fri?: boolean;
+    has_priority_sat?: boolean;
+    has_priority_sun?: boolean;
+    puzzles_completed?: string[];
+};
+
 export async function insertTestAttendee(
-    overrides: { registration?: any; attendee?: any } = {}
+    overrides: {
+        registration?: RegistrationOverride;
+        attendee?: AttendeeOverride;
+    } = {}
 ) {
     const user_id = TESTER.user_id;
     const email = TESTER.email;

@@ -56,3 +56,25 @@ export const CommitteeTypes: Record<
     MARKETING: "MARKETING",
     OPERATIONS: "OPERATIONS",
 };
+
+export interface User {
+    user_id: string;
+    points: number;
+    favorite_events: string[];
+    puzzles_completed: string[];
+    has_priority_mon: boolean;
+    has_priority_tue: boolean;
+    has_priority_wed: boolean;
+    has_priority_thu: boolean;
+    has_priority_fri: boolean;
+    has_priority_sat: boolean;
+    has_priority_sun: boolean;
+    is_eligible_tshirt: boolean;
+    is_eligible_cap: boolean;
+    is_eligible_tote: boolean;
+    is_eligible_button: boolean;
+    has_redeemed_tshirt: boolean;
+    has_redeemed_cap: boolean;
+    has_redeemed_tote: boolean;
+    has_redeemed_button: boolean;
+}
