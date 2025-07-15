@@ -1,5 +1,4 @@
 import mongoose, { Schema, Document, InferSchemaType } from "mongoose";
-import { StaffSchema, StaffValidator } from "./services/staff/staff-schema";
 import {
     AttendeeAttendanceSchema,
     AttendeeSchema,

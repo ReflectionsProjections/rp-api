@@ -1,6 +1,4 @@
-import { Schema } from "mongoose";
 import { z } from "zod";
-import { v4 as uuidv4 } from "uuid";
 import { CommitteeTypes } from "../../supabase";
 
 // Zod schema for staff
