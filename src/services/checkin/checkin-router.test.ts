@@ -78,9 +78,15 @@ const MALFORMED_QR_CODE = "just_one_part";
 const NON_EXISTENT_EVENT_ID = "eventDoesNotExist404";
 const NON_EXISTENT_ATTENDEE_ID = "attendeeDoesNotExist404";
 
-async function insertTestAttendee(
-    overrides: { user_id?: string; email?: string; [key: string]: any } = {}
-) {
+type InsertTestAttendeeOverrides = {
+    user_id?: string;
+    email?: string;
+    points?: number;
+    puzzles_completed?: string[];
+    [key: string]: unknown;
+};
+
+async function insertTestAttendee(overrides: InsertTestAttendeeOverrides = {}) {
     const userId = overrides.user_id || "attendee001";
     const email = overrides.email || "attendee001@test.com";
 
