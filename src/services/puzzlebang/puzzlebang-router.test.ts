@@ -33,9 +33,15 @@ function makeTestRegistration(overrides = {}) {
     };
 }
 
-async function insertTestAttendee(
-    overrides: { user_id?: string; [key: string]: any } = {}
-) {
+type InsertTestAttendeeOverrides = {
+    user_id?: string;
+    email?: string;
+    points?: number;
+    puzzles_completed?: string[];
+    [key: string]: unknown;
+};
+
+async function insertTestAttendee(overrides: InsertTestAttendeeOverrides = {}) {
     const userId = overrides.user_id || TEST_USER_ID;
     const email = overrides.email || TEST_EMAIL;
 
