@@ -104,6 +104,8 @@ export const Config = {
     API_RESUME_UPDATE_ROUTE: `${API_BASE}/attendee/resume/update/`,
     WEB_RESUME_REUPLOAD_ROUTE: `${WEB_BASE}/update`,
     OUTGOING_EMAIL_ADDRESSES: z.enum(["no-reply@reflectionsprojections.org"]),
+    LOG_DIR:
+        env === EnvironmentEnum.PRODUCTION ? "/home/ubuntu/logs" : "./logs",
 };
 
 export const ses = new AWS.SES({

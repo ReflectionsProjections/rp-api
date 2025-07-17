@@ -46,10 +46,12 @@ app.disable("etag");
 app.use(cors());
 
 // Logs
-const accessLogStream = fs.createWriteStream(
-    `${process.env.HOME}/${process.pid}-access.log`,
-    { flags: "a" }
-);
+const date = new Date();
+const logDir = `${Config.LOG_DIR}/${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}`;
+fs.mkdirSync(logDir, { recursive: true });
+const accessLogStream = fs.createWriteStream(`${logDir}/${process.pid}.log`, {
+    flags: "a",
+});
 
 if (Config.ENV !== EnvironmentEnum.TESTING) {
     app.use(morgan("dev", { stream: accessLogStream }));
