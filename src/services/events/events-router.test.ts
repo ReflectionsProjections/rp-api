@@ -209,7 +209,8 @@ describe("GET /events/currentOrNext", () => {
         const response = await get("/events/currentOrNext").expect(
             StatusCodes.OK
         );
-        const { startTime, endTime, ...expectedWithoutTimes } = UPCOMING_EVENT_VISIBLE_SOONEST;
+        const { startTime, endTime, ...expectedWithoutTimes } =
+            UPCOMING_EVENT_VISIBLE_SOONEST;
         expect(response.body).toMatchObject(expectedWithoutTimes);
         expect(new Date(response.body.startTime).toISOString()).toBe(
             new Date(startTime).toISOString()
@@ -223,7 +224,8 @@ describe("GET /events/currentOrNext", () => {
         const response = await get("/events/currentOrNext").expect(
             StatusCodes.OK
         );
-        const { startTime, endTime, ...expectedWithoutTimes } = UPCOMING_EVENT_VISIBLE_LATER;
+        const { startTime, endTime, ...expectedWithoutTimes } =
+            UPCOMING_EVENT_VISIBLE_LATER;
         expect(response.body).toMatchObject(expectedWithoutTimes);
         expect(new Date(response.body.startTime).toISOString()).toBe(
             new Date(startTime).toISOString()
@@ -235,7 +237,10 @@ describe("GET /events/currentOrNext", () => {
 
     it("should return status 204 NO CONTENT if the only events in the future are hidden events for a regular, non-staff or non-admin user", async () => {
         await clearAllTestEvents();
-        await insertTestEvents([UPCOMING_EVENT_HIDDEN_EARLIER, PAST_EVENT_VISIBLE]);
+        await insertTestEvents([
+            UPCOMING_EVENT_HIDDEN_EARLIER,
+            PAST_EVENT_VISIBLE,
+        ]);
 
         await get("/events/currentOrNext").expect(StatusCodes.NO_CONTENT);
     });
@@ -270,7 +275,8 @@ describe("GET /events/currentOrNext", () => {
         const response = await get("/events/currentOrNext").expect(
             StatusCodes.OK
         );
-        const { startTime, endTime, ...expectedWithoutTimes } = eventStartingNow;
+        const { startTime, endTime, ...expectedWithoutTimes } =
+            eventStartingNow;
         expect(response.body).toMatchObject(expectedWithoutTimes);
         expect(new Date(response.body.startTime).toISOString()).toBe(
             new Date(startTime).toISOString()
@@ -289,7 +295,8 @@ describe("GET /events/currentOrNext", () => {
             const response = await get("/events/currentOrNext", role).expect(
                 StatusCodes.OK
             );
-            const { startTime, endTime, ...expectedWithoutTimes } = UPCOMING_EVENT_HIDDEN_EARLIER;
+            const { startTime, endTime, ...expectedWithoutTimes } =
+                UPCOMING_EVENT_HIDDEN_EARLIER;
             expect(response.body).toMatchObject(expectedWithoutTimes);
             expect(new Date(response.body.startTime).toISOString()).toBe(
                 new Date(startTime).toISOString()
@@ -307,12 +314,16 @@ describe("GET /events/currentOrNext", () => {
         "should return the soonest future VISIBLE event if it's earlier than any hidden one for $description",
         async ({ role }) => {
             await clearAllTestEvents();
-            await insertTestEvents([UPCOMING_EVENT_VISIBLE_SOONEST, UPCOMING_EVENT_HIDDEN_EARLIER]);
+            await insertTestEvents([
+                UPCOMING_EVENT_VISIBLE_SOONEST,
+                UPCOMING_EVENT_HIDDEN_EARLIER,
+            ]);
 
             const response = await get("/events/currentOrNext", role).expect(
                 StatusCodes.OK
             );
-            const { startTime, endTime, ...expectedWithoutTimes } = UPCOMING_EVENT_VISIBLE_SOONEST;
+            const { startTime, endTime, ...expectedWithoutTimes } =
+                UPCOMING_EVENT_VISIBLE_SOONEST;
             expect(response.body).toMatchObject(expectedWithoutTimes);
             expect(new Date(response.body.startTime).toISOString()).toBe(
                 new Date(startTime).toISOString()
@@ -368,9 +379,7 @@ describe("GET /events/", () => {
     ])(
         "should return all events, including both visible and hidden, sorted by start time, in an internal view for $description",
         async ({ role }) => {
-            await insertTestEvents([
-                UPCOMING_EVENT_VISIBLE_SOONEST,
-            ]);
+            await insertTestEvents([UPCOMING_EVENT_VISIBLE_SOONEST]);
 
             // expected order: PAST_EVENT_VISIBLE, UPCOMING_EVENT_VISIBLE_SOONEST, UPCOMING_EVENT_HIDDEN_EARLIER, UPCOMING_EVENT_VISIBLE_LATER
 
@@ -528,10 +537,12 @@ describe("POST /events/", () => {
                 .send(NEW_EVENT_VALID_PAYLOAD)
                 .expect(StatusCodes.CREATED);
 
-            const { data: createdEvent } = await SupabaseDB.EVENTS
-                .select("*")
+            const { data: createdEvent } = await SupabaseDB.EVENTS.select("*")
                 .eq("name", NEW_EVENT_VALID_PAYLOAD.name)
-                .eq("start_time", NEW_EVENT_VALID_PAYLOAD.startTime.toISOString())
+                .eq(
+                    "start_time",
+                    NEW_EVENT_VALID_PAYLOAD.startTime.toISOString()
+                )
                 .single()
                 .throwOnError();
 
@@ -546,7 +557,7 @@ describe("POST /events/", () => {
                 attendance_count: NEW_EVENT_VALID_PAYLOAD.attendanceCount,
                 event_type: NEW_EVENT_VALID_PAYLOAD.eventType,
             });
-            
+
             expect(new Date(createdEvent.start_time).toISOString()).toBe(
                 NEW_EVENT_VALID_PAYLOAD.startTime.toISOString()
             );
@@ -606,12 +617,13 @@ describe("PUT /events/:EVENTID", () => {
                 .send(EVENT_UPDATE_FULL_PAYLOAD)
                 .expect(StatusCodes.OK);
 
-            const { data: updatedEventFromDb } = await SupabaseDB.EVENTS
-                .select("*")
+            const { data: updatedEventFromDb } = await SupabaseDB.EVENTS.select(
+                "*"
+            )
                 .eq("event_id", UPCOMING_EVENT_VISIBLE_LATER.eventId)
                 .single()
                 .throwOnError();
-            
+
             expect(updatedEventFromDb).toMatchObject({
                 name: EVENT_UPDATE_FULL_PAYLOAD.name,
                 points: EVENT_UPDATE_FULL_PAYLOAD.points,
@@ -624,7 +636,7 @@ describe("PUT /events/:EVENTID", () => {
                 event_type: EVENT_UPDATE_FULL_PAYLOAD.eventType,
                 event_id: UPCOMING_EVENT_VISIBLE_LATER.eventId,
             });
-            
+
             expect(new Date(updatedEventFromDb.start_time).toISOString()).toBe(
                 EVENT_UPDATE_FULL_PAYLOAD.startTime.toISOString()
             );
@@ -644,8 +656,9 @@ describe("PUT /events/:EVENTID", () => {
                 .send(EVENT_UPDATE_PARTIAL_PAYLOAD)
                 .expect(StatusCodes.OK);
 
-            const { data: updatedEventFromDb } = await SupabaseDB.EVENTS
-                .select("*")
+            const { data: updatedEventFromDb } = await SupabaseDB.EVENTS.select(
+                "*"
+            )
                 .eq("event_id", UPCOMING_EVENT_HIDDEN_EARLIER.eventId)
                 .single()
                 .throwOnError();
@@ -662,7 +675,7 @@ describe("PUT /events/:EVENTID", () => {
                 event_type: EVENT_UPDATE_PARTIAL_PAYLOAD.eventType,
                 event_id: UPCOMING_EVENT_HIDDEN_EARLIER.eventId,
             });
-            
+
             expect(new Date(updatedEventFromDb.start_time).toISOString()).toBe(
                 EVENT_UPDATE_PARTIAL_PAYLOAD.startTime.toISOString()
             );
@@ -706,8 +719,7 @@ describe("DELETE /events/:EVENTID", () => {
         await delAsAdmin(
             `/events/${UPCOMING_EVENT_VISIBLE_LATER.eventId}`
         ).expect(StatusCodes.NO_CONTENT);
-        const { data: deletedEvent } = await SupabaseDB.EVENTS
-            .select("*")
+        const { data: deletedEvent } = await SupabaseDB.EVENTS.select("*")
             .eq("event_id", UPCOMING_EVENT_VISIBLE_LATER.eventId)
             .maybeSingle();
         expect(deletedEvent).toBeNull();

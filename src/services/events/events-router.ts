@@ -20,8 +20,7 @@ eventsRouter.get("/currentOrNext", RoleChecker([], true), async (req, res) => {
 
     const isUser = !(isStaff(payload) || isAdmin(payload));
 
-    let query = SupabaseDB.EVENTS
-        .select("*")
+    let query = SupabaseDB.EVENTS.select("*")
         .gte("start_time", currentTime.toISOString())
         .order("start_time", { ascending: true })
         .limit(1);
@@ -34,7 +33,7 @@ eventsRouter.get("/currentOrNext", RoleChecker([], true), async (req, res) => {
 
     if (events && events.length > 0) {
         const event = events[0];
-        
+
         const transformedEvent = {
             eventId: event.event_id,
             name: event.name,
@@ -63,8 +62,7 @@ eventsRouter.get("/", RoleChecker([], true), async (req, res) => {
 
     const isStaffOrAdmin = isStaff(payload) || isAdmin(payload);
 
-    let query = SupabaseDB.EVENTS
-        .select("*")
+    let query = SupabaseDB.EVENTS.select("*")
         .order("start_time", { ascending: true })
         .order("end_time", { ascending: false });
 
@@ -89,7 +87,7 @@ eventsRouter.get("/", RoleChecker([], true), async (req, res) => {
         eventType: event.event_type,
     }));
 
-    const filterFunction = isStaffOrAdmin 
+    const filterFunction = isStaffOrAdmin
         ? (x: any) => internalEventView.parse(x)
         : (x: any) => externalEventView.parse(x);
 
@@ -103,8 +101,7 @@ eventsRouter.get("/:EVENTID", RoleChecker([], true), async (req, res) => {
 
     const isStaffOrAdmin = isStaff(payload) || isAdmin(payload);
 
-    const { data: event } = await SupabaseDB.EVENTS
-        .select("*")
+    const { data: event } = await SupabaseDB.EVENTS.select("*")
         .eq("event_id", eventId)
         .maybeSingle()
         .throwOnError();
@@ -136,7 +133,7 @@ eventsRouter.get("/:EVENTID", RoleChecker([], true), async (req, res) => {
             .json({ error: "DoesNotExist" });
     }
 
-    const filterFunction = isStaffOrAdmin 
+    const filterFunction = isStaffOrAdmin
         ? internalEventView.parse
         : externalEventView.parse;
 
@@ -149,7 +146,7 @@ eventsRouter.post(
     RoleChecker([Role.Enum.STAFF, Role.Enum.ADMIN]),
     async (req, res) => {
         const validatedData = eventInfoValidator.parse(req.body);
-        
+
         const dbData = {
             name: validatedData.name,
             start_time: validatedData.startTime.toISOString(),
@@ -164,8 +161,7 @@ eventsRouter.post(
             event_type: validatedData.eventType,
         };
 
-        const { data: newEvent } = await SupabaseDB.EVENTS
-            .insert(dbData)
+        const { data: newEvent } = await SupabaseDB.EVENTS.insert(dbData)
             .select("*")
             .single()
             .throwOnError();
@@ -196,7 +192,7 @@ eventsRouter.put(
         const eventId = req.params.EVENTID;
         eventInfoValidator.parse(req.body);
         const validatedData = internalEventView.parse(req.body);
-        
+
         const dbData = {
             name: validatedData.name,
             start_time: validatedData.startTime.toISOString(),
@@ -211,8 +207,7 @@ eventsRouter.put(
             event_type: validatedData.eventType,
         };
 
-        const { data: updatedEvent } = await SupabaseDB.EVENTS
-            .update(dbData)
+        const { data: updatedEvent } = await SupabaseDB.EVENTS.update(dbData)
             .eq("event_id", eventId)
             .select("*")
             .maybeSingle()
@@ -248,9 +243,8 @@ eventsRouter.delete(
     RoleChecker([Role.Enum.ADMIN]),
     async (req, res) => {
         const eventId = req.params.EVENTID;
-        
-        const { data: deletedEvent } = await SupabaseDB.EVENTS
-            .delete()
+
+        const { data: deletedEvent } = await SupabaseDB.EVENTS.delete()
             .eq("event_id", eventId)
             .select("*")
             .throwOnError();
