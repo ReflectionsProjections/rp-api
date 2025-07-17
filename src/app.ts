@@ -47,7 +47,7 @@ app.use(cors());
 
 // Logs
 const accessLogStream = fs.createWriteStream(
-    `${process.env.HOME}/${process.pid}-access.log`,
+    `${Config.LOG_DIR}/${new Date().toISOString()}-${process.pid}.log`,
     { flags: "a" }
 );
 
