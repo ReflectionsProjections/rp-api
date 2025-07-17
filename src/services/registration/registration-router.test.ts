@@ -68,7 +68,12 @@ const toDbRegistration = (
 });
 
 // Helper function to create test role record
-const createTestRole = (userId: string, displayName: string, email: string, roles: ("USER" | "STAFF" | "ADMIN" | "CORPORATE" | "PUZZLEBANG")[] = []) => ({
+const createTestRole = (
+    userId: string,
+    displayName: string,
+    email: string,
+    roles: ("USER" | "STAFF" | "ADMIN" | "CORPORATE" | "PUZZLEBANG")[] = []
+) => ({
     user_id: userId,
     display_name: displayName,
     email: email,
@@ -76,11 +81,22 @@ const createTestRole = (userId: string, displayName: string, email: string, role
 });
 
 beforeEach(async () => {
-    await SupabaseDB.ATTENDEES.delete().neq("user_id", "00000000-0000-0000-0000-000000000000");
-    await SupabaseDB.REGISTRATIONS.delete().neq("user_id", "00000000-0000-0000-0000-000000000000");
-    await SupabaseDB.ROLES.delete().neq("user_id", "00000000-0000-0000-0000-000000000000");
+    await SupabaseDB.ATTENDEES.delete().neq(
+        "user_id",
+        "00000000-0000-0000-0000-000000000000"
+    );
+    await SupabaseDB.REGISTRATIONS.delete().neq(
+        "user_id",
+        "00000000-0000-0000-0000-000000000000"
+    );
+    await SupabaseDB.ROLES.delete().neq(
+        "user_id",
+        "00000000-0000-0000-0000-000000000000"
+    );
 
-    await SupabaseDB.ROLES.insert(createTestRole(TESTER.userId, TESTER.displayName, TESTER.email));
+    await SupabaseDB.ROLES.insert(
+        createTestRole(TESTER.userId, TESTER.displayName, TESTER.email)
+    );
 });
 
 describe("POST /registration/save", () => {
@@ -92,8 +108,7 @@ describe("POST /registration/save", () => {
         expect(response.body.userId).toBe(TESTER.userId);
         expect(response.body.hasSubmitted).toBeFalsy();
 
-        const { data: dbEntry } = await SupabaseDB.REGISTRATIONS
-            .select("*")
+        const { data: dbEntry } = await SupabaseDB.REGISTRATIONS.select("*")
             .eq("user_id", TESTER.userId)
             .single();
         expect(dbEntry).toBeDefined();
@@ -107,7 +122,9 @@ describe("POST /registration/save", () => {
     });
 
     it("should return 409 if user already submitted registration", async () => {
-        await SupabaseDB.REGISTRATIONS.insert(toDbRegistration(VALID_REGISTRATION, TESTER.userId, true));
+        await SupabaseDB.REGISTRATIONS.insert(
+            toDbRegistration(VALID_REGISTRATION, TESTER.userId, true)
+        );
 
         await post("/registration/save", Role.enum.USER)
             .send(VALID_REGISTRATION)
@@ -132,21 +149,18 @@ describe("POST /registration/submit", () => {
             .send(VALID_REGISTRATION)
             .expect(StatusCodes.OK);
 
-        const { data: reg } = await SupabaseDB.REGISTRATIONS
-            .select("*")
+        const { data: reg } = await SupabaseDB.REGISTRATIONS.select("*")
             .eq("user_id", TESTER.userId)
             .single();
         expect(reg?.has_submitted).toBe(true);
 
-        const { data: attendee } = await SupabaseDB.ATTENDEES
-            .select("*")
+        const { data: attendee } = await SupabaseDB.ATTENDEES.select("*")
             .eq("user_id", TESTER.userId)
             .single();
         expect(attendee).toBeDefined();
         // Note: attendee table doesn't have email field, it only has user_id
 
-        const { data: roles } = await SupabaseDB.ROLES
-            .select("*")
+        const { data: roles } = await SupabaseDB.ROLES.select("*")
             .eq("user_id", TESTER.userId)
             .single();
         expect(roles?.roles).toContain(Role.enum.USER);
@@ -160,7 +174,9 @@ describe("POST /registration/submit", () => {
     });
 
     it("should return 409 if user already submitted", async () => {
-        await SupabaseDB.REGISTRATIONS.insert(toDbRegistration(VALID_REGISTRATION, TESTER.userId, true));
+        await SupabaseDB.REGISTRATIONS.insert(
+            toDbRegistration(VALID_REGISTRATION, TESTER.userId, true)
+        );
 
         await post("/registration/submit", Role.enum.USER)
             .send(VALID_REGISTRATION)
@@ -181,7 +197,9 @@ describe("POST /registration/submit", () => {
 
 describe("GET /registration", () => {
     it("should get registration data for an authenticated user", async () => {
-        await SupabaseDB.REGISTRATIONS.insert(toDbRegistration(VALID_REGISTRATION, TESTER.userId, true));
+        await SupabaseDB.REGISTRATIONS.insert(
+            toDbRegistration(VALID_REGISTRATION, TESTER.userId, true)
+        );
 
         const response = await get("/registration", Role.enum.USER).expect(
             StatusCodes.OK
@@ -208,7 +226,10 @@ describe("POST /registration/filter/pagecount", () => {
     const entriesPerPage = Config.SPONSOR_ENTIRES_PER_PAGE;
 
     beforeEach(async () => {
-        await SupabaseDB.REGISTRATIONS.delete().neq("user_id", "00000000-0000-0000-0000-000000000000");
+        await SupabaseDB.REGISTRATIONS.delete().neq(
+            "user_id",
+            "00000000-0000-0000-0000-000000000000"
+        );
     });
 
     it("should return correct page count for matching filters", async () => {
@@ -232,16 +253,20 @@ describe("POST /registration/filter/pagecount", () => {
             hasSubmitted: true,
         };
 
-        const bulkRoles = Array.from({ length: NUM_ENTRIES }, (_, i) => 
+        const bulkRoles = Array.from({ length: NUM_ENTRIES }, (_, i) =>
             createTestRole(`user${i}`, `Test User ${i}`, `user${i}@example.com`)
         );
         await SupabaseDB.ROLES.insert(bulkRoles);
 
-        const bulkDocs = Array.from({ length: NUM_ENTRIES }, (_, i) => 
-            toDbRegistration({
-                ...base,
-                email: `user${i}@example.com`,
-            }, `user${i}`, true)
+        const bulkDocs = Array.from({ length: NUM_ENTRIES }, (_, i) =>
+            toDbRegistration(
+                {
+                    ...base,
+                    email: `user${i}@example.com`,
+                },
+                `user${i}`,
+                true
+            )
         );
 
         await SupabaseDB.REGISTRATIONS.insert(bulkDocs);
@@ -327,21 +352,31 @@ describe("POST /registration/filter/:PAGE", () => {
     };
 
     beforeEach(async () => {
-        await SupabaseDB.REGISTRATIONS.delete().neq("user_id", "00000000-0000-0000-0000-000000000000");
+        await SupabaseDB.REGISTRATIONS.delete().neq(
+            "user_id",
+            "00000000-0000-0000-0000-000000000000"
+        );
     });
 
     it("should return registrants for matching filters on page 1", async () => {
-
-        const bulkRoles = Array.from({ length: 10 }, (_, i) => 
-            createTestRole(`filter-user-${i}`, `Filter User ${i}`, `filter-user-${i}@test.com`)
+        const bulkRoles = Array.from({ length: 10 }, (_, i) =>
+            createTestRole(
+                `filter-user-${i}`,
+                `Filter User ${i}`,
+                `filter-user-${i}@test.com`
+            )
         );
         await SupabaseDB.ROLES.insert(bulkRoles);
 
-        const docs = Array.from({ length: 10 }, (_, i) => 
-            toDbRegistration({
-                ...baseRegistration,
-                email: `filter-user-${i}@test.com`,
-            }, `filter-user-${i}`, true)
+        const docs = Array.from({ length: 10 }, (_, i) =>
+            toDbRegistration(
+                {
+                    ...baseRegistration,
+                    email: `filter-user-${i}@test.com`,
+                },
+                `filter-user-${i}`,
+                true
+            )
         );
 
         await SupabaseDB.REGISTRATIONS.insert(docs);

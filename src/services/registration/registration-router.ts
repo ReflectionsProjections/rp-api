@@ -57,9 +57,7 @@ registrationRouter.post("/save", RoleChecker([]), async (req, res) => {
         has_submitted: false,
     };
 
-    await SupabaseDB.REGISTRATIONS
-        .upsert(dbRegistrationData)
-        .throwOnError();
+    await SupabaseDB.REGISTRATIONS.upsert(dbRegistrationData).throwOnError();
 
     return res.status(StatusCodes.OK).json(registrationData);
 });
@@ -100,39 +98,44 @@ registrationRouter.post("/submit", RoleChecker([]), async (req, res) => {
         has_submitted: true,
     };
 
-    await SupabaseDB.REGISTRATIONS
-        .upsert(dbRegistrationData)
-        .throwOnError();
+    await SupabaseDB.REGISTRATIONS.upsert(dbRegistrationData).throwOnError();
 
-    const { data: existingRoleRecord } = await SupabaseDB.ROLES
-        .select("roles")
+    const { data: existingRoleRecord } = await SupabaseDB.ROLES.select("roles")
         .eq("user_id", payload.userId)
         .single();
 
-    let updatedRoles: ("USER" | "STAFF" | "ADMIN" | "CORPORATE" | "PUZZLEBANG")[] = ["USER"]; // Default if no existing record
+    let updatedRoles: (
+        | "USER"
+        | "STAFF"
+        | "ADMIN"
+        | "CORPORATE"
+        | "PUZZLEBANG"
+    )[] = ["USER"]; // Default if no existing record
     if (existingRoleRecord && existingRoleRecord.roles) {
-        const currentRoles = existingRoleRecord.roles as ("USER" | "STAFF" | "ADMIN" | "CORPORATE" | "PUZZLEBANG")[];
+        const currentRoles = existingRoleRecord.roles as (
+            | "USER"
+            | "STAFF"
+            | "ADMIN"
+            | "CORPORATE"
+            | "PUZZLEBANG"
+        )[];
         updatedRoles = [...new Set([...currentRoles, "USER" as const])];
     }
 
-    await SupabaseDB.ROLES
-        .upsert({
-            user_id: payload.userId,
-            display_name: payload.displayName,
-            email: payload.email,
-            roles: updatedRoles,
-        })
-        .throwOnError();
+    await SupabaseDB.ROLES.upsert({
+        user_id: payload.userId,
+        display_name: payload.displayName,
+        email: payload.email,
+        roles: updatedRoles,
+    }).throwOnError();
 
     const attendeeData = AttendeeCreateValidator.parse(registrationData);
-    
+
     const dbAttendeeData = {
         user_id: attendeeData.userId,
     };
 
-    await SupabaseDB.ATTENDEES
-        .upsert(dbAttendeeData)
-        .throwOnError();
+    await SupabaseDB.ATTENDEES.upsert(dbAttendeeData).throwOnError();
 
     const encryptedId = await generateEncryptedId(payload.userId);
     const redirect = Config.API_RESUME_UPDATE_ROUTE + `${encryptedId}`;
@@ -176,8 +179,7 @@ registrationRouter.post("/submit", RoleChecker([]), async (req, res) => {
 
 // Retrieve registration fields both to repopulate registration info for a user
 registrationRouter.get("/", RoleChecker([]), async (req, res) => {
-    const { data: registration } = await SupabaseDB.REGISTRATIONS
-        .select("*")
+    const { data: registration } = await SupabaseDB.REGISTRATIONS.select("*")
         .eq("user_id", res.locals.payload.userId)
         .maybeSingle();
 
@@ -208,7 +210,9 @@ registrationRouter.get("/", RoleChecker([]), async (req, res) => {
         degree: registration.degree,
     };
 
-    return res.status(StatusCodes.OK).json({ registration: formattedRegistration });
+    return res
+        .status(StatusCodes.OK)
+        .json({ registration: formattedRegistration });
 });
 
 registrationRouter.post(
@@ -218,8 +222,9 @@ registrationRouter.post(
         const { graduations, majors, jobInterests, degrees } =
             RegistrationFilterValidator.parse(req.body);
 
-        let query = SupabaseDB.REGISTRATIONS
-            .select("user_id, name, major, graduation, degree, job_interest, portfolios")
+        let query = SupabaseDB.REGISTRATIONS.select(
+            "user_id, name, major, graduation, degree, job_interest, portfolios"
+        )
             .eq("has_submitted", true)
             .eq("has_resume", true);
 
@@ -262,8 +267,9 @@ registrationRouter.post(
             return res.status(StatusCodes.BAD_REQUEST).send("Invalid Page");
         }
 
-        let query = SupabaseDB.REGISTRATIONS
-            .select("user_id, name, major, graduation, degree, job_interest, portfolios")
+        let query = SupabaseDB.REGISTRATIONS.select(
+            "user_id, name, major, graduation, degree, job_interest, portfolios"
+        )
             .eq("has_submitted", true)
             .eq("has_resume", true);
 
@@ -289,7 +295,7 @@ registrationRouter.post(
 
         const { data: dbRegistrants } = await query.throwOnError();
 
-        const registrants = dbRegistrants.map(registrant => ({
+        const registrants = dbRegistrants.map((registrant) => ({
             userId: registrant.user_id,
             name: registrant.name,
             major: registrant.major,

@@ -3,8 +3,7 @@ import * as CryptoJS from "crypto-js";
 import { Config } from "../../config";
 
 export async function registrationExists(userId: string) {
-    const { data } = await SupabaseDB.REGISTRATIONS
-        .select("user_id")
+    const { data } = await SupabaseDB.REGISTRATIONS.select("user_id")
         .eq("user_id", userId)
         .eq("has_submitted", true)
         .limit(1)
