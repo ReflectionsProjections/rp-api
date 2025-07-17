@@ -4,7 +4,7 @@ import {
     RegistrationFilterValidator,
     RegistrationValidator,
 } from "./registration-schema";
-import { Database } from "../../database";
+import { SupabaseDB } from "../../supabase";
 import RoleChecker from "../../middleware/role-checker";
 import { Role } from "../auth/auth-models";
 import { AttendeeCreateValidator } from "../attendee/attendee-validators";
@@ -36,14 +36,30 @@ registrationRouter.post("/save", RoleChecker([]), async (req, res) => {
         userId: payload.userId,
     });
 
-    await Database.REGISTRATION.findOneAndUpdate(
-        { userId: res.locals.payload.userId },
-        {
-            ...registrationData,
-            hasSubmitted: false,
-        },
-        { upsert: true, new: true, setDefaultsOnInsert: true }
-    );
+    const dbRegistrationData = {
+        user_id: registrationData.userId,
+        name: registrationData.name,
+        email: registrationData.email,
+        university: registrationData.university,
+        graduation: registrationData.graduation,
+        major: registrationData.major,
+        dietary_restrictions: registrationData.dietaryRestrictions,
+        allergies: registrationData.allergies,
+        gender: registrationData.gender,
+        ethnicity: registrationData.ethnicity,
+        hear_about_rp: registrationData.hearAboutRP,
+        portfolios: registrationData.portfolios,
+        job_interest: registrationData.jobInterest,
+        is_interested_mech_mania: registrationData.isInterestedMechMania,
+        is_interested_puzzle_bang: registrationData.isInterestedPuzzleBang,
+        has_resume: registrationData.hasResume,
+        degree: registrationData.degree,
+        has_submitted: false,
+    };
+
+    await SupabaseDB.REGISTRATIONS
+        .upsert(dbRegistrationData)
+        .throwOnError();
 
     return res.status(StatusCodes.OK).json(registrationData);
 });
@@ -63,32 +79,60 @@ registrationRouter.post("/submit", RoleChecker([]), async (req, res) => {
         userId: payload.userId,
     });
 
-    await Database.REGISTRATION.findOneAndUpdate(
-        { userId: payload.userId },
-        {
-            ...registrationData,
-            hasSubmitted: true,
-        },
-        { upsert: true, new: true, setDefaultsOnInsert: true }
-    );
+    const dbRegistrationData = {
+        user_id: registrationData.userId,
+        name: registrationData.name,
+        email: registrationData.email,
+        university: registrationData.university,
+        graduation: registrationData.graduation,
+        major: registrationData.major,
+        dietary_restrictions: registrationData.dietaryRestrictions,
+        allergies: registrationData.allergies,
+        gender: registrationData.gender,
+        ethnicity: registrationData.ethnicity,
+        hear_about_rp: registrationData.hearAboutRP,
+        portfolios: registrationData.portfolios,
+        job_interest: registrationData.jobInterest,
+        is_interested_mech_mania: registrationData.isInterestedMechMania,
+        is_interested_puzzle_bang: registrationData.isInterestedPuzzleBang,
+        has_resume: registrationData.hasResume,
+        degree: registrationData.degree,
+        has_submitted: true,
+    };
 
-    await Database.ROLES.findOneAndUpdate(
-        { userId: payload.userId },
-        {
-            $addToSet: {
-                roles: Role.Values.USER,
-            },
-        },
-        { upsert: true }
-    );
+    await SupabaseDB.REGISTRATIONS
+        .upsert(dbRegistrationData)
+        .throwOnError();
+
+    const { data: existingRoleRecord } = await SupabaseDB.ROLES
+        .select("roles")
+        .eq("user_id", payload.userId)
+        .single();
+
+    let updatedRoles: ("USER" | "STAFF" | "ADMIN" | "CORPORATE" | "PUZZLEBANG")[] = ["USER"]; // Default if no existing record
+    if (existingRoleRecord && existingRoleRecord.roles) {
+        const currentRoles = existingRoleRecord.roles as ("USER" | "STAFF" | "ADMIN" | "CORPORATE" | "PUZZLEBANG")[];
+        updatedRoles = [...new Set([...currentRoles, "USER" as const])];
+    }
+
+    await SupabaseDB.ROLES
+        .upsert({
+            user_id: payload.userId,
+            display_name: payload.displayName,
+            email: payload.email,
+            roles: updatedRoles,
+        })
+        .throwOnError();
 
     const attendeeData = AttendeeCreateValidator.parse(registrationData);
+    
+    const dbAttendeeData = {
+        user_id: attendeeData.userId,
+    };
 
-    await Database.ATTENDEE.findOneAndUpdate(
-        { userId: payload.userId },
-        attendeeData,
-        { upsert: true, setDefaultsOnInsert: true }
-    );
+    await SupabaseDB.ATTENDEES
+        .upsert(dbAttendeeData)
+        .throwOnError();
 
     const encryptedId = await generateEncryptedId(payload.userId);
     const redirect = Config.API_RESUME_UPDATE_ROUTE + `${encryptedId}`;
@@ -132,9 +176,10 @@ registrationRouter.post("/submit", RoleChecker([]), async (req, res) => {
 
 // Retrieve registration fields both to repopulate registration info for a user
 registrationRouter.get("/", RoleChecker([]), async (req, res) => {
-    const registration = await Database.REGISTRATION.findOne({
-        userId: res.locals.payload.userId,
-    });
+    const { data: registration } = await SupabaseDB.REGISTRATIONS
+        .select("*")
+        .eq("user_id", res.locals.payload.userId)
+        .maybeSingle();
 
     if (!registration) {
         return res.status(StatusCodes.NOT_FOUND).json({
@@ -142,7 +187,28 @@ registrationRouter.get("/", RoleChecker([]), async (req, res) => {
         });
     }
 
-    return res.status(StatusCodes.OK).json({ registration });
+    const formattedRegistration = {
+        userId: registration.user_id,
+        name: registration.name,
+        email: registration.email,
+        university: registration.university,
+        graduation: registration.graduation,
+        major: registration.major,
+        dietaryRestrictions: registration.dietary_restrictions,
+        allergies: registration.allergies,
+        gender: registration.gender,
+        ethnicity: registration.ethnicity,
+        hearAboutRP: registration.hear_about_rp,
+        portfolios: registration.portfolios,
+        jobInterest: registration.job_interest,
+        isInterestedMechMania: registration.is_interested_mech_mania,
+        isInterestedPuzzleBang: registration.is_interested_puzzle_bang,
+        hasResume: registration.has_resume,
+        hasSubmitted: registration.has_submitted,
+        degree: registration.degree,
+    };
+
+    return res.status(StatusCodes.OK).json({ registration: formattedRegistration });
 });
 
 registrationRouter.post(
@@ -152,28 +218,28 @@ registrationRouter.post(
         const { graduations, majors, jobInterests, degrees } =
             RegistrationFilterValidator.parse(req.body);
 
-        const query = {
-            hasSubmitted: true,
-            hasResume: true,
-            ...(graduations && { graduation: { $in: graduations } }),
-            ...(majors && { major: { $in: majors } }),
-            ...(degrees && { degree: { $in: degrees } }),
-            ...(jobInterests && {
-                jobInterest: { $elemMatch: { $in: jobInterests } },
-            }),
-        };
+        let query = SupabaseDB.REGISTRATIONS
+            .select("user_id, name, major, graduation, degree, job_interest, portfolios")
+            .eq("has_submitted", true)
+            .eq("has_resume", true);
 
-        const projection = {
-            userId: 1,
-            name: 1,
-            major: 1,
-            graduation: 1,
-            degree: 1,
-            jobInterest: 1,
-            portfolios: 1,
-        };
+        if (graduations && graduations.length > 0) {
+            query = query.in("graduation", graduations);
+        }
 
-        const registrants = await Database.REGISTRATION.find(query, projection);
+        if (majors && majors.length > 0) {
+            query = query.in("major", majors);
+        }
+
+        if (degrees && degrees.length > 0) {
+            query = query.in("degree", degrees);
+        }
+
+        if (jobInterests && jobInterests.length > 0) {
+            query = query.overlaps("job_interest", jobInterests);
+        }
+
+        const { data: registrants } = await query.throwOnError();
 
         return res.status(StatusCodes.OK).json({
             pagecount: Math.floor(
@@ -196,35 +262,42 @@ registrationRouter.post(
             return res.status(StatusCodes.BAD_REQUEST).send("Invalid Page");
         }
 
-        const query = {
-            hasSubmitted: true,
-            hasResume: true,
-            ...(graduations && { graduation: { $in: graduations } }),
-            ...(majors && { major: { $in: majors } }),
-            ...(degrees && { degree: { $in: degrees } }),
-            ...(jobInterests && {
-                jobInterest: { $elemMatch: { $in: jobInterests } },
-            }),
-        };
+        let query = SupabaseDB.REGISTRATIONS
+            .select("user_id, name, major, graduation, degree, job_interest, portfolios")
+            .eq("has_submitted", true)
+            .eq("has_resume", true);
 
-        const projection = {
-            userId: 1,
-            name: 1,
-            major: 1,
-            graduation: 1,
-            degree: 1,
-            jobInterest: 1,
-            portfolios: 1,
-        };
+        if (graduations && graduations.length > 0) {
+            query = query.in("graduation", graduations);
+        }
 
-        const registrants = await Database.REGISTRATION.find(
-            query,
-            projection,
-            {
-                skip: Config.SPONSOR_ENTIRES_PER_PAGE * (page - 1),
-                limit: Config.SPONSOR_ENTIRES_PER_PAGE,
-            }
-        );
+        if (majors && majors.length > 0) {
+            query = query.in("major", majors);
+        }
+
+        if (degrees && degrees.length > 0) {
+            query = query.in("degree", degrees);
+        }
+
+        if (jobInterests && jobInterests.length > 0) {
+            query = query.overlaps("job_interest", jobInterests);
+        }
+
+        const startIndex = Config.SPONSOR_ENTIRES_PER_PAGE * (page - 1);
+        const endIndex = startIndex + Config.SPONSOR_ENTIRES_PER_PAGE - 1;
+        query = query.range(startIndex, endIndex);
+
+        const { data: dbRegistrants } = await query.throwOnError();
+
+        const registrants = dbRegistrants.map(registrant => ({
+            userId: registrant.user_id,
+            name: registrant.name,
+            major: registrant.major,
+            graduation: registrant.graduation,
+            degree: registrant.degree,
+            jobInterest: registrant.job_interest,
+            portfolios: registrant.portfolios,
+        }));
 
         return res.status(StatusCodes.OK).json({ registrants, page });
     }
