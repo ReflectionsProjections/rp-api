@@ -46,7 +46,10 @@ app.disable("etag");
 app.use(cors());
 
 // Logs
-const accessLogStream = fs.createWriteStream(`${process.env.HOME}/${process.pid}-access.log`, { flags: 'a' })
+const accessLogStream = fs.createWriteStream(
+    `${process.env.HOME}/${process.pid}-access.log`,
+    { flags: "a" }
+);
 
 if (Config.ENV !== EnvironmentEnum.TESTING) {
     app.use(morgan("dev", { stream: accessLogStream }));
