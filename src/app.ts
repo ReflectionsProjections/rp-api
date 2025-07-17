@@ -49,7 +49,7 @@ app.use(cors());
 // Ensure the log directory exists
 fs.mkdirSync(Config.LOG_DIR, { recursive: true });
 const accessLogStream = fs.createWriteStream(
-    `${Config.LOG_DIR}/${new Date().toISOString()}-${process.pid}.log`,
+    `${Config.LOG_DIR}/${new Date().toISOString().replace(/[:.]/g, '-')}-${process.pid}.log`,
     { flags: "a" }
 );
 
