@@ -212,10 +212,10 @@ describe("GET /events/currentOrNext", () => {
         const { startTime, endTime, ...expectedWithoutTimes } = UPCOMING_EVENT_VISIBLE_SOONEST;
         expect(response.body).toMatchObject(expectedWithoutTimes);
         expect(new Date(response.body.startTime).toISOString()).toBe(
-            new Date(UPCOMING_EVENT_VISIBLE_SOONEST.startTime).toISOString()
+            new Date(startTime).toISOString()
         );
         expect(new Date(response.body.endTime).toISOString()).toBe(
-            new Date(UPCOMING_EVENT_VISIBLE_SOONEST.endTime).toISOString()
+            new Date(endTime).toISOString()
         );
     });
 
@@ -226,10 +226,10 @@ describe("GET /events/currentOrNext", () => {
         const { startTime, endTime, ...expectedWithoutTimes } = UPCOMING_EVENT_VISIBLE_LATER;
         expect(response.body).toMatchObject(expectedWithoutTimes);
         expect(new Date(response.body.startTime).toISOString()).toBe(
-            new Date(UPCOMING_EVENT_VISIBLE_LATER.startTime).toISOString()
+            new Date(startTime).toISOString()
         );
         expect(new Date(response.body.endTime).toISOString()).toBe(
-            new Date(UPCOMING_EVENT_VISIBLE_LATER.endTime).toISOString()
+            new Date(endTime).toISOString()
         );
     });
 
@@ -273,10 +273,10 @@ describe("GET /events/currentOrNext", () => {
         const { startTime, endTime, ...expectedWithoutTimes } = eventStartingNow;
         expect(response.body).toMatchObject(expectedWithoutTimes);
         expect(new Date(response.body.startTime).toISOString()).toBe(
-            new Date(eventStartingNow.startTime).toISOString()
+            new Date(startTime).toISOString()
         );
         expect(new Date(response.body.endTime).toISOString()).toBe(
-            new Date(eventStartingNow.endTime).toISOString()
+            new Date(endTime).toISOString()
         );
     });
 
@@ -292,10 +292,10 @@ describe("GET /events/currentOrNext", () => {
             const { startTime, endTime, ...expectedWithoutTimes } = UPCOMING_EVENT_HIDDEN_EARLIER;
             expect(response.body).toMatchObject(expectedWithoutTimes);
             expect(new Date(response.body.startTime).toISOString()).toBe(
-                new Date(UPCOMING_EVENT_HIDDEN_EARLIER.startTime).toISOString()
+                new Date(startTime).toISOString()
             );
             expect(new Date(response.body.endTime).toISOString()).toBe(
-                new Date(UPCOMING_EVENT_HIDDEN_EARLIER.endTime).toISOString()
+                new Date(endTime).toISOString()
             );
         }
     );
@@ -315,10 +315,10 @@ describe("GET /events/currentOrNext", () => {
             const { startTime, endTime, ...expectedWithoutTimes } = UPCOMING_EVENT_VISIBLE_SOONEST;
             expect(response.body).toMatchObject(expectedWithoutTimes);
             expect(new Date(response.body.startTime).toISOString()).toBe(
-                new Date(UPCOMING_EVENT_VISIBLE_SOONEST.startTime).toISOString()
+                new Date(startTime).toISOString()
             );
             expect(new Date(response.body.endTime).toISOString()).toBe(
-                new Date(UPCOMING_EVENT_VISIBLE_SOONEST.endTime).toISOString()
+                new Date(endTime).toISOString()
             );
         }
     );
