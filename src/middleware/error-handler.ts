@@ -16,7 +16,12 @@ function errorHandler(
     }
 
     // Handle Postgres unique violation errors
-    if (err && typeof err === 'object' && 'code' in err && err.code === "23505") {
+    if (
+        err &&
+        typeof err === "object" &&
+        "code" in err &&
+        err.code === "23505"
+    ) {
         return res.status(StatusCodes.BAD_REQUEST).json({
             error: "UserAlreadyExists",
         });
