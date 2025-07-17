@@ -1,4 +1,5 @@
 import express from "express";
+import fs from "fs";
 import { StatusCodes } from "http-status-codes";
 import { Config, EnvironmentEnum } from "./config";
 import { isTest } from "./utilities";
@@ -45,8 +46,13 @@ app.disable("etag");
 app.use(cors());
 
 // Logs
+const accessLogStream = fs.createWriteStream(
+    `${process.env.HOME}/${process.pid}-access.log`,
+    { flags: "a" }
+);
+
 if (Config.ENV !== EnvironmentEnum.TESTING) {
-    app.use(morgan("dev"));
+    app.use(morgan("dev", { stream: accessLogStream }));
 }
 
 // Parsing
