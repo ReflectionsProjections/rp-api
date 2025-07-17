@@ -10,9 +10,9 @@ export const Role = z.enum([
 export type Role = z.infer<typeof Role>;
 
 export enum Platform {
-    WEB = "WEB",
-    IOS = "IOS",
-    ANDROID = "ANDROID",
+    WEB = "web",
+    IOS = "ios",
+    ANDROID = "android",
 }
 
 export const PlatformValidator = z.nativeEnum(Platform);

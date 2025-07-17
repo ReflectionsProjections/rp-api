@@ -142,6 +142,9 @@ describe("PUT /auth/", () => {
 });
 
 describe("POST /auth/login/:PLATFORM", () => {
+    const CODE = "loginCode";
+    const REDIRECT_URI = "http://localhost/redirect";
+    const CODE_VERIFIER = "codeVerifier123";
     const ID_TOKEN = "IdToken";
     const AUTH_PAYLOAD = {
         email: TESTER.email,
@@ -181,16 +184,6 @@ describe("POST /auth/login/:PLATFORM", () => {
     });
 
     // Generic tests
-    it("should fail to login with an invalid platform (case sensitive)", async () => {
-        const res = await post("/auth/login/web")
-            .send({
-                code: "loginCode",
-                redirectUri: "http://localhost/redirect",
-            })
-            .expect(StatusCodes.BAD_REQUEST);
-        expect(res.body).toHaveProperty("error", "InvalidRequest");
-    });
-
     it("should fail to login with invalid platform in URL parameter", async () => {
         const res = await post("/auth/login/INVALID_PLATFORM")
             .send({
@@ -215,59 +208,43 @@ describe("POST /auth/login/:PLATFORM", () => {
     describe.each([
         {
             platform: Platform.WEB,
-            loginRequest: {
-                code: "loginCode",
-                redirectUri: "http://localhost/redirect",
-            },
-            expectedOAuthConfig: {
-                clientId: Config.CLIENT_ID,
-                clientSecret: Config.CLIENT_SECRET,
-            },
-            expectedGetTokenParams: {
-                code: "loginCode",
-                redirect_uri: "http://localhost/redirect",
-            },
+            clientId: Config.CLIENT_ID,
+            clientSecret: Config.CLIENT_SECRET,
+            hasCodeVerifier: false,
         },
         {
             platform: Platform.IOS,
-            loginRequest: {
-                code: "loginCode",
-                redirectUri: "http://localhost/redirect",
-                codeVerifier: "codeVerifier123",
-            },
-            expectedOAuthConfig: {
-                clientId: Config.IOS_CLIENT_ID,
-            },
-            expectedGetTokenParams: {
-                code: "loginCode",
-                redirect_uri: "http://localhost/redirect",
-                codeVerifier: "codeVerifier123",
-            },
+            clientId: Config.IOS_CLIENT_ID,
+            hasCodeVerifier: true,
         },
         {
             platform: Platform.ANDROID,
-            loginRequest: {
-                code: "loginCode",
-                redirectUri: "http://localhost/redirect",
-                codeVerifier: "codeVerifier123",
-            },
-            expectedOAuthConfig: {
-                clientId: Config.ANDROID_CLIENT_ID,
-            },
-            expectedGetTokenParams: {
-                code: "loginCode",
-                redirect_uri: "http://localhost/redirect",
-                codeVerifier: "codeVerifier123",
-            },
+            clientId: Config.ANDROID_CLIENT_ID,
+            hasCodeVerifier: true,
         },
     ])(
         "for $platform platform",
-        ({
-            platform,
-            loginRequest,
-            expectedOAuthConfig,
-            expectedGetTokenParams,
-        }) => {
+        ({ platform, clientId, clientSecret, hasCodeVerifier }) => {
+            const loginRequest = hasCodeVerifier
+                ? {
+                      code: CODE,
+                      redirectUri: REDIRECT_URI,
+                      codeVerifier: CODE_VERIFIER,
+                  }
+                : { code: CODE, redirectUri: REDIRECT_URI };
+
+            const expectedOAuthConfig = clientSecret
+                ? { clientId, clientSecret }
+                : { clientId };
+
+            const expectedGetTokenParams = hasCodeVerifier
+                ? {
+                      code: CODE,
+                      redirect_uri: REDIRECT_URI,
+                      codeVerifier: CODE_VERIFIER,
+                  }
+                : { code: CODE, redirect_uri: REDIRECT_URI };
+
             it("should login with a valid code", async () => {
                 const start = Math.floor(Date.now() / 1000);
                 const res = await post(`/auth/login/${platform}`)
