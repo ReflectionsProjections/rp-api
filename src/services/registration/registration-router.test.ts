@@ -2,10 +2,12 @@ import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { post, get } from "../../../testing/testingTools";
 import { TESTER } from "../../../testing/testingTools";
 import { StatusCodes } from "http-status-codes";
-import { Database } from "../../database";
+import { SupabaseDB } from "../../supabase";
 import { Role } from "../auth/auth-models";
 import Config from "../../config";
 import { sendHTMLEmail } from "../ses/ses-utils";
+import { RegistrationValidator } from "./registration-schema";
+import { z } from "zod";
 
 jest.mock("../ses/ses-utils", () => ({
     sendHTMLEmail: jest.fn(),
@@ -17,6 +19,8 @@ jest.mock("./registration-utils", () => ({
     ) as typeof import("./registration-utils")),
     generateEncryptedId: jest.fn(() => Promise.resolve("mock-encrypted-id")),
 }));
+
+type RegistrationData = z.infer<typeof RegistrationValidator>;
 
 const VALID_REGISTRATION = {
     name: "TEST TESTER",
@@ -37,10 +41,46 @@ const VALID_REGISTRATION = {
     hasResume: true,
 };
 
+// Helper function to convert camelCase registration data to snake_case for database insertion
+const toDbRegistration = (
+    registration: Omit<RegistrationData, "userId">,
+    userId: string,
+    hasSubmitted = false
+) => ({
+    user_id: userId,
+    name: registration.name,
+    email: registration.email,
+    university: registration.university,
+    graduation: registration.graduation,
+    major: registration.major,
+    degree: registration.degree,
+    dietary_restrictions: registration.dietaryRestrictions,
+    allergies: registration.allergies,
+    gender: registration.gender,
+    ethnicity: registration.ethnicity,
+    hear_about_rp: registration.hearAboutRP,
+    portfolios: registration.portfolios,
+    job_interest: registration.jobInterest,
+    is_interested_mech_mania: registration.isInterestedMechMania,
+    is_interested_puzzle_bang: registration.isInterestedPuzzleBang,
+    has_resume: registration.hasResume,
+    has_submitted: hasSubmitted,
+});
+
+// Helper function to create test role record
+const createTestRole = (userId: string, displayName: string, email: string, roles: ("USER" | "STAFF" | "ADMIN" | "CORPORATE" | "PUZZLEBANG")[] = []) => ({
+    user_id: userId,
+    display_name: displayName,
+    email: email,
+    roles: roles,
+});
+
 beforeEach(async () => {
-    await Database.REGISTRATION.deleteMany({});
-    await Database.ROLES.deleteMany({});
-    await Database.ATTENDEE.deleteMany({});
+    await SupabaseDB.ATTENDEES.delete().neq("user_id", "00000000-0000-0000-0000-000000000000");
+    await SupabaseDB.REGISTRATIONS.delete().neq("user_id", "00000000-0000-0000-0000-000000000000");
+    await SupabaseDB.ROLES.delete().neq("user_id", "00000000-0000-0000-0000-000000000000");
+
+    await SupabaseDB.ROLES.insert(createTestRole(TESTER.userId, TESTER.displayName, TESTER.email));
 });
 
 describe("POST /registration/save", () => {
@@ -52,11 +92,12 @@ describe("POST /registration/save", () => {
         expect(response.body.userId).toBe(TESTER.userId);
         expect(response.body.hasSubmitted).toBeFalsy();
 
-        const dbEntry = await Database.REGISTRATION.findOne({
-            userId: TESTER.userId,
-        });
+        const { data: dbEntry } = await SupabaseDB.REGISTRATIONS
+            .select("*")
+            .eq("user_id", TESTER.userId)
+            .single();
         expect(dbEntry).toBeDefined();
-        expect(dbEntry?.hasSubmitted).toBe(false);
+        expect(dbEntry?.has_submitted).toBe(false);
     });
 
     it("should not allow unauthenticated users to save registration", async () => {
@@ -66,11 +107,7 @@ describe("POST /registration/save", () => {
     });
 
     it("should return 409 if user already submitted registration", async () => {
-        await Database.REGISTRATION.create({
-            ...VALID_REGISTRATION,
-            userId: TESTER.userId,
-            hasSubmitted: true,
-        });
+        await SupabaseDB.REGISTRATIONS.insert(toDbRegistration(VALID_REGISTRATION, TESTER.userId, true));
 
         await post("/registration/save", Role.enum.USER)
             .send(VALID_REGISTRATION)
@@ -95,18 +132,23 @@ describe("POST /registration/submit", () => {
             .send(VALID_REGISTRATION)
             .expect(StatusCodes.OK);
 
-        const reg = await Database.REGISTRATION.findOne({
-            userId: TESTER.userId,
-        });
-        expect(reg?.hasSubmitted).toBe(true);
+        const { data: reg } = await SupabaseDB.REGISTRATIONS
+            .select("*")
+            .eq("user_id", TESTER.userId)
+            .single();
+        expect(reg?.has_submitted).toBe(true);
 
-        const attendee = await Database.ATTENDEE.findOne({
-            userId: TESTER.userId,
-        });
+        const { data: attendee } = await SupabaseDB.ATTENDEES
+            .select("*")
+            .eq("user_id", TESTER.userId)
+            .single();
         expect(attendee).toBeDefined();
-        expect(attendee?.email).toBe(VALID_REGISTRATION.email);
+        // Note: attendee table doesn't have email field, it only has user_id
 
-        const roles = await Database.ROLES.findOne({ userId: TESTER.userId });
+        const { data: roles } = await SupabaseDB.ROLES
+            .select("*")
+            .eq("user_id", TESTER.userId)
+            .single();
         expect(roles?.roles).toContain(Role.enum.USER);
         expect(sendHTMLEmail).toHaveBeenCalled();
     });
@@ -118,11 +160,7 @@ describe("POST /registration/submit", () => {
     });
 
     it("should return 409 if user already submitted", async () => {
-        await Database.REGISTRATION.create({
-            ...VALID_REGISTRATION,
-            userId: TESTER.userId,
-            hasSubmitted: true,
-        });
+        await SupabaseDB.REGISTRATIONS.insert(toDbRegistration(VALID_REGISTRATION, TESTER.userId, true));
 
         await post("/registration/submit", Role.enum.USER)
             .send(VALID_REGISTRATION)
@@ -143,11 +181,7 @@ describe("POST /registration/submit", () => {
 
 describe("GET /registration", () => {
     it("should get registration data for an authenticated user", async () => {
-        await Database.REGISTRATION.create({
-            ...VALID_REGISTRATION,
-            userId: TESTER.userId,
-            hasSubmitted: true,
-        });
+        await SupabaseDB.REGISTRATIONS.insert(toDbRegistration(VALID_REGISTRATION, TESTER.userId, true));
 
         const response = await get("/registration", Role.enum.USER).expect(
             StatusCodes.OK
@@ -174,7 +208,7 @@ describe("POST /registration/filter/pagecount", () => {
     const entriesPerPage = Config.SPONSOR_ENTIRES_PER_PAGE;
 
     beforeEach(async () => {
-        await Database.REGISTRATION.deleteMany({});
+        await SupabaseDB.REGISTRATIONS.delete().neq("user_id", "00000000-0000-0000-0000-000000000000");
     });
 
     it("should return correct page count for matching filters", async () => {
@@ -198,13 +232,19 @@ describe("POST /registration/filter/pagecount", () => {
             hasSubmitted: true,
         };
 
-        const bulkDocs = Array.from({ length: NUM_ENTRIES }, (_, i) => ({
-            ...base,
-            userId: `user${i}`,
-            email: `user${i}@example.com`,
-        }));
+        const bulkRoles = Array.from({ length: NUM_ENTRIES }, (_, i) => 
+            createTestRole(`user${i}`, `Test User ${i}`, `user${i}@example.com`)
+        );
+        await SupabaseDB.ROLES.insert(bulkRoles);
 
-        await Database.REGISTRATION.insertMany(bulkDocs);
+        const bulkDocs = Array.from({ length: NUM_ENTRIES }, (_, i) => 
+            toDbRegistration({
+                ...base,
+                email: `user${i}@example.com`,
+            }, `user${i}`, true)
+        );
+
+        await SupabaseDB.REGISTRATIONS.insert(bulkDocs);
 
         const filters = {
             graduations: ["2025"],
@@ -287,17 +327,24 @@ describe("POST /registration/filter/:PAGE", () => {
     };
 
     beforeEach(async () => {
-        await Database.REGISTRATION.deleteMany({});
+        await SupabaseDB.REGISTRATIONS.delete().neq("user_id", "00000000-0000-0000-0000-000000000000");
     });
 
     it("should return registrants for matching filters on page 1", async () => {
-        const docs = Array.from({ length: 10 }, (_, i) => ({
-            ...baseRegistration,
-            userId: `filter-user-${i}`,
-            email: `filter-user-${i}@test.com`,
-        }));
 
-        await Database.REGISTRATION.insertMany(docs);
+        const bulkRoles = Array.from({ length: 10 }, (_, i) => 
+            createTestRole(`filter-user-${i}`, `Filter User ${i}`, `filter-user-${i}@test.com`)
+        );
+        await SupabaseDB.ROLES.insert(bulkRoles);
+
+        const docs = Array.from({ length: 10 }, (_, i) => 
+            toDbRegistration({
+                ...baseRegistration,
+                email: `filter-user-${i}@test.com`,
+            }, `filter-user-${i}`, true)
+        );
+
+        await SupabaseDB.REGISTRATIONS.insert(docs);
 
         const filters = {
             graduations: ["2025"],
