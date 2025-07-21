@@ -1,6 +1,6 @@
 import { InferSchemaType, Schema } from "mongoose";
 import { z } from "zod";
-import { Role } from "./auth-models";
+import { Platform, Role } from "./auth-models";
 
 export const RoleValidator = z.object({
     userId: z.coerce.string(),
@@ -9,19 +9,29 @@ export const RoleValidator = z.object({
     roles: z.array(Role).default([]),
 });
 
-export const AuthLoginValidator = z.object({
-    code: z.string(),
-    redirectUri: z.string(),
-    codeVerifier: z.string().optional(),
-});
+export const AuthLoginValidator = z.union([
+    // Web platform - no codeVerifier needed
+    z.object({
+        code: z.string(),
+        redirectUri: z.string(),
+        platform: z.literal(Platform.WEB),
+    }),
+    // iOS/Android - codeVerifier is required
+    z.object({
+        code: z.string(),
+        redirectUri: z.string(),
+        codeVerifier: z.string(),
+        platform: z.union([
+            z.literal(Platform.IOS),
+            z.literal(Platform.ANDROID),
+        ]),
+    }),
+]);
 
 export const AuthRoleChangeRequest = z.object({
     email: z.string().email(),
     role: z.string(),
 });
-
-// Platform validator for OAuth clients
-export const PlatformValidator = z.enum(["web", "ios", "android"]);
 
 export const RoleSchema = new Schema(
     {
