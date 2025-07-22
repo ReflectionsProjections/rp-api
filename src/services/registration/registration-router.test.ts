@@ -72,7 +72,7 @@ const createTestRole = (
     userId: string,
     displayName: string,
     email: string,
-    roles: ("USER" | "STAFF" | "ADMIN" | "CORPORATE" | "PUZZLEBANG")[] = []
+    roles: Role[] = []
 ) => ({
     user_id: userId,
     display_name: displayName,
