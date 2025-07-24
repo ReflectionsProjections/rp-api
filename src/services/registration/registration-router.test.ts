@@ -1,10 +1,8 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
-import { post, get } from "../../../testing/testingTools";
-import { TESTER } from "../../../testing/testingTools";
 import { StatusCodes } from "http-status-codes";
+import { get, post, TESTER } from "../../../testing/testingTools";
 import { Database } from "../../database";
 import { Role } from "../auth/auth-models";
-import Config from "../../config";
 import { sendHTMLEmail } from "../ses/ses-utils";
 
 jest.mock("../ses/ses-utils", () => ({
@@ -169,103 +167,7 @@ describe("GET /registration", () => {
     });
 });
 
-describe("POST /registration/filter/pagecount", () => {
-    const NUM_ENTRIES = 53;
-    const entriesPerPage = Config.SPONSOR_ENTIRES_PER_PAGE;
-
-    beforeEach(async () => {
-        await Database.REGISTRATION.deleteMany({});
-    });
-
-    it("should return correct page count for matching filters", async () => {
-        const base = {
-            graduation: "2025",
-            major: "CS",
-            jobInterest: ["Backend"],
-            degree: "Bachelor",
-            name: "Test User",
-            email: "test@example.com",
-            university: "UIUC",
-            dietaryRestrictions: [],
-            allergies: [],
-            gender: "Female",
-            ethnicity: [],
-            hearAboutRP: [],
-            portfolios: ["https://portfolio.com"],
-            isInterestedMechMania: false,
-            isInterestedPuzzleBang: false,
-            hasResume: true,
-            hasSubmitted: true,
-        };
-
-        const bulkDocs = Array.from({ length: NUM_ENTRIES }, (_, i) => ({
-            ...base,
-            userId: `user${i}`,
-            email: `user${i}@example.com`,
-        }));
-
-        await Database.REGISTRATION.insertMany(bulkDocs);
-
-        const filters = {
-            graduations: ["2025"],
-            majors: ["CS"],
-            jobInterests: ["Backend"],
-            degrees: ["Bachelor"],
-        };
-
-        const response = await post(
-            "/registration/filter/pagecount",
-            Role.enum.ADMIN
-        )
-            .send(filters)
-            .expect(StatusCodes.OK);
-
-        const expectedPageCount = Math.ceil(NUM_ENTRIES / entriesPerPage);
-        expect(response.body.pagecount).toBe(expectedPageCount);
-    });
-
-    it("should return 0 pages if no records match", async () => {
-        const filters = {
-            graduations: ["3000"],
-            majors: ["Astrophysics"],
-            jobInterests: ["Zookeeper"],
-            degrees: ["PhD"],
-        };
-
-        const response = await post(
-            "/registration/filter/pagecount",
-            Role.enum.ADMIN
-        )
-            .send(filters)
-            .expect(StatusCodes.OK);
-
-        expect(response.body.pagecount).toBe(0);
-    });
-
-    it("should return 401 for unauthenticated users", async () => {
-        await post("/registration/filter/pagecount")
-            .send({})
-            .expect(StatusCodes.UNAUTHORIZED);
-    });
-
-    it("should return 403 for users without permission", async () => {
-        await post("/registration/filter/pagecount", Role.enum.USER)
-            .send({})
-            .expect(StatusCodes.FORBIDDEN);
-    });
-
-    it("should return 400 if filters are invalid", async () => {
-        const badFilters = {
-            graduations: "not-an-array",
-        };
-
-        await post("/registration/filter/pagecount", Role.enum.ADMIN)
-            .send(badFilters)
-            .expect(StatusCodes.BAD_REQUEST);
-    });
-});
-
-describe("POST /registration/filter/:PAGE", () => {
+describe("GET /registration/all", () => {
     const baseRegistration = {
         graduation: "2025",
         major: "CS",
@@ -290,8 +192,8 @@ describe("POST /registration/filter/:PAGE", () => {
         await Database.REGISTRATION.deleteMany({});
     });
 
-    it("should return registrants for matching filters on page 1", async () => {
-        const docs = Array.from({ length: 10 }, (_, i) => ({
+    it("should return registrants for matching filters", async () => {
+        const docs = Array.from({ length: 1000 }, (_, i) => ({
             ...baseRegistration,
             userId: `filter-user-${i}`,
             email: `filter-user-${i}@test.com`,
@@ -306,64 +208,59 @@ describe("POST /registration/filter/:PAGE", () => {
             degrees: ["Bachelor"],
         };
 
-        const response = await post("/registration/filter/1", Role.enum.ADMIN)
+        const response = await get("/registration/all", Role.enum.ADMIN)
             .send(filters)
             .expect(StatusCodes.OK);
 
-        expect(response.body.page).toBe(1);
-        expect(response.body.registrants.length).toBe(10);
+        expect(response.body.registrants.length).toBe(1000);
         expect(response.body.registrants[0]).toHaveProperty("userId");
     });
 
-    it("should return empty array if page exceeds data", async () => {
-        const filters = {
-            graduations: ["2025"],
-            majors: ["CS"],
-            jobInterests: ["Backend"],
-            degrees: ["Bachelor"],
-        };
-
-        const response = await post("/registration/filter/999", Role.enum.ADMIN)
-            .send(filters)
-            .expect(StatusCodes.OK);
-
-        expect(response.body.page).toBe(999);
-        expect(response.body.registrants).toEqual([]);
-    });
-
-    it("should return 400 for invalid page number", async () => {
-        await post("/registration/filter/notanumber", Role.enum.ADMIN)
-            .send({})
-            .expect(StatusCodes.BAD_REQUEST);
-
-        await post("/registration/filter/0", Role.enum.ADMIN)
-            .send({})
-            .expect(StatusCodes.BAD_REQUEST);
-
-        await post("/registration/filter/-5", Role.enum.ADMIN)
-            .send({})
-            .expect(StatusCodes.BAD_REQUEST);
-    });
-
     it("should return 401 if unauthenticated", async () => {
-        await post("/registration/filter/1")
+        await get("/registration/all")
             .send({})
             .expect(StatusCodes.UNAUTHORIZED);
     });
 
     it("should return 403 if user is not ADMIN or CORPORATE", async () => {
-        await post("/registration/filter/1", Role.enum.USER)
+        await get("/registration/all", Role.enum.USER)
             .send({})
             .expect(StatusCodes.FORBIDDEN);
     });
+    it("should not return registrants who do not match hasSubmitted and hasResume filters", async () => {
+        await Database.REGISTRATION.insertMany([
+            {
+                ...baseRegistration,
+                userId: "valid-user",
+                email: "validfellow@test.com",
+                hasResume: true,
+                hasSubmitted: true,
+            },
+            {
+                ...baseRegistration,
+                userId: "no-resume",
+                email: "noresume@test.com",
+                hasResume: false,
+                hasSubmitted: true,
+            },
+            {
+                ...baseRegistration,
+                userId: "not-submitted",
+                email: "notsubmitted@test.com",
+                hasResume: true,
+                hasSubmitted: false,
+            },
+        ]);
 
-    it("should return 400 for invalid filter schema", async () => {
-        const badFilters = {
-            graduations: "not-an-array", // should be array
-        };
+        const response = await get("/registration/all", Role.enum.ADMIN).expect(
+            StatusCodes.OK
+        );
 
-        await post("/registration/filter/1", Role.enum.ADMIN)
-            .send(badFilters)
-            .expect(StatusCodes.BAD_REQUEST);
+        const userIds = response.body.registrants.map(
+            (r: { userId: string }) => r.userId
+        );
+        expect(userIds).toContain("valid-user");
+        expect(userIds).not.toContain("no-resume");
+        expect(userIds).not.toContain("not-submitted");
     });
 });
