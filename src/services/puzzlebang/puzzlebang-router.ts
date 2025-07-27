@@ -17,7 +17,7 @@ puzzlebangRouter.post(
 
         // Email is in registration, so we need to get the userId from the email and pull from attendee
         const { data: registrationData } =
-            await SupabaseDB.REGISTRATIONS.select("user_id")
+            await SupabaseDB.REGISTRATIONS.select("userId")
                 .eq("email", email)
                 .maybeSingle()
                 .throwOnError(); // allow 0 rows, which will be gracefully handled
@@ -28,12 +28,12 @@ puzzlebangRouter.post(
             });
         }
 
-        const userId = registrationData.user_id;
+        const userId = registrationData.userId;
 
         const { data: attendeeData } = await SupabaseDB.ATTENDEES.select(
-            "puzzles_completed, points"
+            "puzzlesCompleted, points"
         )
-            .eq("user_id", userId)
+            .eq("userId", userId)
             .maybeSingle()
             .throwOnError(); // allow 0 rows, which will be gracefully handled
 
@@ -43,7 +43,7 @@ puzzlebangRouter.post(
                 .send("Attendee profile not found for this user.");
         }
 
-        const puzzlesCompleted = attendeeData.puzzles_completed ?? [];
+        const puzzlesCompleted = attendeeData.puzzlesCompleted ?? [];
 
         const currentPoints = attendeeData.points ?? 0;
 
@@ -55,15 +55,10 @@ puzzlebangRouter.post(
 
         const updatedPuzzles = [...puzzlesCompleted, puzzleId];
 
-        const { error: updateError } = await SupabaseDB.ATTENDEES.update({
-            puzzles_completed: updatedPuzzles,
+        await SupabaseDB.ATTENDEES.update({
+            puzzlesCompleted: updatedPuzzles,
             points: currentPoints + 2,
-        }).eq("user_id", userId);
-
-        if (updateError) {
-            console.error("Database update failed:", updateError);
-            return res.sendStatus(StatusCodes.INTERNAL_SERVER_ERROR);
-        }
+        }).eq("userId", userId).throwOnError();
 
         return res.sendStatus(StatusCodes.OK);
     }

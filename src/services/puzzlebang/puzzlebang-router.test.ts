@@ -7,26 +7,28 @@ const TEST_USER_ID = "ritam123";
 const TEST_EMAIL = "ritam@test.com";
 const PUZZLE_ID = "P1";
 
+jest.setTimeout(100000);
+
 function makeTestAttendee(overrides = {}) {
     return {
-        user_id: TEST_USER_ID,
+        userId: TEST_USER_ID,
         points: 0,
-        puzzles_completed: [],
+        puzzlesCompleted: [],
         ...overrides,
     };
 }
 
 function makeTestRegistration(overrides = {}) {
     return {
-        user_id: TEST_USER_ID,
+        userId: TEST_USER_ID,
         name: "Ritam",
         email: TEST_EMAIL,
         degree: "Bachelors",
         university: "UIUC",
-        is_interested_mech_mania: false,
-        is_interested_puzzle_bang: true,
+        isInterestedMechMania: false,
+        isInterestedPuzzleBang: true,
         allergies: [],
-        dietary_restrictions: [],
+        dietaryRestrictions: [],
         ethnicity: null,
         gender: null,
         ...overrides,
@@ -34,53 +36,48 @@ function makeTestRegistration(overrides = {}) {
 }
 
 type InsertTestAttendeeOverrides = {
-    user_id?: string;
+    userId?: string;
     email?: string;
     points?: number;
-    puzzles_completed?: string[];
+    puzzlesCompleted?: string[];
     [key: string]: unknown;
 };
 
 async function insertTestAttendee(overrides: InsertTestAttendeeOverrides = {}) {
-    const userId = overrides.user_id || TEST_USER_ID;
+    const userId = overrides.userId || TEST_USER_ID;
     const email = overrides.email || TEST_EMAIL;
 
     // Roles (needed first because of FK constraint)
-    const { error: roleError } = await SupabaseDB.ROLES.insert([
+    await SupabaseDB.ROLES.insert([
         {
-            user_id: userId,
-            display_name: "Ritam",
+            userId: userId,
+            displayName: "Ritam",
             email,
             roles: [Role.enum.PUZZLEBANG],
         },
-    ]);
-    if (roleError) throw new Error("Role insert failed: " + roleError.message);
+    ]).throwOnError();
 
     // Registrations
-    const { error: regError } = await SupabaseDB.REGISTRATIONS.insert([
-        makeTestRegistration({ user_id: userId }),
-    ]);
-    if (regError)
-        throw new Error("Registration insert failed: " + regError.message);
+    await SupabaseDB.REGISTRATIONS.insert([
+        makeTestRegistration({ userId: userId }),
+    ]).throwOnError();
 
     // Attendee
-    const { error: attError } = await SupabaseDB.ATTENDEES.insert([
-        makeTestAttendee({ user_id: userId, ...overrides }),
-    ]);
-    if (attError)
-        throw new Error("Attendee insert failed: " + attError.message);
+    await SupabaseDB.ATTENDEES.insert([
+        makeTestAttendee({ userId: userId, ...overrides }),
+    ]).throwOnError();
 }
 
 describe("POST /puzzlebang", () => {
     beforeEach(async () => {
         // Clean up all possibly conflicting data
-        await SupabaseDB.ATTENDEES.delete().eq("user_id", TEST_USER_ID);
-        await SupabaseDB.REGISTRATIONS.delete().eq("user_id", TEST_USER_ID);
-        await SupabaseDB.ROLES.delete().eq("user_id", TEST_USER_ID);
+        await SupabaseDB.ATTENDEES.delete().eq("userId", TEST_USER_ID);
+        await SupabaseDB.REGISTRATIONS.delete().eq("userId", TEST_USER_ID);
+        await SupabaseDB.ROLES.delete().eq("userId", TEST_USER_ID);
 
-        await SupabaseDB.ATTENDEES.delete().eq("user_id", "nonexistent");
-        await SupabaseDB.REGISTRATIONS.delete().eq("user_id", "nonexistent");
-        await SupabaseDB.ROLES.delete().eq("user_id", "nonexistent");
+        await SupabaseDB.ATTENDEES.delete().eq("userId", "nonexistent");
+        await SupabaseDB.REGISTRATIONS.delete().eq("userId", "nonexistent");
+        await SupabaseDB.ROLES.delete().eq("userId", "nonexistent");
     });
 
     it("should complete puzzle and increment points for PUZZLEBANG role", async () => {
@@ -90,19 +87,18 @@ describe("POST /puzzlebang", () => {
             .send({ email: TEST_EMAIL, puzzleId: PUZZLE_ID })
             .expect(StatusCodes.OK);
 
-        const { data: updated, error } = await SupabaseDB.ATTENDEES.select(
-            "points, puzzles_completed"
+        const { data: updated} = await SupabaseDB.ATTENDEES.select(
+            "points, puzzlesCompleted"
         )
-            .eq("user_id", TEST_USER_ID)
-            .single();
+            .eq("userId", TEST_USER_ID)
+            .single().throwOnError();
 
-        if (error) throw error;
         expect(updated?.points).toBe(2);
-        expect(updated?.puzzles_completed).toContain(PUZZLE_ID);
+        expect(updated?.puzzlesCompleted).toContain(PUZZLE_ID);
     }, 30000);
 
     it("should return 409 if puzzle was already completed", async () => {
-        await insertTestAttendee({ puzzles_completed: [PUZZLE_ID] });
+        await insertTestAttendee({ puzzlesCompleted: [PUZZLE_ID] });
 
         await post("/puzzlebang", Role.enum.PUZZLEBANG)
             .send({ email: TEST_EMAIL, puzzleId: PUZZLE_ID })
@@ -113,15 +109,15 @@ describe("POST /puzzlebang", () => {
         // Insert dummy user to satisfy FKs
         await SupabaseDB.ROLES.insert([
             {
-                user_id: "nonexistent",
-                display_name: "Fake User",
+                userId: "nonexistent",
+                displayName: "Fake User",
                 email: "fake@example.com",
                 roles: [Role.enum.PUZZLEBANG],
             },
         ]);
         await SupabaseDB.REGISTRATIONS.insert([
             makeTestRegistration({
-                user_id: "nonexistent",
+                userId: "nonexistent",
                 email: "fake@example.com",
             }),
         ]);
@@ -136,8 +132,8 @@ describe("POST /puzzlebang", () => {
     it("should return 403 if user does not have PUZZLEBANG role", async () => {
         await SupabaseDB.ROLES.insert([
             {
-                user_id: TEST_USER_ID,
-                display_name: "Ritam",
+                userId: TEST_USER_ID,
+                displayName: "Ritam",
                 email: TEST_EMAIL,
                 roles: [Role.enum.USER], // not PUZZLEBANG
             },
