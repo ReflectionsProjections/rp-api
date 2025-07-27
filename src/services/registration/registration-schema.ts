@@ -1,26 +1,44 @@
 import mongoose from "mongoose";
 import { z } from "zod";
 
+// Zod schema for registration drafts
+const RegistrationDraftValidator = z.object({
+    allergies: z.array(z.string()).optional(),
+    dietaryRestrictions: z.array(z.string()).optional(),
+    educationLevel: z.string().optional(),
+    email: z.string().email().optional(),
+    ethnicity: z.array(z.string()).optional(),
+    gender: z.string().optional(),
+    graduationYear: z.string().optional(),
+    howDidYouHear: z.array(z.string()).optional(),
+    majors: z.array(z.string()).optional(),
+    minors: z.array(z.string()).optional(),
+    name: z.string().optional(),
+    opportunities: z.array(z.string()).optional(),
+    personalLinks: z.array(z.string()).optional(),
+    resume: z.string().optional(),
+    school: z.string().optional(),
+    tags: z.array(z.string()).optional(),
+});
+
 // Zod schema for registration
 const RegistrationValidator = z.object({
-    userId: z.coerce.string(),
-    name: z.string().min(1, "Name is required"),
+    allergies: z.array(z.string()),
+    dietaryRestrictions: z.array(z.string()),
+    educationLevel: z.string(),
     email: z.string().email(),
-    university: z.string(),
-    graduation: z.string().optional(),
-    major: z.string().optional(),
-    dietaryRestrictions: z.string().array(),
-    allergies: z.string().array(),
-    gender: z.string().optional(),
-    ethnicity: z.array(z.string()).optional(),
-    hearAboutRP: z.array(z.string()).optional(),
-    portfolios: z.string().array(),
-    jobInterest: z.array(z.string()).optional(),
-    isInterestedMechMania: z.boolean(),
-    isInterestedPuzzleBang: z.boolean(),
-    hasResume: z.boolean().default(false),
-    hasSubmitted: z.boolean().optional(),
-    degree: z.string(),
+    ethnicity: z.array(z.string()),
+    gender: z.string(),
+    graduationYear: z.string(),
+    howDidYouHear: z.array(z.string()),
+    majors: z.array(z.string()),
+    minors: z.array(z.string()),
+    name: z.string(),
+    opportunities: z.array(z.string()),
+    personalLinks: z.array(z.string()),
+    resume: z.string().optional(),
+    school: z.string(),
+    tags: z.array(z.string()),
 });
 
 // Mongoose schema for registration
@@ -45,15 +63,8 @@ const RegistrationSchema = new mongoose.Schema({
     degree: { type: String },
 });
 
-const RegistrationFilterValidator = z.object({
-    graduations: z.array(z.string()).optional(),
-    majors: z.array(z.string()).optional(),
-    jobInterests: z.array(z.string()).optional(),
-    degrees: z.array(z.string()).optional(),
-});
-
 export {
     RegistrationSchema,
+    RegistrationDraftValidator,
     RegistrationValidator,
-    RegistrationFilterValidator,
 };

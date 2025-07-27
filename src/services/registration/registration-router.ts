@@ -1,104 +1,80 @@
 import { Router } from "express";
 import { StatusCodes } from "http-status-codes";
 import {
-    RegistrationFilterValidator,
+    RegistrationDraftValidator,
     RegistrationValidator,
 } from "./registration-schema";
 import { SupabaseDB } from "../../supabase";
 import RoleChecker from "../../middleware/role-checker";
 import { Role } from "../auth/auth-models";
 import { AttendeeCreateValidator } from "../attendee/attendee-validators";
-import { registrationExists, generateEncryptedId } from "./registration-utils";
 import cors from "cors";
-import Config from "../../config";
-
 import Mustache from "mustache";
 import { sendHTMLEmail } from "../ses/ses-utils";
-
 import templates from "../../templates/templates";
 
 const registrationRouter = Router();
 registrationRouter.use(cors());
 
-// A database upsert operation to save registration mid-progress
-registrationRouter.post("/save", RoleChecker([]), async (req, res) => {
+registrationRouter.post("/draft", RoleChecker([]), async (req, res) => {
     const payload = res.locals.payload;
-    const existingRegistration = await registrationExists(payload.userId);
 
-    if (existingRegistration) {
-        return res.status(StatusCodes.CONFLICT).json({
-            error: "AlreadySubmitted",
+    const validatorResult = RegistrationDraftValidator.safeParse(req.body);
+    if (!validatorResult.success) {
+        return res
+            .status(StatusCodes.BAD_REQUEST)
+            .json({ error: validatorResult.error.format() });
+    }
+
+    const registrationDraft = {
+        ...validatorResult.data,
+        userId: payload.userId,
+    };
+
+    await SupabaseDB.DRAFT_REGISTRATIONS.upsert(
+        registrationDraft
+    ).throwOnError();
+
+    return res.status(StatusCodes.OK).json(registrationDraft);
+});
+
+registrationRouter.get("/draft", RoleChecker([]), async (req, res) => {
+    const { data: draftRegistration } =
+        await SupabaseDB.DRAFT_REGISTRATIONS.select("*")
+            .eq("user_id", res.locals.payload.userId)
+            .maybeSingle();
+
+    if (!draftRegistration) {
+        return res.status(StatusCodes.NOT_FOUND).json({
+            error: "DoesNotExist",
         });
     }
 
-    const registrationData = RegistrationValidator.parse({
-        ...req.body,
-        userId: payload.userId,
-    });
-
-    const dbRegistrationData = {
-        user_id: registrationData.userId,
-        name: registrationData.name,
-        email: registrationData.email,
-        university: registrationData.university,
-        graduation: registrationData.graduation,
-        major: registrationData.major,
-        dietary_restrictions: registrationData.dietaryRestrictions,
-        allergies: registrationData.allergies,
-        gender: registrationData.gender,
-        ethnicity: registrationData.ethnicity,
-        hear_about_rp: registrationData.hearAboutRP,
-        portfolios: registrationData.portfolios,
-        job_interest: registrationData.jobInterest,
-        is_interested_mech_mania: registrationData.isInterestedMechMania,
-        is_interested_puzzle_bang: registrationData.isInterestedPuzzleBang,
-        has_resume: registrationData.hasResume,
-        degree: registrationData.degree,
-        has_submitted: false,
-    };
-
-    await SupabaseDB.REGISTRATIONS.upsert(dbRegistrationData).throwOnError();
-
-    return res.status(StatusCodes.OK).json(registrationData);
+    return res.status(StatusCodes.OK).json(draftRegistration);
 });
 
 registrationRouter.post("/submit", RoleChecker([]), async (req, res) => {
     const payload = res.locals.payload;
-    const existingRegistration = await registrationExists(payload.userId);
 
-    if (existingRegistration) {
-        return res.status(StatusCodes.CONFLICT).json({
-            error: "AlreadySubmitted",
-        });
+    const registrationResult = RegistrationValidator.safeParse(req.body);
+    if (!registrationResult.success) {
+        return res
+            .status(StatusCodes.BAD_REQUEST)
+            .json({ error: registrationResult.error.format() });
     }
 
-    const registrationData = RegistrationValidator.parse({
-        ...req.body,
-        userId: payload.userId,
-    });
+    const registration = { ...registrationResult.data, userId: payload.userId };
 
-    const dbRegistrationData = {
-        user_id: registrationData.userId,
-        name: registrationData.name,
-        email: registrationData.email,
-        university: registrationData.university,
-        graduation: registrationData.graduation,
-        major: registrationData.major,
-        dietary_restrictions: registrationData.dietaryRestrictions,
-        allergies: registrationData.allergies,
-        gender: registrationData.gender,
-        ethnicity: registrationData.ethnicity,
-        hear_about_rp: registrationData.hearAboutRP,
-        portfolios: registrationData.portfolios,
-        job_interest: registrationData.jobInterest,
-        is_interested_mech_mania: registrationData.isInterestedMechMania,
-        is_interested_puzzle_bang: registrationData.isInterestedPuzzleBang,
-        has_resume: registrationData.hasResume,
-        degree: registrationData.degree,
-        has_submitted: true,
-    };
+    const attendeeResult = AttendeeCreateValidator.safeParse(registration);
+    if (!attendeeResult.success) {
+        return res
+            .status(StatusCodes.BAD_REQUEST)
+            .json({ error: attendeeResult.error.format() });
+    }
 
-    await SupabaseDB.REGISTRATIONS.upsert(dbRegistrationData).throwOnError();
+    const attendee = attendeeResult.data;
+
+    await SupabaseDB.REGISTRATIONS.upsert(registration).throwOnError();
 
     const { data: existingRoleRecord } = await SupabaseDB.ROLES.select("roles")
         .eq("user_id", payload.userId)
@@ -117,183 +93,64 @@ registrationRouter.post("/submit", RoleChecker([]), async (req, res) => {
         roles: updatedRoles,
     }).throwOnError();
 
-    const attendeeData = AttendeeCreateValidator.parse(registrationData);
-
-    const dbAttendeeData = {
-        user_id: attendeeData.userId,
-    };
-
-    await SupabaseDB.ATTENDEES.upsert(dbAttendeeData).throwOnError();
-
-    const encryptedId = await generateEncryptedId(payload.userId);
-    const redirect = Config.API_RESUME_UPDATE_ROUTE + `${encryptedId}`;
+    await SupabaseDB.ATTENDEES.upsert(attendee).throwOnError();
 
     const substitution = {
-        magic_link: redirect,
-        name: registrationData.name || "N/A",
-        email: registrationData.email || "N/A",
-        university: registrationData.university || "N/A",
-        major: registrationData.major || "N/A",
-        degree: registrationData.degree || "N/A",
-        graduation: registrationData.graduation || "N/A",
-        dietaryRestrictions:
-            registrationData.dietaryRestrictions.length > 0
-                ? registrationData.dietaryRestrictions
-                : "N/A",
         allergies:
-            registrationData.allergies.length > 0
-                ? registrationData.allergies
+            registration.allergies.length > 0
+                ? registration.allergies.join(", ")
                 : "N/A",
-        gender: registrationData.gender || "N/A",
-        ethnicity: registrationData.ethnicity || "N/A",
-        portfolios:
-            registrationData.portfolios.length > 0
-                ? registrationData.portfolios
+        dietaryRestrictions:
+            registration.dietaryRestrictions.length > 0
+                ? registration.dietaryRestrictions.join(", ")
                 : "N/A",
-        jobInterest:
-            (registrationData?.jobInterest ?? []).length > 0
-                ? registrationData.jobInterest
+        educationLevel: registration.educationLevel,
+        ethnicity:
+            registration.ethnicity.length > 0
+                ? registration.ethnicity.join(", ")
                 : "N/A",
+        gender: registration.gender,
+        graduationYear: registration.graduationYear,
+        majors:
+            registration.majors.length > 0
+                ? registration.majors.join(", ")
+                : "N/A",
+        minors:
+            registration.minors.length > 0
+                ? registration.minors.join(", ")
+                : "N/A",
+        name: registration.name,
+        hasResume: registration.resume !== undefined,
+        school: registration.school,
+        opportunities:
+            registration.opportunities.length > 0
+                ? registration.opportunities.join(", ")
+                : "N/A",
+        personalLinks: registration.personalLinks,
+        tags:
+            registration.tags.length > 0 ? registration.tags.join(", ") : "N/A",
     };
 
     await sendHTMLEmail(
         payload.email,
-        "Reflections Projections 2024 Confirmation!",
+        "Reflections Projections 2025 Confirmation!",
         Mustache.render(templates.REGISTRATION_CONFIRMATION, substitution)
     );
 
-    return res.status(StatusCodes.OK).json(registrationData);
+    return res.status(StatusCodes.OK).json(registration);
 });
 
-// Retrieve registration fields both to repopulate registration info for a user
-registrationRouter.get("/", RoleChecker([]), async (req, res) => {
-    const { data: registration } = await SupabaseDB.REGISTRATIONS.select("*")
-        .eq("user_id", res.locals.payload.userId)
-        .maybeSingle();
-
-    if (!registration) {
-        return res.status(StatusCodes.NOT_FOUND).json({
-            error: "DoesNotExist",
-        });
-    }
-
-    const formattedRegistration = {
-        userId: registration.user_id,
-        name: registration.name,
-        email: registration.email,
-        university: registration.university,
-        graduation: registration.graduation,
-        major: registration.major,
-        dietaryRestrictions: registration.dietary_restrictions,
-        allergies: registration.allergies,
-        gender: registration.gender,
-        ethnicity: registration.ethnicity,
-        hearAboutRP: registration.hear_about_rp,
-        portfolios: registration.portfolios,
-        jobInterest: registration.job_interest,
-        isInterestedMechMania: registration.is_interested_mech_mania,
-        isInterestedPuzzleBang: registration.is_interested_puzzle_bang,
-        hasResume: registration.has_resume,
-        hasSubmitted: registration.has_submitted,
-        degree: registration.degree,
-    };
-
-    return res
-        .status(StatusCodes.OK)
-        .json({ registration: formattedRegistration });
-});
-
-registrationRouter.post(
-    "/filter/pagecount",
+registrationRouter.get(
+    "/all",
     RoleChecker([Role.Enum.ADMIN, Role.Enum.CORPORATE]),
     async (req, res) => {
-        const { graduations, majors, jobInterests, degrees } =
-            RegistrationFilterValidator.parse(req.body);
-
-        let query = SupabaseDB.REGISTRATIONS.select(
-            "user_id, name, major, graduation, degree, job_interest, portfolios"
+        const { data } = await SupabaseDB.REGISTRATIONS.select(
+            "userId, name, majors, minors, school, educationLevel, graduationYear, opportunities, personalLinks"
         )
-            .eq("has_submitted", true)
-            .eq("has_resume", true);
+            .not("resume", "is", null)
+            .throwOnError();
 
-        if (graduations && graduations.length > 0) {
-            query = query.in("graduation", graduations);
-        }
-
-        if (majors && majors.length > 0) {
-            query = query.in("major", majors);
-        }
-
-        if (degrees && degrees.length > 0) {
-            query = query.in("degree", degrees);
-        }
-
-        if (jobInterests && jobInterests.length > 0) {
-            query = query.overlaps("job_interest", jobInterests);
-        }
-
-        const { data: registrants } = await query.throwOnError();
-
-        return res.status(StatusCodes.OK).json({
-            pagecount: Math.floor(
-                (registrants.length + Config.SPONSOR_ENTIRES_PER_PAGE - 1) /
-                    Config.SPONSOR_ENTIRES_PER_PAGE
-            ),
-        });
-    }
-);
-
-registrationRouter.post(
-    "/filter/:PAGE",
-    RoleChecker([Role.Enum.ADMIN, Role.Enum.CORPORATE]),
-    async (req, res) => {
-        const page = parseInt(req.params.PAGE, 10);
-        const { graduations, majors, jobInterests, degrees } =
-            RegistrationFilterValidator.parse(req.body);
-
-        if (!page || page <= 0) {
-            return res.status(StatusCodes.BAD_REQUEST).send("Invalid Page");
-        }
-
-        let query = SupabaseDB.REGISTRATIONS.select(
-            "user_id, name, major, graduation, degree, job_interest, portfolios"
-        )
-            .eq("has_submitted", true)
-            .eq("has_resume", true);
-
-        if (graduations && graduations.length > 0) {
-            query = query.in("graduation", graduations);
-        }
-
-        if (majors && majors.length > 0) {
-            query = query.in("major", majors);
-        }
-
-        if (degrees && degrees.length > 0) {
-            query = query.in("degree", degrees);
-        }
-
-        if (jobInterests && jobInterests.length > 0) {
-            query = query.overlaps("job_interest", jobInterests);
-        }
-
-        const startIndex = Config.SPONSOR_ENTIRES_PER_PAGE * (page - 1);
-        const endIndex = startIndex + Config.SPONSOR_ENTIRES_PER_PAGE - 1;
-        query = query.range(startIndex, endIndex);
-
-        const { data: dbRegistrants } = await query.throwOnError();
-
-        const registrants = dbRegistrants.map((registrant) => ({
-            userId: registrant.user_id,
-            name: registrant.name,
-            major: registrant.major,
-            graduation: registrant.graduation,
-            degree: registrant.degree,
-            jobInterest: registrant.job_interest,
-            portfolios: registrant.portfolios,
-        }));
-
-        return res.status(StatusCodes.OK).json({ registrants, page });
+        return res.status(StatusCodes.OK).json(data);
     }
 );
 

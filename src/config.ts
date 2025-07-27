@@ -101,9 +101,8 @@ export const Config = {
     // QR Scanning
     QR_HASH_ITERATIONS: 10000,
     QR_HASH_SECRET: getEnv("QR_HASH_SECRET"),
-    USERID_ENCRYPTION_KEY: getEnv("USERID_ENCRYPTION_KEY"),
-    API_RESUME_UPDATE_ROUTE: `${API_BASE}/attendee/resume/update/`,
-    WEB_RESUME_REUPLOAD_ROUTE: `${WEB_BASE}/update`,
+    WEB_REGISTER_ROUTE: `${WEB_BASE}/register`,
+    WEB_RESUME_ROUTE: `${WEB_BASE}/resume`,
     OUTGOING_EMAIL_ADDRESSES: z.enum(["no-reply@reflectionsprojections.org"]),
 };
 
