@@ -23,25 +23,10 @@ export const SupabaseDB = {
         return supabase.from("events");
     },
     get EVENT_ATTENDANCE() {
-        return supabase.from("eventAttendance");
+        return supabase.from("eventAttendances");
     },
     get ATTENDEE_ATTENDANCE() {
-        return supabase.from("attendeeAttendance");
-    },
-    get REGISTRATIONS() {
-        return supabase.from("registrations");
-    },
-    get ATTENDEES() {
-        return supabase.from("attendees");
-    },
-    get EVENTS() {
-        return supabase.from("events");
-    },
-    get EVENT_ATTENDANCE() {
-        return supabase.from("event_attendance");
-    },
-    get ATTENDEE_ATTENDANCE() {
-        return supabase.from("attendee_attendance");
+        return supabase.from("attendeeAttendances");
     },
     get REGISTRATIONS() {
         return supabase.from("registrations");

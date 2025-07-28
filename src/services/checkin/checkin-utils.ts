@@ -13,10 +13,10 @@ export function getCurrentDay() {
     return dayString as DayKey;
 }
 
-async function checkEventAndAttendeeExist(event_id: string, user_id: string) {
+async function checkEventAndAttendeeExist(eventId: string, userId: string) {
     const [eventRes, attendeeRes] = await Promise.all([
-        SupabaseDB.EVENTS.select("event_id").eq("event_id", event_id).single(),
-        SupabaseDB.ATTENDEES.select("user_id").eq("user_id", user_id).single(),
+        SupabaseDB.EVENTS.select("eventId").eq("eventId", eventId).single(),
+        SupabaseDB.ATTENDEES.select("userId").eq("userId", userId).single(),
     ]);
 
     if (!eventRes.data || !attendeeRes.data) {
@@ -24,15 +24,15 @@ async function checkEventAndAttendeeExist(event_id: string, user_id: string) {
     }
 }
 
-async function checkForDuplicateAttendance(event_id: string, user_id: string) {
+async function checkForDuplicateAttendance(eventId: string, userId: string) {
     const [isRepeatInEvent, isRepeatInAttendee] = await Promise.all([
         SupabaseDB.EVENT_ATTENDANCE.select()
-            .eq("event_id", event_id)
-            .eq("attendee", user_id)
+            .eq("eventId", eventId)
+            .eq("attendee", userId)
             .maybeSingle(),
         SupabaseDB.ATTENDEE_ATTENDANCE.select()
-            .eq("user_id", user_id)
-            .contains("events_attended", [event_id])
+            .eq("userId", userId)
+            .contains("eventsAttended", [eventId])
             .maybeSingle(),
     ]);
 
@@ -42,93 +42,93 @@ async function checkForDuplicateAttendance(event_id: string, user_id: string) {
 }
 
 // Update attendee priority for the current day
-async function updateAttendeePriority(user_id: string) {
+async function updateAttendeePriority(userId: string) {
     const day = getCurrentDay();
     await SupabaseDB.ATTENDEES.update({
-        [`has_priority_${day}`.toLowerCase()]: true,
+        [`hasPriority${day}`]: true,
     })
-        .eq("user_id", user_id)
+        .eq("userId", userId)
         .throwOnError();
 }
 
-async function updateAttendanceRecords(event_id: string, user_id: string) {
+async function updateAttendanceRecords(eventId: string, userId: string) {
     const { data: attendeeAttendance } =
-        await SupabaseDB.ATTENDEE_ATTENDANCE.select("events_attended")
-            .eq("user_id", user_id)
+        await SupabaseDB.ATTENDEE_ATTENDANCE.select("eventsAttended")
+            .eq("userId", userId)
             .maybeSingle()
             .throwOnError();
 
-    const eventsAttended = attendeeAttendance?.events_attended || [];
+    const eventsAttended = attendeeAttendance?.eventsAttended || [];
 
-    if (!eventsAttended.includes(event_id)) {
-        const newEventsAttended = [...eventsAttended, event_id];
+    if (!eventsAttended.includes(eventId)) {
+        const newEventsAttended = [...eventsAttended, eventId];
         await SupabaseDB.ATTENDEE_ATTENDANCE.upsert({
-            user_id: user_id,
-            events_attended: newEventsAttended,
+            userId: userId,
+            eventsAttended: newEventsAttended,
         }).throwOnError();
     }
 
     await SupabaseDB.EVENT_ATTENDANCE.insert({
-        event_id: event_id,
-        attendee: user_id,
+        eventId: eventId,
+        attendee: userId,
     }).throwOnError();
 
     const { data: eventData } = await SupabaseDB.EVENTS.select(
-        "attendance_count"
+        "attendanceCount"
     )
-        .eq("event_id", event_id)
+        .eq("eventId", eventId)
         .single()
         .throwOnError();
 
-    const currentCount = eventData?.attendance_count || 0;
-    await SupabaseDB.EVENTS.update({ attendance_count: currentCount + 1 })
-        .eq("event_id", event_id)
+    const currentCount = eventData?.attendanceCount || 0;
+    await SupabaseDB.EVENTS.update({ attendanceCount: currentCount + 1 })
+        .eq("eventId", eventId)
         .throwOnError();
 }
 
-async function assignPixelsToUser(user_id: string, pixels: number) {
+async function assignPixelsToUser(userId: string, pixels: number) {
     const { data: attendee } = await SupabaseDB.ATTENDEES.select("points")
-        .eq("user_id", user_id)
+        .eq("userId", userId)
         .single()
         .throwOnError();
 
-    const new_points = (attendee?.points || 0) + pixels;
+    const newPoints = (attendee?.points || 0) + pixels;
 
     const updatedFields = {
-        points: new_points,
-        is_eligible_cap: new_points >= 50,
-        is_eligible_tote: new_points >= 35,
-        is_eligible_button: new_points >= 20,
-        is_eligible_tshirt: new_points >= 0,
+        points: newPoints,
+        isEligibleCap: newPoints >= 50,
+        isEligibleTote: newPoints >= 35,
+        isEligibleButton: newPoints >= 20,
+        isEligibleTshirt: newPoints >= 0,
     };
 
     await SupabaseDB.ATTENDEES.update(updatedFields)
-        .eq("user_id", user_id)
+        .eq("userId", userId)
         .throwOnError();
 }
 
-export async function checkInUserToEvent(event_id: string, user_id: string) {
-    await checkEventAndAttendeeExist(event_id, user_id);
-    await checkForDuplicateAttendance(event_id, user_id);
+export async function checkInUserToEvent(eventId: string, userId: string) {
+    await checkEventAndAttendeeExist(eventId, userId);
+    await checkForDuplicateAttendance(eventId, userId);
 
-    const { data: event } = await SupabaseDB.EVENTS.select("event_type, points")
-        .eq("event_id", event_id)
+    const { data: event } = await SupabaseDB.EVENTS.select("eventType, points")
+        .eq("eventId", eventId)
         .single()
         .throwOnError();
 
     if (
-        event.event_type !== EventType.Enum.MEALS &&
-        event.event_type !== EventType.Enum.CHECKIN
+        event.eventType !== EventType.Enum.MEALS &&
+        event.eventType !== EventType.Enum.CHECKIN
     ) {
-        await updateAttendeePriority(user_id);
+        await updateAttendeePriority(userId);
     }
 
-    await updateAttendanceRecords(event_id, user_id);
-    await assignPixelsToUser(user_id, event.points);
+    await updateAttendanceRecords(eventId, userId);
+    await assignPixelsToUser(userId, event.points);
 }
 
-export function generateQrHash(user_id: string, expTime: number) {
-    let hashStr = user_id + "#" + expTime;
+export function generateQrHash(userId: string, expTime: number) {
+    let hashStr = userId + "#" + expTime;
     const hashIterations = Config.QR_HASH_ITERATIONS;
     const hashSecret = Config.QR_HASH_SECRET;
 
@@ -140,18 +140,18 @@ export function generateQrHash(user_id: string, expTime: number) {
         hashStr = hash.update(hashSecret + "#" + hashStr).digest("hex");
     }
 
-    return `${hashStr}#${expTime}#${user_id}`;
+    return `${hashStr}#${expTime}#${userId}`;
 }
 
 export function validateQrHash(qrCode: string) {
     const parts = qrCode.split("#");
-    const user_id = parts[2];
+    const userId = parts[2];
     const expTime = parseInt(parts[1]);
-    const generatedHash = generateQrHash(user_id, expTime);
+    const generatedHash = generateQrHash(userId, expTime);
 
     if (generatedHash.split("#")[0] !== parts[0]) {
         throw new Error("Invalid QR code");
     }
 
-    return { user_id, expTime };
+    return { userId, expTime };
 }

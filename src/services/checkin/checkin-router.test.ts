@@ -17,84 +17,84 @@ const NOW_SECONDS = Math.floor(Date.now() / 1000);
 const ONE_HOUR_SECONDS = 3600;
 
 const TEST_ATTENDEE_1 = {
-    user_id: "attendee001",
+    userId: "attendee001",
     points: 0,
-    puzzles_completed: [],
+    puzzlesCompleted: [],
 };
 
 const GENERAL_CHECKIN_EVENT = {
-    event_id: uuidv4(),
+    eventId: uuidv4(),
     name: "Main Event Check-In",
-    start_time: new Date(
+    startTime: new Date(
         (NOW_SECONDS - ONE_HOUR_SECONDS * 2) * 1000
     ).toISOString(),
-    end_time: new Date(
+    endTime: new Date(
         (NOW_SECONDS + ONE_HOUR_SECONDS * 8) * 1000
     ).toISOString(),
     points: 100,
     description: "Main event check-in point.",
-    is_virtual: false,
-    image_url: null,
+    isVirtual: false,
+    imageUrl: null,
     location: "Siebel 1st Floor",
-    event_type: EventType.enum.CHECKIN,
-    is_visible: true,
-    attendance_count: 0,
+    eventType: EventType.enum.CHECKIN,
+    isVisible: true,
+    attendanceCount: 0,
 };
 
 const REGULAR_EVENT_FOR_CHECKIN = {
-    event_id: uuidv4(),
+    eventId: uuidv4(),
     name: "Google Deepmind Guest Speaker Event",
-    start_time: new Date((NOW_SECONDS - 600) * 1000).toISOString(),
-    end_time: new Date((NOW_SECONDS + ONE_HOUR_SECONDS) * 1000).toISOString(),
+    startTime: new Date((NOW_SECONDS - 600) * 1000).toISOString(),
+    endTime: new Date((NOW_SECONDS + ONE_HOUR_SECONDS) * 1000).toISOString(),
     points: 50,
     description: "A guest speaker event.",
-    is_virtual: false,
-    image_url: null,
+    isVirtual: false,
+    imageUrl: null,
     location: "Siebel 2405",
-    event_type: EventType.enum.SPEAKER,
-    is_visible: true,
-    attendance_count: 0,
+    eventType: EventType.enum.SPEAKER,
+    isVisible: true,
+    attendanceCount: 0,
 };
 
 const MEALS_EVENT = {
-    event_id: uuidv4(),
+    eventId: uuidv4(),
     name: "Lunch Time",
-    start_time: new Date((NOW_SECONDS - 300) * 1000).toISOString(),
-    end_time: new Date((NOW_SECONDS + ONE_HOUR_SECONDS) * 1000).toISOString(),
+    startTime: new Date((NOW_SECONDS - 300) * 1000).toISOString(),
+    endTime: new Date((NOW_SECONDS + ONE_HOUR_SECONDS) * 1000).toISOString(),
     points: 10,
     description: "Time to eat",
-    is_virtual: false,
-    image_url: null,
+    isVirtual: false,
+    imageUrl: null,
     location: "Siebel Second Floor Atrium",
-    event_type: EventType.enum.MEALS,
-    is_visible: true,
-    attendance_count: 0,
+    eventType: EventType.enum.MEALS,
+    isVisible: true,
+    attendanceCount: 0,
 };
 
 let VALID_QR_CODE_TEST_ATTENDEE_1: string;
 let EXPIRED_QR_CODE_TEST_ATTENDEE_1: string;
 const INVALID_SIGNATURE_QR_CODE = "tamperedHash#1234567890#attendee001";
 const MALFORMED_QR_CODE = "just_one_part";
-const NON_EXISTENT_EVENT_ID = "eventDoesNotExist404";
+const NON_EXISTENT_eventId = "eventDoesNotExist404";
 const NON_EXISTENT_ATTENDEE_ID = "attendeeDoesNotExist404";
 
 type InsertTestAttendeeOverrides = {
-    user_id?: string;
+    userId?: string;
     email?: string;
     points?: number;
-    puzzles_completed?: string[];
+    puzzlesCompleted?: string[];
     [key: string]: unknown;
 };
 
 async function insertTestAttendee(overrides: InsertTestAttendeeOverrides = {}) {
-    const userId = overrides.user_id || "attendee001";
+    const userId = overrides.userId || "attendee001";
     const email = overrides.email || "attendee001@test.com";
 
-    await SupabaseDB.ROLES.delete().eq("user_id", userId);
+    await SupabaseDB.ROLES.delete().eq("userId", userId);
     await SupabaseDB.ROLES.insert([
         {
-            user_id: userId,
-            display_name: "Attendee 001",
+            userId: userId,
+            displayName: "Attendee 001",
             email,
             roles: [Role.enum.USER],
         },
@@ -102,15 +102,15 @@ async function insertTestAttendee(overrides: InsertTestAttendeeOverrides = {}) {
 
     await SupabaseDB.REGISTRATIONS.insert([
         {
-            user_id: userId,
+            userId: userId,
             name: "Attendee 001",
             email,
             degree: "Bachelors",
             university: "UIUC",
-            is_interested_mech_mania: false,
-            is_interested_puzzle_bang: true,
+            isInterestedMechMania: false,
+            isInterestedPuzzleBang: true,
             allergies: [],
-            dietary_restrictions: [],
+            dietaryRestrictions: [],
             ethnicity: null,
             gender: null,
         },
@@ -118,25 +118,25 @@ async function insertTestAttendee(overrides: InsertTestAttendeeOverrides = {}) {
 
     await SupabaseDB.ATTENDEES.insert([
         {
-            user_id: userId,
+            userId: userId,
             points: 0,
-            puzzles_completed: [],
-            has_priority_fri: false,
-            has_priority_mon: false,
-            has_priority_sat: false,
-            has_priority_sun: false,
-            has_priority_thu: false,
-            has_priority_tue: false,
-            has_priority_wed: false,
-            has_redeemed_button: false,
-            has_redeemed_cap: false,
-            has_redeemed_tote: false,
-            has_redeemed_tshirt: false,
-            is_eligible_button: false,
-            is_eligible_cap: false,
-            is_eligible_tote: false,
-            is_eligible_tshirt: false,
-            favorite_events: [],
+            puzzlesCompleted: [],
+            hasPriorityFri: false,
+            hasPriorityMon: false,
+            hasPrioritySat: false,
+            hasPrioritySun: false,
+            hasPriorityThu: false,
+            hasPriorityTue: false,
+            hasPriorityWed: false,
+            hasRedeemedButton: false,
+            hasRedeemedCap: false,
+            hasRedeemedTote: false,
+            hasRedeemedTshirt: false,
+            isEligibleButton: false,
+            isEligibleCap: false,
+            isEligibleTote: false,
+            isEligibleTshirt: false,
+            favoriteEvents: [],
             ...overrides,
         },
     ]);
@@ -144,21 +144,21 @@ async function insertTestAttendee(overrides: InsertTestAttendeeOverrides = {}) {
 
 beforeAll(async () => {
     await SupabaseDB.EVENT_ATTENDANCE.delete().neq("attendee", "");
-    await SupabaseDB.ATTENDEE_ATTENDANCE.delete().neq("user_id", "");
-    await SupabaseDB.EVENTS.delete().neq("event_id", "");
-    await SupabaseDB.ATTENDEES.delete().neq("user_id", "");
-    await SupabaseDB.REGISTRATIONS.delete().neq("user_id", "");
-    await SupabaseDB.ROLES.delete().neq("user_id", "");
+    await SupabaseDB.ATTENDEE_ATTENDANCE.delete().neq("userId", "");
+    await SupabaseDB.EVENTS.delete().neq("eventId", "");
+    await SupabaseDB.ATTENDEES.delete().neq("userId", "");
+    await SupabaseDB.REGISTRATIONS.delete().neq("userId", "");
+    await SupabaseDB.ROLES.delete().neq("userId", "");
     await insertTestAttendee();
     const validExpTime = NOW_SECONDS + ONE_HOUR_SECONDS;
     const expiredExpTime = NOW_SECONDS - ONE_HOUR_SECONDS;
 
     VALID_QR_CODE_TEST_ATTENDEE_1 = generateQrHash(
-        TEST_ATTENDEE_1.user_id,
+        TEST_ATTENDEE_1.userId,
         validExpTime
     );
     EXPIRED_QR_CODE_TEST_ATTENDEE_1 = generateQrHash(
-        TEST_ATTENDEE_1.user_id,
+        TEST_ATTENDEE_1.userId,
         expiredExpTime
     );
     await SupabaseDB.EVENTS.insert([
@@ -175,36 +175,36 @@ describe("POST /checkin/scan/staff", () => {
     beforeEach(async () => {
         // Clean only the dynamic tables
         await SupabaseDB.EVENT_ATTENDANCE.delete().neq("attendee", "");
-        await SupabaseDB.ATTENDEE_ATTENDANCE.delete().neq("user_id", "");
+        await SupabaseDB.ATTENDEE_ATTENDANCE.delete().neq("userId", "");
 
-        // Reset events attendance_count back to 0
+        // Reset events attendanceCount back to 0
         for (const event of [
             REGULAR_EVENT_FOR_CHECKIN,
             GENERAL_CHECKIN_EVENT,
             MEALS_EVENT,
         ]) {
-            await SupabaseDB.EVENTS.update({ attendance_count: 0 }).eq(
-                "event_id",
-                event.event_id
+            await SupabaseDB.EVENTS.update({ attendanceCount: 0 }).eq(
+                "eventId",
+                event.eventId
             );
         }
 
         // Reset attendee fields
         await SupabaseDB.ATTENDEES.update({
             points: 0,
-            has_priority_mon: false,
-            has_priority_tue: false,
-            has_priority_wed: false,
-            has_priority_thu: false,
-            has_priority_fri: false,
-            has_priority_sat: false,
-            has_priority_sun: false,
-        }).eq("user_id", TEST_ATTENDEE_1.user_id);
+            hasPriorityMon: false,
+            hasPriorityTue: false,
+            hasPriorityWed: false,
+            hasPriorityThu: false,
+            hasPriorityFri: false,
+            hasPrioritySat: false,
+            hasPrioritySun: false,
+        }).eq("userId", TEST_ATTENDEE_1.userId);
     });
 
     beforeEach(() => {
         payload = {
-            event_id: REGULAR_EVENT_FOR_CHECKIN.event_id,
+            eventId: REGULAR_EVENT_FOR_CHECKIN.eventId,
             qrCode: VALID_QR_CODE_TEST_ATTENDEE_1,
         };
 
@@ -219,21 +219,21 @@ describe("POST /checkin/scan/staff", () => {
 
     it.each([
         {
-            description: "missing event_id",
+            description: "missing eventId",
             payload: { qrCode: VALID_QR_CODE_TEST_ATTENDEE_1 },
         },
         {
             description: "missing qrCode",
-            payload: { event_id: REGULAR_EVENT_FOR_CHECKIN.event_id },
+            payload: { eventId: REGULAR_EVENT_FOR_CHECKIN.eventId },
         },
         {
-            description: "event_id is not a string",
-            payload: { event_id: 123, qrCode: VALID_QR_CODE_TEST_ATTENDEE_1 },
+            description: "eventId is not a string",
+            payload: { eventId: 123, qrCode: VALID_QR_CODE_TEST_ATTENDEE_1 },
         },
         {
             description: "qrCode is not a string",
             payload: {
-                event_id: REGULAR_EVENT_FOR_CHECKIN.event_id,
+                eventId: REGULAR_EVENT_FOR_CHECKIN.eventId,
                 qrCode: true,
             },
         },
@@ -269,17 +269,17 @@ describe("POST /checkin/scan/staff", () => {
             .expect(StatusCodes.INTERNAL_SERVER_ERROR);
     });
 
-    it("should return INTERNAL_SERVER_ERROR if event_id does not exist", async () => {
-        payload.event_id = "nonExistentEvent123";
+    it("should return INTERNAL_SERVER_ERROR if eventId does not exist", async () => {
+        payload.eventId = "nonExistentEvent123";
         await postAsAdmin("/checkin/scan/staff")
             .send(payload)
             .expect(StatusCodes.INTERNAL_SERVER_ERROR);
     });
 
-    it("should return INTERNAL_SERVER_ERROR if user_id from QR code does not exist in Attendee collection", async () => {
-        const nonExistentuser_id = "userNotInDB123";
+    it("should return INTERNAL_SERVER_ERROR if userId from QR code does not exist in Attendee collection", async () => {
+        const nonExistentuserId = "userNotInDB123";
         payload.qrCode = generateQrHash(
-            nonExistentuser_id,
+            nonExistentuserId,
             NOW_SECONDS + ONE_HOUR_SECONDS
         );
 
@@ -301,71 +301,71 @@ describe("POST /checkin/scan/staff", () => {
     });
 
     it("should successfully check-in user to a REGULAR event and update records", async () => {
-        payload.event_id = REGULAR_EVENT_FOR_CHECKIN.event_id;
+        payload.eventId = REGULAR_EVENT_FOR_CHECKIN.eventId;
         payload.qrCode = VALID_QR_CODE_TEST_ATTENDEE_1;
         const { data, error } = await SupabaseDB.EVENTS.select()
-            .eq("event_id", payload.event_id)
+            .eq("eventId", payload.eventId)
             .single();
         console.log("Event before check-in:", data, error);
         const response = await postAsAdmin("/checkin/scan/staff")
             .send(payload)
             .expect(StatusCodes.OK);
-        expect(response.body).toBe(TEST_ATTENDEE_1.user_id);
+        expect(response.body).toBe(TEST_ATTENDEE_1.userId);
 
         const { data: eventAttn, error: eventAttnError } =
             await SupabaseDB.EVENT_ATTENDANCE.select()
-                .eq("event_id", payload.event_id)
-                .eq("attendee", TEST_ATTENDEE_1.user_id)
+                .eq("eventId", payload.eventId)
+                .eq("attendee", TEST_ATTENDEE_1.userId)
                 .single();
         expect(eventAttnError).toBeNull();
         expect(eventAttn).not.toBeNull();
 
         const { data: attendeeAttn, error: attendeeAttnError } =
             await SupabaseDB.ATTENDEE_ATTENDANCE.select(
-                "user_id, events_attended"
+                "userId, eventsAttended"
             )
-                .eq("user_id", TEST_ATTENDEE_1.user_id)
+                .eq("userId", TEST_ATTENDEE_1.userId)
                 .single();
         expect(attendeeAttnError).toBeNull();
         expect(attendeeAttn).not.toBeNull();
         if (attendeeAttn) {
-            expect(attendeeAttn.events_attended).toContain(payload.event_id);
+            expect(attendeeAttn.eventsAttended).toContain(payload.eventId);
         }
 
         const { data: updatedEventData, error: eventError } =
-            await SupabaseDB.EVENTS.select("attendance_count")
-                .eq("event_id", payload.event_id)
+            await SupabaseDB.EVENTS.select("attendanceCount")
+                .eq("eventId", payload.eventId)
                 .single();
         expect(eventError).toBeNull();
-        expect(updatedEventData?.attendance_count).toBe(
-            REGULAR_EVENT_FOR_CHECKIN.attendance_count + 1
+        expect(updatedEventData?.attendanceCount).toBe(
+            REGULAR_EVENT_FOR_CHECKIN.attendanceCount + 1
         );
 
         const { data: updatedAttendee, error: attendeeError } =
             await SupabaseDB.ATTENDEES.select()
-                .eq("user_id", TEST_ATTENDEE_1.user_id)
+                .eq("userId", TEST_ATTENDEE_1.userId)
                 .single();
         expect(attendeeError).toBeNull();
         expect(updatedAttendee).toMatchObject({
             points: TEST_ATTENDEE_1.points + REGULAR_EVENT_FOR_CHECKIN.points,
-            [`has_priority_${currentDay}`.toLowerCase()]: true,
+            [`hasPriority${currentDay}`]: true,
         });
     }, 100000);
 
     it("should successfully check-in user to a CHECKIN type event and update records", async () => {
-        payload.event_id = GENERAL_CHECKIN_EVENT.event_id;
+        payload.eventId = GENERAL_CHECKIN_EVENT.eventId;
         payload.qrCode = VALID_QR_CODE_TEST_ATTENDEE_1;
 
         const response = await postAsAdmin("/checkin/scan/staff")
             .send(payload)
             .expect(StatusCodes.OK);
-        expect(response.body).toBe(TEST_ATTENDEE_1.user_id);
+        expect(response.body).toBe(TEST_ATTENDEE_1.userId);
 
         // Verify a record was created in the 'event_attendance' junction table
         const { data: eventAttn, error: eventAttnError } =
             await SupabaseDB.EVENT_ATTENDANCE.select()
-                .eq("event_id", payload.event_id)
-                .eq("attendee", TEST_ATTENDEE_1.user_id)
+                .eq("eventId", payload.eventId)
+                .eq("attendee", TEST_ATTENDEE_1.userId)
                 .single();
         expect(eventAttnError).toBeNull();
         expect(eventAttn).not.toBeNull();
@@ -373,52 +373,52 @@ describe("POST /checkin/scan/staff", () => {
         // Verify a record was created in the 'attendee_attendance' junction table
         const { data: attendeeAttn, error: attendeeAttnError } =
             await SupabaseDB.ATTENDEE_ATTENDANCE.select(
-                "user_id, events_attended"
+                "userId, eventsAttended"
             )
-                .eq("user_id", TEST_ATTENDEE_1.user_id)
+                .eq("userId", TEST_ATTENDEE_1.userId)
                 .single();
         expect(attendeeAttnError).toBeNull();
         expect(attendeeAttn).not.toBeNull();
         if (attendeeAttn) {
-            expect(attendeeAttn.events_attended).toContain(payload.event_id);
+            expect(attendeeAttn.eventsAttended).toContain(payload.eventId);
         }
 
         // Verify the event's attendance count was incremented
         const { data: updatedEvent, error: eventError } =
-            await SupabaseDB.EVENTS.select("attendance_count")
-                .eq("event_id", payload.event_id)
+            await SupabaseDB.EVENTS.select("attendanceCount")
+                .eq("eventId", payload.eventId)
                 .single();
         expect(eventError).toBeNull();
-        expect(updatedEvent?.attendance_count).toBe(
-            GENERAL_CHECKIN_EVENT.attendance_count + 1
+        expect(updatedEvent?.attendanceCount).toBe(
+            GENERAL_CHECKIN_EVENT.attendanceCount + 1
         );
 
         // Verify the attendee was updated correctly for a CHECKIN event
         const { data: updatedAttendee, error: attendeeError } =
             await SupabaseDB.ATTENDEES.select()
-                .eq("user_id", TEST_ATTENDEE_1.user_id)
+                .eq("userId", TEST_ATTENDEE_1.userId)
                 .single();
         expect(attendeeError).toBeNull();
         expect(updatedAttendee).toMatchObject({
             points: TEST_ATTENDEE_1.points + GENERAL_CHECKIN_EVENT.points,
-            [`has_priority_${currentDay}`.toLowerCase()]: false,
+            [`hasPriority${currentDay}`]: false,
         });
     });
 
     it("should successfully check-in user to a MEALS type event and update records", async () => {
-        payload.event_id = MEALS_EVENT.event_id;
+        payload.eventId = MEALS_EVENT.eventId;
         payload.qrCode = VALID_QR_CODE_TEST_ATTENDEE_1;
 
         const response = await postAsAdmin("/checkin/scan/staff")
             .send(payload)
             .expect(StatusCodes.OK);
-        expect(response.body).toBe(TEST_ATTENDEE_1.user_id);
+        expect(response.body).toBe(TEST_ATTENDEE_1.userId);
 
         // Verify a record was created in the 'event_attendance' junction table
         const { data: eventAttn, error: eventAttnError } =
             await SupabaseDB.EVENT_ATTENDANCE.select()
-                .eq("event_id", payload.event_id)
-                .eq("attendee", TEST_ATTENDEE_1.user_id)
+                .eq("eventId", payload.eventId)
+                .eq("attendee", TEST_ATTENDEE_1.userId)
                 .single();
         expect(eventAttnError).toBeNull();
         expect(eventAttn).not.toBeNull();
@@ -426,34 +426,34 @@ describe("POST /checkin/scan/staff", () => {
         // Verify a record was created in the 'attendee_attendance' junction table
         const { data: attendeeAttn, error: attendeeAttnError } =
             await SupabaseDB.ATTENDEE_ATTENDANCE.select(
-                "user_id, events_attended"
+                "userId, eventsAttended"
             )
-                .eq("user_id", TEST_ATTENDEE_1.user_id)
+                .eq("userId", TEST_ATTENDEE_1.userId)
                 .single();
         expect(attendeeAttnError).toBeNull();
         expect(attendeeAttn).not.toBeNull();
         if (attendeeAttn) {
-            expect(attendeeAttn.events_attended).toContain(payload.event_id);
+            expect(attendeeAttn.eventsAttended).toContain(payload.eventId);
         }
         // Verify the event's attendance count was incremented
         const { data: updatedEvent, error: eventError } =
-            await SupabaseDB.EVENTS.select("attendance_count")
-                .eq("event_id", payload.event_id)
+            await SupabaseDB.EVENTS.select("attendanceCount")
+                .eq("eventId", payload.eventId)
                 .single();
         expect(eventError).toBeNull();
-        expect(updatedEvent?.attendance_count).toBe(
-            MEALS_EVENT.attendance_count + 1
+        expect(updatedEvent?.attendanceCount).toBe(
+            MEALS_EVENT.attendanceCount + 1
         );
 
         // Verify the attendee was updated correctly for a MEALS event
         const { data: updatedAttendee, error: attendeeError } =
             await SupabaseDB.ATTENDEES.select()
-                .eq("user_id", TEST_ATTENDEE_1.user_id)
+                .eq("userId", TEST_ATTENDEE_1.userId)
                 .single();
         expect(attendeeError).toBeNull();
         expect(updatedAttendee).toMatchObject({
             points: TEST_ATTENDEE_1.points + MEALS_EVENT.points,
-            [`has_priority_${currentDay}`.toLowerCase()]: false,
+            [`hasPriority${currentDay}`]: false,
         });
     });
 });
@@ -464,8 +464,8 @@ describe("POST /checkin/event", () => {
 
     beforeEach(async () => {
         payload = {
-            event_id: REGULAR_EVENT_FOR_CHECKIN.event_id,
-            user_id: TEST_ATTENDEE_1.user_id,
+            eventId: REGULAR_EVENT_FOR_CHECKIN.eventId,
+            userId: TEST_ATTENDEE_1.userId,
         };
         currentDay = getCurrentDay();
     });
@@ -473,7 +473,7 @@ describe("POST /checkin/event", () => {
     beforeEach(async () => {
         // Clear junction tables
         await SupabaseDB.EVENT_ATTENDANCE.delete().neq("attendee", "");
-        await SupabaseDB.ATTENDEE_ATTENDANCE.delete().neq("user_id", "");
+        await SupabaseDB.ATTENDEE_ATTENDANCE.delete().neq("userId", "");
 
         // Reset attendance count on all static events
         for (const event of [
@@ -481,23 +481,23 @@ describe("POST /checkin/event", () => {
             GENERAL_CHECKIN_EVENT,
             MEALS_EVENT,
         ]) {
-            await SupabaseDB.EVENTS.update({ attendance_count: 0 }).eq(
-                "event_id",
-                event.event_id
+            await SupabaseDB.EVENTS.update({ attendanceCount: 0 }).eq(
+                "eventId",
+                event.eventId
             );
         }
 
         // Reset static test attendee
         await SupabaseDB.ATTENDEES.update({
             points: 0,
-            has_priority_mon: false,
-            has_priority_tue: false,
-            has_priority_wed: false,
-            has_priority_thu: false,
-            has_priority_fri: false,
-            has_priority_sat: false,
-            has_priority_sun: false,
-        }).eq("user_id", TEST_ATTENDEE_1.user_id);
+            hasPriorityMon: false,
+            hasPriorityTue: false,
+            hasPriorityWed: false,
+            hasPriorityThu: false,
+            hasPriorityFri: false,
+            hasPrioritySat: false,
+            hasPrioritySun: false,
+        }).eq("userId", TEST_ATTENDEE_1.userId);
     });
 
     it("should return UNAUTHORIZED for an unauthenticated user", async () => {
@@ -508,33 +508,33 @@ describe("POST /checkin/event", () => {
 
     it.each([
         {
-            description: "missing event_id",
-            payload: { user_id: TEST_ATTENDEE_1.user_id },
+            description: "missing eventId",
+            payload: { userId: TEST_ATTENDEE_1.userId },
         },
         {
-            description: "missing user_id",
-            payload: { event_id: REGULAR_EVENT_FOR_CHECKIN.event_id },
+            description: "missing userId",
+            payload: { eventId: REGULAR_EVENT_FOR_CHECKIN.eventId },
         },
         {
-            description: "event_id is not a string",
-            payload: { event_id: 12345, user_id: TEST_ATTENDEE_1.user_id },
+            description: "eventId is not a string",
+            payload: { eventId: 12345, userId: TEST_ATTENDEE_1.userId },
         },
         {
-            description: "user_id is not a string",
+            description: "userId is not a string",
             payload: {
-                event_id: REGULAR_EVENT_FOR_CHECKIN.event_id,
-                user_id: true,
+                eventId: REGULAR_EVENT_FOR_CHECKIN.eventId,
+                userId: true,
             },
         },
         {
-            description: "event_id is an empty string",
-            payload: { event_id: "", user_id: TEST_ATTENDEE_1.user_id },
+            description: "eventId is an empty string",
+            payload: { eventId: "", userId: TEST_ATTENDEE_1.userId },
         },
         {
-            description: "user_id is an empty string",
+            description: "userId is an empty string",
             payload: {
-                event_id: REGULAR_EVENT_FOR_CHECKIN.event_id,
-                user_id: "",
+                eventId: REGULAR_EVENT_FOR_CHECKIN.eventId,
+                userId: "",
             },
         },
     ])(
@@ -547,151 +547,151 @@ describe("POST /checkin/event", () => {
     );
 
     it("should successfully check-in to a regular event and update all records", async () => {
-        payload.event_id = REGULAR_EVENT_FOR_CHECKIN.event_id;
-        payload.user_id = TEST_ATTENDEE_1.user_id;
+        payload.eventId = REGULAR_EVENT_FOR_CHECKIN.eventId;
+        payload.userId = TEST_ATTENDEE_1.userId;
 
         const response = await postAsAdmin("/checkin/event")
             .send(payload)
             .expect(StatusCodes.OK);
-        expect(response.body).toBe(TEST_ATTENDEE_1.user_id);
+        expect(response.body).toBe(TEST_ATTENDEE_1.userId);
 
         const { data: eventAttn } = await SupabaseDB.EVENT_ATTENDANCE.select()
-            .eq("event_id", payload.event_id)
-            .eq("attendee", payload.user_id)
+            .eq("eventId", payload.eventId)
+            .eq("attendee", payload.userId)
             .single();
         expect(eventAttn).not.toBeNull();
 
         const { data: attendeeAttn, error: attendeeAttnError } =
             await SupabaseDB.ATTENDEE_ATTENDANCE.select(
-                "user_id, events_attended"
+                "userId, eventsAttended"
             )
-                .eq("user_id", TEST_ATTENDEE_1.user_id)
+                .eq("userId", TEST_ATTENDEE_1.userId)
                 .single();
         expect(attendeeAttnError).toBeNull();
         expect(attendeeAttn).not.toBeNull();
         if (attendeeAttn) {
-            expect(attendeeAttn.events_attended).toContain(payload.event_id);
+            expect(attendeeAttn.eventsAttended).toContain(payload.eventId);
         }
 
         // Verify event counter was incremented
         const { data: updatedEvent } = await SupabaseDB.EVENTS.select(
-            "attendance_count"
+            "attendanceCount"
         )
-            .eq("event_id", payload.event_id)
+            .eq("eventId", payload.eventId)
             .single();
-        expect(updatedEvent?.attendance_count).toBe(
-            REGULAR_EVENT_FOR_CHECKIN.attendance_count + 1
+        expect(updatedEvent?.attendanceCount).toBe(
+            REGULAR_EVENT_FOR_CHECKIN.attendanceCount + 1
         );
 
         // Verify attendee was updated for a regular event
         const { data: updatedAttendee } = await SupabaseDB.ATTENDEES.select()
-            .eq("user_id", payload.user_id)
+            .eq("userId", payload.userId)
             .single();
         expect(updatedAttendee).toMatchObject({
             points: TEST_ATTENDEE_1.points + REGULAR_EVENT_FOR_CHECKIN.points,
-            [`has_priority_${currentDay}`.toLowerCase()]: true,
+            [`hasPriority${currentDay}`]: true,
         });
     });
 
     it("should successfully check-in to a check in event and update records", async () => {
-        payload.event_id = GENERAL_CHECKIN_EVENT.event_id;
+        payload.eventId = GENERAL_CHECKIN_EVENT.eventId;
 
         const response = await postAsAdmin("/checkin/event")
             .send(payload)
             .expect(StatusCodes.OK);
-        expect(response.body).toBe(TEST_ATTENDEE_1.user_id);
+        expect(response.body).toBe(TEST_ATTENDEE_1.userId);
 
         const { data: eventAttn } = await SupabaseDB.EVENT_ATTENDANCE.select()
-            .eq("event_id", payload.event_id)
-            .eq("attendee", payload.user_id)
+            .eq("eventId", payload.eventId)
+            .eq("attendee", payload.userId)
             .single();
         expect(eventAttn).not.toBeNull();
 
         const { data: attendeeAttn, error: attendeeAttnError } =
             await SupabaseDB.ATTENDEE_ATTENDANCE.select(
-                "user_id, events_attended"
+                "userId, eventsAttended"
             )
-                .eq("user_id", TEST_ATTENDEE_1.user_id)
+                .eq("userId", TEST_ATTENDEE_1.userId)
                 .single();
         expect(attendeeAttnError).toBeNull();
         expect(attendeeAttn).not.toBeNull();
         if (attendeeAttn) {
-            expect(attendeeAttn.events_attended).toContain(payload.event_id);
+            expect(attendeeAttn.eventsAttended).toContain(payload.eventId);
         }
 
         // Verify event counter
         const { data: updatedEvent } = await SupabaseDB.EVENTS.select(
-            "attendance_count"
+            "attendanceCount"
         )
-            .eq("event_id", payload.event_id)
+            .eq("eventId", payload.eventId)
             .single();
-        expect(updatedEvent?.attendance_count).toBe(
-            GENERAL_CHECKIN_EVENT.attendance_count + 1
+        expect(updatedEvent?.attendanceCount).toBe(
+            GENERAL_CHECKIN_EVENT.attendanceCount + 1
         );
 
         // Verify attendee was updated for a CHECKIN event
         const { data: updatedAttendee } = await SupabaseDB.ATTENDEES.select()
-            .eq("user_id", payload.user_id)
+            .eq("userId", payload.userId)
             .single();
         expect(updatedAttendee).toMatchObject({
             points: TEST_ATTENDEE_1.points + GENERAL_CHECKIN_EVENT.points,
-            [`has_priority_${currentDay}`.toLowerCase()]: false,
+            [`hasPriority${currentDay}`]: false,
         });
     });
 
     it("should successfully check-in to a meals event and update records", async () => {
-        payload.event_id = MEALS_EVENT.event_id;
+        payload.eventId = MEALS_EVENT.eventId;
 
         const response = await postAsAdmin("/checkin/event")
             .send(payload)
             .expect(StatusCodes.OK);
-        expect(response.body).toBe(TEST_ATTENDEE_1.user_id);
+        expect(response.body).toBe(TEST_ATTENDEE_1.userId);
 
         const { data: eventAttn } = await SupabaseDB.EVENT_ATTENDANCE.select()
-            .eq("event_id", payload.event_id)
-            .eq("attendee", payload.user_id)
+            .eq("eventId", payload.eventId)
+            .eq("attendee", payload.userId)
             .single();
         expect(eventAttn).not.toBeNull();
 
         const { data: attendeeAttn, error: attendeeAttnError } =
             await SupabaseDB.ATTENDEE_ATTENDANCE.select(
-                "user_id, events_attended"
+                "userId, eventsAttended"
             )
-                .eq("user_id", TEST_ATTENDEE_1.user_id)
+                .eq("userId", TEST_ATTENDEE_1.userId)
                 .single();
         expect(attendeeAttnError).toBeNull();
         expect(attendeeAttn).not.toBeNull();
         if (attendeeAttn) {
-            expect(attendeeAttn.events_attended).toContain(payload.event_id);
+            expect(attendeeAttn.eventsAttended).toContain(payload.eventId);
         }
         // Verify event counter
         const { data: updatedEvent } = await SupabaseDB.EVENTS.select(
-            "attendance_count"
+            "attendanceCount"
         )
-            .eq("event_id", payload.event_id)
+            .eq("eventId", payload.eventId)
             .single();
-        expect(updatedEvent?.attendance_count).toBe(
-            MEALS_EVENT.attendance_count + 1
+        expect(updatedEvent?.attendanceCount).toBe(
+            MEALS_EVENT.attendanceCount + 1
         );
 
         // Verify attendee was updated for a MEALS event
         const { data: updatedAttendee } = await SupabaseDB.ATTENDEES.select()
-            .eq("user_id", payload.user_id)
+            .eq("userId", payload.userId)
             .single();
         expect(updatedAttendee).toMatchObject({
             points: TEST_ATTENDEE_1.points + MEALS_EVENT.points,
-            [`has_priority_${currentDay}`.toLowerCase()]: false,
+            [`hasPriority${currentDay}`]: false,
         });
     });
 
     it("should correctly add points when $role checks in attendee who already has points", async () => {
         const preExistingPoints = 25;
         await SupabaseDB.ATTENDEES.update({ points: preExistingPoints }).eq(
-            "user_id",
-            TEST_ATTENDEE_1.user_id
+            "userId",
+            TEST_ATTENDEE_1.userId
         );
 
-        payload.event_id = REGULAR_EVENT_FOR_CHECKIN.event_id;
+        payload.eventId = REGULAR_EVENT_FOR_CHECKIN.eventId;
 
         await postAsAdmin("/checkin/event")
             .send(payload)
@@ -700,7 +700,7 @@ describe("POST /checkin/event", () => {
         const { data: updatedAttendee } = await SupabaseDB.ATTENDEES.select(
             "points"
         )
-            .eq("user_id", TEST_ATTENDEE_1.user_id)
+            .eq("userId", TEST_ATTENDEE_1.userId)
             .single();
         expect(updatedAttendee?.points).toBe(
             preExistingPoints + REGULAR_EVENT_FOR_CHECKIN.points
@@ -718,44 +718,44 @@ describe("POST /checkin/event", () => {
         expect(response.body).toEqual({ error: "IsDuplicate" });
     });
 
-    it("should return INTERNAL_SERVER_ERROR if event_id does not exist", async () => {
-        payload.event_id = NON_EXISTENT_EVENT_ID;
+    it("should return INTERNAL_SERVER_ERROR if eventId does not exist", async () => {
+        payload.eventId = NON_EXISTENT_eventId;
         await postAsAdmin("/checkin/event")
             .send(payload)
             .expect(StatusCodes.INTERNAL_SERVER_ERROR);
     });
 
-    it("should return INTERNAL_SERVER_ERROR if user_id does not exist", async () => {
-        payload.user_id = NON_EXISTENT_ATTENDEE_ID;
+    it("should return INTERNAL_SERVER_ERROR if userId does not exist", async () => {
+        payload.userId = NON_EXISTENT_ATTENDEE_ID;
         await postAsAdmin("/checkin/event")
             .send(payload)
             .expect(StatusCodes.INTERNAL_SERVER_ERROR);
     });
 
     it("should not make partial updates if check-in fails due to non-existent event", async () => {
-        payload.event_id = "eventDoesNotExist404";
+        payload.eventId = "eventDoesNotExist404";
 
         const { data: attendeeBefore } = await SupabaseDB.ATTENDEES.select()
-            .eq("user_id", TEST_ATTENDEE_1.user_id)
+            .eq("userId", TEST_ATTENDEE_1.userId)
             .single();
         const { count: attendanceCountBefore } =
             await SupabaseDB.EVENT_ATTENDANCE.select("*", {
                 count: "exact",
                 head: true,
-            }).eq("attendee", TEST_ATTENDEE_1.user_id);
+            }).eq("attendee", TEST_ATTENDEE_1.userId);
 
         await postAsAdmin("/checkin/event")
             .send(payload)
             .expect(StatusCodes.INTERNAL_SERVER_ERROR);
 
         const { data: attendeeAfter } = await SupabaseDB.ATTENDEES.select()
-            .eq("user_id", TEST_ATTENDEE_1.user_id)
+            .eq("userId", TEST_ATTENDEE_1.userId)
             .single();
         const { count: attendanceCountAfter } =
             await SupabaseDB.EVENT_ATTENDANCE.select("*", {
                 count: "exact",
                 head: true,
-            }).eq("attendee", TEST_ATTENDEE_1.user_id);
+            }).eq("attendee", TEST_ATTENDEE_1.userId);
 
         expect(attendeeAfter).toEqual(attendeeBefore);
         expect(attendanceCountAfter).toBe(attendanceCountBefore);
@@ -817,15 +817,15 @@ describe("POST /checkin/scan/merch", () => {
             .expect(StatusCodes.INTERNAL_SERVER_ERROR);
     });
 
-    it("should successfully validate a valid QR code and return user_id", async () => {
+    it("should successfully validate a valid QR code and return userId", async () => {
         payload.qrCode = VALID_QR_CODE_TEST_ATTENDEE_1;
         const response = await postAsAdmin("/checkin/scan/merch")
             .send(payload)
             .expect(StatusCodes.OK);
-        expect(response.body).toBe(TEST_ATTENDEE_1.user_id);
+        expect(response.body).toBe(TEST_ATTENDEE_1.userId);
     });
 
-    it("should successfully validate a valid QR code for a user not in the Attendee collection and return their user_id", async () => {
+    it("should successfully validate a valid QR code for a user not in the Attendee collection and return their userId", async () => {
         payload.qrCode = QR_CODE_NON_EXISTENT_USER;
         const response = await postAsAdmin("/checkin/scan/merch")
             .send(payload)
@@ -833,7 +833,7 @@ describe("POST /checkin/scan/merch", () => {
         expect(response.body).toBe("nonExistentUserForMerch");
         const { data: nonExistentAttendee } =
             await SupabaseDB.ATTENDEES.select()
-                .eq("user_id", "nonExistentUserForMerch")
+                .eq("userId", "nonExistentUserForMerch")
                 .maybeSingle();
         expect(nonExistentAttendee).toBeNull();
     });
@@ -842,7 +842,7 @@ describe("POST /checkin/scan/merch", () => {
         const mockCurrentTime = NOW_SECONDS;
         const expiryTime = mockCurrentTime + 1;
         const qrCodeAboutToExpire = generateQrHash(
-            TEST_ATTENDEE_1.user_id,
+            TEST_ATTENDEE_1.userId,
             expiryTime
         );
         payload.qrCode = qrCodeAboutToExpire;
@@ -854,7 +854,7 @@ describe("POST /checkin/scan/merch", () => {
         const response = await postAsStaff("/checkin/scan/merch")
             .send(payload)
             .expect(StatusCodes.OK);
-        expect(response.body).toBe(TEST_ATTENDEE_1.user_id);
+        expect(response.body).toBe(TEST_ATTENDEE_1.userId);
 
         jest.spyOn(Date, "now").mockRestore();
     });
@@ -863,7 +863,7 @@ describe("POST /checkin/scan/merch", () => {
         const mockCurrentTime = NOW_SECONDS;
         const expiryTime = mockCurrentTime - 1;
         const qrCodeJustExpired = generateQrHash(
-            TEST_ATTENDEE_1.user_id,
+            TEST_ATTENDEE_1.userId,
             expiryTime
         );
         payload.qrCode = qrCodeJustExpired;

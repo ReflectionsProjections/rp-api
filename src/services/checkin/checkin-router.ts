@@ -15,9 +15,9 @@ checkinRouter.post(
     "/scan/staff",
     RoleChecker([Role.Enum.ADMIN, Role.Enum.STAFF]),
     async (req, res) => {
-        const { event_id, qrCode } = ScanValidator.parse(req.body);
+        const { eventId, qrCode } = ScanValidator.parse(req.body);
 
-        const { user_id, expTime } = validateQrHash(qrCode);
+        const { userId, expTime } = validateQrHash(qrCode);
 
         if (Date.now() / 1000 > expTime) {
             return res
@@ -26,7 +26,7 @@ checkinRouter.post(
         }
 
         try {
-            await checkInUserToEvent(event_id, user_id);
+            await checkInUserToEvent(eventId, userId);
         } catch (error: unknown) {
             console.error("Check-in failed:", error);
             if (error instanceof Error && error.message == "IsDuplicate") {
@@ -37,7 +37,7 @@ checkinRouter.post(
             return res.sendStatus(StatusCodes.INTERNAL_SERVER_ERROR);
         }
 
-        return res.status(StatusCodes.OK).json(user_id);
+        return res.status(StatusCodes.OK).json(userId);
     }
 );
 
@@ -45,10 +45,10 @@ checkinRouter.post(
     "/event",
     RoleChecker([Role.Enum.ADMIN, Role.Enum.STAFF]),
     async (req, res) => {
-        const { event_id, user_id } = EventValidator.parse(req.body);
+        const { eventId, userId } = EventValidator.parse(req.body);
 
         try {
-            await checkInUserToEvent(event_id, user_id);
+            await checkInUserToEvent(eventId, userId);
         } catch (error: unknown) {
             if (error instanceof Error && error.message == "IsDuplicate") {
                 return res
@@ -57,7 +57,7 @@ checkinRouter.post(
             }
             return res.sendStatus(StatusCodes.INTERNAL_SERVER_ERROR);
         }
-        return res.status(StatusCodes.OK).json(user_id);
+        return res.status(StatusCodes.OK).json(userId);
     }
 );
 
@@ -67,7 +67,7 @@ checkinRouter.post(
     async (req, res) => {
         const { qrCode } = MerchScanValidator.parse(req.body);
 
-        const { user_id, expTime } = validateQrHash(qrCode);
+        const { userId, expTime } = validateQrHash(qrCode);
 
         if (Date.now() / 1000 > expTime) {
             return res
@@ -75,7 +75,7 @@ checkinRouter.post(
                 .json({ error: "QR code has expired" });
         }
 
-        return res.status(StatusCodes.OK).json(user_id);
+        return res.status(StatusCodes.OK).json(userId);
     }
 );
 

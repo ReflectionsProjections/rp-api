@@ -15,27 +15,27 @@ export type InternalEvent = z.infer<typeof internalEventView>;
 export type EventInputPayload = z.infer<typeof eventInfoValidator>;
 
 export const externalEventView = z.object({
-    event_id: z.coerce.string().default(() => uuidv4()),
+    eventId: z.coerce.string().default(() => uuidv4()),
     name: z.string(),
-    start_time: z.coerce.date(),
-    end_time: z.coerce.date(),
+    startTime: z.coerce.date(),
+    endTime: z.coerce.date(),
     points: z.number().min(0),
     description: z.string(),
-    is_virtual: z.boolean(),
-    image_url: z.string().nullable(),
+    isVirtual: z.boolean(),
+    imageUrl: z.string().nullable(),
     location: z.string().nullable(),
-    event_type: EventType,
+    eventType: EventType,
 });
 
 export const internalEventView = externalEventView.extend({
-    attendance_count: z.number(),
-    is_visible: z.boolean(),
+    attendanceCount: z.number(),
+    isVisible: z.boolean(),
 });
 
 // ApiResponseSchema objects used to create expected internal and external event objects
 const eventTimeExtension = {
-    start_time: z.string(),
-    end_time: z.string(),
+    startTime: z.string(),
+    endTime: z.string(),
 };
 
 export const externalEventApiResponseSchema =
@@ -51,11 +51,11 @@ export type InternalEventApiResponse = z.infer<
 >;
 
 export const eventInfoValidator = internalEventView
-    .omit({ event_id: true })
+    .omit({ eventId: true })
     .strict();
 
 export const EventSchema = new Schema({
-    event_id: {
+    eventId: {
         type: String,
         required: true,
         unique: true,
