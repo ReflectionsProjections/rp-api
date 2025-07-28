@@ -12,24 +12,34 @@ const dummyUUID = "00000000-0000-0000-0000-000000000000";
 
 afterAll(async () => {
     console.log("Cleaning up test environment...");
-    
+
     try {
-        await SupabaseDB.EVENT_ATTENDANCE.delete().neq("attendee", "NONEXISTENT_VALUE_THAT_WILL_NEVER_EXIST").throwOnError();
-        await SupabaseDB.ATTENDEE_ATTENDANCE.delete().neq("userId", dummyUUID).throwOnError();
-        await SupabaseDB.EVENTS.delete().neq("eventId", dummyUUID).throwOnError();
-        await SupabaseDB.ATTENDEES.delete().neq("userId", dummyUUID).throwOnError();
-        await SupabaseDB.REGISTRATIONS.delete().neq("userId", dummyUUID).throwOnError();
+        await SupabaseDB.EVENT_ATTENDANCE.delete()
+            .neq("attendee", "NONEXISTENT_VALUE_THAT_WILL_NEVER_EXIST")
+            .throwOnError();
+        await SupabaseDB.ATTENDEE_ATTENDANCE.delete()
+            .neq("userId", dummyUUID)
+            .throwOnError();
+        await SupabaseDB.EVENTS.delete()
+            .neq("eventId", dummyUUID)
+            .throwOnError();
+        await SupabaseDB.ATTENDEES.delete()
+            .neq("userId", dummyUUID)
+            .throwOnError();
+        await SupabaseDB.REGISTRATIONS.delete()
+            .neq("userId", dummyUUID)
+            .throwOnError();
         await SupabaseDB.ROLES.delete().neq("userId", dummyUUID).throwOnError();
     } catch (error) {
         console.log("Cleanup error (expected):", error);
     }
-    
-    await new Promise(resolve => setTimeout(resolve, 100));
+
+    await new Promise((resolve) => setTimeout(resolve, 100));
 });
 
 async function createTestEvent() {
     const testEventId = uuidv4();
-    
+
     await SupabaseDB.EVENTS.insert({
         eventId: testEventId,
         name: "Test Event",
@@ -112,7 +122,7 @@ export async function insertTestAttendee(
         allergies: [],
         ...overrides.registration,
     }).throwOnError();
-    
+
     // Insert attendee
     await SupabaseDB.ATTENDEES.insert({
         userId,
@@ -147,23 +157,39 @@ const BASE_TEST_ATTENDEE = {
 beforeEach(async () => {
     // Clear all test data - delete ALL records from all tables
     try {
-        await SupabaseDB.EVENT_ATTENDANCE.delete().neq("attendee", "NONEXISTENT_VALUE_THAT_WILL_NEVER_EXIST").throwOnError();
-        await SupabaseDB.ATTENDEE_ATTENDANCE.delete().neq("userId", dummyUUID).throwOnError();
-        await SupabaseDB.EVENTS.delete().neq("eventId", dummyUUID).throwOnError();
-        await SupabaseDB.ATTENDEES.delete().neq("userId", dummyUUID).throwOnError();
-        await SupabaseDB.REGISTRATIONS.delete().neq("userId", dummyUUID).throwOnError();
+        await SupabaseDB.EVENT_ATTENDANCE.delete()
+            .neq("attendee", "NONEXISTENT_VALUE_THAT_WILL_NEVER_EXIST")
+            .throwOnError();
+        await SupabaseDB.ATTENDEE_ATTENDANCE.delete()
+            .neq("userId", dummyUUID)
+            .throwOnError();
+        await SupabaseDB.EVENTS.delete()
+            .neq("eventId", dummyUUID)
+            .throwOnError();
+        await SupabaseDB.ATTENDEES.delete()
+            .neq("userId", dummyUUID)
+            .throwOnError();
+        await SupabaseDB.REGISTRATIONS.delete()
+            .neq("userId", dummyUUID)
+            .throwOnError();
         await SupabaseDB.ROLES.delete().neq("userId", dummyUUID).throwOnError();
 
-        await SupabaseDB.ROLES.delete().eq("userId", TESTER.userId).throwOnError();
-        await SupabaseDB.REGISTRATIONS.delete().eq("userId", TESTER.userId).throwOnError();
-        await SupabaseDB.ATTENDEES.delete().eq("userId", TESTER.userId).throwOnError();
+        await SupabaseDB.ROLES.delete()
+            .eq("userId", TESTER.userId)
+            .throwOnError();
+        await SupabaseDB.REGISTRATIONS.delete()
+            .eq("userId", TESTER.userId)
+            .throwOnError();
+        await SupabaseDB.ATTENDEES.delete()
+            .eq("userId", TESTER.userId)
+            .throwOnError();
     } catch (error) {
         // Ignore cleanup errors - they're expected if tables are empty
         console.log("Cleanup in beforeEach (expected):", error);
     }
-    
+
     // Add a small delay to ensure cleanup completes
-    await new Promise(resolve => setTimeout(resolve, 50));
+    await new Promise((resolve) => setTimeout(resolve, 50));
 });
 
 describe("POST /attendee/favorites/:eventId", () => {
@@ -185,7 +211,7 @@ describe("POST /attendee/favorites/:eventId", () => {
 
     it("should not duplicate event ID in favoriteEvents", async () => {
         const eventId = await createTestEvent();
-        
+
         await insertTestAttendee({
             attendee: {
                 favoriteEvents: [eventId],
@@ -207,7 +233,7 @@ describe("POST /attendee/favorites/:eventId", () => {
 
     it("should return 404 if attendee is not found", async () => {
         const eventId = await createTestEvent();
-        
+
         const res = await post(
             `/attendee/favorites/${eventId}`,
             Role.enum.USER
@@ -218,7 +244,7 @@ describe("POST /attendee/favorites/:eventId", () => {
 
     it("should return 401 if user is unauthenticated", async () => {
         const eventId = await createTestEvent();
-        
+
         await post(`/attendee/favorites/${eventId}`).expect(
             StatusCodes.UNAUTHORIZED
         );
@@ -226,7 +252,7 @@ describe("POST /attendee/favorites/:eventId", () => {
 
     it("should return 403 if user does not have USER role", async () => {
         const eventId = await createTestEvent();
-        
+
         await post(`/attendee/favorites/${eventId}`, Role.enum.STAFF).expect(
             StatusCodes.FORBIDDEN
         );
@@ -245,7 +271,7 @@ describe("POST /attendee/favorites/:eventId", () => {
 describe("DELETE /attendee/favorites/:eventId", () => {
     it("should remove the event ID from the user's favoriteEvents", async () => {
         const eventId = await createTestEvent();
-        
+
         await insertTestAttendee({
             attendee: {
                 favoriteEvents: [eventId, otherEvent],
@@ -267,7 +293,7 @@ describe("DELETE /attendee/favorites/:eventId", () => {
 
     it("should handle event ID not being in favorite_events", async () => {
         const eventId = await createTestEvent();
-        
+
         await insertTestAttendee({
             attendee: {
                 favoriteEvents: [otherEvent],
@@ -287,7 +313,7 @@ describe("DELETE /attendee/favorites/:eventId", () => {
 
     it("should return 404 if attendee is not found", async () => {
         const eventId = await createTestEvent();
-        
+
         const res = await del(
             `/attendee/favorites/${eventId}`,
             Role.enum.USER
@@ -298,7 +324,7 @@ describe("DELETE /attendee/favorites/:eventId", () => {
 
     it("should return 401 if user is unauthenticated", async () => {
         const eventId = await createTestEvent();
-        
+
         await del(`/attendee/favorites/${eventId}`).expect(
             StatusCodes.UNAUTHORIZED
         );
@@ -306,7 +332,7 @@ describe("DELETE /attendee/favorites/:eventId", () => {
 
     it("should return 403 if user does not have USER role", async () => {
         const eventId = await createTestEvent();
-        
+
         await del(`/attendee/favorites/${eventId}`, Role.enum.STAFF).expect(
             StatusCodes.FORBIDDEN
         );
@@ -455,7 +481,7 @@ describe("GET /attendee/points", () => {
 });
 
 describe("GET /attendee/foodwave", () => {
-    const currentDay = getCurrentDay()
+    const currentDay = getCurrentDay();
     console.log(currentDay);
 
     it("should return foodwave 1 if attendee has priority today", async () => {

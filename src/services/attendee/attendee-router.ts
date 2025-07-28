@@ -23,7 +23,7 @@ attendeeRouter.post(
     async (req, res) => {
         const payload = res.locals.payload;
         const userId = payload.userId;
-        
+
         const { eventId } = EventIdValidator.parse(req.params);
 
         const { data: attendee } = await SupabaseDB.ATTENDEES.select(
@@ -40,9 +40,9 @@ attendeeRouter.post(
         }
 
         const newFavorites = (attendee.favoriteEvents || []).includes(eventId)
-            ? (attendee.favoriteEvents || [])
+            ? attendee.favoriteEvents || []
             : [...(attendee.favoriteEvents || []), eventId];
-        
+
         await SupabaseDB.ATTENDEES.update({ favoriteEvents: newFavorites })
             .eq("userId", userId)
             .throwOnError();
@@ -199,7 +199,7 @@ attendeeRouter.get(
             .throwOnError();
 
         // check if true for cur day
-        const day = getCurrentDay()
+        const day = getCurrentDay();
         const priorityKey = `hasPriority${day}`;
         if (!user) {
             return res
@@ -296,8 +296,10 @@ attendeeRouter.post(
                 .json({ error: "UserNotFound" });
         }
 
-        const eligibleKey = `isEligible${merchItem.charAt(0).toUpperCase() + merchItem.slice(1)}` as keyof User;
-        const redeemedKey = `hasRedeemed${merchItem.charAt(0).toUpperCase() + merchItem.slice(1)}` as keyof User;
+        const eligibleKey =
+            `isEligible${merchItem.charAt(0).toUpperCase() + merchItem.slice(1)}` as keyof User;
+        const redeemedKey =
+            `hasRedeemed${merchItem.charAt(0).toUpperCase() + merchItem.slice(1)}` as keyof User;
 
         if (!user[eligibleKey]) {
             return res
