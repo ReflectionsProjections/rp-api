@@ -80,14 +80,27 @@ describe("POST /puzzlebang", () => {
         await SupabaseDB.ROLES.delete().eq("userId", "nonexistent");
     });
 
-    afterEach(async () => { // clean up after tests
-        await SupabaseDB.ATTENDEES.delete().eq("userId", TEST_USER_ID).throwOnError();
-        await SupabaseDB.REGISTRATIONS.delete().eq("userId", TEST_USER_ID).throwOnError();
-        await SupabaseDB.ROLES.delete().eq("userId", TEST_USER_ID).throwOnError();
+    afterEach(async () => {
+        // clean up after tests
+        await SupabaseDB.ATTENDEES.delete()
+            .eq("userId", TEST_USER_ID)
+            .throwOnError();
+        await SupabaseDB.REGISTRATIONS.delete()
+            .eq("userId", TEST_USER_ID)
+            .throwOnError();
+        await SupabaseDB.ROLES.delete()
+            .eq("userId", TEST_USER_ID)
+            .throwOnError();
 
-        await SupabaseDB.ATTENDEES.delete().eq("userId", "nonexistent").throwOnError();
-        await SupabaseDB.REGISTRATIONS.delete().eq("userId", "nonexistent").throwOnError();
-        await SupabaseDB.ROLES.delete().eq("userId", "nonexistent").throwOnError();
+        await SupabaseDB.ATTENDEES.delete()
+            .eq("userId", "nonexistent")
+            .throwOnError();
+        await SupabaseDB.REGISTRATIONS.delete()
+            .eq("userId", "nonexistent")
+            .throwOnError();
+        await SupabaseDB.ROLES.delete()
+            .eq("userId", "nonexistent")
+            .throwOnError();
     });
 
     it("should complete puzzle and increment points for PUZZLEBANG role", async () => {
@@ -97,11 +110,12 @@ describe("POST /puzzlebang", () => {
             .send({ email: TEST_EMAIL, puzzleId: PUZZLE_ID })
             .expect(StatusCodes.OK);
 
-        const { data: updated} = await SupabaseDB.ATTENDEES.select(
+        const { data: updated } = await SupabaseDB.ATTENDEES.select(
             "points, puzzlesCompleted"
         )
             .eq("userId", TEST_USER_ID)
-            .single().throwOnError();
+            .single()
+            .throwOnError();
 
         expect(updated?.points).toBe(2);
         expect(updated?.puzzlesCompleted).toContain(PUZZLE_ID);

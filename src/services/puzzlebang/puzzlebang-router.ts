@@ -58,7 +58,9 @@ puzzlebangRouter.post(
         await SupabaseDB.ATTENDEES.update({
             puzzlesCompleted: updatedPuzzles,
             points: currentPoints + 2,
-        }).eq("userId", userId).throwOnError();
+        })
+            .eq("userId", userId)
+            .throwOnError();
 
         return res.sendStatus(StatusCodes.OK);
     }
