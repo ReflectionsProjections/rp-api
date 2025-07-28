@@ -34,11 +34,3 @@ export function isDev() {
 export function isTest() {
     return Config.ENV == Environment.enum.TESTING;
 }
-
-export function getEnv(key: string): string {
-    const val = process.env[key];
-    if (val === undefined) {
-        throw new Error(`env value ${key} not found, exiting...`);
-    }
-    return val;
-}
