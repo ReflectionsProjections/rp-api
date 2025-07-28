@@ -168,6 +168,17 @@ beforeAll(async () => {
     ]);
 });
 
+afterAll(async () => {
+    await SupabaseDB.EVENT_ATTENDANCE.delete().neq("attendee", "");
+    await SupabaseDB.ATTENDEE_ATTENDANCE.delete().neq("userId", "");
+    await SupabaseDB.EVENTS.delete().eq("eventId", REGULAR_EVENT_FOR_CHECKIN.eventId);
+    await SupabaseDB.EVENTS.delete().eq("eventId", GENERAL_CHECKIN_EVENT.eventId);
+    await SupabaseDB.EVENTS.delete().eq("eventId", MEALS_EVENT.eventId);
+    await SupabaseDB.ATTENDEES.delete().neq("userId", "");
+    await SupabaseDB.REGISTRATIONS.delete().neq("userId", "");
+    await SupabaseDB.ROLES.delete().neq("userId", "non-existent-user");
+});
+
 describe("POST /checkin/scan/staff", () => {
     let payload: ScanPayload;
     let currentDay: DayKey;
