@@ -56,8 +56,7 @@ staffRouter.post(
 
         // Must be within a certain range of meeting time
         const diffSeconds =
-            Math.abs(Date.now() - new Date(meeting.startTime).getTime()) /
-            1000;
+            Math.abs(Date.now() - new Date(meeting.startTime).getTime()) / 1000;
         if (diffSeconds >= Config.STAFF_MEETING_CHECK_IN_WINDOW_SECONDS) {
             return res.status(StatusCodes.BAD_REQUEST).send({
                 error: "Expired",

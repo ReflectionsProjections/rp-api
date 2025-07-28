@@ -66,10 +66,7 @@ afterAll(async () => {
         "email",
         "a_non_existent_email_to_delete_all"
     );
-    await SupabaseDB.MEETINGS.delete().eq(
-        "meetingId",
-        MEETING.meetingId
-    );
+    await SupabaseDB.MEETINGS.delete().eq("meetingId", MEETING.meetingId);
 });
 
 describe("GET /staff/", () => {
