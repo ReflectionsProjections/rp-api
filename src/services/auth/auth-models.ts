@@ -9,10 +9,18 @@ export const Role = z.enum([
 ]);
 export type Role = z.infer<typeof Role>;
 
+export enum Platform {
+    WEB = "web",
+    IOS = "ios",
+    ANDROID = "android",
+}
+
+export const PlatformValidator = z.nativeEnum(Platform);
+
 export const JwtPayloadValidator = z.object({
     userId: z.string(),
     displayName: z.string(),
-    email: z.string().email(),
+    // email: z.string().email(),
     roles: Role.array(),
 });
 

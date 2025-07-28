@@ -1,4 +1,4 @@
-import { Schema } from "mongoose";
+import { InferSchemaType, Schema } from "mongoose";
 import { z } from "zod";
 
 // Zod schema
@@ -24,3 +24,4 @@ export const CorporateSchema = new Schema({
         unique: true,
     },
 });
+export type Corporate = InferSchemaType<typeof CorporateSchema>;
