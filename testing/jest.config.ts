@@ -18,6 +18,7 @@ const config: Config = {
     ],
 
     verbose: true,
+    detectOpenHandles: true,
 };
 
 export default config;
