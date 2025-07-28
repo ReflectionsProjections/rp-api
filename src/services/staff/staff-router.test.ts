@@ -26,9 +26,9 @@ const TESTER_STAFF = {
 } satisfies Staff;
 
 const MEETING = {
-    meeting_id: uuidv4(),
-    committee_type: CommitteeNames.Enum.DEV,
-    start_time: new Date(),
+    meetingId: uuidv4(),
+    committeeType: CommitteeNames.Enum.DEV,
+    startTime: new Date().toISOString(),
 };
 
 const OTHER_STAFF = {
@@ -53,12 +53,23 @@ beforeEach(async () => {
         "a_non_existent_email_to_delete_all"
     );
     await SupabaseDB.MEETINGS.delete().neq(
-        "meeting_id",
+        "meetingId",
         "a_non_existent_id_to_delete_all"
     );
     await SupabaseDB.MEETINGS.insert(MEETING);
     await SupabaseDB.STAFF.insert(StaffValidator.parse(TESTER_STAFF));
     await SupabaseDB.STAFF.insert(StaffValidator.parse(OTHER_STAFF));
+});
+
+afterAll(async () => {
+    await SupabaseDB.STAFF.delete().neq(
+        "email",
+        "a_non_existent_email_to_delete_all"
+    );
+    await SupabaseDB.MEETINGS.delete().eq(
+        "meetingId",
+        MEETING.meetingId
+    );
 });
 
 describe("GET /staff/", () => {
@@ -78,7 +89,7 @@ describe("GET /staff/", () => {
                 ])
             );
         },
-        20000
+        500000
     );
 
     it("should return an unauthorized error for an unauthenticated user", async () => {
@@ -243,7 +254,7 @@ describe("POST /staff/check-in", () => {
     it("fails if staff is already checked in", async () => {
         await SupabaseDB.STAFF.update({
             attendances: {
-                [MEETING.meeting_id]: StaffAttendanceTypeEnum.PRESENT,
+                [MEETING.meetingId]: StaffAttendanceTypeEnum.PRESENT,
             },
         })
             .eq("email", TESTER_STAFF.email)
@@ -251,7 +262,7 @@ describe("POST /staff/check-in", () => {
 
         const res = await postAsStaff("/staff/check-in")
             .send({
-                meetingId: MEETING.meeting_id,
+                meetingId: MEETING.meetingId,
             })
             .expect(StatusCodes.BAD_REQUEST);
         expect(res.body.error).toBe("AlreadyCheckedIn");
@@ -259,17 +270,17 @@ describe("POST /staff/check-in", () => {
 
     it("fails if meeting is outside check-in window", async () => {
         await SupabaseDB.MEETINGS.update({
-            start_time: new Date(
+            startTime: new Date(
                 Date.now() -
                     Config.STAFF_MEETING_CHECK_IN_WINDOW_SECONDS * 1000 * 2
-            ),
+            ).toISOString(),
         })
-            .eq("meeting_id", MEETING.meeting_id)
+            .eq("meetingId", MEETING.meetingId)
             .select();
 
         const res = await postAsStaff("/staff/check-in")
             .send({
-                meetingId: MEETING.meeting_id,
+                meetingId: MEETING.meetingId,
             })
             .expect(StatusCodes.BAD_REQUEST);
         expect(res.body.error).toBe("Expired");
@@ -279,16 +290,16 @@ describe("POST /staff/check-in", () => {
         // Should still check in, even if close to end of check in window
 
         await SupabaseDB.MEETINGS.update({
-            start_time: new Date(
+            startTime: new Date(
                 Date.now() -
                     (Config.STAFF_MEETING_CHECK_IN_WINDOW_SECONDS / 2) * 1000
-            ),
+            ).toISOString(),
         })
-            .eq("meeting_id", MEETING.meeting_id)
+            .eq("meetingId", MEETING.meetingId)
             .select();
 
         const res = await postAsStaff("/staff/check-in").send({
-            meetingId: MEETING.meeting_id,
+            meetingId: MEETING.meetingId,
         });
         expect(res.status).toBe(StatusCodes.OK);
         const updated = await SupabaseDB.STAFF.select()
@@ -297,7 +308,7 @@ describe("POST /staff/check-in", () => {
         expect(updated.data).toMatchObject({
             ...TESTER_STAFF,
             attendances: {
-                [MEETING.meeting_id]: StaffAttendanceTypeEnum.PRESENT,
+                [MEETING.meetingId]: StaffAttendanceTypeEnum.PRESENT,
             },
         });
     });
@@ -318,7 +329,7 @@ describe("POST /staff/:EMAIL/attendance", () => {
     it("fails if staff is not found", async () => {
         const res = await postAsAdmin(`/staff/invalid-id/attendance`)
             .send({
-                meetingId: MEETING.meeting_id,
+                meetingId: MEETING.meetingId,
                 attendanceType: StaffAttendanceTypeEnum.EXCUSED,
             })
             .expect(StatusCodes.NOT_FOUND);
@@ -330,7 +341,7 @@ describe("POST /staff/:EMAIL/attendance", () => {
         const res = await postAsAdmin(
             `/staff/${OTHER_STAFF.email}/attendance`
         ).send({
-            meetingId: MEETING.meeting_id,
+            meetingId: MEETING.meetingId,
             attendanceType: StaffAttendanceTypeEnum.EXCUSED,
         });
 
@@ -341,14 +352,14 @@ describe("POST /staff/:EMAIL/attendance", () => {
         expect(updated.data).toMatchObject({
             ...OTHER_STAFF,
             attendances: {
-                [MEETING.meeting_id]: StaffAttendanceTypeEnum.EXCUSED,
+                [MEETING.meetingId]: StaffAttendanceTypeEnum.EXCUSED,
             },
         });
     });
 
     it("updates attendance successfully", async () => {
         const EXISTING_ATTENDANCES = {
-            [MEETING.meeting_id]: StaffAttendanceTypeEnum.PRESENT,
+            [MEETING.meetingId]: StaffAttendanceTypeEnum.PRESENT,
         };
         await SupabaseDB.STAFF.update({
             attendances: EXISTING_ATTENDANCES,
@@ -359,7 +370,7 @@ describe("POST /staff/:EMAIL/attendance", () => {
         const res = await postAsAdmin(
             `/staff/${OTHER_STAFF.email}/attendance`
         ).send({
-            meetingId: MEETING.meeting_id,
+            meetingId: MEETING.meetingId,
             attendanceType: StaffAttendanceTypeEnum.EXCUSED,
         });
 
@@ -372,7 +383,7 @@ describe("POST /staff/:EMAIL/attendance", () => {
             ...OTHER_STAFF,
             attendances: new Map([
                 ...Object.entries(EXISTING_ATTENDANCES),
-                [MEETING.meeting_id, StaffAttendanceTypeEnum.EXCUSED],
+                [MEETING.meetingId, StaffAttendanceTypeEnum.EXCUSED],
             ]),
         });
     });

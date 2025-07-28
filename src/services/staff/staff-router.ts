@@ -24,7 +24,7 @@ staffRouter.post(
         const { meetingId } = CheckInValidator.parse(req.body);
 
         const { data: meeting } = await SupabaseDB.MEETINGS.select("*")
-            .eq("meeting_id", meetingId)
+            .eq("meetingId", meetingId)
             .maybeSingle()
             .throwOnError();
 
@@ -56,7 +56,7 @@ staffRouter.post(
 
         // Must be within a certain range of meeting time
         const diffSeconds =
-            Math.abs(Date.now() - new Date(meeting.start_time).getTime()) /
+            Math.abs(Date.now() - new Date(meeting.startTime).getTime()) /
             1000;
         if (diffSeconds >= Config.STAFF_MEETING_CHECK_IN_WINDOW_SECONDS) {
             return res.status(StatusCodes.BAD_REQUEST).send({
@@ -99,7 +99,7 @@ staffRouter.post(
             UpdateStaffAttendanceValidator.parse(req.body);
 
         const { data: meeting } = await SupabaseDB.MEETINGS.select("*")
-            .eq("meeting_id", meetingId)
+            .eq("meetingId", meetingId)
             .maybeSingle()
             .throwOnError();
 

@@ -28,6 +28,7 @@ function setRole(request: request.Test, role?: RoleType) {
         userId: TESTER.userId,
         roles: [role],
         displayName: TESTER.displayName,
+        email: TESTER.email,
     } satisfies JwtPayloadType;
 
     const jwt = jsonwebtoken.sign(payload, Config.JWT_SIGNING_SECRET, {
