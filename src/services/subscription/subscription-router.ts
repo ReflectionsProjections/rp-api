@@ -14,12 +14,12 @@ subscriptionRouter.post("/", cors(), async (req, res) => {
     // normalize the email to prevent case sensitivity duplicates
     const lowerCaseEmail = subscriptionData.email.toLowerCase();
 
-    const { mailing_list } = subscriptionData;
+    const { mailingList } = subscriptionData;
 
     const { data: list } = await SupabaseDB.SUBSCRIPTIONS.select(
         "subscriptions"
     )
-        .eq("mailing_list", mailing_list)
+        .eq("mailingList", mailingList)
         .maybeSingle()
         .throwOnError();
 
@@ -34,13 +34,13 @@ subscriptionRouter.post("/", cors(), async (req, res) => {
             await SupabaseDB.SUBSCRIPTIONS.update({
                 subscriptions: updatedSubs,
             })
-                .eq("mailing_list", mailing_list)
+                .eq("mailingList", mailingList)
                 .throwOnError();
         }
     } else {
         // if the list was not found, we need to create it
         await SupabaseDB.SUBSCRIPTIONS.insert({
-            mailing_list: mailing_list,
+            mailingList: mailingList,
             subscriptions: [lowerCaseEmail],
         }).throwOnError();
     }

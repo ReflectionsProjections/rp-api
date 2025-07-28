@@ -7,29 +7,36 @@ import { IncomingSubscription } from "./subscription-schema";
 const EMAIL_1 = "testuser@example.com";
 const EMAIL_2 = "otheruser@example.com";
 const INVALID_EMAIL = "not-an-email";
-const VALID_MAILING_LIST = "rp_interest";
-const INVALID_MAILING_LIST = "invalid_list";
+const VALID_mailingList = "rp_interest";
+const INVALID_mailingList = "invalid_list";
 
 const SUBSCRIPTION_1 = {
     email: EMAIL_1,
-    mailing_list: VALID_MAILING_LIST,
+    mailingList: VALID_mailingList,
 } satisfies IncomingSubscription;
 const SUBSCRIPTION_2 = {
     email: EMAIL_2,
-    mailing_list: VALID_MAILING_LIST,
+    mailingList: VALID_mailingList,
 } satisfies IncomingSubscription;
 const SUBSCRIPTION_INVALID_EMAIL = {
     email: INVALID_EMAIL,
-    mailing_list: VALID_MAILING_LIST,
+    mailingList: VALID_mailingList,
 };
 const SUBSCRIPTION_INVALID_LIST = {
     email: EMAIL_1,
-    mailing_list: INVALID_MAILING_LIST,
+    mailingList: INVALID_mailingList,
 };
 
 beforeEach(async () => {
     await SupabaseDB.SUBSCRIPTIONS.delete().neq(
-        "mailing_list",
+        "mailingList",
+        "a_value_that_will_never_exist"
+    );
+});
+
+afterEach(async () => {
+    await SupabaseDB.SUBSCRIPTIONS.delete().neq(
+        "mailingList",
         "a_value_that_will_never_exist"
     );
 });
@@ -41,31 +48,31 @@ describe("POST /subscription/", () => {
             .expect(StatusCodes.CREATED);
         expect(response.body).toEqual(SUBSCRIPTION_1);
         const { data } = await SupabaseDB.SUBSCRIPTIONS.select().eq(
-            "mailing_list",
-            VALID_MAILING_LIST
+            "mailingList",
+            VALID_mailingList
         );
         const dbEntry = data?.[0];
         expect(dbEntry).toMatchObject({
-            mailing_list: VALID_MAILING_LIST,
+            mailingList: VALID_mailingList,
             subscriptions: [EMAIL_1],
         });
     }, 50000);
 
     it("should add a new email to an existing mailing list", async () => {
         await SupabaseDB.SUBSCRIPTIONS.insert([
-            { mailing_list: VALID_MAILING_LIST, subscriptions: [EMAIL_1] },
+            { mailingList: VALID_mailingList, subscriptions: [EMAIL_1] },
         ]);
         const response = await post("/subscription/")
             .send(SUBSCRIPTION_2)
             .expect(StatusCodes.CREATED);
         expect(response.body).toEqual(SUBSCRIPTION_2);
         const { data } = await SupabaseDB.SUBSCRIPTIONS.select().eq(
-            "mailing_list",
-            VALID_MAILING_LIST
+            "mailingList",
+            VALID_mailingList
         );
         const dbEntry = data?.[0];
         expect(dbEntry).toMatchObject({
-            mailing_list: VALID_MAILING_LIST,
+            mailingList: VALID_mailingList,
             subscriptions: expect.arrayContaining([EMAIL_1, EMAIL_2]),
         });
         expect(dbEntry?.subscriptions.length).toBe(2);
@@ -73,15 +80,15 @@ describe("POST /subscription/", () => {
 
     it("should not add duplicate emails to the same mailing list", async () => {
         await SupabaseDB.SUBSCRIPTIONS.insert([
-            { mailing_list: VALID_MAILING_LIST, subscriptions: [EMAIL_1] },
+            { mailingList: VALID_mailingList, subscriptions: [EMAIL_1] },
         ]);
         const response = await post("/subscription/")
             .send(SUBSCRIPTION_1)
             .expect(StatusCodes.CREATED);
         expect(response.body).toEqual(SUBSCRIPTION_1);
         const { data } = await SupabaseDB.SUBSCRIPTIONS.select().eq(
-            "mailing_list",
-            VALID_MAILING_LIST
+            "mailingList",
+            VALID_mailingList
         );
         const dbEntry = data?.[0];
         expect(dbEntry?.subscriptions).toEqual([EMAIL_1]);
@@ -90,10 +97,10 @@ describe("POST /subscription/", () => {
     it.each([
         {
             description: "missing email",
-            payload: { mailing_list: VALID_MAILING_LIST },
+            payload: { mailingList: VALID_mailingList },
         },
         {
-            description: "missing mailing_list",
+            description: "missing mailingList",
             payload: { email: EMAIL_1 },
         },
         {
@@ -101,7 +108,7 @@ describe("POST /subscription/", () => {
             payload: SUBSCRIPTION_INVALID_EMAIL,
         },
         {
-            description: "invalid mailing_list",
+            description: "invalid mailingList",
             payload: SUBSCRIPTION_INVALID_LIST,
         },
     ])("should return BAD_REQUEST when $description", async ({ payload }) => {
@@ -121,8 +128,8 @@ describe("POST /subscription/", () => {
             .expect(StatusCodes.CREATED);
         expect(response.body).toEqual(SUBSCRIPTION_1);
         const { data } = await SupabaseDB.SUBSCRIPTIONS.select().eq(
-            "mailing_list",
-            VALID_MAILING_LIST
+            "mailingList",
+            VALID_mailingList
         );
         const dbEntry = data?.[0];
         expect(dbEntry?.subscriptions).toEqual([EMAIL_1]);
@@ -131,17 +138,17 @@ describe("POST /subscription/", () => {
     it("should treat emails with different cases as the same subscription", async () => {
         await post("/subscription/").send({
             email: "test@example.com",
-            mailing_list: VALID_MAILING_LIST,
+            mailingList: VALID_mailingList,
         });
 
         await post("/subscription/").send({
             email: "TEST@example.com",
-            mailing_list: VALID_MAILING_LIST,
+            mailingList: VALID_mailingList,
         });
 
         const { data } = await SupabaseDB.SUBSCRIPTIONS.select().eq(
-            "mailing_list",
-            VALID_MAILING_LIST
+            "mailingList",
+            VALID_mailingList
         );
         const dbEntry = data?.[0];
 
