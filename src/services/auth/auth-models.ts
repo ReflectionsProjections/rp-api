@@ -10,8 +10,8 @@ export const Role = z.enum([
 export type Role = z.infer<typeof Role>;
 
 export const JwtPayloadValidator = z.object({
-    user_id: z.string(),
-    display_name: z.string(),
+    userId: z.string(),
+    displayName: z.string(),
     // email: z.string().email(),
     roles: Role.array(),
 });

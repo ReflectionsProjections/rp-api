@@ -4,7 +4,7 @@ export type AttendeeType = z.infer<typeof AttendeeCreateValidator>;
 
 // Zod schema for attendee
 export const AttendeeCreateValidator = z.object({
-    user_id: z.string(),
+    userId: z.string(),
     // name: z.string(),
     // email: z.string().email(),
     // dietaryRestrictions: z.string().array(),
@@ -12,5 +12,5 @@ export const AttendeeCreateValidator = z.object({
 });
 
 export const EventIdValidator = z.object({
-    event_id: z.string().uuid(),
+    eventId: z.string().uuid(),
 });

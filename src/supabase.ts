@@ -23,10 +23,10 @@ export const SupabaseDB = {
         return supabase.from("events");
     },
     get EVENT_ATTENDANCE() {
-        return supabase.from("event_attendance");
+        return supabase.from("eventAttendance");
     },
     get ATTENDEE_ATTENDANCE() {
-        return supabase.from("attendee_attendance");
+        return supabase.from("attendeeAttendance");
     },
     get REGISTRATIONS() {
         return supabase.from("registrations");
@@ -58,23 +58,23 @@ export const CommitteeTypes: Record<
 };
 
 export interface User {
-    user_id: string;
+    userId: string;
     points: number;
-    favorite_events: string[];
-    puzzles_completed: string[];
-    has_priority_mon: boolean;
-    has_priority_tue: boolean;
-    has_priority_wed: boolean;
-    has_priority_thu: boolean;
-    has_priority_fri: boolean;
-    has_priority_sat: boolean;
-    has_priority_sun: boolean;
-    is_eligible_tshirt: boolean;
-    is_eligible_cap: boolean;
-    is_eligible_tote: boolean;
-    is_eligible_button: boolean;
-    has_redeemed_tshirt: boolean;
-    has_redeemed_cap: boolean;
-    has_redeemed_tote: boolean;
-    has_redeemed_button: boolean;
+    favoriteEvents: string[];
+    puzzlesCompleted: string[];
+    hasPriorityMon: boolean;
+    hasPriorityTue: boolean;
+    hasPriorityWed: boolean;
+    hasPriorityThu: boolean;
+    hasPriorityFri: boolean;
+    hasPrioritySat: boolean;
+    hasPrioritySun: boolean;
+    isEligibleTshirt: boolean;
+    isEligibleCap: boolean;
+    isEligibleTote: boolean;
+    isEligibleButton: boolean;
+    hasRedeemedTshirt: boolean;
+    hasRedeemedCap: boolean;
+    hasRedeemedTote: boolean;
+    hasRedeemedButton: boolean;
 }

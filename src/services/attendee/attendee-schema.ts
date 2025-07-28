@@ -4,7 +4,7 @@ export type DayKey = "Mon" | "Tue" | "Wed" | "Thu" | "Fri" | "Sat" | "Sun";
 
 // Mongoose schema for attendee
 export const AttendeeSchema = new Schema({
-    user_id: { type: String, required: true, unique: true },
+    userId: { type: String, required: true, unique: true },
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     events: [{ type: String, ref: "Event", default: [] }],
@@ -74,7 +74,7 @@ export const AttendeeSchema = new Schema({
 });
 
 export const AttendeeAttendanceSchema = new Schema({
-    user_id: {
+    userId: {
         type: String,
         ref: "Attendee",
         required: true,

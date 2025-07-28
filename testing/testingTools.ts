@@ -7,9 +7,9 @@ import { JwtPayloadType, Role } from "../src/services/auth/auth-models";
 type RoleType = z.infer<typeof Role>;
 
 export const TESTER = {
-    user_id: "lforger132",
+    userId: "lforger132",
     roles: [],
-    display_name: "Loid Forger",
+    displayName: "Loid Forger",
     email: "loid.forger@testing.com",
 };
 
@@ -25,9 +25,9 @@ function setRole(request: request.Test, role?: RoleType) {
     }
 
     const payload = {
-        user_id: TESTER.user_id,
+        userId: TESTER.userId,
         roles: [role],
-        display_name: TESTER.display_name,
+        displayName: TESTER.displayName,
     } satisfies JwtPayloadType;
 
     const jwt = jsonwebtoken.sign(payload, Config.JWT_SIGNING_SECRET, {
