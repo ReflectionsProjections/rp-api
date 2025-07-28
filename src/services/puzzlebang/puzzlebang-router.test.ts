@@ -80,6 +80,16 @@ describe("POST /puzzlebang", () => {
         await SupabaseDB.ROLES.delete().eq("userId", "nonexistent");
     });
 
+    afterEach(async () => { // clean up after tests
+        await SupabaseDB.ATTENDEES.delete().eq("userId", TEST_USER_ID).throwOnError();
+        await SupabaseDB.REGISTRATIONS.delete().eq("userId", TEST_USER_ID).throwOnError();
+        await SupabaseDB.ROLES.delete().eq("userId", TEST_USER_ID).throwOnError();
+
+        await SupabaseDB.ATTENDEES.delete().eq("userId", "nonexistent").throwOnError();
+        await SupabaseDB.REGISTRATIONS.delete().eq("userId", "nonexistent").throwOnError();
+        await SupabaseDB.ROLES.delete().eq("userId", "nonexistent").throwOnError();
+    });
+
     it("should complete puzzle and increment points for PUZZLEBANG role", async () => {
         await insertTestAttendee();
 
