@@ -20,7 +20,7 @@ export const PlatformValidator = z.nativeEnum(Platform);
 export const JwtPayloadValidator = z.object({
     userId: z.string(),
     displayName: z.string(),
-    email: z.string().email(),
+    // email: z.string().email(),
     roles: Role.array(),
 });
 

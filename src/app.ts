@@ -5,7 +5,7 @@ import { Config, EnvironmentEnum } from "./config";
 import { isTest } from "./utilities";
 import AWS from "aws-sdk";
 
-import databaseMiddleware from "./middleware/database-middleware";
+//import databaseMiddleware from "./middleware/database-middleware";
 // import customCors from "./middleware/cors-middleware";
 import morgan from "morgan";
 import bodyParser from "body-parser";
@@ -61,7 +61,7 @@ if (Config.ENV !== EnvironmentEnum.TESTING) {
 app.use(bodyParser.json());
 
 // Database
-app.use(databaseMiddleware);
+// app.use(databaseMiddleware);
 
 // API routes
 app.use("/attendee", attendeeRouter);

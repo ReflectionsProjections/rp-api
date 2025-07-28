@@ -1,4 +1,4 @@
-process.env.ENV = "DEVELOPMENT";
+process.env.ENV = "TESTING";
 
 process.env.DATABASE_USERNAME = "urmom";
 process.env.DATABASE_PASSWORD = "alsourmom";
