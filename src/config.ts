@@ -1,7 +1,6 @@
 import dotenv from "dotenv";
 
 import { z } from "zod";
-import { getEnv } from "./utilities";
 
 import AWS from "aws-sdk";
 
@@ -16,6 +15,14 @@ export enum EnvironmentEnum {
 export const Environment = z.nativeEnum(EnvironmentEnum);
 
 export const MailingListName = z.enum(["rp_interest"]);
+
+function getEnv(key: string): string {
+    const val = process.env[key];
+    if (val === undefined) {
+        throw new Error(`env value ${key} not found, exiting...`);
+    }
+    return val;
+}
 
 const env = Environment.parse(getEnv("ENV"));
 const API_BASE =
@@ -43,7 +50,8 @@ export const Config = {
 
     CLIENT_ID: getEnv("OAUTH_GOOGLE_CLIENT_ID"),
     CLIENT_SECRET: getEnv("OAUTH_GOOGLE_CLIENT_SECRET"),
-
+    IOS_CLIENT_ID: getEnv("IOS_OAUTH_GOOGLE_CLIENT_ID"),
+    ANDROID_CLIENT_ID: getEnv("ANDROID_OAUTH_GOOGLE_CLIENT_ID"),
     AUTH_CALLBACK_URI_BASE: `${API_BASE}/auth/callback/`,
 
     // prettier-ignore
@@ -105,6 +113,8 @@ export const Config = {
     API_RESUME_UPDATE_ROUTE: `${API_BASE}/attendee/resume/update/`,
     WEB_RESUME_REUPLOAD_ROUTE: `${WEB_BASE}/update`,
     OUTGOING_EMAIL_ADDRESSES: z.enum(["no-reply@reflectionsprojections.org"]),
+    LOG_DIR:
+        env === EnvironmentEnum.PRODUCTION ? "/home/ubuntu/logs" : "./logs",
 };
 
 export const ses = new AWS.SES({
