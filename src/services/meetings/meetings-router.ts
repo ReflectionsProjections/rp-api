@@ -19,11 +19,7 @@ meetingsRouter.get(
             await SupabaseDB.MEETINGS.select("*").throwOnError();
 
         const responseMeetings = meetings.map((meeting) =>
-            meetingView.parse({
-                meetingId: meeting.meeting_id,
-                committeeType: meeting.committee_type,
-                startTime: meeting.start_time,
-            })
+            meetingView.parse(meeting)
         );
 
         res.status(StatusCodes.OK).json(responseMeetings);
@@ -35,7 +31,7 @@ meetingsRouter.get(
     RoleChecker([Role.enum.STAFF, Role.enum.ADMIN]),
     async (req, res) => {
         const { data: meeting } = await SupabaseDB.MEETINGS.select()
-            .eq("meeting_id", req.params.meetingId)
+            .eq("meetingId", req.params.meetingId)
             .maybeSingle()
             .throwOnError();
 
@@ -45,11 +41,7 @@ meetingsRouter.get(
                 .json({ message: "Meeting not found" });
         }
 
-        const responseMeeting = meetingView.parse({
-            meetingId: meeting.meeting_id,
-            committeeType: meeting.committee_type,
-            startTime: meeting.start_time,
-        });
+        const responseMeeting = meetingView.parse(meeting);
 
         res.status(StatusCodes.OK).json(responseMeeting);
     }
@@ -60,19 +52,15 @@ meetingsRouter.post("/", RoleChecker([Role.enum.ADMIN]), async (req, res) => {
 
     const { data: newMeeting } = await SupabaseDB.MEETINGS.insert([
         {
-            committee_type: validatedData.committeeType,
-            start_time: validatedData.startTime,
+            committeeType: validatedData.committeeType,
+            startTime: validatedData.startTime.toISOString(),
         },
     ])
         .select()
         .single()
         .throwOnError();
 
-    const responseMeeting = meetingView.parse({
-        meetingId: newMeeting.meeting_id,
-        committeeType: newMeeting.committee_type,
-        startTime: newMeeting.start_time,
-    });
+    const responseMeeting = meetingView.parse(newMeeting);
 
     res.status(StatusCodes.CREATED).json(responseMeeting);
 });
@@ -84,10 +72,10 @@ meetingsRouter.put(
         const validatedData = updateMeetingValidator.parse(req.body);
 
         const { data: updatedMeeting } = await SupabaseDB.MEETINGS.update({
-            committee_type: validatedData.committeeType,
-            start_time: validatedData.startTime,
+            committeeType: validatedData.committeeType,
+            startTime: validatedData.startTime?.toISOString(),
         })
-            .eq("meeting_id", req.params.meetingId)
+            .eq("meetingId", req.params.meetingId)
             .select()
             .maybeSingle()
             .throwOnError();
@@ -98,11 +86,7 @@ meetingsRouter.put(
                 .json({ message: "Meeting not found" });
         }
 
-        const responseMeeting = meetingView.parse({
-            meetingId: updatedMeeting.meeting_id,
-            committeeType: updatedMeeting.committee_type,
-            startTime: updatedMeeting.start_time,
-        });
+        const responseMeeting = meetingView.parse(updatedMeeting);
 
         res.status(StatusCodes.OK).json(responseMeeting);
     }
@@ -113,7 +97,7 @@ meetingsRouter.delete(
     RoleChecker([Role.enum.ADMIN]),
     async (req, res) => {
         const { data: deletedMeeting } = await SupabaseDB.MEETINGS.delete()
-            .eq("meeting_id", req.params.meetingId)
+            .eq("meetingId", req.params.meetingId)
             .select()
             .maybeSingle()
             .throwOnError();
