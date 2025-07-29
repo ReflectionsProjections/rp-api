@@ -1,26 +1,29 @@
 import { Router } from "express";
-import { Config } from "../../config";
 import { StatusCodes } from "http-status-codes";
-import jsonwebtoken from "jsonwebtoken";
 import { Database } from "../../database";
+import Config from "../../config";
 import RoleChecker from "../../middleware/role-checker";
-import { JwtPayloadType, Role } from "../auth/auth-models";
+import { Platform, Role } from "../auth/auth-models";
 import { AuthLoginValidator, AuthRoleChangeRequest } from "./auth-schema";
 import authSponsorRouter from "./sponsor/sponsor-router";
 import { CorporateDeleteRequest, CorporateValidator } from "./corporate-schema";
+import { generateJWT, updateDatabaseWithAuthPayload } from "./auth-utils";
 import { OAuth2Client } from "google-auth-library";
-import {
-    getJwtPayloadFromDatabase,
-    isPuzzleBang,
-    updateDatabaseWithAuthPayload,
-} from "./auth-utils";
-
-const googleOAuthClient = new OAuth2Client({
-    clientId: Config.CLIENT_ID,
-    clientSecret: Config.CLIENT_SECRET,
-});
 
 const authRouter = Router();
+
+const oauthClients = {
+    [Platform.WEB]: new OAuth2Client({
+        clientId: Config.CLIENT_ID,
+        clientSecret: Config.CLIENT_SECRET,
+    }),
+    [Platform.IOS]: new OAuth2Client({
+        clientId: Config.IOS_CLIENT_ID,
+    }),
+    [Platform.ANDROID]: new OAuth2Client({
+        clientId: Config.ANDROID_CLIENT_ID,
+    }),
+};
 
 authRouter.use("/sponsor", authSponsorRouter);
 
@@ -55,21 +58,21 @@ authRouter.put("/", RoleChecker([Role.Enum.ADMIN]), async (req, res) => {
         { new: true, upsert: true }
     );
 
-    if (!user) {
-        return res.status(StatusCodes.NOT_FOUND).json({
-            error: "UserNotFound",
-        });
-    }
-
     return res.status(StatusCodes.OK).json(user);
 });
 
-const getAuthPayloadFromCode = async (code: string, redirect_uri: string) => {
-    //
+const getAuthPayloadFromCode = async (
+    code: string,
+    redirect_uri: string,
+    platform: Platform,
+    codeVerifier?: string
+) => {
     try {
+        const googleOAuthClient = oauthClients[platform];
         const { tokens } = await googleOAuthClient.getToken({
             code,
             redirect_uri,
+            codeVerifier, // only for mobile apps
         });
         if (!tokens.id_token) {
             throw new Error("Invalid token");
@@ -89,43 +92,56 @@ const getAuthPayloadFromCode = async (code: string, redirect_uri: string) => {
     }
 };
 
-authRouter.post("/login/", async (req, res) => {
-    // Convert id to token
-    const { code, redirectUri } = AuthLoginValidator.parse(req.body);
-    const authPayload = await getAuthPayloadFromCode(code, redirectUri);
+authRouter.post("/login/:PLATFORM", async (req, res) => {
+    try {
+        const validatedData = AuthLoginValidator.parse({
+            ...req.body,
+            platform: req.params.PLATFORM,
+        });
 
-    if (!authPayload) {
-        return res
-            .status(StatusCodes.BAD_REQUEST)
-            .send({ error: "InvalidToken" });
+        const { code, redirectUri, platform } = validatedData;
+        const codeVerifier =
+            "codeVerifier" in validatedData
+                ? validatedData.codeVerifier
+                : undefined;
+
+        const authPayload = await getAuthPayloadFromCode(
+            code,
+            redirectUri,
+            platform,
+            codeVerifier
+        );
+
+        if (!authPayload) {
+            return res
+                .status(StatusCodes.BAD_REQUEST)
+                .send({ error: "InvalidToken" });
+        }
+
+        const properScopes =
+            "email" in authPayload &&
+            "sub" in authPayload &&
+            "name" in authPayload;
+        if (!properScopes) {
+            return res
+                .status(StatusCodes.BAD_REQUEST)
+                .send({ error: "InvalidScopes" });
+        }
+
+        // Update database by payload
+        await updateDatabaseWithAuthPayload(authPayload);
+
+        // Generate the JWT
+        const jwtToken = await generateJWT(`user${authPayload.sub}`);
+
+        return res.status(StatusCodes.OK).send({ token: jwtToken });
+    } catch (error) {
+        console.error("Error in platform login:", error);
+        return res.status(StatusCodes.BAD_REQUEST).send({
+            error: "InvalidRequest",
+            details: error instanceof Error ? error.message : "Unknown error",
+        });
     }
-
-    const properScopes =
-        "email" in authPayload && "sub" in authPayload && "name" in authPayload;
-    if (!properScopes) {
-        return res
-            .status(StatusCodes.BAD_REQUEST)
-            .send({ error: "InvalidScopes" });
-    }
-
-    // Update database by payload
-    await updateDatabaseWithAuthPayload(authPayload);
-
-    // Generate the JWT
-    const jwtPayload = (
-        await getJwtPayloadFromDatabase(`user${authPayload.sub}`)
-    ).toObject() as JwtPayloadType;
-
-    // Check if user has PuzzleBang role
-    const isPB = isPuzzleBang(jwtPayload);
-
-    const jwtToken = jsonwebtoken.sign(jwtPayload, Config.JWT_SIGNING_SECRET, {
-        expiresIn: isPB
-            ? Config.PB_JWT_EXPIRATION_TIME
-            : Config.JWT_EXPIRATION_TIME,
-    });
-
-    return res.status(StatusCodes.OK).send({ token: jwtToken });
 });
 
 authRouter.get(
@@ -143,8 +159,15 @@ authRouter.post(
     RoleChecker([Role.Enum.ADMIN]),
     async (req, res) => {
         const attendeeData = CorporateValidator.parse(req.body);
-        const corporate = new Database.CORPORATE(attendeeData);
-        await corporate.save();
+        const existing = await Database.CORPORATE.findOne({
+            email: attendeeData.email,
+        });
+        if (existing) {
+            return res.status(StatusCodes.BAD_REQUEST).send({
+                error: "AlreadyExists",
+            });
+        }
+        const corporate = await Database.CORPORATE.create(attendeeData);
 
         return res.status(StatusCodes.CREATED).json(corporate);
     }
@@ -154,9 +177,16 @@ authRouter.delete(
     "/corporate",
     RoleChecker([Role.Enum.ADMIN]),
     async (req, res) => {
-        const attendeeData = CorporateDeleteRequest.parse(req.body);
-        const email = attendeeData.email;
-        await Database.CORPORATE.findOneAndDelete({ email: email });
+        const { email } = CorporateDeleteRequest.parse(req.body);
+        const result = await Database.CORPORATE.findOneAndDelete({
+            email: email,
+        });
+
+        if (!result) {
+            return res
+                .status(StatusCodes.BAD_REQUEST)
+                .send({ error: "NotFound" });
+        }
 
         return res.sendStatus(StatusCodes.NO_CONTENT);
     }
@@ -167,6 +197,8 @@ authRouter.get("/info", RoleChecker([]), async (req, res) => {
     const user = await Database.ROLES.findOne({ userId }).select({
         displayName: true,
         roles: true,
+        userId: true,
+        email: true,
         _id: false,
     });
     return res.status(StatusCodes.OK).json(user);
