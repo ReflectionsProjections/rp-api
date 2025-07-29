@@ -12,17 +12,7 @@ speakersRouter.get("/", RoleChecker([], true), async (req, res) => {
     const { data: speakers } =
         await SupabaseDB.SPEAKERS.select("*").throwOnError();
 
-    const responseSpeakers = (speakers || []).map((speaker) => ({
-        speakerId: speaker.speaker_id,
-        name: speaker.name,
-        title: speaker.title,
-        bio: speaker.bio,
-        eventTitle: speaker.event_title,
-        eventDescription: speaker.event_description,
-        imgUrl: speaker.img_url,
-    }));
-
-    return res.status(StatusCodes.OK).json(responseSpeakers);
+    return res.status(StatusCodes.OK).json(speakers);
 });
 
 // Get a specific speaker
@@ -30,7 +20,7 @@ speakersRouter.get("/:SPEAKERID", RoleChecker([], true), async (req, res) => {
     const speakerId = req.params.SPEAKERID;
 
     const { data: speaker } = await SupabaseDB.SPEAKERS.select("*")
-        .eq("speaker_id", speakerId)
+        .eq("speakerId", speakerId)
         .maybeSingle()
         .throwOnError();
 
@@ -40,17 +30,7 @@ speakersRouter.get("/:SPEAKERID", RoleChecker([], true), async (req, res) => {
             .json({ error: "DoesNotExist" });
     }
 
-    const responseSpeaker = {
-        speakerId: speaker.speaker_id,
-        name: speaker.name,
-        title: speaker.title,
-        bio: speaker.bio,
-        eventTitle: speaker.event_title,
-        eventDescription: speaker.event_description,
-        imgUrl: speaker.img_url,
-    };
-
-    return res.status(StatusCodes.OK).json(responseSpeaker);
+    return res.status(StatusCodes.OK).json(speaker);
 });
 
 // Create a new speaker
@@ -60,36 +40,14 @@ speakersRouter.post(
     async (req, res) => {
         const validatedData = SpeakerValidator.parse(req.body);
 
-        // Map from camelCase to snake_case for the database
-        const newSpeakerData = {
-            speaker_id: validatedData.speakerId,
-            name: validatedData.name,
-            title: validatedData.title,
-            bio: validatedData.bio,
-            event_title: validatedData.eventTitle,
-            event_description: validatedData.eventDescription,
-            img_url: validatedData.imgUrl,
-        };
-
         const { data: newSpeaker } = await SupabaseDB.SPEAKERS.insert(
-            newSpeakerData
+            validatedData
         )
             .select()
             .single()
             .throwOnError();
 
-        // Map back from snake_case to camelCase for the API response
-        const responseSpeaker = {
-            speakerId: newSpeaker.speaker_id,
-            name: newSpeaker.name,
-            title: newSpeaker.title,
-            bio: newSpeaker.bio,
-            eventTitle: newSpeaker.event_title,
-            eventDescription: newSpeaker.event_description,
-            imgUrl: newSpeaker.img_url,
-        };
-
-        return res.status(StatusCodes.CREATED).json(responseSpeaker);
+        return res.status(StatusCodes.CREATED).json(newSpeaker);
     }
 );
 
@@ -101,20 +59,10 @@ speakersRouter.put(
         const speakerId = req.params.SPEAKERID;
         const validatedData = UpdateSpeakerValidator.parse(req.body);
 
-        // Map from camelCase to snake_case for the database
-        const updateDataForDB = {
-            name: validatedData.name,
-            title: validatedData.title,
-            bio: validatedData.bio,
-            event_title: validatedData.eventTitle,
-            event_description: validatedData.eventDescription,
-            img_url: validatedData.imgUrl,
-        };
-
         const { data: updatedSpeaker } = await SupabaseDB.SPEAKERS.update(
-            updateDataForDB
+            validatedData
         )
-            .eq("speaker_id", speakerId)
+            .eq("speakerId", speakerId)
             .select()
             .maybeSingle()
             .throwOnError();
@@ -125,18 +73,7 @@ speakersRouter.put(
                 .json({ error: "DoesNotExist" });
         }
 
-        // Map back from snake_case to camelCase for the API response
-        const responseSpeaker = {
-            speakerId: updatedSpeaker.speaker_id,
-            name: updatedSpeaker.name,
-            title: updatedSpeaker.title,
-            bio: updatedSpeaker.bio,
-            eventTitle: updatedSpeaker.event_title,
-            eventDescription: updatedSpeaker.event_description,
-            imgUrl: updatedSpeaker.img_url,
-        };
-
-        return res.status(StatusCodes.OK).json(responseSpeaker);
+        return res.status(StatusCodes.OK).json(updatedSpeaker);
     }
 );
 
@@ -148,7 +85,7 @@ speakersRouter.delete(
         const speakerId = req.params.SPEAKERID;
 
         const { data: deletedSpeaker } = await SupabaseDB.SPEAKERS.delete()
-            .eq("speaker_id", speakerId)
+            .eq("speakerId", speakerId)
             .select()
             .maybeSingle()
             .throwOnError();
