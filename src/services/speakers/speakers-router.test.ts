@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "@jest/globals";
+import { afterAll, beforeEach, describe, expect, it } from "@jest/globals";
 import {
     get,
     post,
@@ -64,32 +64,18 @@ const UPDATE_SPEAKER_PAYLOAD = {
 } satisfies UpdateSpeakerType;
 
 beforeEach(async () => {
-    // Clear existing speakers
     await SupabaseDB.SPEAKERS.delete().neq(
-        "speaker_id",
+        "speakerId",
         "00000000-0000-0000-0000-000000000000"
     );
 
-    // Insert test speakers
-    await SupabaseDB.SPEAKERS.insert([
-        {
-            speaker_id: SPEAKER_1.speakerId,
-            name: SPEAKER_1.name,
-            title: SPEAKER_1.title,
-            bio: SPEAKER_1.bio,
-            event_title: SPEAKER_1.eventTitle,
-            event_description: SPEAKER_1.eventDescription,
-            img_url: SPEAKER_1.imgUrl,
-        },
-        {
-            speaker_id: SPEAKER_2.speakerId,
-            name: SPEAKER_2.name,
-            title: SPEAKER_2.title,
-            bio: SPEAKER_2.bio,
-            event_title: SPEAKER_2.eventTitle,
-            event_description: SPEAKER_2.eventDescription,
-            img_url: SPEAKER_2.imgUrl,
-        },
+    await SupabaseDB.SPEAKERS.insert([SPEAKER_1, SPEAKER_2]);
+});
+
+afterAll(async () => {
+    await SupabaseDB.SPEAKERS.delete().in("speakerId", [
+        SPEAKER_1_ID,
+        SPEAKER_2_ID,
     ]);
 });
 
@@ -106,7 +92,7 @@ describe("GET /speakers/", () => {
 
     it("should return an empty array when no speakers exist", async () => {
         await SupabaseDB.SPEAKERS.delete().neq(
-            "speaker_id",
+            "speakerId",
             "00000000-0000-0000-0000-000000000000"
         );
         const response = await get("/speakers/").expect(StatusCodes.OK);
@@ -151,7 +137,6 @@ describe("POST /speakers/", () => {
             /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/
         );
 
-        // Verify the speaker was actually created by attempting to fetch it
         const createdSpeakerResponse = await get(
             `/speakers/${response.body.speakerId}`
         ).expect(StatusCodes.OK);
@@ -227,7 +212,6 @@ describe("PUT /speakers/:SPEAKERID", () => {
             speakerId: SPEAKER_1_ID,
         });
 
-        // ensure speakerId was not overwritten
         expect(response.body.speakerId).toBe(SPEAKER_1_ID);
 
         const speakerAfterUpdateResponse = await get(
