@@ -336,22 +336,22 @@ afterAll(async () => {
         "eventId",
         "00000000-0000-0000-0000-000000000000"
     );
-    
+
     await SupabaseDB.EVENTS.delete().neq(
         "eventId",
         "00000000-0000-0000-0000-000000000000"
     );
-    
+
     await SupabaseDB.REGISTRATIONS.delete().neq(
         "userId",
         "00000000-0000-0000-0000-000000000000"
     );
-    
+
     await SupabaseDB.ATTENDEES.delete().neq(
         "userId",
         "00000000-0000-0000-0000-000000000000"
     );
-    
+
     await SupabaseDB.ROLES.delete().neq(
         "userId",
         "00000000-0000-0000-0000-000000000000"

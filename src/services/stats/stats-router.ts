@@ -195,12 +195,10 @@ statsRouter.get(
 
         const dietaryRestrictionCounts: { [key: string]: number } = {};
         dietaryRestrictionsData?.forEach((registration) => {
-            registration.dietaryRestrictions?.forEach(
-                (restriction: string) => {
-                    dietaryRestrictionCounts[restriction] =
-                        (dietaryRestrictionCounts[restriction] || 0) + 1;
-                }
-            );
+            registration.dietaryRestrictions?.forEach((restriction: string) => {
+                dietaryRestrictionCounts[restriction] =
+                    (dietaryRestrictionCounts[restriction] || 0) + 1;
+            });
         });
 
         return res.status(StatusCodes.OK).json({
