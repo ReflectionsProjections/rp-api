@@ -23,10 +23,10 @@ export const SupabaseDB = {
         return supabase.from("events");
     },
     get EVENT_ATTENDANCE() {
-        return supabase.from("eventAttendance");
+        return supabase.from("eventAttendances");
     },
     get ATTENDEE_ATTENDANCE() {
-        return supabase.from("attendeeAttendance");
+        return supabase.from("attendeeAttendances");
     },
     get REGISTRATIONS() {
         return supabase.from("registrations");
