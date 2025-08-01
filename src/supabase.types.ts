@@ -280,7 +280,7 @@ export type Database = {
                     resume?: string;
                     school?: string;
                     tags?: string[];
-                    userId?: string;
+                    userId: string;
                 };
                 Insert: {
                     allergies?: string[];
@@ -299,7 +299,7 @@ export type Database = {
                     resume?: string;
                     school?: string;
                     tags?: string[];
-                    userId?: string;
+                    userId: string;
                 };
                 Update: {
                     allergies?: string[];
@@ -336,7 +336,7 @@ export type Database = {
                     name: string;
                     opportunities: string[];
                     personalLinks: string[];
-                    resume?: string;
+                    resume: string;
                     school: string;
                     tags: string[];
                     userId: string;
@@ -355,7 +355,7 @@ export type Database = {
                     name: string;
                     opportunities: string[];
                     personalLinks: string[];
-                    resume?: string;
+                    resume: string;
                     school: string;
                     tags: string[];
                     userId: string;

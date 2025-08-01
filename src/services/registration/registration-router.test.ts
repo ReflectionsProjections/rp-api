@@ -11,6 +11,7 @@ jest.mock("../ses/ses-utils", () => ({
 }));
 
 const VALID_DRAFT = {
+    userId: "1234",
     name: "Draft User",
     email: "fake@gmail.com",
     school: "UIUC",
@@ -30,25 +31,26 @@ const VALID_DRAFT = {
 const VALID_REGISTRATION = {
     ...VALID_DRAFT,
     majors: ["CS"],
+    resume: "resume.pdf",
 };
 
 beforeEach(async () => {
     jest.clearAllMocks();
 
     await SupabaseDB.ATTENDEES.delete().neq(
-        "user_id",
+        "userId",
         "00000000-0000-0000-0000-000000000000"
     );
     await SupabaseDB.DRAFT_REGISTRATIONS.delete().neq(
-        "user_id",
+        "userId",
         "00000000-0000-0000-0000-000000000000"
     );
     await SupabaseDB.REGISTRATIONS.delete().neq(
-        "user_id",
+        "userId",
         "00000000-0000-0000-0000-000000000000"
     );
     await SupabaseDB.ROLES.delete().neq(
-        "user_id",
+        "userId",
         "00000000-0000-0000-0000-000000000000"
     );
 
@@ -67,12 +69,13 @@ describe("POST /registration/draft", () => {
             "*"
         )
             .eq("userId", TESTER.userId)
-            .single();
+            .single()
+            .throwOnError();
         expect(dbEntry).toBeDefined();
     });
 
     it("should not allow unauthenticated users to save registration", async () => {
-        await post("/registration/save")
+        await post("/registration/draft")
             .send(VALID_REGISTRATION)
             .expect(StatusCodes.UNAUTHORIZED);
     });
@@ -81,7 +84,7 @@ describe("POST /registration/draft", () => {
         await SupabaseDB.DRAFT_REGISTRATIONS.insert({
             ...VALID_DRAFT,
             userId: TESTER.userId,
-        });
+        }).throwOnError();
         const updatedDraft = { ...VALID_DRAFT, name: "Updated Name" };
         const res = await post("/registration/draft", Role.enum.USER)
             .send(updatedDraft)
@@ -93,7 +96,8 @@ describe("POST /registration/draft", () => {
             "*"
         )
             .eq("userId", TESTER.userId)
-            .single();
+            .single()
+            .throwOnError();
         expect(dbEntry).toBeDefined();
         expect(dbEntry.name).toBe("Updated Name");
     });
@@ -115,7 +119,7 @@ describe("GET /registration/draft", () => {
         await SupabaseDB.DRAFT_REGISTRATIONS.insert({
             ...VALID_DRAFT,
             userId: TESTER.userId,
-        });
+        }).throwOnError();
 
         const response = await get(
             "/registration/draft",
@@ -145,19 +149,30 @@ describe("POST /registration/submit", () => {
             .send(VALID_REGISTRATION)
             .expect(StatusCodes.OK);
 
+        const { data: draft_reg } = await SupabaseDB.DRAFT_REGISTRATIONS.select(
+            "*"
+        )
+            .eq("userId", TESTER.userId)
+            .single()
+            .throwOnError();
+        expect(draft_reg).toBeDefined();
+
         const { data: reg } = await SupabaseDB.REGISTRATIONS.select("*")
             .eq("userId", TESTER.userId)
-            .single();
+            .single()
+            .throwOnError();
         expect(reg).toBeDefined();
 
         const { data: attendee } = await SupabaseDB.ATTENDEES.select("*")
             .eq("userId", TESTER.userId)
-            .single();
+            .single()
+            .throwOnError();
         expect(attendee).toBeDefined();
 
         const { data: roles } = await SupabaseDB.ROLES.select("*")
             .eq("userId", TESTER.userId)
-            .single();
+            .single()
+            .throwOnError();
         expect(roles?.roles).toContain(Role.enum.USER);
         expect(sendHTMLEmail).toHaveBeenCalled();
     });
@@ -166,7 +181,7 @@ describe("POST /registration/submit", () => {
         await SupabaseDB.REGISTRATIONS.insert({
             ...VALID_REGISTRATION,
             userId: TESTER.userId,
-        });
+        }).throwOnError();
         await post("/registration/submit", Role.Enum.USER)
             .send({ ...VALID_REGISTRATION, name: "Updated Name" })
             .expect(StatusCodes.OK);
@@ -201,32 +216,18 @@ describe("GET /registration/all", () => {
     it.each([Role.enum.ADMIN, Role.enum.CORPORATE])(
         "should return registrants for %s",
         async (role) => {
-            await SupabaseDB.REGISTRATIONS.insert({
-                ...VALID_REGISTRATION,
-                userId: "user1",
-                resume: "resume.pdf",
-            });
-            await SupabaseDB.REGISTRATIONS.insert({
-                ...VALID_REGISTRATION,
-                userId: "user2",
-                resume: "resume.pdf",
-            });
-            await SupabaseDB.REGISTRATIONS.insert({
-                ...VALID_REGISTRATION,
-                userId: "user3",
-                resume: undefined,
-            });
-            await SupabaseDB.REGISTRATIONS.insert({
-                ...VALID_REGISTRATION,
-                userId: "user4",
-                hasResume: "resume.pdf",
-            });
+            await post("/registration/submit", Role.Enum.USER).send(
+                VALID_REGISTRATION
+            );
+
             const res = await get("/registration/all", role).expect(
                 StatusCodes.OK
             );
 
-            expect(res.body.registrants.length).toBe(3);
-            expect(res.body.registrants[0]).toHaveProperty("userId");
+            console.log(res.body);
+
+            expect(res.body.length).toBe(1);
+            expect(res.body[0]).toHaveProperty("userId");
         }
     );
 

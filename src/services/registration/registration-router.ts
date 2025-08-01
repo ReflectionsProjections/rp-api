@@ -41,7 +41,7 @@ registrationRouter.post("/draft", RoleChecker([]), async (req, res) => {
 registrationRouter.get("/draft", RoleChecker([]), async (req, res) => {
     const { data: draftRegistration } =
         await SupabaseDB.DRAFT_REGISTRATIONS.select("*")
-            .eq("user_id", res.locals.payload.userId)
+            .eq("userId", res.locals.payload.userId)
             .maybeSingle();
 
     if (!draftRegistration) {
@@ -74,10 +74,15 @@ registrationRouter.post("/submit", RoleChecker([]), async (req, res) => {
 
     const attendee = attendeeResult.data;
 
+    const { data: existing } = await SupabaseDB.REGISTRATIONS.select("userId")
+        .eq("userId", payload.userId)
+        .single();
+
+    await SupabaseDB.DRAFT_REGISTRATIONS.upsert(registration).throwOnError();
     await SupabaseDB.REGISTRATIONS.upsert(registration).throwOnError();
 
     const { data: existingRoleRecord } = await SupabaseDB.ROLES.select("roles")
-        .eq("user_id", payload.userId)
+        .eq("userId", payload.userId)
         .single();
 
     let updatedRoles: Role[] = [Role.enum.USER]; // Default if no existing record
@@ -87,55 +92,59 @@ registrationRouter.post("/submit", RoleChecker([]), async (req, res) => {
     }
 
     await SupabaseDB.ROLES.upsert({
-        user_id: payload.userId,
-        display_name: payload.displayName,
+        userId: payload.userId,
+        displayName: payload.displayName,
         email: payload.email,
         roles: updatedRoles,
     }).throwOnError();
 
     await SupabaseDB.ATTENDEES.upsert(attendee).throwOnError();
 
-    const substitution = {
-        allergies:
-            registration.allergies.length > 0
-                ? registration.allergies.join(", ")
-                : "N/A",
-        dietaryRestrictions:
-            registration.dietaryRestrictions.length > 0
-                ? registration.dietaryRestrictions.join(", ")
-                : "N/A",
-        educationLevel: registration.educationLevel,
-        ethnicity:
-            registration.ethnicity.length > 0
-                ? registration.ethnicity.join(", ")
-                : "N/A",
-        gender: registration.gender,
-        graduationYear: registration.graduationYear,
-        majors:
-            registration.majors.length > 0
-                ? registration.majors.join(", ")
-                : "N/A",
-        minors:
-            registration.minors.length > 0
-                ? registration.minors.join(", ")
-                : "N/A",
-        name: registration.name,
-        hasResume: registration.resume !== undefined,
-        school: registration.school,
-        opportunities:
-            registration.opportunities.length > 0
-                ? registration.opportunities.join(", ")
-                : "N/A",
-        personalLinks: registration.personalLinks,
-        tags:
-            registration.tags.length > 0 ? registration.tags.join(", ") : "N/A",
-    };
+    if (!existing) {
+        const substitution = {
+            allergies:
+                registration.allergies.length > 0
+                    ? registration.allergies.join(", ")
+                    : "N/A",
+            dietaryRestrictions:
+                registration.dietaryRestrictions.length > 0
+                    ? registration.dietaryRestrictions.join(", ")
+                    : "N/A",
+            educationLevel: registration.educationLevel,
+            ethnicity:
+                registration.ethnicity.length > 0
+                    ? registration.ethnicity.join(", ")
+                    : "N/A",
+            gender: registration.gender,
+            graduationYear: registration.graduationYear,
+            majors:
+                registration.majors.length > 0
+                    ? registration.majors.join(", ")
+                    : "N/A",
+            minors:
+                registration.minors.length > 0
+                    ? registration.minors.join(", ")
+                    : "N/A",
+            name: registration.name,
+            hasResume: registration.resume !== undefined,
+            school: registration.school,
+            opportunities:
+                registration.opportunities.length > 0
+                    ? registration.opportunities.join(", ")
+                    : "N/A",
+            personalLinks: registration.personalLinks,
+            tags:
+                registration.tags.length > 0
+                    ? registration.tags.join(", ")
+                    : "N/A",
+        };
 
-    await sendHTMLEmail(
-        payload.email,
-        "Reflections Projections 2025 Confirmation!",
-        Mustache.render(templates.REGISTRATION_CONFIRMATION, substitution)
-    );
+        await sendHTMLEmail(
+            payload.email,
+            "Reflections Projections 2025 Confirmation!",
+            Mustache.render(templates.REGISTRATION_CONFIRMATION, substitution)
+        );
+    }
 
     return res.status(StatusCodes.OK).json(registration);
 });
@@ -146,9 +155,7 @@ registrationRouter.get(
     async (req, res) => {
         const { data } = await SupabaseDB.REGISTRATIONS.select(
             "userId, name, majors, minors, school, educationLevel, graduationYear, opportunities, personalLinks"
-        )
-            .not("resume", "is", null)
-            .throwOnError();
+        ).throwOnError();
 
         return res.status(StatusCodes.OK).json(data);
     }
