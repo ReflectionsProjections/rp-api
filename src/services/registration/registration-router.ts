@@ -6,12 +6,12 @@ import {
 } from "./registration-schema";
 import { SupabaseDB } from "../../supabase";
 import RoleChecker from "../../middleware/role-checker";
-import { Role } from "../auth/auth-models";
 import { AttendeeCreateValidator } from "../attendee/attendee-validators";
 import cors from "cors";
 import Mustache from "mustache";
 import { sendHTMLEmail } from "../ses/ses-utils";
 import templates from "../../templates/templates";
+import { Role } from "../auth/auth-models";
 
 const registrationRouter = Router();
 registrationRouter.use(cors());
@@ -55,6 +55,7 @@ registrationRouter.get("/draft", RoleChecker([]), async (req, res) => {
 
 registrationRouter.post("/submit", RoleChecker([]), async (req, res) => {
     const payload = res.locals.payload;
+    console.log(payload);
 
     const registrationResult = RegistrationValidator.safeParse(req.body);
     if (!registrationResult.success) {

@@ -1,10 +1,9 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
-import { post, get } from "../../../testing/testingTools";
-import { TESTER } from "../../../testing/testingTools";
 import { StatusCodes } from "http-status-codes";
-import { SupabaseDB } from "../../supabase";
+import { get, post, TESTER } from "../../../testing/testingTools";
 import { Role } from "../auth/auth-models";
 import { sendHTMLEmail } from "../ses/ses-utils";
+import { SupabaseDB } from "../../supabase";
 
 jest.mock("../ses/ses-utils", () => ({
     sendHTMLEmail: jest.fn(),

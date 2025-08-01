@@ -19,11 +19,20 @@ export const SupabaseDB = {
     get DRAFT_REGISTRATIONS() {
         return supabase.from("draft_registrations");
     },
-    get REGISTRATIONS() {
-        return supabase.from("registrations");
-    },
     get ATTENDEES() {
         return supabase.from("attendees");
+    },
+    get EVENTS() {
+        return supabase.from("events");
+    },
+    get EVENT_ATTENDANCE() {
+        return supabase.from("eventAttendance");
+    },
+    get ATTENDEE_ATTENDANCE() {
+        return supabase.from("attendeeAttendance");
+    },
+    get REGISTRATIONS() {
+        return supabase.from("registrations");
     },
 };
 
@@ -50,3 +59,25 @@ export const CommitteeTypes: Record<
     MARKETING: "MARKETING",
     OPERATIONS: "OPERATIONS",
 };
+
+export interface User {
+    userId: string;
+    points: number;
+    favoriteEvents: string[];
+    puzzlesCompleted: string[];
+    hasPriorityMon: boolean;
+    hasPriorityTue: boolean;
+    hasPriorityWed: boolean;
+    hasPriorityThu: boolean;
+    hasPriorityFri: boolean;
+    hasPrioritySat: boolean;
+    hasPrioritySun: boolean;
+    isEligibleTshirt: boolean;
+    isEligibleCap: boolean;
+    isEligibleTote: boolean;
+    isEligibleButton: boolean;
+    hasRedeemedTshirt: boolean;
+    hasRedeemedCap: boolean;
+    hasRedeemedTote: boolean;
+    hasRedeemedButton: boolean;
+}

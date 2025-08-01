@@ -7,6 +7,11 @@ export type Json =
     | Json[];
 
 export type Database = {
+    // Allows to automatically instanciate createClient with right options
+    // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+    __InternalSupabase: {
+        PostgrestVersion: "12.2.3 (519615d)";
+    };
     graphql_public: {
         Tables: {
             [_ in never]: never;
@@ -34,100 +39,100 @@ export type Database = {
     };
     public: {
         Tables: {
-            attendee_attendance: {
+            attendeeAttendance: {
                 Row: {
-                    events_attended: string[];
-                    user_id: string;
+                    eventsAttended: string[];
+                    userId: string;
                 };
                 Insert: {
-                    events_attended?: string[];
-                    user_id: string;
+                    eventsAttended?: string[];
+                    userId: string;
                 };
                 Update: {
-                    events_attended?: string[];
-                    user_id?: string;
+                    eventsAttended?: string[];
+                    userId?: string;
                 };
                 Relationships: [
                     {
                         foreignKeyName: "attendee_attendance_user_id_fkey";
-                        columns: ["user_id"];
+                        columns: ["userId"];
                         isOneToOne: true;
                         referencedRelation: "roles";
-                        referencedColumns: ["user_id"];
+                        referencedColumns: ["userId"];
                     },
                 ];
             };
             attendees: {
                 Row: {
-                    favorite_events: string[];
-                    has_priority_fri: boolean;
-                    has_priority_mon: boolean;
-                    has_priority_sat: boolean;
-                    has_priority_sun: boolean;
-                    has_priority_thu: boolean;
-                    has_priority_tue: boolean;
-                    has_priority_wed: boolean;
-                    has_redeemed_button: boolean;
-                    has_redeemed_cap: boolean;
-                    has_redeemed_tote: boolean;
-                    has_redeemed_tshirt: boolean;
-                    is_eligible_button: boolean;
-                    is_eligible_cap: boolean;
-                    is_eligible_tote: boolean;
-                    is_eligible_tshirt: boolean;
+                    favoriteEvents: string[];
+                    hasPriorityFri: boolean;
+                    hasPriorityMon: boolean;
+                    hasPrioritySat: boolean;
+                    hasPrioritySun: boolean;
+                    hasPriorityThu: boolean;
+                    hasPriorityTue: boolean;
+                    hasPriorityWed: boolean;
+                    hasRedeemedButton: boolean;
+                    hasRedeemedCap: boolean;
+                    hasRedeemedTote: boolean;
+                    hasRedeemedTshirt: boolean;
+                    isEligibleButton: boolean;
+                    isEligibleCap: boolean;
+                    isEligibleTote: boolean;
+                    isEligibleTshirt: boolean;
                     points: number;
-                    puzzles_completed: string[];
-                    user_id: string;
+                    puzzlesCompleted: string[];
+                    userId: string;
                 };
                 Insert: {
-                    favorite_events?: string[];
-                    has_priority_fri?: boolean;
-                    has_priority_mon?: boolean;
-                    has_priority_sat?: boolean;
-                    has_priority_sun?: boolean;
-                    has_priority_thu?: boolean;
-                    has_priority_tue?: boolean;
-                    has_priority_wed?: boolean;
-                    has_redeemed_button?: boolean;
-                    has_redeemed_cap?: boolean;
-                    has_redeemed_tote?: boolean;
-                    has_redeemed_tshirt?: boolean;
-                    is_eligible_button?: boolean;
-                    is_eligible_cap?: boolean;
-                    is_eligible_tote?: boolean;
-                    is_eligible_tshirt?: boolean;
+                    favoriteEvents?: string[];
+                    hasPriorityFri?: boolean;
+                    hasPriorityMon?: boolean;
+                    hasPrioritySat?: boolean;
+                    hasPrioritySun?: boolean;
+                    hasPriorityThu?: boolean;
+                    hasPriorityTue?: boolean;
+                    hasPriorityWed?: boolean;
+                    hasRedeemedButton?: boolean;
+                    hasRedeemedCap?: boolean;
+                    hasRedeemedTote?: boolean;
+                    hasRedeemedTshirt?: boolean;
+                    isEligibleButton?: boolean;
+                    isEligibleCap?: boolean;
+                    isEligibleTote?: boolean;
+                    isEligibleTshirt?: boolean;
                     points?: number;
-                    puzzles_completed?: string[];
-                    user_id: string;
+                    puzzlesCompleted?: string[];
+                    userId: string;
                 };
                 Update: {
-                    favorite_events?: string[];
-                    has_priority_fri?: boolean;
-                    has_priority_mon?: boolean;
-                    has_priority_sat?: boolean;
-                    has_priority_sun?: boolean;
-                    has_priority_thu?: boolean;
-                    has_priority_tue?: boolean;
-                    has_priority_wed?: boolean;
-                    has_redeemed_button?: boolean;
-                    has_redeemed_cap?: boolean;
-                    has_redeemed_tote?: boolean;
-                    has_redeemed_tshirt?: boolean;
-                    is_eligible_button?: boolean;
-                    is_eligible_cap?: boolean;
-                    is_eligible_tote?: boolean;
-                    is_eligible_tshirt?: boolean;
+                    favoriteEvents?: string[];
+                    hasPriorityFri?: boolean;
+                    hasPriorityMon?: boolean;
+                    hasPrioritySat?: boolean;
+                    hasPrioritySun?: boolean;
+                    hasPriorityThu?: boolean;
+                    hasPriorityTue?: boolean;
+                    hasPriorityWed?: boolean;
+                    hasRedeemedButton?: boolean;
+                    hasRedeemedCap?: boolean;
+                    hasRedeemedTote?: boolean;
+                    hasRedeemedTshirt?: boolean;
+                    isEligibleButton?: boolean;
+                    isEligibleCap?: boolean;
+                    isEligibleTote?: boolean;
+                    isEligibleTshirt?: boolean;
                     points?: number;
-                    puzzles_completed?: string[];
-                    user_id?: string;
+                    puzzlesCompleted?: string[];
+                    userId?: string;
                 };
                 Relationships: [
                     {
                         foreignKeyName: "attendees_user_id_fkey";
-                        columns: ["user_id"];
+                        columns: ["userId"];
                         isOneToOne: true;
                         referencedRelation: "roles";
-                        referencedColumns: ["user_id"];
+                        referencedColumns: ["userId"];
                     },
                 ];
             };
@@ -146,18 +151,18 @@ export type Database = {
                 };
                 Relationships: [];
             };
-            event_attendance: {
+            eventAttendance: {
                 Row: {
                     attendee: string;
-                    event_id: string;
+                    eventId: string;
                 };
                 Insert: {
                     attendee: string;
-                    event_id: string;
+                    eventId: string;
                 };
                 Update: {
                     attendee?: string;
-                    event_id?: string;
+                    eventId?: string;
                 };
                 Relationships: [
                     {
@@ -165,100 +170,100 @@ export type Database = {
                         columns: ["attendee"];
                         isOneToOne: false;
                         referencedRelation: "attendees";
-                        referencedColumns: ["user_id"];
+                        referencedColumns: ["userId"];
                     },
                     {
                         foreignKeyName: "event_attendance_event_id_fkey";
-                        columns: ["event_id"];
+                        columns: ["eventId"];
                         isOneToOne: false;
                         referencedRelation: "events";
-                        referencedColumns: ["event_id"];
+                        referencedColumns: ["eventId"];
                     },
                 ];
             };
             events: {
                 Row: {
-                    attendance_count: number;
+                    attendanceCount: number;
                     description: string;
-                    end_time: string;
-                    event_id: string;
-                    event_type: Database["public"]["Enums"]["event_type"];
-                    image_url: string | null;
-                    is_virtual: boolean;
-                    is_visible: boolean;
+                    endTime: string;
+                    eventId: string;
+                    eventType: Database["public"]["Enums"]["event_type"];
+                    imageUrl: string | null;
+                    isVirtual: boolean;
+                    isVisible: boolean;
                     location: string | null;
                     name: string;
                     points: number;
-                    start_time: string;
+                    startTime: string;
                 };
                 Insert: {
-                    attendance_count?: number;
+                    attendanceCount?: number;
                     description: string;
-                    end_time: string;
-                    event_id?: string;
-                    event_type: Database["public"]["Enums"]["event_type"];
-                    image_url?: string | null;
-                    is_virtual: boolean;
-                    is_visible?: boolean;
+                    endTime: string;
+                    eventId?: string;
+                    eventType: Database["public"]["Enums"]["event_type"];
+                    imageUrl?: string | null;
+                    isVirtual: boolean;
+                    isVisible?: boolean;
                     location?: string | null;
                     name: string;
                     points: number;
-                    start_time: string;
+                    startTime: string;
                 };
                 Update: {
-                    attendance_count?: number;
+                    attendanceCount?: number;
                     description?: string;
-                    end_time?: string;
-                    event_id?: string;
-                    event_type?: Database["public"]["Enums"]["event_type"];
-                    image_url?: string | null;
-                    is_virtual?: boolean;
-                    is_visible?: boolean;
+                    endTime?: string;
+                    eventId?: string;
+                    eventType?: Database["public"]["Enums"]["event_type"];
+                    imageUrl?: string | null;
+                    isVirtual?: boolean;
+                    isVisible?: boolean;
                     location?: string | null;
                     name?: string;
                     points?: number;
-                    start_time?: string;
+                    startTime?: string;
                 };
                 Relationships: [];
             };
             meetings: {
                 Row: {
-                    committee_type: Database["public"]["Enums"]["committee_names"];
-                    meeting_id: string;
-                    start_time: Date;
+                    committeeType: Database["public"]["Enums"]["committee_names"];
+                    meetingId: string;
+                    startTime: string;
                 };
                 Insert: {
-                    committee_type: Database["public"]["Enums"]["committee_names"];
-                    meeting_id?: string;
-                    start_time: Date;
+                    committeeType: Database["public"]["Enums"]["committee_names"];
+                    meetingId?: string;
+                    startTime: string;
                 };
                 Update: {
-                    committee_type?: Database["public"]["Enums"]["committee_names"];
-                    meeting_id?: string;
-                    start_time?: Date;
+                    committeeType?: Database["public"]["Enums"]["committee_names"];
+                    meetingId?: string;
+                    startTime?: string;
                 };
                 Relationships: [];
             };
             notifications: {
                 Row: {
-                    device_id: string;
-                    user_id: string;
+                    deviceId: string;
+                    userId: string;
                 };
                 Insert: {
-                    device_id: string;
-                    user_id: string;
+                    deviceId: string;
+                    userId: string;
                 };
                 Update: {
-                    device_id?: string;
-                    user_id?: string;
+                    deviceId?: string;
+                    userId?: string;
                 };
                 Relationships: [
                     {
                         foreignKeyName: "notifications_user_id_fkey";
-                        columns: ["user_id"];
+                        columns: ["userId"];
                         isOneToOne: true;
                         referencedRelation: "roles";
-                        referencedColumns: ["user_id"];
+                        referencedColumns: ["userId"];
                     },
                 ];
             };
@@ -391,51 +396,51 @@ export type Database = {
             };
             roles: {
                 Row: {
-                    display_name: string;
+                    displayName: string;
                     email: string;
                     roles: Database["public"]["Enums"]["role_type"][];
-                    user_id: string;
+                    userId: string;
                 };
                 Insert: {
-                    display_name: string;
+                    displayName: string;
                     email: string;
                     roles?: Database["public"]["Enums"]["role_type"][];
-                    user_id: string;
+                    userId: string;
                 };
                 Update: {
-                    display_name?: string;
+                    displayName?: string;
                     email?: string;
                     roles?: Database["public"]["Enums"]["role_type"][];
-                    user_id?: string;
+                    userId?: string;
                 };
                 Relationships: [];
             };
             speakers: {
                 Row: {
                     bio: string;
-                    event_description: string;
-                    event_title: string;
-                    img_url: string;
+                    eventDescription: string;
+                    eventTitle: string;
+                    imgUrl: string;
                     name: string;
-                    speaker_id: string;
+                    speakerId: string;
                     title: string;
                 };
                 Insert: {
                     bio: string;
-                    event_description: string;
-                    event_title: string;
-                    img_url: string;
+                    eventDescription: string;
+                    eventTitle: string;
+                    imgUrl: string;
                     name: string;
-                    speaker_id?: string;
+                    speakerId?: string;
                     title: string;
                 };
                 Update: {
                     bio?: string;
-                    event_description?: string;
-                    event_title?: string;
-                    img_url?: string;
+                    eventDescription?: string;
+                    eventTitle?: string;
+                    imgUrl?: string;
                     name?: string;
-                    speaker_id?: string;
+                    speakerId?: string;
                     title?: string;
                 };
                 Relationships: [];
@@ -463,15 +468,15 @@ export type Database = {
             };
             subscriptions: {
                 Row: {
-                    mailing_list: string;
+                    mailingList: string;
                     subscriptions: string[];
                 };
                 Insert: {
-                    mailing_list: string;
+                    mailingList: string;
                     subscriptions?: string[];
                 };
                 Update: {
-                    mailing_list?: string;
+                    mailingList?: string;
                     subscriptions?: string[];
                 };
                 Relationships: [];
@@ -508,21 +513,28 @@ export type Database = {
     };
 };
 
-type DefaultSchema = Database[Extract<keyof Database, "public">];
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">;
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<
+    keyof Database,
+    "public"
+>];
 
 export type Tables<
     DefaultSchemaTableNameOrOptions extends
         | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
-        | { schema: keyof Database },
+        | { schema: keyof DatabaseWithoutInternals },
     TableName extends DefaultSchemaTableNameOrOptions extends {
-        schema: keyof Database;
+        schema: keyof DatabaseWithoutInternals;
     }
-        ? keyof (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-              Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+        ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+              DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
         : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-    ? (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-          Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals;
+}
+    ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+          DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
           Row: infer R;
       }
         ? R
@@ -540,14 +552,16 @@ export type Tables<
 export type TablesInsert<
     DefaultSchemaTableNameOrOptions extends
         | keyof DefaultSchema["Tables"]
-        | { schema: keyof Database },
+        | { schema: keyof DatabaseWithoutInternals },
     TableName extends DefaultSchemaTableNameOrOptions extends {
-        schema: keyof Database;
+        schema: keyof DatabaseWithoutInternals;
     }
-        ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+        ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
         : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-    ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals;
+}
+    ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
           Insert: infer I;
       }
         ? I
@@ -563,14 +577,16 @@ export type TablesInsert<
 export type TablesUpdate<
     DefaultSchemaTableNameOrOptions extends
         | keyof DefaultSchema["Tables"]
-        | { schema: keyof Database },
+        | { schema: keyof DatabaseWithoutInternals },
     TableName extends DefaultSchemaTableNameOrOptions extends {
-        schema: keyof Database;
+        schema: keyof DatabaseWithoutInternals;
     }
-        ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+        ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
         : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-    ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals;
+}
+    ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
           Update: infer U;
       }
         ? U
@@ -586,14 +602,16 @@ export type TablesUpdate<
 export type Enums<
     DefaultSchemaEnumNameOrOptions extends
         | keyof DefaultSchema["Enums"]
-        | { schema: keyof Database },
+        | { schema: keyof DatabaseWithoutInternals },
     EnumName extends DefaultSchemaEnumNameOrOptions extends {
-        schema: keyof Database;
+        schema: keyof DatabaseWithoutInternals;
     }
-        ? keyof Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+        ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
         : never = never,
-> = DefaultSchemaEnumNameOrOptions extends { schema: keyof Database }
-    ? Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+> = DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals;
+}
+    ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
     : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
       ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
       : never;
@@ -601,14 +619,16 @@ export type Enums<
 export type CompositeTypes<
     PublicCompositeTypeNameOrOptions extends
         | keyof DefaultSchema["CompositeTypes"]
-        | { schema: keyof Database },
+        | { schema: keyof DatabaseWithoutInternals },
     CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
-        schema: keyof Database;
+        schema: keyof DatabaseWithoutInternals;
     }
-        ? keyof Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+        ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
         : never = never,
-> = PublicCompositeTypeNameOrOptions extends { schema: keyof Database }
-    ? Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+> = PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals;
+}
+    ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
     : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
       ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
       : never;
