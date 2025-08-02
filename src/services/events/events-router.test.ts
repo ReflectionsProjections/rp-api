@@ -136,31 +136,18 @@ const EVENT_UPDATE_PARTIAL_PAYLOAD = {
 
 const NON_EXISTENT_EVENT_ID = uuidv4();
 
-function transformEventForDB(event: InternalEvent) {
-    return {
-        event_id: event.eventId,
-        name: event.name,
-        start_time: event.startTime.toISOString(),
-        end_time: event.endTime.toISOString(),
-        points: event.points,
-        description: event.description,
-        is_virtual: event.isVirtual,
-        image_url: event.imageUrl,
-        location: event.location,
-        is_visible: event.isVisible,
-        attendance_count: event.attendanceCount,
-        event_type: event.eventType,
-    };
-}
-
-async function insertTestEvents(events: InternalEvent[]) {
-    const dbEvents = events.map(transformEventForDB);
-    await SupabaseDB.EVENTS.insert(dbEvents);
+// helper function to convert dates to ISO strings for the database
+function toDbFormat(events: InternalEvent[]) {
+    return events.map(event => ({
+        ...event,
+        startTime: event.startTime.toISOString(),
+        endTime: event.endTime.toISOString()
+    }));
 }
 
 async function clearAllTestEvents() {
     await SupabaseDB.EVENTS.delete().neq(
-        "event_id",
+        "eventId",
         "00000000-0000-0000-0000-000000000000"
     );
 }
@@ -195,16 +182,20 @@ function createInternalEventObject(
 beforeEach(async () => {
     await clearAllTestEvents();
 
-    await insertTestEvents([
+    await SupabaseDB.EVENTS.insert(toDbFormat([
         PAST_EVENT_VISIBLE,
         UPCOMING_EVENT_VISIBLE_LATER,
         UPCOMING_EVENT_HIDDEN_EARLIER,
-    ]);
+    ]));
+});
+
+afterAll(async () => {
+    await clearAllTestEvents();
 });
 
 describe("GET /events/currentOrNext", () => {
     it("should return the soonest future visible event if one exists for a regular, non-staff or non-admin user", async () => {
-        await insertTestEvents([UPCOMING_EVENT_VISIBLE_SOONEST]);
+        await SupabaseDB.EVENTS.insert(toDbFormat([UPCOMING_EVENT_VISIBLE_SOONEST]));
 
         const response = await get("/events/currentOrNext").expect(
             StatusCodes.OK
@@ -237,17 +228,17 @@ describe("GET /events/currentOrNext", () => {
 
     it("should return status 204 NO CONTENT if the only events in the future are hidden events for a regular, non-staff or non-admin user", async () => {
         await clearAllTestEvents();
-        await insertTestEvents([
+        await SupabaseDB.EVENTS.insert(toDbFormat([
             UPCOMING_EVENT_HIDDEN_EARLIER,
             PAST_EVENT_VISIBLE,
-        ]);
+        ]));
 
         await get("/events/currentOrNext").expect(StatusCodes.NO_CONTENT);
     });
 
     it("should return status 204 NO CONTENT if only past events exist", async () => {
         await clearAllTestEvents();
-        await insertTestEvents([PAST_EVENT_VISIBLE]);
+        await SupabaseDB.EVENTS.insert(toDbFormat([PAST_EVENT_VISIBLE]));
 
         await get("/events/currentOrNext").expect(StatusCodes.NO_CONTENT);
     });
@@ -270,7 +261,7 @@ describe("GET /events/currentOrNext", () => {
             endTime: new Date(testCaseStartTime.getTime() + ONE_HOUR_MS + 100),
         } satisfies InternalEvent;
 
-        await insertTestEvents([eventStartingNow]);
+        await SupabaseDB.EVENTS.insert(toDbFormat([eventStartingNow]));
 
         const response = await get("/events/currentOrNext").expect(
             StatusCodes.OK
@@ -314,10 +305,10 @@ describe("GET /events/currentOrNext", () => {
         "should return the soonest future VISIBLE event if it's earlier than any hidden one for $description",
         async ({ role }) => {
             await clearAllTestEvents();
-            await insertTestEvents([
+            await SupabaseDB.EVENTS.insert(toDbFormat([
                 UPCOMING_EVENT_VISIBLE_SOONEST,
                 UPCOMING_EVENT_HIDDEN_EARLIER,
-            ]);
+            ]));
 
             const response = await get("/events/currentOrNext", role).expect(
                 StatusCodes.OK
@@ -341,7 +332,7 @@ describe("GET /events/", () => {
             ...UPCOMING_EVENT_VISIBLE_SOONEST,
             eventId: TEST_UPCOMING_EVENT_VISIBLE_SOONEST_ID,
         } satisfies InternalEvent;
-        await insertTestEvents([anotherVisibleUpcomingEvent]);
+        await SupabaseDB.EVENTS.insert(toDbFormat([anotherVisibleUpcomingEvent]));
 
         const response = await get("/events/").expect(StatusCodes.OK);
 
@@ -360,7 +351,7 @@ describe("GET /events/", () => {
 
     it("should return an empty array if only hidden events exist for a regular, non-staff or non-admin user", async () => {
         await clearAllTestEvents();
-        await insertTestEvents([UPCOMING_EVENT_HIDDEN_EARLIER]);
+        await SupabaseDB.EVENTS.insert(toDbFormat([UPCOMING_EVENT_HIDDEN_EARLIER]));
 
         const response = await get("/events/").expect(StatusCodes.OK);
         expect(response.body).toEqual([]);
@@ -379,7 +370,7 @@ describe("GET /events/", () => {
     ])(
         "should return all events, including both visible and hidden, sorted by start time, in an internal view for $description",
         async ({ role }) => {
-            await insertTestEvents([UPCOMING_EVENT_VISIBLE_SOONEST]);
+            await SupabaseDB.EVENTS.insert(toDbFormat([UPCOMING_EVENT_VISIBLE_SOONEST]));
 
             // expected order: PAST_EVENT_VISIBLE, UPCOMING_EVENT_VISIBLE_SOONEST, UPCOMING_EVENT_HIDDEN_EARLIER, UPCOMING_EVENT_VISIBLE_LATER
 
@@ -430,7 +421,7 @@ describe("GET /events/", () => {
                 endTime: new Date(NOW.getTime() + 1.5 * ONE_HOUR_MS),
             };
 
-            await insertTestEvents([eventA, eventB, eventC]);
+            await SupabaseDB.EVENTS.insert(toDbFormat([eventA, eventB, eventC]));
 
             const response = await get("/events/", role).expect(StatusCodes.OK);
             expect(response.body).toHaveLength(3);
@@ -540,7 +531,7 @@ describe("POST /events/", () => {
             const { data: createdEvent } = await SupabaseDB.EVENTS.select("*")
                 .eq("name", NEW_EVENT_VALID_PAYLOAD.name)
                 .eq(
-                    "start_time",
+                    "startTime",
                     NEW_EVENT_VALID_PAYLOAD.startTime.toISOString()
                 )
                 .single()
@@ -550,18 +541,18 @@ describe("POST /events/", () => {
                 name: NEW_EVENT_VALID_PAYLOAD.name,
                 points: NEW_EVENT_VALID_PAYLOAD.points,
                 description: NEW_EVENT_VALID_PAYLOAD.description,
-                is_virtual: NEW_EVENT_VALID_PAYLOAD.isVirtual,
-                image_url: NEW_EVENT_VALID_PAYLOAD.imageUrl,
+                isVirtual: NEW_EVENT_VALID_PAYLOAD.isVirtual,
+                imageUrl: NEW_EVENT_VALID_PAYLOAD.imageUrl,
                 location: NEW_EVENT_VALID_PAYLOAD.location,
-                is_visible: NEW_EVENT_VALID_PAYLOAD.isVisible,
-                attendance_count: NEW_EVENT_VALID_PAYLOAD.attendanceCount,
-                event_type: NEW_EVENT_VALID_PAYLOAD.eventType,
+                isVisible: NEW_EVENT_VALID_PAYLOAD.isVisible,
+                attendanceCount: NEW_EVENT_VALID_PAYLOAD.attendanceCount,
+                eventType: NEW_EVENT_VALID_PAYLOAD.eventType,
             });
 
-            expect(new Date(createdEvent.start_time).toISOString()).toBe(
+            expect(new Date(createdEvent.startTime).toISOString()).toBe(
                 NEW_EVENT_VALID_PAYLOAD.startTime.toISOString()
             );
-            expect(new Date(createdEvent.end_time).toISOString()).toBe(
+            expect(new Date(createdEvent.endTime).toISOString()).toBe(
                 NEW_EVENT_VALID_PAYLOAD.endTime.toISOString()
             );
         }
@@ -620,7 +611,7 @@ describe("PUT /events/:EVENTID", () => {
             const { data: updatedEventFromDb } = await SupabaseDB.EVENTS.select(
                 "*"
             )
-                .eq("event_id", UPCOMING_EVENT_VISIBLE_LATER.eventId)
+                .eq("eventId", UPCOMING_EVENT_VISIBLE_LATER.eventId)
                 .single()
                 .throwOnError();
 
@@ -628,19 +619,19 @@ describe("PUT /events/:EVENTID", () => {
                 name: EVENT_UPDATE_FULL_PAYLOAD.name,
                 points: EVENT_UPDATE_FULL_PAYLOAD.points,
                 description: EVENT_UPDATE_FULL_PAYLOAD.description,
-                is_virtual: EVENT_UPDATE_FULL_PAYLOAD.isVirtual,
-                image_url: EVENT_UPDATE_FULL_PAYLOAD.imageUrl,
+                isVirtual: EVENT_UPDATE_FULL_PAYLOAD.isVirtual,
+                imageUrl: EVENT_UPDATE_FULL_PAYLOAD.imageUrl,
                 location: EVENT_UPDATE_FULL_PAYLOAD.location,
-                is_visible: EVENT_UPDATE_FULL_PAYLOAD.isVisible,
-                attendance_count: EVENT_UPDATE_FULL_PAYLOAD.attendanceCount,
-                event_type: EVENT_UPDATE_FULL_PAYLOAD.eventType,
-                event_id: UPCOMING_EVENT_VISIBLE_LATER.eventId,
+                isVisible: EVENT_UPDATE_FULL_PAYLOAD.isVisible,
+                attendanceCount: EVENT_UPDATE_FULL_PAYLOAD.attendanceCount,
+                eventType: EVENT_UPDATE_FULL_PAYLOAD.eventType,
+                eventId: UPCOMING_EVENT_VISIBLE_LATER.eventId,
             });
 
-            expect(new Date(updatedEventFromDb.start_time).toISOString()).toBe(
+            expect(new Date(updatedEventFromDb.startTime).toISOString()).toBe(
                 EVENT_UPDATE_FULL_PAYLOAD.startTime.toISOString()
             );
-            expect(new Date(updatedEventFromDb.end_time).toISOString()).toBe(
+            expect(new Date(updatedEventFromDb.endTime).toISOString()).toBe(
                 EVENT_UPDATE_FULL_PAYLOAD.endTime.toISOString()
             );
         }
@@ -659,7 +650,7 @@ describe("PUT /events/:EVENTID", () => {
             const { data: updatedEventFromDb } = await SupabaseDB.EVENTS.select(
                 "*"
             )
-                .eq("event_id", UPCOMING_EVENT_HIDDEN_EARLIER.eventId)
+                .eq("eventId", UPCOMING_EVENT_HIDDEN_EARLIER.eventId)
                 .single()
                 .throwOnError();
 
@@ -667,19 +658,19 @@ describe("PUT /events/:EVENTID", () => {
                 name: EVENT_UPDATE_PARTIAL_PAYLOAD.name,
                 description: EVENT_UPDATE_PARTIAL_PAYLOAD.description,
                 points: EVENT_UPDATE_PARTIAL_PAYLOAD.points,
-                is_virtual: EVENT_UPDATE_PARTIAL_PAYLOAD.isVirtual,
-                image_url: EVENT_UPDATE_PARTIAL_PAYLOAD.imageUrl,
+                isVirtual: EVENT_UPDATE_PARTIAL_PAYLOAD.isVirtual,
+                imageUrl: EVENT_UPDATE_PARTIAL_PAYLOAD.imageUrl,
                 location: EVENT_UPDATE_PARTIAL_PAYLOAD.location,
-                is_visible: EVENT_UPDATE_PARTIAL_PAYLOAD.isVisible,
-                attendance_count: EVENT_UPDATE_PARTIAL_PAYLOAD.attendanceCount,
-                event_type: EVENT_UPDATE_PARTIAL_PAYLOAD.eventType,
-                event_id: UPCOMING_EVENT_HIDDEN_EARLIER.eventId,
+                isVisible: EVENT_UPDATE_PARTIAL_PAYLOAD.isVisible,
+                attendanceCount: EVENT_UPDATE_PARTIAL_PAYLOAD.attendanceCount,
+                eventType: EVENT_UPDATE_PARTIAL_PAYLOAD.eventType,
+                eventId: UPCOMING_EVENT_HIDDEN_EARLIER.eventId,
             });
 
-            expect(new Date(updatedEventFromDb.start_time).toISOString()).toBe(
+            expect(new Date(updatedEventFromDb.startTime).toISOString()).toBe(
                 EVENT_UPDATE_PARTIAL_PAYLOAD.startTime.toISOString()
             );
-            expect(new Date(updatedEventFromDb.end_time).toISOString()).toBe(
+            expect(new Date(updatedEventFromDb.endTime).toISOString()).toBe(
                 EVENT_UPDATE_PARTIAL_PAYLOAD.endTime.toISOString()
             );
         }
@@ -720,7 +711,7 @@ describe("DELETE /events/:EVENTID", () => {
             `/events/${UPCOMING_EVENT_VISIBLE_LATER.eventId}`
         ).expect(StatusCodes.NO_CONTENT);
         const { data: deletedEvent } = await SupabaseDB.EVENTS.select("*")
-            .eq("event_id", UPCOMING_EVENT_VISIBLE_LATER.eventId)
+            .eq("eventId", UPCOMING_EVENT_VISIBLE_LATER.eventId)
             .maybeSingle();
         expect(deletedEvent).toBeNull();
     });
