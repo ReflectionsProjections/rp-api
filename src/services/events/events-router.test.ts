@@ -138,10 +138,10 @@ const NON_EXISTENT_EVENT_ID = uuidv4();
 
 // helper function to convert dates to ISO strings for the database
 function toDbFormat(events: InternalEvent[]) {
-    return events.map(event => ({
+    return events.map((event) => ({
         ...event,
         startTime: event.startTime.toISOString(),
-        endTime: event.endTime.toISOString()
+        endTime: event.endTime.toISOString(),
     }));
 }
 
@@ -182,11 +182,13 @@ function createInternalEventObject(
 beforeEach(async () => {
     await clearAllTestEvents();
 
-    await SupabaseDB.EVENTS.insert(toDbFormat([
-        PAST_EVENT_VISIBLE,
-        UPCOMING_EVENT_VISIBLE_LATER,
-        UPCOMING_EVENT_HIDDEN_EARLIER,
-    ]));
+    await SupabaseDB.EVENTS.insert(
+        toDbFormat([
+            PAST_EVENT_VISIBLE,
+            UPCOMING_EVENT_VISIBLE_LATER,
+            UPCOMING_EVENT_HIDDEN_EARLIER,
+        ])
+    );
 });
 
 afterAll(async () => {
@@ -195,7 +197,9 @@ afterAll(async () => {
 
 describe("GET /events/currentOrNext", () => {
     it("should return the soonest future visible event if one exists for a regular, non-staff or non-admin user", async () => {
-        await SupabaseDB.EVENTS.insert(toDbFormat([UPCOMING_EVENT_VISIBLE_SOONEST]));
+        await SupabaseDB.EVENTS.insert(
+            toDbFormat([UPCOMING_EVENT_VISIBLE_SOONEST])
+        );
 
         const response = await get("/events/currentOrNext").expect(
             StatusCodes.OK
@@ -228,10 +232,9 @@ describe("GET /events/currentOrNext", () => {
 
     it("should return status 204 NO CONTENT if the only events in the future are hidden events for a regular, non-staff or non-admin user", async () => {
         await clearAllTestEvents();
-        await SupabaseDB.EVENTS.insert(toDbFormat([
-            UPCOMING_EVENT_HIDDEN_EARLIER,
-            PAST_EVENT_VISIBLE,
-        ]));
+        await SupabaseDB.EVENTS.insert(
+            toDbFormat([UPCOMING_EVENT_HIDDEN_EARLIER, PAST_EVENT_VISIBLE])
+        );
 
         await get("/events/currentOrNext").expect(StatusCodes.NO_CONTENT);
     });
@@ -305,10 +308,12 @@ describe("GET /events/currentOrNext", () => {
         "should return the soonest future VISIBLE event if it's earlier than any hidden one for $description",
         async ({ role }) => {
             await clearAllTestEvents();
-            await SupabaseDB.EVENTS.insert(toDbFormat([
-                UPCOMING_EVENT_VISIBLE_SOONEST,
-                UPCOMING_EVENT_HIDDEN_EARLIER,
-            ]));
+            await SupabaseDB.EVENTS.insert(
+                toDbFormat([
+                    UPCOMING_EVENT_VISIBLE_SOONEST,
+                    UPCOMING_EVENT_HIDDEN_EARLIER,
+                ])
+            );
 
             const response = await get("/events/currentOrNext", role).expect(
                 StatusCodes.OK
@@ -332,7 +337,9 @@ describe("GET /events/", () => {
             ...UPCOMING_EVENT_VISIBLE_SOONEST,
             eventId: TEST_UPCOMING_EVENT_VISIBLE_SOONEST_ID,
         } satisfies InternalEvent;
-        await SupabaseDB.EVENTS.insert(toDbFormat([anotherVisibleUpcomingEvent]));
+        await SupabaseDB.EVENTS.insert(
+            toDbFormat([anotherVisibleUpcomingEvent])
+        );
 
         const response = await get("/events/").expect(StatusCodes.OK);
 
@@ -351,7 +358,9 @@ describe("GET /events/", () => {
 
     it("should return an empty array if only hidden events exist for a regular, non-staff or non-admin user", async () => {
         await clearAllTestEvents();
-        await SupabaseDB.EVENTS.insert(toDbFormat([UPCOMING_EVENT_HIDDEN_EARLIER]));
+        await SupabaseDB.EVENTS.insert(
+            toDbFormat([UPCOMING_EVENT_HIDDEN_EARLIER])
+        );
 
         const response = await get("/events/").expect(StatusCodes.OK);
         expect(response.body).toEqual([]);
@@ -370,7 +379,9 @@ describe("GET /events/", () => {
     ])(
         "should return all events, including both visible and hidden, sorted by start time, in an internal view for $description",
         async ({ role }) => {
-            await SupabaseDB.EVENTS.insert(toDbFormat([UPCOMING_EVENT_VISIBLE_SOONEST]));
+            await SupabaseDB.EVENTS.insert(
+                toDbFormat([UPCOMING_EVENT_VISIBLE_SOONEST])
+            );
 
             // expected order: PAST_EVENT_VISIBLE, UPCOMING_EVENT_VISIBLE_SOONEST, UPCOMING_EVENT_HIDDEN_EARLIER, UPCOMING_EVENT_VISIBLE_LATER
 
@@ -421,7 +432,9 @@ describe("GET /events/", () => {
                 endTime: new Date(NOW.getTime() + 1.5 * ONE_HOUR_MS),
             };
 
-            await SupabaseDB.EVENTS.insert(toDbFormat([eventA, eventB, eventC]));
+            await SupabaseDB.EVENTS.insert(
+                toDbFormat([eventA, eventB, eventC])
+            );
 
             const response = await get("/events/", role).expect(StatusCodes.OK);
             expect(response.body).toHaveLength(3);
