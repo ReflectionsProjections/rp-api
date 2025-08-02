@@ -13,6 +13,7 @@ import { decryptId } from "./attendee-utils";
 
 import { generateJWT } from "../auth/auth-utils";
 import Config from "../../config";
+import { admin } from "../../firebase";
 
 const attendeeRouter = Router();
 
@@ -46,6 +47,17 @@ attendeeRouter.post(
         await SupabaseDB.ATTENDEES.update({ favoriteEvents: newFavorites })
             .eq("userId", userId)
             .throwOnError();
+        
+        // enroll them into the topic:
+        const { data: device } = await SupabaseDB.NOTIFICATIONS.select("deviceId")
+            .eq("userId", userId)
+            .single()
+            .throwOnError();
+
+        if (device?.deviceId) {
+            const topicName = `event_${eventId}`;
+            await admin.messaging().subscribeToTopic(device?.deviceId, topicName);
+        }
 
         return res.status(StatusCodes.OK).json({ favorites: newFavorites });
     }
@@ -81,6 +93,18 @@ attendeeRouter.delete(
         })
             .eq("userId", userId)
             .throwOnError();
+
+        // remove them from the topic:
+        const { data: device } = await SupabaseDB.NOTIFICATIONS.select("deviceId")
+            .eq("userId", userId)
+            .single()
+            .throwOnError();
+
+        if (device?.deviceId) {
+            const topicName = `event_${eventId}`;
+            await admin.messaging().unsubscribeFromTopic(device?.deviceId, topicName);
+        }
+
         return res.status(StatusCodes.OK).json({ favorites: updatedFavorites });
     }
 );

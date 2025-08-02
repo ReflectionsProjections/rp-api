@@ -4,6 +4,7 @@ import { StatusCodes } from "http-status-codes";
 import { Config, EnvironmentEnum } from "./config";
 import { isTest } from "./utilities";
 import AWS from "aws-sdk";
+import './firebase';
 
 //import databaseMiddleware from "./middleware/database-middleware";
 // import customCors from "./middleware/cors-middleware";
