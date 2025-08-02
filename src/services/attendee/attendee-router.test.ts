@@ -129,6 +129,9 @@ const BASE_TEST_ATTENDEE = {
 
 beforeEach(async () => {
     // Clear all test data - delete ALL records from all tables
+    console.log("SUPABASE_URL", process.env.SUPABASE_URL);
+    console.log("SUPABASE_ANON_KEY", process.env.SUPABASE_ANON_KEY);
+
     try {
         await SupabaseDB.EVENT_ATTENDANCE.delete()
             .neq("attendee", "NONEXISTENT_VALUE_THAT_WILL_NEVER_EXIST")

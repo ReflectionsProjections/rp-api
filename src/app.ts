@@ -53,8 +53,15 @@ const accessLogStream = fs.createWriteStream(`${logDir}/${process.pid}.log`, {
     flags: "a",
 });
 
-if (Config.ENV !== EnvironmentEnum.TESTING) {
-    app.use(morgan("dev", { stream: accessLogStream }));
+switch (Config.ENV) {
+    case EnvironmentEnum.TESTING:
+        break;
+    case EnvironmentEnum.DEVELOPMENT:
+        app.use(morgan("dev"));
+        break;
+    case EnvironmentEnum.PRODUCTION:
+        app.use(morgan("combined", { stream: accessLogStream }));
+        break;
 }
 
 // Parsing

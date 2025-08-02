@@ -3,6 +3,10 @@
 -- Create Supabase roles only if they don't exist
 DO $$
 BEGIN
+    IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'postgres') THEN
+        CREATE ROLE postgres LOGIN NOINHERIT;
+    END IF;
+
     IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'anon') THEN
         CREATE ROLE anon NOLOGIN NOINHERIT;
     END IF;
@@ -24,6 +28,10 @@ $$;
 -- Create users only if not exist
 DO $$
 BEGIN
+    IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'postgres') THEN
+        CREATE USER postgres WITH PASSWORD 'postgres';
+    END IF;
+
     IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'authenticator') THEN
         CREATE USER authenticator WITH PASSWORD 'postgres';
     END IF;

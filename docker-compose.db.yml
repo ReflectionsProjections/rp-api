@@ -1,31 +1,4 @@
-version: '3.8'
 services:
-  api:
-    build: .
-    container_name: rp-api
-    ports:
-      - "3000:3000"
-    volumes:
-      - .:/app
-      - /app/node_modules
-    environment:
-      - POSTGRES_HOST=db
-      - POSTGRES_USER=${POSTGRES_USER:-postgres}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
-      - POSTGRES_DB=${POSTGRES_DB:-postgres}
-      - POSTGRES_PORT=${POSTGRES_PORT:-5432}
-      - SUPABASE_URL=http://kong:8000
-      - SUPABASE_ANON_KEY=${ANON_KEY}
-      - SUPABASE_SERVICE_KEY=${SERVICE_ROLE_KEY}
-    env_file:
-      - .env
-    depends_on:
-      db:
-        condition: service_healthy
-      kong:
-        condition: service_healthy
-    networks:
-      - net
   db:
     image: supabase/postgres:15.8.1.060
     container_name: rp-db
@@ -48,8 +21,6 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
-    networks:
-      - net
 
   meta:
     image: supabase/postgres-meta:v0.89.0
@@ -65,8 +36,6 @@ services:
       PG_META_DB_NAME: ${POSTGRES_DB}
       PG_META_DB_USER: supabase_admin
       PG_META_DB_PASSWORD: postgres
-    networks:
-      - net
 
   studio:
     image: supabase/studio:2025.05.19-sha-3487831
@@ -84,8 +53,28 @@ services:
       AUTH_JWT_SECRET: ${JWT_SECRET}
       DEFAULT_ORGANIZATION_NAME: RP
       DEFAULT_PROJECT_NAME: RP Dev
-    networks:
-      - net
+  
+  rest:
+    container_name: rp-rest
+    image: postgrest/postgrest:v12.2.12
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PGRST_DB_URI: postgres://authenticator:postgres@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
+      PGRST_DB_SCHEMAS: public
+      PGRST_DB_ANON_ROLE: anon
+      PGRST_JWT_SECRET: ${JWT_SECRET:-default-secret}
+      PGRST_DB_USE_LEGACY_GUCS: "false"
+      PGRST_APP_SETTINGS_JWT_SECRET: ${JWT_SECRET:-default-secret}
+      PGRST_APP_SETTINGS_JWT_EXP: ${JWT_EXPIRY}
+    command:
+      [
+        "postgrest"
+      ]
 
   kong:
     image: kong:2.8.1
@@ -96,11 +85,8 @@ services:
     environment:
       KONG_DATABASE: "off"
       KONG_DECLARATIVE_CONFIG: /home/kong/kong.yml
-      # https://github.com/supabase/cli/issues/14
       KONG_DNS_ORDER: LAST,A,CNAME
-      KONG_PLUGINS: request-transformer,cors,key-auth,acl,basic-auth
-      KONG_NGINX_PROXY_PROXY_BUFFER_SIZE: 160k
-      KONG_NGINX_PROXY_PROXY_BUFFERS: 64 160k
+      KONG_PLUGINS: cors,key-auth,acl
       SUPABASE_ANON_KEY: ${ANON_KEY}
       SUPABASE_SERVICE_KEY: ${SERVICE_ROLE_KEY}
       DASHBOARD_USERNAME: postgres
@@ -109,31 +95,5 @@ services:
       - ./docker/kong.yml:/home/kong/temp.yml:ro
     entrypoint: >
       bash -c "eval 'echo \"$(cat ~/temp.yml)\"' > ~/kong.yml && /docker-entrypoint.sh kong docker-start"
-    networks:
-      - net
-  rest:
-    container_name: rp-rest
-    image: postgrest/postgrest:v12.2.12
-    restart: unless-stopped
-    depends_on:
-      db:
-        # Disable this if you are using an external Postgres database
-        condition: service_healthy
-    environment:
-      PGRST_DB_URI: postgres://authenticator:postgres@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
-      PGRST_DB_SCHEMAS: ${PGRST_DB_SCHEMAS}
-      PGRST_DB_ANON_ROLE: anon
-      PGRST_JWT_SECRET: ${JWT_SECRET}
-      PGRST_DB_USE_LEGACY_GUCS: "false"
-      PGRST_APP_SETTINGS_JWT_SECRET: ${JWT_SECRET}
-      PGRST_APP_SETTINGS_JWT_EXP: ${JWT_EXPIRY}
-    command:
-      [
-        "postgrest"
-      ] 
-    networks:
-      - net
 
-networks:
-  net:
-    driver: bridge 
+  

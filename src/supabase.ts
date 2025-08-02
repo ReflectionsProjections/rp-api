@@ -1,6 +1,9 @@
 import { createClient } from "@supabase/supabase-js";
 import { Database } from "./supabase.types";
 
+console.log(process.env.SUPABASE_URL);
+console.log(process.env.SUPABASE_ANON_KEY);
+
 export const supabase = createClient<Database>(
     process.env.SUPABASE_URL!,
     process.env.SUPABASE_ANON_KEY!
@@ -56,25 +59,3 @@ export const CommitteeTypes: Record<
     MARKETING: "MARKETING",
     OPERATIONS: "OPERATIONS",
 };
-
-export interface User {
-    userId: string;
-    points: number;
-    favoriteEvents: string[];
-    puzzlesCompleted: string[];
-    hasPriorityMon: boolean;
-    hasPriorityTue: boolean;
-    hasPriorityWed: boolean;
-    hasPriorityThu: boolean;
-    hasPriorityFri: boolean;
-    hasPrioritySat: boolean;
-    hasPrioritySun: boolean;
-    isEligibleTshirt: boolean;
-    isEligibleCap: boolean;
-    isEligibleTote: boolean;
-    isEligibleButton: boolean;
-    hasRedeemedTshirt: boolean;
-    hasRedeemedCap: boolean;
-    hasRedeemedTote: boolean;
-    hasRedeemedButton: boolean;
-}
