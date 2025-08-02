@@ -2,9 +2,13 @@ import { Router } from "express";
 import RoleChecker from "../../middleware/role-checker";
 import { Role } from "../auth/auth-models";
 import { StatusCodes } from "http-status-codes";
-import { registerDeviceSchema, sendToTopicSchema, manualTopicSchema } from "./notifications-schema";
+import {
+    registerDeviceSchema,
+    sendToTopicSchema,
+    manualTopicSchema,
+} from "./notifications-schema";
 import { SupabaseDB } from "../../supabase";
-import { admin } from '../../firebase';
+import { admin } from "../../firebase";
 
 const notificationsRouter = Router();
 
@@ -20,10 +24,14 @@ notificationsRouter.post(
         await SupabaseDB.NOTIFICATIONS.upsert({
             userId: userId,
             deviceId: notificationEnrollmentData.deviceId,
-        }).single().throwOnError();
+        })
+            .single()
+            .throwOnError();
 
         // sign them up for the default topic: all users (notify everyone who has the app)
-        await admin.messaging().subscribeToTopic(notificationEnrollmentData.deviceId, 'allUsers');
+        await admin
+            .messaging()
+            .subscribeToTopic(notificationEnrollmentData.deviceId, "allUsers");
 
         return res.status(StatusCodes.CREATED).json(notificationEnrollmentData);
     }
@@ -37,11 +45,10 @@ notificationsRouter.post(
     "/topics/:topicName",
     RoleChecker([Role.enum.ADMIN]), // for now thinking that only admins get to use this
     async (req, res) => {
-
         sendToTopicSchema.parse(req.body); // make sure it fits the validator
 
         const { topicName } = req.params;
-        const { title, body} = req.body;
+        const { title, body } = req.body;
 
         const message = {
             topic: topicName,
@@ -55,9 +62,8 @@ notificationsRouter.post(
 
         return res.status(StatusCodes.OK).send({
             status: "success",
-            message: `Notification sent to topic: ${topicName}`
+            message: `Notification sent to topic: ${topicName}`,
         });
-
     }
 );
 
@@ -74,11 +80,9 @@ notificationsRouter.post(
 
         return res.status(StatusCodes.CREATED).send({
             status: "success",
-            message: `Custom topic created: ${topicName}`
+            message: `Custom topic created: ${topicName}`,
         });
-
     }
-
 );
 
 // Admins can manually subscribe a user to a topic
@@ -87,19 +91,23 @@ notificationsRouter.post(
     "/manual-users-topic", // open to suggestions for a better name
     RoleChecker([Role.enum.ADMIN]),
     async (req, res) => {
-        const { userId, topicName } =  manualTopicSchema.parse(req.body);
+        const { userId, topicName } = manualTopicSchema.parse(req.body);
         // get the user's deviceId
-        const { data: userDevice } = await SupabaseDB.NOTIFICATIONS
-            .select("deviceId")
+        const { data: userDevice } = await SupabaseDB.NOTIFICATIONS.select(
+            "deviceId"
+        )
             .eq("userId", userId)
-            .single().throwOnError();
+            .single()
+            .throwOnError();
 
         // Subscribe the user to the specified topic
-        await admin.messaging().subscribeToTopic(userDevice.deviceId, topicName);
+        await admin
+            .messaging()
+            .subscribeToTopic(userDevice.deviceId, topicName);
 
         return res.status(StatusCodes.OK).send({
             status: "success",
-            message: `User ${userId} subscribed to topic: ${topicName}`
+            message: `User ${userId} subscribed to topic: ${topicName}`,
         });
     }
 );
@@ -110,25 +118,29 @@ notificationsRouter.delete(
     "/manual-users-topic", // also open to suggestions for a better name here
     RoleChecker([Role.enum.ADMIN]),
     async (req, res) => {
-        const { userId, topicName } =  manualTopicSchema.parse(req.body);
+        const { userId, topicName } = manualTopicSchema.parse(req.body);
         // get the user's deviceId
-        const { data: userDevice } = await SupabaseDB.NOTIFICATIONS
-            .select("deviceId")
+        const { data: userDevice } = await SupabaseDB.NOTIFICATIONS.select(
+            "deviceId"
+        )
             .eq("userId", userId)
-            .single().throwOnError();
+            .single()
+            .throwOnError();
 
         // Subscribe the user to the specified topic
-        await admin.messaging().unsubscribeFromTopic(userDevice.deviceId, topicName);
+        await admin
+            .messaging()
+            .unsubscribeFromTopic(userDevice.deviceId, topicName);
 
         return res.status(StatusCodes.OK).send({
             status: "success",
-            message: `User ${userId} unsubscribed from topic: ${topicName}`
+            message: `User ${userId} unsubscribed from topic: ${topicName}`,
         });
     }
 );
 
 // Get all available notification topics
-// Firebase doesn't have an actual way to get this. 
+// Firebase doesn't have an actual way to get this.
 // one topic is allUsers, defined earlier in this file
 // the other topics are event topics, denoted by event_{eventId}
 // any custom topics are in the customTopics table
@@ -137,12 +149,18 @@ notificationsRouter.get(
     RoleChecker([Role.enum.ADMIN]),
     async (req, res) => {
         const staticTopics = ["allUsers"]; // add any other static topics to this array in future
-        
-        const { data: events } = await SupabaseDB.EVENTS.select("eventId").throwOnError();   
-        const eventTopics = events.map(event => `event_${event.eventId}`) ?? [];
-        const { data: customTopicsData } = await SupabaseDB.CUSTOM_TOPICS.select("topicName").throwOnError();
-        const customTopics = customTopicsData.map(topic => topic.topicName) ?? [];
-        const allTopics = [...new Set([...staticTopics, ...eventTopics, ...customTopics])];
+
+        const { data: events } =
+            await SupabaseDB.EVENTS.select("eventId").throwOnError();
+        const eventTopics =
+            events.map((event) => `event_${event.eventId}`) ?? [];
+        const { data: customTopicsData } =
+            await SupabaseDB.CUSTOM_TOPICS.select("topicName").throwOnError();
+        const customTopics =
+            customTopicsData.map((topic) => topic.topicName) ?? [];
+        const allTopics = [
+            ...new Set([...staticTopics, ...eventTopics, ...customTopics]),
+        ];
         return res.status(StatusCodes.OK).send({ topics: allTopics.sort() });
     }
 );

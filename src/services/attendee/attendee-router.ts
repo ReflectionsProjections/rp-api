@@ -47,16 +47,20 @@ attendeeRouter.post(
         await SupabaseDB.ATTENDEES.update({ favoriteEvents: newFavorites })
             .eq("userId", userId)
             .throwOnError();
-        
+
         // enroll them into the topic:
-        const { data: device } = await SupabaseDB.NOTIFICATIONS.select("deviceId")
+        const { data: device } = await SupabaseDB.NOTIFICATIONS.select(
+            "deviceId"
+        )
             .eq("userId", userId)
             .single()
             .throwOnError();
 
         if (device?.deviceId) {
             const topicName = `event_${eventId}`;
-            await admin.messaging().subscribeToTopic(device?.deviceId, topicName);
+            await admin
+                .messaging()
+                .subscribeToTopic(device?.deviceId, topicName);
         }
 
         return res.status(StatusCodes.OK).json({ favorites: newFavorites });
@@ -95,14 +99,18 @@ attendeeRouter.delete(
             .throwOnError();
 
         // remove them from the topic:
-        const { data: device } = await SupabaseDB.NOTIFICATIONS.select("deviceId")
+        const { data: device } = await SupabaseDB.NOTIFICATIONS.select(
+            "deviceId"
+        )
             .eq("userId", userId)
             .single()
             .throwOnError();
 
         if (device?.deviceId) {
             const topicName = `event_${eventId}`;
-            await admin.messaging().unsubscribeFromTopic(device?.deviceId, topicName);
+            await admin
+                .messaging()
+                .unsubscribeFromTopic(device?.deviceId, topicName);
         }
 
         return res.status(StatusCodes.OK).json({ favorites: updatedFavorites });

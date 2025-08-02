@@ -1,4 +1,4 @@
-import { post, del, get } from "../../../testing/testingTools"; 
+import { post, del, get } from "../../../testing/testingTools";
 import { Role } from "../auth/auth-models";
 import { StatusCodes } from "http-status-codes";
 import { SupabaseDB } from "../../supabase";
@@ -8,9 +8,9 @@ const mockSubscribe = jest.fn();
 const mockUnsubscribe = jest.fn();
 const mockSend = jest.fn();
 
-jest.mock('../../database', () => ({})); // Add this line
+jest.mock("../../database", () => ({})); // Add this line
 
-jest.mock('../../firebase', () => ({
+jest.mock("../../firebase", () => ({
     admin: {
         messaging: () => ({
             subscribeToTopic: mockSubscribe,
@@ -97,10 +97,12 @@ async function insertTestUser(overrides: InsertTestAttendeeOverrides = {}) {
         makeTestAttendee({ userId: userId, ...overrides }),
     ]).throwOnError();
 
-    await SupabaseDB.NOTIFICATIONS.insert([{
-        userId: userId,
-        deviceId: TEST_DEVICE_ID,
-    }]).throwOnError();
+    await SupabaseDB.NOTIFICATIONS.insert([
+        {
+            userId: userId,
+            deviceId: TEST_DEVICE_ID,
+        },
+    ]).throwOnError();
 }
 
 describe("/notifications", () => {
@@ -119,27 +121,34 @@ describe("/notifications", () => {
     describe("POST /notifications/register", () => {
         it("should create a notification entry and subscribe to the allUsers topic", async () => {
             // Setup: Insert a user without a notification entry
-            await SupabaseDB.ROLES.insert([{
-                userId: TEST_USER_ID,
-                displayName: "Ritam",
-                email: TEST_EMAIL,
-                roles: [Role.enum.USER]
-            }]).throwOnError();
+            await SupabaseDB.ROLES.insert([
+                {
+                    userId: TEST_USER_ID,
+                    displayName: "Ritam",
+                    email: TEST_EMAIL,
+                    roles: [Role.enum.USER],
+                },
+            ]).throwOnError();
             await SupabaseDB.REGISTRATIONS.insert([
-                makeTestRegistration({ userId: TEST_USER_ID })
+                makeTestRegistration({ userId: TEST_USER_ID }),
             ]).throwOnError();
 
-            
             await post("/notifications/register", Role.enum.USER)
                 .send({ deviceId: "new-device-id" })
                 .expect(StatusCodes.CREATED);
 
             // Verify database state
-            const { data } = await SupabaseDB.NOTIFICATIONS.select().eq("userId", TEST_USER_ID).single().throwOnError();
+            const { data } = await SupabaseDB.NOTIFICATIONS.select()
+                .eq("userId", TEST_USER_ID)
+                .single()
+                .throwOnError();
             expect(data?.deviceId).toBe("new-device-id");
 
             // Verify Firebase mock was called
-            expect(mockSubscribe).toHaveBeenCalledWith("new-device-id", 'allUsers');
+            expect(mockSubscribe).toHaveBeenCalledWith(
+                "new-device-id",
+                "allUsers"
+            );
         });
     });
 
@@ -171,7 +180,10 @@ describe("/notifications", () => {
                 .send({ userId: TEST_USER_ID, topicName: "food-priority-1" })
                 .expect(StatusCodes.OK);
 
-            expect(mockSubscribe).toHaveBeenCalledWith(TEST_DEVICE_ID, "food-priority-1");
+            expect(mockSubscribe).toHaveBeenCalledWith(
+                TEST_DEVICE_ID,
+                "food-priority-1"
+            );
         });
 
         it("DELETE should allow an admin to manually unsubscribe a user", async () => {
@@ -179,7 +191,10 @@ describe("/notifications", () => {
                 .send({ userId: TEST_USER_ID, topicName: "food-priority-1" })
                 .expect(StatusCodes.OK);
 
-            expect(mockUnsubscribe).toHaveBeenCalledWith(TEST_DEVICE_ID, "food-priority-1");
+            expect(mockUnsubscribe).toHaveBeenCalledWith(
+                TEST_DEVICE_ID,
+                "food-priority-1"
+            );
         });
     });
 
@@ -198,20 +213,27 @@ describe("/notifications", () => {
                 isVirtual: false,
                 location: "Test Location",
                 attendanceCount: 0,
-                points: 0
+                points: 0,
             });
-            await SupabaseDB.CUSTOM_TOPICS.insert({ topicName: TEST_TOPIC_NAME });
+            await SupabaseDB.CUSTOM_TOPICS.insert({
+                topicName: TEST_TOPIC_NAME,
+            });
         });
 
         // Cleanup: Remove test data after the test runs
         afterEach(async () => {
             await SupabaseDB.EVENTS.delete().eq("id", TEST_EVENT_ID);
-            await SupabaseDB.CUSTOM_TOPICS.delete().eq("topicName", TEST_TOPIC_NAME);
+            await SupabaseDB.CUSTOM_TOPICS.delete().eq(
+                "topicName",
+                TEST_TOPIC_NAME
+            );
         });
 
         it("should return a sorted list of all static, event, and custom topics", async () => {
-            const response = await get("/notifications/topics", Role.enum.ADMIN)
-                .expect(StatusCodes.OK);
+            const response = await get(
+                "/notifications/topics",
+                Role.enum.ADMIN
+            ).expect(StatusCodes.OK);
 
             const expectedTopics = [
                 "allUsers",
@@ -227,7 +249,10 @@ describe("/notifications", () => {
         const NEW_TOPIC_NAME = "new_test_topic";
 
         afterEach(async () => {
-            await SupabaseDB.CUSTOM_TOPICS.delete().eq("topicName", NEW_TOPIC_NAME);
+            await SupabaseDB.CUSTOM_TOPICS.delete().eq(
+                "topicName",
+                NEW_TOPIC_NAME
+            );
         });
 
         it("should allow an admin to create a new custom topic", async () => {
@@ -244,7 +269,6 @@ describe("/notifications", () => {
             expect(data?.topicName).toBe(NEW_TOPIC_NAME);
         });
     });
-
 });
 
 describe("Attendee Favorite/Unfavorite Logic", () => {
@@ -262,15 +286,19 @@ describe("Attendee Favorite/Unfavorite Logic", () => {
             isVirtual: false,
             location: "Test Location",
             attendanceCount: 0,
-            points: 0
+            points: 0,
         });
 
         // Action
-        await post(`/attendee/favorites/${testEventId}`, Role.enum.USER)
-            .expect(StatusCodes.OK);
+        await post(`/attendee/favorites/${testEventId}`, Role.enum.USER).expect(
+            StatusCodes.OK
+        );
 
         // Verify
-        expect(mockSubscribe).toHaveBeenCalledWith(TEST_DEVICE_ID, `event_${testEventId}`);
+        expect(mockSubscribe).toHaveBeenCalledWith(
+            TEST_DEVICE_ID,
+            `event_${testEventId}`
+        );
 
         // Cleanup
         await SupabaseDB.EVENTS.delete().eq("eventId", testEventId);
@@ -290,15 +318,19 @@ describe("Attendee Favorite/Unfavorite Logic", () => {
             isVirtual: false,
             location: "Test Location",
             attendanceCount: 0,
-            points: 0
+            points: 0,
         });
 
         // Action
-        await del(`/attendee/favorites/${testEventId}`, Role.enum.USER)
-            .expect(StatusCodes.OK);
+        await del(`/attendee/favorites/${testEventId}`, Role.enum.USER).expect(
+            StatusCodes.OK
+        );
 
         // Verify
-        expect(mockUnsubscribe).toHaveBeenCalledWith(TEST_DEVICE_ID, `event_${testEventId}`);
+        expect(mockUnsubscribe).toHaveBeenCalledWith(
+            TEST_DEVICE_ID,
+            `event_${testEventId}`
+        );
 
         // Cleanup
         await SupabaseDB.EVENTS.delete().eq("eventId", testEventId);
