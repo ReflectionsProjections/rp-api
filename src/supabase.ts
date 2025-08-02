@@ -34,6 +34,9 @@ export const SupabaseDB = {
     get NOTIFICATIONS() {
         return supabase.from("notifications");
     },
+    get CUSTOM_TOPICS() {
+        return supabase.from("customTopics");
+    }
 };
 
 export const RoleTypes: Record<

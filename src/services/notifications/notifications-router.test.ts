@@ -1,4 +1,4 @@
-import { post, del } from "../../../testing/testingTools"; 
+import { post, del, get } from "../../../testing/testingTools"; 
 import { Role } from "../auth/auth-models";
 import { StatusCodes } from "http-status-codes";
 import { SupabaseDB } from "../../supabase";
@@ -160,14 +160,14 @@ describe("/notifications", () => {
         });
     });
 
-    describe("/manual-topic", () => {
+    describe("/manual-users-topic", () => {
         // This setup runs once before each test inside this 'describe' block
         beforeEach(async () => {
             await insertTestUser();
         });
 
         it("POST should allow an admin to manually subscribe a user", async () => {
-            await post("/notifications/manual-topic", Role.enum.ADMIN)
+            await post("/notifications/manual-users-topic", Role.enum.ADMIN)
                 .send({ userId: TEST_USER_ID, topicName: "food-priority-1" })
                 .expect(StatusCodes.OK);
 
@@ -175,13 +175,76 @@ describe("/notifications", () => {
         });
 
         it("DELETE should allow an admin to manually unsubscribe a user", async () => {
-            await del("/notifications/manual-topic", Role.enum.ADMIN)
+            await del("/notifications/manual-users-topic", Role.enum.ADMIN)
                 .send({ userId: TEST_USER_ID, topicName: "food-priority-1" })
                 .expect(StatusCodes.OK);
 
             expect(mockUnsubscribe).toHaveBeenCalledWith(TEST_DEVICE_ID, "food-priority-1");
         });
     });
+
+    describe("GET /notifications/topics", () => {
+        const TEST_EVENT_ID = uuidv4();
+        const TEST_TOPIC_NAME = "food_wave_1";
+
+        beforeEach(async () => {
+            await SupabaseDB.EVENTS.insert({
+                eventId: TEST_EVENT_ID,
+                name: "Test Event",
+                description: "Test event description",
+                startTime: new Date().toISOString(),
+                endTime: new Date(Date.now() + 3600000).toISOString(), // 1 hour later
+                eventType: "SPECIAL",
+                isVirtual: false,
+                location: "Test Location",
+                attendanceCount: 0,
+                points: 0
+            });
+            await SupabaseDB.CUSTOM_TOPICS.insert({ topicName: TEST_TOPIC_NAME });
+        });
+
+        // Cleanup: Remove test data after the test runs
+        afterEach(async () => {
+            await SupabaseDB.EVENTS.delete().eq("id", TEST_EVENT_ID);
+            await SupabaseDB.CUSTOM_TOPICS.delete().eq("topicName", TEST_TOPIC_NAME);
+        });
+
+        it("should return a sorted list of all static, event, and custom topics", async () => {
+            const response = await get("/notifications/topics", Role.enum.ADMIN)
+                .expect(StatusCodes.OK);
+
+            const expectedTopics = [
+                "allUsers",
+                `event_${TEST_EVENT_ID}`,
+                "food_wave_1",
+            ].sort();
+
+            expect(response.body.topics).toEqual(expectedTopics);
+        });
+    });
+
+    describe("POST /notifications/custom-topic", () => {
+        const NEW_TOPIC_NAME = "new_test_topic";
+
+        afterEach(async () => {
+            await SupabaseDB.CUSTOM_TOPICS.delete().eq("topicName", NEW_TOPIC_NAME);
+        });
+
+        it("should allow an admin to create a new custom topic", async () => {
+            await post("/notifications/custom-topic", Role.enum.ADMIN)
+                .send({ topicName: NEW_TOPIC_NAME })
+                .expect(StatusCodes.CREATED);
+
+            // Verify: Query the database to ensure the topic was created
+            const { data } = await SupabaseDB.CUSTOM_TOPICS.select("topicName")
+                .eq("topicName", NEW_TOPIC_NAME)
+                .single()
+                .throwOnError();
+
+            expect(data?.topicName).toBe(NEW_TOPIC_NAME);
+        });
+    });
+
 });
 
 describe("Attendee Favorite/Unfavorite Logic", () => {

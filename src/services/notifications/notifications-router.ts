@@ -61,10 +61,30 @@ notificationsRouter.post(
     }
 );
 
+// Admins can create a custom topic
+// Request body: topicName
+notificationsRouter.post(
+    "/custom-topic",
+    RoleChecker([Role.enum.ADMIN]),
+    async (req, res) => {
+        const { topicName } = req.body;
+        await SupabaseDB.CUSTOM_TOPICS.insert({
+            topicName: topicName,
+        }).throwOnError();
+
+        return res.status(StatusCodes.CREATED).send({
+            status: "success",
+            message: `Custom topic created: ${topicName}`
+        });
+
+    }
+
+);
+
 // Admins can manually subscribe a user to a topic
 // Request body: userId, topicName
 notificationsRouter.post(
-    "/manual-topic", // open to suggestions for a better name
+    "/manual-users-topic", // open to suggestions for a better name
     RoleChecker([Role.enum.ADMIN]),
     async (req, res) => {
         const { userId, topicName } =  manualTopicSchema.parse(req.body);
@@ -87,7 +107,7 @@ notificationsRouter.post(
 // Admins can manually unsubscribe a user from a topic
 // Request body: userId, topicName
 notificationsRouter.delete(
-    "/manual-topic", // also open to suggestions for a better name here
+    "/manual-users-topic", // also open to suggestions for a better name here
     RoleChecker([Role.enum.ADMIN]),
     async (req, res) => {
         const { userId, topicName } =  manualTopicSchema.parse(req.body);
@@ -107,9 +127,24 @@ notificationsRouter.delete(
     }
 );
 
-// TODO Get all available notification topics
+// Get all available notification topics
 // Firebase doesn't have an actual way to get this. 
 // one topic is allUsers, defined earlier in this file
-// might be worth making a table in Supabase to store topics, and adding to it when a new topic is created
+// the other topics are event topics, denoted by event_{eventId}
+// any custom topics are in the customTopics table
+notificationsRouter.get(
+    "/topics",
+    RoleChecker([Role.enum.ADMIN]),
+    async (req, res) => {
+        const staticTopics = ["allUsers"]; // add any other static topics to this array in future
+        
+        const { data: events } = await SupabaseDB.EVENTS.select("eventId").throwOnError();   
+        const eventTopics = events.map(event => `event_${event.eventId}`) ?? [];
+        const { data: customTopicsData } = await SupabaseDB.CUSTOM_TOPICS.select("topicName").throwOnError();
+        const customTopics = customTopicsData.map(topic => topic.topicName) ?? [];
+        const allTopics = [...new Set([...staticTopics, ...eventTopics, ...customTopics])];
+        return res.status(StatusCodes.OK).send({ topics: allTopics.sort() });
+    }
+);
 
 export default notificationsRouter;
