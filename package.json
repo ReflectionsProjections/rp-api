@@ -11,7 +11,11 @@
         "format:check": "prettier . --check",
         "build": "tsc",
         "verify": "yarn build && yarn lint:check && yarn format:check",
-        "test": "jest --config=testing/jest.config.ts"
+        "test": "jest --config=testing/jest.config.ts --color",
+        "test:docker": "docker compose -f docker-compose.test.yml run --rm test yarn test",
+        "logs": "docker compose logs -f api",
+        "shell": "docker compose exec api sh",
+        "restart": "docker compose restart api"
     },
     "dependencies": {
         "@aws-sdk/client-s3": "^3.496.0",
