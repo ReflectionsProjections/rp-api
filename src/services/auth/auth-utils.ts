@@ -2,7 +2,6 @@
 import { TokenPayload } from "google-auth-library";
 import { Config } from "../../config";
 import { Database } from "../../database";
-import { SupabaseDB, RoleTypes } from "../../supabase";
 import { JwtPayloadType, Role } from "./auth-models";
 import jsonwebtoken from "jsonwebtoken";
 

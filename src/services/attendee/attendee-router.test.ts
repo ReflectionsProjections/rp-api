@@ -128,10 +128,6 @@ const BASE_TEST_ATTENDEE = {
 };
 
 beforeEach(async () => {
-    // Clear all test data - delete ALL records from all tables
-    console.log("SUPABASE_URL", process.env.SUPABASE_URL);
-    console.log("SUPABASE_ANON_KEY", process.env.SUPABASE_ANON_KEY);
-
     try {
         await SupabaseDB.EVENT_ATTENDANCE.delete()
             .neq("attendee", "NONEXISTENT_VALUE_THAT_WILL_NEVER_EXIST")
@@ -160,11 +156,9 @@ beforeEach(async () => {
             .eq("userId", TESTER.userId)
             .throwOnError();
     } catch (error) {
-        // Ignore cleanup errors - they're expected if tables are empty
         console.log("Cleanup in beforeEach (expected):", error);
     }
 
-    // Add a small delay to ensure cleanup completes
     await new Promise((resolve) => setTimeout(resolve, 50));
 });
 
@@ -458,7 +452,6 @@ describe("GET /attendee/points", () => {
 
 describe("GET /attendee/foodwave", () => {
     const currentDay = getCurrentDay();
-    console.log(currentDay);
 
     it("should return foodwave 1 if attendee has priority today", async () => {
         await insertTestAttendee({

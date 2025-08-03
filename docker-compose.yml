@@ -1,139 +1,51 @@
-version: '3.8'
 services:
   api:
-    build: .
-    container_name: rp-api
-    ports:
-      - "3000:3000"
-    volumes:
-      - .:/app
-      - /app/node_modules
-    environment:
-      - POSTGRES_HOST=db
-      - POSTGRES_USER=${POSTGRES_USER:-postgres}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
-      - POSTGRES_DB=${POSTGRES_DB:-postgres}
-      - POSTGRES_PORT=${POSTGRES_PORT:-5432}
-      - SUPABASE_URL=http://kong:8000
-      - SUPABASE_ANON_KEY=${ANON_KEY}
-      - SUPABASE_SERVICE_KEY=${SERVICE_ROLE_KEY}
-    env_file:
-      - .env
+    extends:
+      file: docker-compose.api.yml
+      service: api
     depends_on:
       db:
         condition: service_healthy
       kong:
         condition: service_healthy
     networks:
-      - net
-  db:
-    image: supabase/postgres:15.8.1.060
-    container_name: rp-db
-    ports:
-      - "5432:5432"
-    environment:
-      POSTGRES_HOST: /var/run/postgresql
-      PGPORT: ${POSTGRES_PORT}
-      POSTGRES_PORT: ${POSTGRES_PORT}
-      PGPASSWORD: postgres
-      POSTGRES_PASSWORD: postgres
-      PGDATABASE: ${POSTGRES_DB}
-      POSTGRES_DB: ${POSTGRES_DB}
-      JWT_SECRET: ${JWT_SECRET}
-      JWT_EXP: ${JWT_EXPIRY}
-    volumes:
-      - ./docker/init-scripts:/docker-entrypoint-initdb.d
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-    networks:
-      - net
-
-  meta:
-    image: supabase/postgres-meta:v0.89.0
-    container_name: rp-meta
-    restart: unless-stopped
-    depends_on:
-      db:
-        condition: service_healthy
-    environment:
-      PG_META_PORT: 8080
-      PG_META_DB_HOST: ${POSTGRES_HOST}
-      PG_META_DB_PORT: ${POSTGRES_PORT}
-      PG_META_DB_NAME: ${POSTGRES_DB}
-      PG_META_DB_USER: supabase_admin
-      PG_META_DB_PASSWORD: postgres
-    networks:
-      - net
+      - rp-network
 
   studio:
-    image: supabase/studio:2025.05.19-sha-3487831
-    container_name: rp-studio
-    restart: unless-stopped
-    depends_on:
-      - meta
-    environment:
-      STUDIO_PG_META_URL: http://meta:8080
-      POSTGRES_PASSWORD: postgres
-      SUPABASE_URL: http://kong:8000
-      SUPABASE_PUBLIC_URL: ${SUPABASE_PUBLIC_URL}
-      SUPABASE_ANON_KEY: ${ANON_KEY}
-      SUPABASE_SERVICE_KEY: ${SERVICE_ROLE_KEY}
-      AUTH_JWT_SECRET: ${JWT_SECRET}
-      DEFAULT_ORGANIZATION_NAME: RP
-      DEFAULT_PROJECT_NAME: RP Dev
+    extends:
+      file: docker-compose.db.yml
+      service: studio
     networks:
-      - net
+      - rp-network
 
   kong:
-    image: kong:2.8.1
-    container_name: rp-kong
-    restart: unless-stopped
-    ports:
-      - "8000:8000/tcp"
-    environment:
-      KONG_DATABASE: "off"
-      KONG_DECLARATIVE_CONFIG: /home/kong/kong.yml
-      # https://github.com/supabase/cli/issues/14
-      KONG_DNS_ORDER: LAST,A,CNAME
-      KONG_PLUGINS: request-transformer,cors,key-auth,acl,basic-auth
-      KONG_NGINX_PROXY_PROXY_BUFFER_SIZE: 160k
-      KONG_NGINX_PROXY_PROXY_BUFFERS: 64 160k
-      SUPABASE_ANON_KEY: ${ANON_KEY}
-      SUPABASE_SERVICE_KEY: ${SERVICE_ROLE_KEY}
-      DASHBOARD_USERNAME: postgres
-      DASHBOARD_PASSWORD: postgres
-    volumes:
-      - ./docker/kong.yml:/home/kong/temp.yml:ro
-    entrypoint: >
-      bash -c "eval 'echo \"$(cat ~/temp.yml)\"' > ~/kong.yml && /docker-entrypoint.sh kong docker-start"
+    extends:
+      file: docker-compose.db.yml
+      service: kong
     networks:
-      - net
+      - rp-network
+
   rest:
-    container_name: rp-rest
-    image: postgrest/postgrest:v12.2.12
-    restart: unless-stopped
-    depends_on:
-      db:
-        # Disable this if you are using an external Postgres database
-        condition: service_healthy
-    environment:
-      PGRST_DB_URI: postgres://authenticator:postgres@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
-      PGRST_DB_SCHEMAS: ${PGRST_DB_SCHEMAS}
-      PGRST_DB_ANON_ROLE: anon
-      PGRST_JWT_SECRET: ${JWT_SECRET}
-      PGRST_DB_USE_LEGACY_GUCS: "false"
-      PGRST_APP_SETTINGS_JWT_SECRET: ${JWT_SECRET}
-      PGRST_APP_SETTINGS_JWT_EXP: ${JWT_EXPIRY}
-    command:
-      [
-        "postgrest"
-      ] 
+    extends:
+      file: docker-compose.db.yml
+      service: rest
     networks:
-      - net
+      - rp-network
+
+  meta:
+    extends:
+      file: docker-compose.db.yml
+      service: meta
+    networks:
+      - rp-network
+
+  db:
+    extends:
+      file: docker-compose.db.yml
+      service: db
+    networks:
+      - rp-network
 
 networks:
-  net:
-    driver: bridge 
+  rp-network:
+    driver: bridge

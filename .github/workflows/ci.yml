@@ -59,4 +59,4 @@ jobs:
       - name: Install dependencies
         run: yarn
       - name: Test
-        run: yarn test
+        run: yarn test:docker

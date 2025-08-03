@@ -1,15 +1,16 @@
-version: '3.8'
+version: "3.8"
 
 services:
   api:
     build: .
     container_name: rp-api
     ports:
-      - "3000:3000"
+      - "3000:3000" # API
     volumes:
       - .:/app
       - /app/node_modules
     environment:
+      - NODE_ENV=development
       - POSTGRES_HOST=db
       - POSTGRES_USER=${POSTGRES_USER:-postgres}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
@@ -17,5 +18,7 @@ services:
       - POSTGRES_PORT=${POSTGRES_PORT:-5432}
       - SUPABASE_URL=http://kong:8000
       - SUPABASE_ANON_KEY=${ANON_KEY}
+      - SUPABASE_SERVICE_KEY=${SERVICE_ROLE_KEY}
     env_file:
       - .env
+    command: ["yarn", "dev"]

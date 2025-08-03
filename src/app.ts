@@ -89,6 +89,8 @@ app.get("/status", (req, res) => {
     return res.status(StatusCodes.OK).send({
         ok: true,
         message: "API is alive!",
+        timestamp: new Date().toISOString(),
+        environment: Config.ENV,
     });
 });
 
