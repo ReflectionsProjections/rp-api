@@ -49,6 +49,7 @@ jobs:
   test:
     name: Test
     runs-on: ubuntu-latest
+    environment: supabase_test
 
     steps:
       - uses: actions/checkout@v4
@@ -58,16 +59,16 @@ jobs:
           cache: "yarn"
       - name: Create .env file
         run: |
-          cat > .env << EOF
-          ANON_KEY=${{ secrets.ANON_KEY }}
-          SERVICE_ROLE_KEY=${{ secrets.SERVICE_ROLE_KEY }}
-          JWT_SECRET=${{ secrets.JWT_SECRET }}
-          DASHBOARD_USERNAME=${{ vars.DASHBOARD_USERNAME }}
-          DASHBOARD_PASSWORD=${{ vars.DASHBOARD_PASSWORD }}
-          POSTGRES_HOST=${{ vars.POSTGRES_HOST }}
-          POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
-          POSTGRES_DB=${{ vars.POSTGRES_DB }}
-          POSTGRES_PORT=${{ vars.POSTGRES_PORT }}
+          cat <<EOF > .env
+          ANON_KEY="${{ secrets.ANON_KEY }}"
+          SERVICE_ROLE_KEY="${{ secrets.SERVICE_ROLE_KEY }}"
+          JWT_SECRET="${{ secrets.JWT_SECRET }}"
+          DASHBOARD_USERNAME="${{ vars.DASHBOARD_USERNAME }}"
+          DASHBOARD_PASSWORD="${{ vars.DASHBOARD_PASSWORD }}"
+          POSTGRES_HOST="${{ vars.POSTGRES_HOST }}"
+          POSTGRES_PASSWORD="${{ secrets.POSTGRES_PASSWORD }}"
+          POSTGRES_DB="${{ vars.POSTGRES_DB }}"
+          POSTGRES_PORT="${{ vars.POSTGRES_PORT }}"
           EOF
       - name: Test
         run: yarn test:docker
