@@ -40,8 +40,8 @@ services:
       - SUPABASE_ANON_KEY=${ANON_KEY}
       - SUPABASE_SERVICE_KEY=${SERVICE_ROLE_KEY}
       - JWT_SECRET=${JWT_SECRET}
-      - JWT_EXPIRY=${JWT_EXPIRY}
-      - PGRST_DB_SCHEMAS=${PGRST_DB_SCHEMAS}
+      - JWT_EXPIRY=${JWT_EXPIRY:-3600}
+      - PGRST_DB_SCHEMAS=${PGRST_DB_SCHEMAS:-public}
     env_file:
       - .env
     depends_on:
