@@ -47,6 +47,8 @@ services:
     container_name: rp-studio
     image: supabase/studio:2025.05.19-sha-3487831
     restart: unless-stopped
+    ports:
+      - "8000:3000"
     healthcheck:
       test:
         [
