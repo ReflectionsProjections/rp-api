@@ -1,128 +1,107 @@
-import { Router } from "express";
-import { StatusCodes } from "http-status-codes";
-import {
-    AttendeeCreateValidator,
-    EventIdValidator,
-} from "./attendee-validators";
-import { SupabaseDB } from "../../supabase";
-import RoleChecker from "../../middleware/role-checker";
+import { beforeEach, describe, expect, it } from "@jest/globals";
+import { post, del, get } from "../../../testing/testingTools";
+import { TESTER } from "../../../testing/testingTools";
 import { Role } from "../auth/auth-models";
-import { generateQrHash, getCurrentDay } from "../checkin/checkin-utils";
+import { StatusCodes } from "http-status-codes";
+import { SupabaseDB } from "../../supabase";
+import { v4 as uuidv4 } from "uuid";
+import { getCurrentDay } from "../checkin/checkin-utils";
 
-import { decryptId } from "./attendee-utils";
+const otherEvent = uuidv4();
+const dummyUUID = "00000000-0000-0000-0000-000000000000";
 
-import { generateJWT } from "../auth/auth-utils";
-import Config from "../../config";
+async function createTestEvent() {
+    const testEventId = uuidv4();
 
-const attendeeRouter = Router();
+    await SupabaseDB.EVENTS.insert({
+        eventId: testEventId,
+        name: "Test Event",
+        description: "Description",
+        startTime: new Date().toISOString(),
+        endTime: new Date(Date.now() + 3600000).toISOString(), // +1hr
+        eventType: "SPECIAL", // use one of the allowed enums
+        isVirtual: false,
+        isVisible: true,
+        location: "Test Location",
+        points: 10,
+    }).throwOnError();
 
-// Favorite an event for an attendee
-attendeeRouter.post(
-    "/favorites/:eventId",
-    RoleChecker([Role.Enum.USER]),
-    async (req, res) => {
-        const payload = res.locals.payload;
-        const userId = payload.userId;
+    return testEventId;
+}
 
-        const { eventId } = EventIdValidator.parse(req.params);
+type RegistrationOverride = {
+    userId?: string;
+    displayName?: string;
+    email?: string;
+    name?: string;
+    university?: string;
+    degree?: string;
+    isInterestedMechMania?: boolean;
+    isInterestedPuzzleBang?: boolean;
+    dietaryRestrictions?: string[];
+    allergies?: string[];
+};
 
-        const { data: attendee } = await SupabaseDB.ATTENDEES.select(
-            "favoriteEvents"
-        )
-            .eq("userId", userId)
-            .maybeSingle()
-            .throwOnError();
+type AttendeeOverride = {
+    userId?: string;
+    displayName?: string;
+    points?: number;
+    favoriteEvents?: string[];
+    isEligibleTshirt?: boolean;
+    isEligibleCap?: boolean;
+    isEligibleTote?: boolean;
+    isEligibleButton?: boolean;
+    hasRedeemedTshirt?: boolean;
+    hasRedeemedCap?: boolean;
+    hasRedeemedTote?: boolean;
+    hasRedeemedButton?: boolean;
+    hasPriorityMon?: boolean;
+    hasPriorityTue?: boolean;
+    hasPriorityWed?: boolean;
+    hasPriorityThu?: boolean;
+    hasPriorityFri?: boolean;
+    hasPrioritySat?: boolean;
+    hasPrioritySun?: boolean;
+    puzzlesCompleted?: string[];
+};
 
-        if (!attendee) {
-            return res
-                .status(StatusCodes.NOT_FOUND)
-                .json({ error: "UserNotFound" });
-        }
+export async function insertTestAttendee(
+    overrides: {
+        registration?: RegistrationOverride;
+        attendee?: AttendeeOverride;
+    } = {}
+) {
+    const userId = TESTER.userId;
+    const email = TESTER.email;
 
-        const newFavorites = (attendee.favoriteEvents || []).includes(eventId)
-            ? attendee.favoriteEvents || []
-            : [...(attendee.favoriteEvents || []), eventId];
+    // Insert role
+    await SupabaseDB.ROLES.insert({
+        userId,
+        displayName: "Test User",
+        email,
+        roles: [Role.enum.USER],
+    }).throwOnError();
 
-        await SupabaseDB.ATTENDEES.update({ favoriteEvents: newFavorites })
-            .eq("userId", userId)
-            .throwOnError();
+    // Insert registration
+    await SupabaseDB.REGISTRATIONS.insert({
+        userId,
+        email,
+        name: "Test User",
+        university: "UIUC", // default test value
+        degree: "BS", // default test value
+        isInterestedMechMania: true,
+        isInterestedPuzzleBang: false,
+        dietaryRestrictions: [],
+        allergies: [],
+        ...overrides.registration,
+    }).throwOnError();
 
-        return res.status(StatusCodes.OK).json({ favorites: newFavorites });
-    }
-);
-
-// Unfavorite an event for an attendee
-attendeeRouter.delete(
-    "/favorites/:eventId",
-    RoleChecker([Role.Enum.USER]),
-    async (req, res) => {
-        const payload = res.locals.payload;
-        const userId = payload.userId;
-        const { eventId } = EventIdValidator.parse(req.params);
-
-        const { data: attendee } = await SupabaseDB.ATTENDEES.select(
-            "favoriteEvents"
-        )
-            .eq("userId", userId)
-            .maybeSingle()
-            .throwOnError();
-
-        if (!attendee) {
-            return res
-                .status(StatusCodes.NOT_FOUND)
-                .json({ error: "UserNotFound" });
-        }
-
-        const updatedFavorites = (attendee?.favoriteEvents || []).filter(
-            (id) => id !== eventId
-        );
-        await SupabaseDB.ATTENDEES.update({
-            favoriteEvents: updatedFavorites,
-        })
-            .eq("userId", userId)
-            .throwOnError();
-        return res.status(StatusCodes.OK).json({ favorites: updatedFavorites });
-    }
-);
-
-// Get favorite events for an attendee
-attendeeRouter.get(
-    "/favorites",
-    RoleChecker([Role.Enum.USER]),
-    async (req, res) => {
-        const payload = res.locals.payload;
-        const userId = payload.userId;
-
-        const { data: attendee } = await SupabaseDB.ATTENDEES.select(
-            "favoriteEvents"
-        )
-            .eq("userId", userId)
-            .maybeSingle()
-            .throwOnError();
-
-        if (!attendee) {
-            return res
-                .status(StatusCodes.NOT_FOUND)
-                .json({ error: "UserNotFound" });
-        }
-
-        return res.status(StatusCodes.OK).json({
-            userId: userId,
-            favoriteEvents: attendee.favoriteEvents || [],
-        });
-    }
-);
-
-// Create a new attendee
-attendeeRouter.post("/", async (req, res) => {
-    const { userId } = AttendeeCreateValidator.parse(req.body);
-
-    const newAttendee = {
-        userId: userId,
+    // Insert attendee
+    await SupabaseDB.ATTENDEES.insert({
+        userId,
         points: 0,
         favoriteEvents: [],
-        puzzlesCompleted: [],
-        isEligibleTshirt: false,
+        isEligibleTshirt: true,
         isEligibleCap: false,
         isEligibleTote: false,
         isEligibleButton: false,
@@ -137,196 +116,655 @@ attendeeRouter.post("/", async (req, res) => {
         hasPriorityFri: false,
         hasPrioritySat: false,
         hasPrioritySun: false,
+        puzzlesCompleted: [],
+        ...overrides.attendee,
+    }).throwOnError();
+}
+
+const BASE_TEST_ATTENDEE = {
+    userId: TESTER.userId,
+    points: 0,
+    puzzlesCompleted: [],
+};
+
+beforeEach(async () => {
+    try {
+        await SupabaseDB.EVENT_ATTENDANCE.delete()
+            .neq("attendee", "NONEXISTENT_VALUE_THAT_WILL_NEVER_EXIST")
+            .throwOnError();
+        await SupabaseDB.ATTENDEE_ATTENDANCE.delete()
+            .neq("userId", dummyUUID)
+            .throwOnError();
+        await SupabaseDB.EVENTS.delete()
+            .neq("eventId", dummyUUID)
+            .throwOnError();
+        await SupabaseDB.ATTENDEES.delete()
+            .neq("userId", dummyUUID)
+            .throwOnError();
+        await SupabaseDB.REGISTRATIONS.delete()
+            .neq("userId", dummyUUID)
+            .throwOnError();
+        await SupabaseDB.ROLES.delete().neq("userId", dummyUUID).throwOnError();
+
+        await SupabaseDB.ROLES.delete()
+            .eq("userId", TESTER.userId)
+            .throwOnError();
+        await SupabaseDB.REGISTRATIONS.delete()
+            .eq("userId", TESTER.userId)
+            .throwOnError();
+        await SupabaseDB.ATTENDEES.delete()
+            .eq("userId", TESTER.userId)
+            .throwOnError();
+    } catch (error) {
+        console.log("Cleanup in beforeEach (expected):", error);
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+});
+
+describe("POST /attendee/favorites/:eventId", () => {
+    it("should add a favorite event ID to the user's attendee profile", async () => {
+        const eventId = await createTestEvent();
+        await insertTestAttendee();
+
+        await post(`/attendee/favorites/${eventId}`, Role.enum.USER).expect(
+            StatusCodes.OK
+        );
+
+        const updated = await SupabaseDB.ATTENDEES.select("favoriteEvents").eq(
+            "userId",
+            TESTER.userId
+        );
+
+        expect(updated.data?.[0]?.favoriteEvents).toContain(eventId);
+    }, 50000);
+
+    it("should not duplicate event ID in favoriteEvents", async () => {
+        const eventId = await createTestEvent();
+
+        await insertTestAttendee({
+            attendee: {
+                favoriteEvents: [eventId],
+            },
+        });
+
+        await post(`/attendee/favorites/${eventId}`, Role.enum.USER).expect(
+            StatusCodes.OK
+        );
+
+        const updated = await SupabaseDB.ATTENDEES.select("favoriteEvents").eq(
+            "userId",
+            TESTER.userId
+        );
+
+        expect(updated.data?.[0]?.favoriteEvents.length).toBe(1); // still only one
+        expect(updated.data?.[0]?.favoriteEvents).toContain(eventId);
+    });
+
+    it("should return 404 if attendee is not found", async () => {
+        const eventId = await createTestEvent();
+
+        const res = await post(
+            `/attendee/favorites/${eventId}`,
+            Role.enum.USER
+        ).expect(StatusCodes.NOT_FOUND);
+
+        expect(res.body).toEqual({ error: "UserNotFound" });
+    });
+
+    it("should return 401 if user is unauthenticated", async () => {
+        const eventId = await createTestEvent();
+
+        await post(`/attendee/favorites/${eventId}`).expect(
+            StatusCodes.UNAUTHORIZED
+        );
+    });
+
+    it("should return 403 if user does not have USER role", async () => {
+        const eventId = await createTestEvent();
+
+        await post(`/attendee/favorites/${eventId}`, Role.enum.STAFF).expect(
+            StatusCodes.FORBIDDEN
+        );
+    });
+
+    it("should return 400 for invalid event ID", async () => {
+        const invalidEventId = "this-is-not-a-valid-uuid";
+
+        await post(
+            `/attendee/favorites/${invalidEventId}`,
+            Role.enum.USER
+        ).expect(StatusCodes.BAD_REQUEST);
+    });
+});
+
+describe("DELETE /attendee/favorites/:eventId", () => {
+    it("should remove the event ID from the user's favoriteEvents", async () => {
+        const eventId = await createTestEvent();
+
+        await insertTestAttendee({
+            attendee: {
+                favoriteEvents: [eventId, otherEvent],
+            },
+        });
+
+        await del(`/attendee/favorites/${eventId}`, Role.enum.USER).expect(
+            StatusCodes.OK
+        );
+
+        const updated = await SupabaseDB.ATTENDEES.select("favoriteEvents").eq(
+            "userId",
+            TESTER.userId
+        );
+
+        expect(updated.data?.[0]?.favoriteEvents).not.toContain(eventId);
+        expect(updated.data?.[0]?.favoriteEvents).toContain(otherEvent);
+    });
+
+    it("should handle event ID not being in favorite_events", async () => {
+        const eventId = await createTestEvent();
+
+        await insertTestAttendee({
+            attendee: {
+                favoriteEvents: [otherEvent],
+            },
+        });
+
+        await del(`/attendee/favorites/${eventId}`, Role.enum.USER).expect(
+            StatusCodes.OK
+        );
+
+        const updated = await SupabaseDB.ATTENDEES.select("favoriteEvents").eq(
+            "userId",
+            TESTER.userId
+        );
+        expect(updated.data?.[0]?.favoriteEvents).toEqual([otherEvent]);
+    });
+
+    it("should return 404 if attendee is not found", async () => {
+        const eventId = await createTestEvent();
+
+        const res = await del(
+            `/attendee/favorites/${eventId}`,
+            Role.enum.USER
+        ).expect(StatusCodes.NOT_FOUND);
+
+        expect(res.body).toEqual({ error: "UserNotFound" });
+    });
+
+    it("should return 401 if user is unauthenticated", async () => {
+        const eventId = await createTestEvent();
+
+        await del(`/attendee/favorites/${eventId}`).expect(
+            StatusCodes.UNAUTHORIZED
+        );
+    });
+
+    it("should return 403 if user does not have USER role", async () => {
+        const eventId = await createTestEvent();
+
+        await del(`/attendee/favorites/${eventId}`, Role.enum.STAFF).expect(
+            StatusCodes.FORBIDDEN
+        );
+    });
+
+    it("should return 400 for invalid event ID", async () => {
+        const invalidEventId = "this-is-not-a-valid-uuid";
+
+        await del(
+            `/attendee/favorites/${invalidEventId}`,
+            Role.enum.USER
+        ).expect(StatusCodes.BAD_REQUEST);
+    });
+});
+
+describe("GET /attendee/favorites", () => {
+    const uuidEvent1 = uuidv4();
+    const uuidEvent2 = uuidv4();
+
+    it("should return the attendee with their favoriteEvents", async () => {
+        const favoriteEvents = [uuidEvent1, uuidEvent2];
+        await insertTestAttendee({
+            attendee: {
+                favoriteEvents: favoriteEvents,
+            },
+        });
+
+        const response = await get(
+            "/attendee/favorites",
+            Role.enum.USER
+        ).expect(StatusCodes.OK);
+
+        expect(response.body).toMatchObject({
+            userId: TESTER.userId,
+            favoriteEvents: favoriteEvents,
+        });
+    });
+
+    it("should return an empty favoriteEvents array if none are set", async () => {
+        await insertTestAttendee();
+
+        const response = await get(
+            "/attendee/favorites",
+            Role.enum.USER
+        ).expect(StatusCodes.OK);
+
+        expect(response.body.favoriteEvents).toEqual([]);
+    });
+
+    it("should return 404 if attendee is not found", async () => {
+        await get("/attendee/favorites", Role.enum.USER).expect(
+            StatusCodes.NOT_FOUND
+        );
+    });
+
+    it("should return 401 if unauthenticated", async () => {
+        await get("/attendee/favorites").expect(StatusCodes.UNAUTHORIZED);
+    });
+
+    it("should return 403 if user does not have USER role", async () => {
+        await get("/attendee/favorites", Role.enum.STAFF).expect(
+            StatusCodes.FORBIDDEN
+        );
+    });
+});
+
+describe("POST /attendee/", () => {
+    const VALID_ATTENDEE_PAYLOAD = {
+        userId: "testuser123",
     };
 
-    await SupabaseDB.ATTENDEES.insert(newAttendee).throwOnError();
+    beforeEach(async () => {
+        await SupabaseDB.ROLES.insert({
+            userId: VALID_ATTENDEE_PAYLOAD.userId,
+            email: "test@test.com",
+            displayName: "Test",
+            roles: [Role.Enum.USER],
+        });
+    });
 
-    return res.status(StatusCodes.CREATED).json({ userId: userId });
+    it("should create a new attendee with valid data", async () => {
+        const response = await post("/attendee/")
+            .send(VALID_ATTENDEE_PAYLOAD)
+            .expect(StatusCodes.CREATED);
+        expect(response.body).toEqual(VALID_ATTENDEE_PAYLOAD);
+        const dbRecord = await SupabaseDB.ATTENDEES.select()
+            .eq("userId", VALID_ATTENDEE_PAYLOAD.userId)
+            .single();
+
+        expect(dbRecord.data?.userId).toBe(VALID_ATTENDEE_PAYLOAD.userId);
+    });
+
+    it("should return 400 if required fields are missing", async () => {
+        const invalidPayload = {}; // Empty object, missing userId
+
+        await post("/attendee/")
+            .send(invalidPayload)
+            .expect(StatusCodes.BAD_REQUEST);
+    });
 });
 
-// generates a unique QR code for each attendee
-attendeeRouter.get("/qr/", RoleChecker([Role.Enum.USER]), async (req, res) => {
-    const payload = res.locals.payload;
+describe("GET /attendee/points", () => {
+    it("should return the user's points", async () => {
+        await insertTestAttendee({
+            attendee: {
+                userId: BASE_TEST_ATTENDEE.userId,
+                points: 42,
+            },
+        });
 
-    const userId = payload.userId;
-    const expTime = Math.floor(Date.now() / 1000) + 20; // Current epoch time in seconds + 20 seconds
-    const qrCodeString = generateQrHash(userId, expTime);
-    return res.status(StatusCodes.OK).json({ qrCode: qrCodeString });
-});
-
-attendeeRouter.get(
-    "/points",
-    RoleChecker([Role.Enum.USER]),
-    async (req, res) => {
-        const payload = res.locals.payload;
-        const userId = payload.userId;
-
-        // Check if the user exists in the database
-        const { data: user } = await SupabaseDB.ATTENDEES.select("points")
-            .eq("userId", userId)
-            .maybeSingle()
-            .throwOnError();
-
-        if (!user) {
-            // adding because user could be null is an error
-            return res
-                .status(StatusCodes.NOT_FOUND)
-                .json({ error: "UserNotFound" });
-        }
-
-        return res.status(StatusCodes.OK).json({ points: user.points });
-    }
-);
-
-attendeeRouter.get(
-    "/foodwave",
-    RoleChecker([Role.Enum.USER]),
-    async (req, res) => {
-        const payload = res.locals.payload;
-        const userId = payload.userId;
-
-        // Check if the user exists in the database
-        const { data: user } = await SupabaseDB.ATTENDEES.select()
-            .eq("userId", userId)
-            .maybeSingle()
-            .throwOnError();
-
-        const { data: registration } = await SupabaseDB.REGISTRATIONS.select(
-            "dietaryRestrictions"
-        )
-            .eq("userId", userId)
-            .maybeSingle()
-            .throwOnError();
-
-        // check if true for cur day
-        const day = getCurrentDay();
-        const priorityKey = `hasPriority${day}`;
-        if (!user) {
-            return res
-                .status(StatusCodes.NOT_FOUND)
-                .json({ error: "UserNotFound" });
-        }
-        const hasPriority = user[priorityKey as keyof typeof user];
-        const dietary = registration?.dietaryRestrictions || [];
-        const hasFoodRestrictions = ["VEGAN", "GLUTEN-FREE"].some((r) =>
-            dietary.includes(r)
+        const response = await get("/attendee/points", Role.enum.USER).expect(
+            StatusCodes.OK
         );
-        const foodwave = hasPriority || hasFoodRestrictions ? 1 : 2;
 
-        return res.status(StatusCodes.OK).json({ foodwave });
-    }
-);
+        expect(response.body).toEqual({ points: 42 });
+    });
 
-attendeeRouter.get("/", RoleChecker([Role.Enum.USER]), async (req, res) => {
-    const payload = res.locals.payload;
-    const userId = payload.userId;
+    it("should return 0 points if not explicitly set", async () => {
+        await insertTestAttendee({
+            attendee: {
+                userId: BASE_TEST_ATTENDEE.userId,
+            },
+        });
+        const response = await get("/attendee/points", Role.enum.USER).expect(
+            StatusCodes.OK
+        );
 
-    // Check if the user exists in the database
-    const { data: user } = await SupabaseDB.ATTENDEES.select()
-        .eq("userId", userId)
-        .maybeSingle()
-        .throwOnError();
+        expect(response.body).toEqual({ points: 0 });
+    });
 
-    if (!user) {
-        return res
-            .status(StatusCodes.NOT_FOUND)
-            .json({ error: "UserNotFound" });
-    }
+    it("should return 404 if attendee is not found", async () => {
+        await get("/attendee/points", Role.enum.USER).expect(
+            StatusCodes.NOT_FOUND
+        );
+    });
 
-    return res.status(StatusCodes.OK).json(user);
+    it("should return 401 if unauthenticated", async () => {
+        await get("/attendee/points").expect(StatusCodes.UNAUTHORIZED);
+    });
+
+    it("should return 403 if user does not have USER role", async () => {
+        await get("/attendee/points", Role.enum.STAFF).expect(
+            StatusCodes.FORBIDDEN
+        );
+    });
 });
 
-// Get attendee info via user_id
-attendeeRouter.get(
-    "/id/:userId",
-    RoleChecker([Role.Enum.STAFF, Role.Enum.ADMIN]),
-    async (req, res) => {
-        const { userId } = req.params;
+describe("GET /attendee/foodwave", () => {
+    const currentDay = getCurrentDay();
 
-        // Check if the user exists in the database
-        const { data: user } = await SupabaseDB.ATTENDEES.select()
-            .eq("userId", userId)
-            .maybeSingle()
-            .throwOnError();
-        if (!user) {
-            return res
-                .status(StatusCodes.NOT_FOUND)
-                .json({ error: "UserNotFound" });
-        }
+    it("should return foodwave 1 if attendee has priority today", async () => {
+        await insertTestAttendee({
+            attendee: {
+                userId: BASE_TEST_ATTENDEE.userId,
+                [`hasPriority${currentDay}`]: true,
+            },
+        });
 
-        return res.status(StatusCodes.OK).json(user);
-    }
-);
+        const response = await get("/attendee/foodwave", Role.enum.USER).expect(
+            StatusCodes.OK
+        );
+        expect(response.body).toEqual({ foodwave: 1 });
+    });
 
-attendeeRouter.get(
-    "/emails",
-    RoleChecker([Role.Enum.STAFF, Role.Enum.ADMIN]),
-    async (_req, res) => {
-        const { data } =
-            await SupabaseDB.REGISTRATIONS.select(
-                "email, userId"
-            ).throwOnError();
+    it("should return foodwave 1 if attendee has dietary restriction VEGAN", async () => {
+        await insertTestAttendee({
+            registration: {
+                userId: BASE_TEST_ATTENDEE.userId,
+                dietaryRestrictions: ["VEGAN"],
+            },
+        });
 
-        return res.status(StatusCodes.OK).json(data);
-    }
-);
+        const response = await get("/attendee/foodwave", Role.enum.USER).expect(
+            StatusCodes.OK
+        );
+        expect(response.body).toEqual({ foodwave: 1 });
+    });
 
-attendeeRouter.post(
-    "/redeemMerch/:ITEM",
-    RoleChecker([Role.Enum.STAFF, Role.Enum.ADMIN]),
-    async (req, res) => {
-        const userId = req.body.userId;
-        const merchItem = req.params.ITEM.toLowerCase();
-        const validItems = ["tshirt", "cap", "tote", "button"];
+    it("should return foodwave 1 if attendee has dietary restriction GLUTEN-FREE", async () => {
+        await insertTestAttendee({
+            registration: {
+                userId: BASE_TEST_ATTENDEE.userId,
+                dietaryRestrictions: ["GLUTEN-FREE"],
+            },
+        });
 
-        if (!validItems.includes(merchItem)) {
-            return res
-                .status(StatusCodes.BAD_REQUEST)
-                .json({ error: "Not a valid item" });
-        }
+        const response = await get("/attendee/foodwave", Role.enum.USER).expect(
+            StatusCodes.OK
+        );
+        expect(response.body).toEqual({ foodwave: 1 });
+    });
 
-        const { data: user } = await SupabaseDB.ATTENDEES.select()
-            .eq("userId", userId)
-            .maybeSingle()
-            .throwOnError();
+    it("should return foodwave 2 if no priority and no restrictions", async () => {
+        await insertTestAttendee({
+            attendee: {
+                userId: BASE_TEST_ATTENDEE.userId,
+            },
+        });
 
-        if (!user) {
-            return res
-                .status(StatusCodes.NOT_FOUND)
-                .json({ error: "UserNotFound" });
-        }
+        const response = await get("/attendee/foodwave", Role.enum.USER).expect(
+            StatusCodes.OK
+        );
+        expect(response.body).toEqual({ foodwave: 2 });
+    });
 
-        const eligibleKey =
-            `isEligible${merchItem.charAt(0).toUpperCase() + merchItem.slice(1)}` as keyof typeof user;
-        const redeemedKey =
-            `hasRedeemed${merchItem.charAt(0).toUpperCase() + merchItem.slice(1)}` as keyof typeof user;
+    it("should return 404 if attendee not found", async () => {
+        await get("/attendee/foodwave", Role.enum.USER).expect(
+            StatusCodes.NOT_FOUND
+        );
+    });
 
-        if (!user[eligibleKey]) {
-            return res
-                .status(StatusCodes.BAD_REQUEST)
-                .json({ error: "Too few points" });
-        }
+    it("should return 401 if unauthenticated", async () => {
+        await get("/attendee/foodwave").expect(StatusCodes.UNAUTHORIZED);
+    });
 
-        if (user[redeemedKey]) {
-            return res
-                .status(StatusCodes.BAD_REQUEST)
-                .json({ error: "Item already redeemed" });
-        }
-
-        await SupabaseDB.ATTENDEES.update({ [redeemedKey]: true })
-            .eq("userId", userId)
-            .throwOnError();
-
-        return res.status(StatusCodes.OK).json({ message: "Item Redeemed!" });
-    }
-);
-
-attendeeRouter.get("/resume/update/:ENCODED_ID", async (req, res) => {
-    const encodedId = req.params.ENCODED_ID;
-    const decryptedId = await decryptId(encodedId);
-    const token = await generateJWT(decryptedId);
-    const uploadURL = Config.WEB_RESUME_REUPLOAD_ROUTE + `?token=${token}`;
-    return res.redirect(uploadURL);
+    it("should return 403 if user does not have USER role", async () => {
+        await get("/attendee/foodwave", Role.enum.STAFF).expect(
+            StatusCodes.FORBIDDEN
+        );
+    });
 });
 
-export default attendeeRouter;
+describe("GET /attendee/", () => {
+    it("should return the attendee data for an authenticated USER", async () => {
+        await insertTestAttendee({
+            attendee: {
+                ...BASE_TEST_ATTENDEE,
+            },
+        });
+
+        const response = await get("/attendee/", Role.enum.USER).expect(
+            StatusCodes.OK
+        );
+
+        expect(response.body.userId).toBe(TESTER.userId);
+    });
+
+    it("should return 404 if attendee not found", async () => {
+        await get("/attendee/", Role.enum.USER).expect(StatusCodes.NOT_FOUND);
+    });
+
+    it("should return 401 if unauthenticated", async () => {
+        await get("/attendee/").expect(StatusCodes.UNAUTHORIZED);
+    });
+
+    it("should return 403 if not a USER", async () => {
+        await get("/attendee/", Role.enum.STAFF).expect(StatusCodes.FORBIDDEN);
+    });
+});
+
+describe("GET /attendee/id/:userId", () => {
+    const targetId = "some-user-id";
+
+    beforeEach(async () => {
+        await SupabaseDB.ROLES.insert({
+            userId: targetId,
+            email: "some-user@test.com",
+            displayName: "Some User",
+            roles: [Role.Enum.USER],
+        });
+    });
+
+    it.each([
+        { role: Role.enum.STAFF, label: "STAFF" },
+        { role: Role.enum.ADMIN, label: "ADMIN" },
+    ])("should return attendee info for %s role", async ({ role }) => {
+        await insertTestAttendee({
+            attendee: { ...BASE_TEST_ATTENDEE, userId: targetId },
+        });
+
+        const res = await get(`/attendee/id/${targetId}`, role).expect(
+            StatusCodes.OK
+        );
+
+        expect(res.body.userId).toBe(targetId);
+    });
+
+    it("should return 404 if attendee not found", async () => {
+        await get(`/attendee/id/unknown-id`, Role.enum.STAFF).expect(
+            StatusCodes.NOT_FOUND
+        );
+    });
+
+    it("should return 401 if unauthenticated", async () => {
+        await get(`/attendee/id/${targetId}`).expect(StatusCodes.UNAUTHORIZED);
+    });
+
+    it("should return 403 if user does not have STAFF or ADMIN role", async () => {
+        await get(`/attendee/id/${targetId}`, Role.enum.USER).expect(
+            StatusCodes.FORBIDDEN
+        );
+    });
+});
+
+describe("GET /attendee/emails", () => {
+    it.each([
+        { role: Role.enum.STAFF, label: "STAFF" },
+        { role: Role.enum.ADMIN, label: "ADMIN" },
+    ])(
+        "should return all attendee emails and userIds for %s role",
+        async ({ role }) => {
+            await SupabaseDB.ROLES.insert([
+                {
+                    userId: "u1",
+                    email: "u1@example.com",
+                    displayName: "User One",
+                    roles: [],
+                },
+                {
+                    userId: "u2",
+                    email: "u2@example.com",
+                    displayName: "User Two",
+                    roles: [],
+                },
+            ]).throwOnError();
+
+            await SupabaseDB.REGISTRATIONS.insert([
+                {
+                    userId: "u1",
+                    name: "User One",
+                    email: "u1@example.com",
+                    university: "N/A",
+                    degree: "N/A",
+                    isInterestedMechMania: false,
+                    isInterestedPuzzleBang: false,
+                    dietaryRestrictions: [],
+                    allergies: [],
+                },
+                {
+                    userId: "u2",
+                    name: "User Two",
+                    email: "u2@example.com",
+                    university: "N/A",
+                    degree: "N/A",
+                    isInterestedMechMania: false,
+                    isInterestedPuzzleBang: false,
+                    dietaryRestrictions: [],
+                    allergies: [],
+                },
+            ]).throwOnError();
+
+            const res = await get("/attendee/emails", role).expect(
+                StatusCodes.OK
+            );
+
+            expect(res.body).toEqual(
+                expect.arrayContaining([
+                    expect.objectContaining({
+                        userId: "u1",
+                        email: "u1@example.com",
+                    }),
+                    expect.objectContaining({
+                        userId: "u2",
+                        email: "u2@example.com",
+                    }),
+                ])
+            );
+        }
+    );
+
+    it("should return empty array if no attendees exist", async () => {
+        const res = await get("/attendee/emails", Role.enum.ADMIN).expect(
+            StatusCodes.OK
+        );
+
+        expect(res.body).toEqual([]);
+    });
+
+    it("should return 401 if unauthenticated", async () => {
+        await get("/attendee/emails").expect(StatusCodes.UNAUTHORIZED);
+    });
+
+    it("should return 403 if user is not STAFF or ADMIN", async () => {
+        await get("/attendee/emails", Role.enum.USER).expect(
+            StatusCodes.FORBIDDEN
+        );
+    });
+});
+
+describe("POST /attendee/redeemMerch/:ITEM", () => {
+    const userId = TESTER.userId;
+
+    it.each([{ role: Role.enum.STAFF }, { role: Role.enum.ADMIN }])(
+        "should redeem valid item for %s role",
+        async ({ role }) => {
+            await insertTestAttendee({
+                attendee: { ...BASE_TEST_ATTENDEE, userId: userId },
+            });
+
+            const res = await post("/attendee/redeemMerch/Tshirt", role)
+                .send({ userId })
+                .expect(StatusCodes.OK);
+
+            expect(res.body).toEqual({ message: "Item Redeemed!" });
+
+            const updated = await SupabaseDB.ATTENDEES.select(
+                "hasRedeemedTshirt"
+            )
+                .eq("userId", userId)
+                .maybeSingle()
+                .throwOnError();
+
+            expect(updated.data?.hasRedeemedTshirt).toBe(true);
+        }
+    );
+
+    it("should return 404 if user not found", async () => {
+        await post("/attendee/redeemMerch/Tshirt", Role.enum.STAFF)
+            .send({ userId: "notreal" })
+            .expect(StatusCodes.NOT_FOUND);
+    });
+
+    it("should return 400 for invalid item", async () => {
+        await insertTestAttendee({
+            attendee: { ...BASE_TEST_ATTENDEE, userId: userId },
+        });
+        await post("/attendee/redeemMerch/InvalidItem", Role.enum.ADMIN)
+            .send({ userId })
+            .expect(StatusCodes.BAD_REQUEST);
+    });
+
+    it("should return 400 if item already redeemed", async () => {
+        await insertTestAttendee({
+            attendee: {
+                ...BASE_TEST_ATTENDEE,
+                userId: userId,
+                hasRedeemedTshirt: true,
+            },
+        });
+
+        await post("/attendee/redeemMerch/Tshirt", Role.enum.ADMIN)
+            .send({ userId })
+            .expect(StatusCodes.BAD_REQUEST);
+    });
+
+    it("should return 400 if user not eligible for item", async () => {
+        await insertTestAttendee({
+            attendee: {
+                ...BASE_TEST_ATTENDEE,
+                userId: userId,
+                hasRedeemedTshirt: true,
+            },
+        });
+
+        await post("/attendee/redeemMerch/Cap", Role.enum.STAFF)
+            .send({ userId })
+            .expect(StatusCodes.BAD_REQUEST);
+    });
+
+    it("should return 401 if unauthenticated", async () => {
+        await post("/attendee/redeemMerch/Tshirt")
+            .send({ userId })
+            .expect(StatusCodes.UNAUTHORIZED);
+    });
+
+    it("should return 403 if user is not STAFF or ADMIN", async () => {
+        await insertTestAttendee({
+            attendee: { ...BASE_TEST_ATTENDEE, userId: userId },
+        });
+
+        await post("/attendee/redeemMerch/Tshirt", Role.enum.USER)
+            .send({ userId })
+            .expect(StatusCodes.FORBIDDEN);
+    });
+});
