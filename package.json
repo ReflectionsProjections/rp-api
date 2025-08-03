@@ -11,7 +11,7 @@
         "format:check": "prettier . --check",
         "build": "tsc",
         "verify": "yarn build && yarn lint:check && yarn format:check",
-        "test": "jest --config=testing/jest.config.ts --color --verbose",
+        "test": "jest --config=testing/jest.config.ts --color",
         "test:docker": "docker compose -f docker-compose.test.yml run --rm test yarn test",
         "logs": "docker compose logs -f api",
         "shell": "docker compose exec api sh",
