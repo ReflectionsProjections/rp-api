@@ -57,6 +57,8 @@ jobs:
         with:
           node-version: "18.x"
           cache: "yarn"
+      - name: Install dependencies
+        run: yarn
       - name: Create .env file
         run: |
           cat <<EOF > .env
