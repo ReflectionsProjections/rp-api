@@ -41,7 +41,7 @@ CREATE TYPE public."staffAttendanceType" AS ENUM (
 );
 
 -- Create tables
-CREATE TABLE public."attendeeAttendance" (
+CREATE TABLE public."attendeeAttendances" (
     "userId" character varying NOT NULL,
     "eventsAttended" uuid[] DEFAULT '{}'::uuid[] NOT NULL,
     CONSTRAINT "attendeeAttendance_pkey" PRIMARY KEY ("userId")
@@ -76,7 +76,7 @@ CREATE TABLE public."corporate" (
     CONSTRAINT "corporate_pkey" PRIMARY KEY ("email")
 );
 
-CREATE TABLE public."eventAttendance" (
+CREATE TABLE public."eventAttendances" (
     "eventId" uuid NOT NULL,
     "attendee" character varying NOT NULL,
     CONSTRAINT "event_attendance_pkey" PRIMARY KEY ("eventId", "attendee")
@@ -134,14 +134,24 @@ CREATE TABLE public."registrations" (
     CONSTRAINT "registrations_email_key" UNIQUE ("email")
 );
 
-CREATE TABLE public."roles" (
+CREATE TABLE public."authInfo" (
     "userId" character varying NOT NULL,
-    "displayName" text NOT NULL,
+    "authId" text,
     "email" text NOT NULL,
-    "roles" public."roleType"[] DEFAULT '{}'::public."roleType"[] NOT NULL,
-    CONSTRAINT "roles_pkey" PRIMARY KEY ("userId"),
-    CONSTRAINT "roles_email_key" UNIQUE ("email")
+    "displayName" text NOT NULL,
+    CONSTRAINT "authInfo_pkey" PRIMARY KEY ("userId")
 );
+
+CREATE TABLE public."authRoles" (
+    "userId" character varying NOT NULL,
+    "role" public."roleType" NOT NULL,
+    CONSTRAINT "authRoles_pkey" PRIMARY KEY ("userId", "role")
+);
+
+-- Indexes for auth tables
+CREATE INDEX "authRoles_userId_idx" ON public."authRoles" ("userId");
+CREATE INDEX "authRoles_role_idx"   ON public."authRoles" ("role");
+CREATE INDEX "authInfo_authId_idx"  ON public."authInfo"  ("authId");
 
 CREATE TABLE public."speakers" (
     "speakerId" uuid DEFAULT gen_random_uuid() NOT NULL,
@@ -169,20 +179,20 @@ CREATE TABLE public."subscriptions" (
 );
 
 -- Add foreign key constraints
-ALTER TABLE ONLY public."attendeeAttendance"
-    ADD CONSTRAINT "attendee_attendance_user_id_fkey" FOREIGN KEY ("userId") REFERENCES public."roles"("userId");
+ALTER TABLE ONLY public."attendeeAttendances"
+    ADD CONSTRAINT "attendee_attendance_user_id_fkey" FOREIGN KEY ("userId") REFERENCES public."authInfo"("userId");
 
 ALTER TABLE ONLY public."attendees"
-    ADD CONSTRAINT "attendees_user_id_fkey" FOREIGN KEY ("userId") REFERENCES public."roles"("userId");
+    ADD CONSTRAINT "attendees_user_id_fkey" FOREIGN KEY ("userId") REFERENCES public."authInfo"("userId");
 
-ALTER TABLE ONLY public."eventAttendance"
+ALTER TABLE ONLY public."eventAttendances"
     ADD CONSTRAINT "event_attendance_attendee_fkey" FOREIGN KEY ("attendee") REFERENCES public."attendees"("userId");
 
-ALTER TABLE ONLY public."eventAttendance"
+ALTER TABLE ONLY public."eventAttendances"
     ADD CONSTRAINT "event_attendance_event_id_fkey" FOREIGN KEY ("eventId") REFERENCES public."events"("eventId");
 
 ALTER TABLE ONLY public."notifications"
-    ADD CONSTRAINT "notifications_user_id_fkey" FOREIGN KEY ("userId") REFERENCES public."roles"("userId");
+    ADD CONSTRAINT "notifications_user_id_fkey" FOREIGN KEY ("userId") REFERENCES public."authInfo"("userId");
 
 ALTER TABLE ONLY public."registrations"
-    ADD CONSTRAINT "registrations_user_id_fkey" FOREIGN KEY ("userId") REFERENCES public."roles"("userId");
+    ADD CONSTRAINT "registrations_user_id_fkey" FOREIGN KEY ("userId") REFERENCES public."authInfo"("userId");
