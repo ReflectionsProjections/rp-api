@@ -4,17 +4,17 @@ import {
     createMeetingValidator,
     updateMeetingValidator,
 } from "./meetings-schema";
+import { z } from "zod";
 
 export const getAllMeetings = async () => {
-    console.log("Getting all meetings from Supabase");
     const { data, error } = await SupabaseDB.MEETINGS.select("*");
     if (error) throw error;
 
     return data.map((m) =>
         meetingView.parse({
-            meetingId: m.meeting_id,
-            committeeType: m.committee_type,
-            startTime: m.start_time,
+            meetingId: m.meetingId,
+            committeeType: m.committeeType,
+            startTime: m.startTime,
         })
     );
 };
@@ -28,19 +28,21 @@ export const getMeetingById = async (meetingId: string) => {
     if (!data) return null;
 
     return meetingView.parse({
-        meetingId: data.meeting_id,
-        committeeType: data.committee_type,
-        startTime: data.start_time,
+        meetingId: data.meetingId,
+        committeeType: data.committeeType,
+        startTime: data.startTime,
     });
 };
 
-export const createMeeting = async (meetingData: any) => {
+export const createMeeting = async (
+    meetingData: z.infer<typeof createMeetingValidator>
+) => {
     const validatedData = createMeetingValidator.parse(meetingData);
 
     const { data, error } = await SupabaseDB.MEETINGS.insert([
         {
-            committee_type: validatedData.committeeType,
-            start_time: validatedData.startTime,
+            committeeType: validatedData.committeeType,
+            startTime: validatedData.startTime?.toISOString(),
         },
     ])
         .select()
@@ -49,19 +51,22 @@ export const createMeeting = async (meetingData: any) => {
     if (error) throw error;
 
     return meetingView.parse({
-        meetingId: data.meeting_id,
-        committeeType: data.committee_type,
-        startTime: data.start_time,
+        meetingId: data.meetingId,
+        committeeType: data.committeeType,
+        startTime: data.startTime,
     });
 };
 
-export const updateMeeting = async (meetingId: string, meetingData: any) => {
+export const updateMeeting = async (
+    meetingId: string,
+    meetingData: z.infer<typeof createMeetingValidator>
+) => {
     const validatedData = updateMeetingValidator.parse(meetingData);
     const { data, error } = await SupabaseDB.MEETINGS.update({
-        committee_type: validatedData.committeeType,
-        start_time: validatedData.startTime,
+        committeeType: validatedData.committeeType,
+        startTime: validatedData.startTime?.toISOString(),
     })
-        .eq("meeting_id", meetingId)
+        .eq("meetingId", meetingId)
         .select()
         .single();
 
@@ -69,15 +74,15 @@ export const updateMeeting = async (meetingId: string, meetingData: any) => {
     if (!data) return null;
 
     return meetingView.parse({
-        meetingId: data.meeting_id,
-        committeeType: data.committee_type,
-        startTime: data.start_time,
+        meetingId: data.meetingId,
+        committeeType: data.committeeType,
+        startTime: data.startTime,
     });
 };
 
 export const deleteMeeting = async (meetingId: string) => {
     const { data, error } = await SupabaseDB.MEETINGS.delete()
-        .eq("meeting_id", meetingId)
+        .eq("meetingId", meetingId)
         .select()
         .single();
 
