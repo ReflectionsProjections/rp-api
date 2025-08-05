@@ -22,10 +22,10 @@ export const SupabaseDB = {
     get EVENTS() {
         return supabase.from("events");
     },
-    get EVENT_ATTENDANCE() {
+    get EVENT_ATTENDANCES() {
         return supabase.from("eventAttendances");
     },
-    get ATTENDEE_ATTENDANCE() {
+    get ATTENDEE_ATTENDANCES() {
         return supabase.from("attendeeAttendances");
     },
     get REGISTRATIONS() {

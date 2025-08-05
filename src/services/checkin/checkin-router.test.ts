@@ -145,12 +145,12 @@ async function insertTestAttendee(overrides: InsertTestAttendeeOverrides = {}) {
 
 
 beforeEach(async () => {
-    await SupabaseDB.EVENT_ATTENDANCE.delete().neq("attendee", "NON_EXISTENT_ATTENDEE_ID");
-    await SupabaseDB.ATTENDEE_ATTENDANCE.delete().neq("userId", dummyUUID);
-    await SupabaseDB.EVENTS.delete().neq("eventId", dummyUUID);
+    await SupabaseDB.EVENT_ATTENDANCES.delete().neq("attendee", "NON_EXISTENT_ATTENDEE_ID");
+    await SupabaseDB.ATTENDEE_ATTENDANCES.delete().neq("userId", dummyUUID);
     await SupabaseDB.ATTENDEES.delete().neq("userId", dummyUUID);
     await SupabaseDB.REGISTRATIONS.delete().neq("userId", dummyUUID);
     await SupabaseDB.ROLES.delete().neq("userId", dummyUUID);
+    await SupabaseDB.EVENTS.delete().neq("eventId", dummyUUID);
     await insertTestAttendee();
     const validExpTime = NOW_SECONDS + ONE_HOUR_SECONDS;
     const expiredExpTime = NOW_SECONDS - ONE_HOUR_SECONDS;
@@ -171,8 +171,8 @@ beforeEach(async () => {
 });
 
 afterAll(async () => {
-    await SupabaseDB.EVENT_ATTENDANCE.delete().neq("attendee", "");
-    await SupabaseDB.ATTENDEE_ATTENDANCE.delete().neq("userId", "");
+    await SupabaseDB.EVENT_ATTENDANCES.delete().neq("attendee", "");
+    await SupabaseDB.ATTENDEE_ATTENDANCES.delete().neq("userId", "");
     await SupabaseDB.EVENTS.delete().eq("eventId", REGULAR_EVENT_FOR_CHECKIN.eventId);
     await SupabaseDB.EVENTS.delete().eq("eventId", GENERAL_CHECKIN_EVENT.eventId);
     await SupabaseDB.EVENTS.delete().eq("eventId", MEALS_EVENT.eventId);
@@ -187,8 +187,8 @@ describe("POST /checkin/scan/staff", () => {
 
     beforeEach(async () => {
         // Clean only the dynamic tables
-        await SupabaseDB.EVENT_ATTENDANCE.delete().neq("attendee", "");
-        await SupabaseDB.ATTENDEE_ATTENDANCE.delete().neq("userId", "");
+        // await SupabaseDB.EVENT_ATTENDANCES.delete().neq("attendee", "");
+        // await SupabaseDB.ATTENDEE_ATTENDANCES.delete().neq("userId", "");
 
         // Reset events attendanceCount back to 0
         for (const event of [
@@ -213,14 +213,12 @@ describe("POST /checkin/scan/staff", () => {
             hasPrioritySat: false,
             hasPrioritySun: false,
         }).eq("userId", TEST_ATTENDEE_1.userId);
-    });
 
-    beforeEach(() => {
         payload = {
             eventId: REGULAR_EVENT_FOR_CHECKIN.eventId,
             qrCode: VALID_QR_CODE_TEST_ATTENDEE_1,
         };
-
+    
         currentDay = getCurrentDay();
     });
 
@@ -326,7 +324,7 @@ describe("POST /checkin/scan/staff", () => {
         expect(response.body).toBe(TEST_ATTENDEE_1.userId);
 
         const { data: eventAttn, error: eventAttnError } =
-            await SupabaseDB.EVENT_ATTENDANCE.select()
+            await SupabaseDB.EVENT_ATTENDANCES.select()
                 .eq("eventId", payload.eventId)
                 .eq("attendee", TEST_ATTENDEE_1.userId)
                 .single();
@@ -334,7 +332,7 @@ describe("POST /checkin/scan/staff", () => {
         expect(eventAttn).not.toBeNull();
 
         const { data: attendeeAttn, error: attendeeAttnError } =
-            await SupabaseDB.ATTENDEE_ATTENDANCE.select(
+            await SupabaseDB.ATTENDEE_ATTENDANCES.select(
                 "userId, eventsAttended"
             )
                 .eq("userId", TEST_ATTENDEE_1.userId)
@@ -376,7 +374,7 @@ describe("POST /checkin/scan/staff", () => {
 
         // Verify a record was created in the 'event_attendance' junction table
         const { data: eventAttn, error: eventAttnError } =
-            await SupabaseDB.EVENT_ATTENDANCE.select()
+            await SupabaseDB.EVENT_ATTENDANCES.select()
                 .eq("eventId", payload.eventId)
                 .eq("attendee", TEST_ATTENDEE_1.userId)
                 .single();
@@ -385,7 +383,7 @@ describe("POST /checkin/scan/staff", () => {
 
         // Verify a record was created in the 'attendee_attendance' junction table
         const { data: attendeeAttn, error: attendeeAttnError } =
-            await SupabaseDB.ATTENDEE_ATTENDANCE.select(
+            await SupabaseDB.ATTENDEE_ATTENDANCES.select(
                 "userId, eventsAttended"
             )
                 .eq("userId", TEST_ATTENDEE_1.userId)
@@ -429,7 +427,7 @@ describe("POST /checkin/scan/staff", () => {
 
         // Verify a record was created in the 'event_attendance' junction table
         const { data: eventAttn, error: eventAttnError } =
-            await SupabaseDB.EVENT_ATTENDANCE.select()
+            await SupabaseDB.EVENT_ATTENDANCES.select()
                 .eq("eventId", payload.eventId)
                 .eq("attendee", TEST_ATTENDEE_1.userId)
                 .single();
@@ -438,7 +436,7 @@ describe("POST /checkin/scan/staff", () => {
 
         // Verify a record was created in the 'attendee_attendance' junction table
         const { data: attendeeAttn, error: attendeeAttnError } =
-            await SupabaseDB.ATTENDEE_ATTENDANCE.select(
+            await SupabaseDB.ATTENDEE_ATTENDANCES.select(
                 "userId, eventsAttended"
             )
                 .eq("userId", TEST_ATTENDEE_1.userId)
@@ -485,8 +483,8 @@ describe("POST /checkin/event", () => {
 
     beforeEach(async () => {
         // Clear junction tables
-        await SupabaseDB.EVENT_ATTENDANCE.delete().neq("attendee", "");
-        await SupabaseDB.ATTENDEE_ATTENDANCE.delete().neq("userId", "");
+        await SupabaseDB.EVENT_ATTENDANCES.delete().neq("attendee", "");
+        await SupabaseDB.ATTENDEE_ATTENDANCES.delete().neq("userId", "");
 
         // Reset attendance count on all static events
         for (const event of [
@@ -568,14 +566,14 @@ describe("POST /checkin/event", () => {
             .expect(StatusCodes.OK);
         expect(response.body).toBe(TEST_ATTENDEE_1.userId);
 
-        const { data: eventAttn } = await SupabaseDB.EVENT_ATTENDANCE.select()
+        const { data: eventAttn } = await SupabaseDB.EVENT_ATTENDANCES.select()
             .eq("eventId", payload.eventId)
             .eq("attendee", payload.userId)
             .single();
         expect(eventAttn).not.toBeNull();
 
         const { data: attendeeAttn, error: attendeeAttnError } =
-            await SupabaseDB.ATTENDEE_ATTENDANCE.select(
+            await SupabaseDB.ATTENDEE_ATTENDANCES.select(
                 "userId, eventsAttended"
             )
                 .eq("userId", TEST_ATTENDEE_1.userId)
@@ -614,14 +612,14 @@ describe("POST /checkin/event", () => {
             .expect(StatusCodes.OK);
         expect(response.body).toBe(TEST_ATTENDEE_1.userId);
 
-        const { data: eventAttn } = await SupabaseDB.EVENT_ATTENDANCE.select()
+        const { data: eventAttn } = await SupabaseDB.EVENT_ATTENDANCES.select()
             .eq("eventId", payload.eventId)
             .eq("attendee", payload.userId)
             .single();
         expect(eventAttn).not.toBeNull();
 
         const { data: attendeeAttn, error: attendeeAttnError } =
-            await SupabaseDB.ATTENDEE_ATTENDANCE.select(
+            await SupabaseDB.ATTENDEE_ATTENDANCES.select(
                 "userId, eventsAttended"
             )
                 .eq("userId", TEST_ATTENDEE_1.userId)
@@ -660,14 +658,14 @@ describe("POST /checkin/event", () => {
             .expect(StatusCodes.OK);
         expect(response.body).toBe(TEST_ATTENDEE_1.userId);
 
-        const { data: eventAttn } = await SupabaseDB.EVENT_ATTENDANCE.select()
+        const { data: eventAttn } = await SupabaseDB.EVENT_ATTENDANCES.select()
             .eq("eventId", payload.eventId)
             .eq("attendee", payload.userId)
             .single();
         expect(eventAttn).not.toBeNull();
 
         const { data: attendeeAttn, error: attendeeAttnError } =
-            await SupabaseDB.ATTENDEE_ATTENDANCE.select(
+            await SupabaseDB.ATTENDEE_ATTENDANCES.select(
                 "userId, eventsAttended"
             )
                 .eq("userId", TEST_ATTENDEE_1.userId)
@@ -752,7 +750,7 @@ describe("POST /checkin/event", () => {
             .eq("userId", TEST_ATTENDEE_1.userId)
             .single();
         const { count: attendanceCountBefore } =
-            await SupabaseDB.EVENT_ATTENDANCE.select("*", {
+            await SupabaseDB.EVENT_ATTENDANCES.select("*", {
                 count: "exact",
                 head: true,
             }).eq("attendee", TEST_ATTENDEE_1.userId);
@@ -765,7 +763,7 @@ describe("POST /checkin/event", () => {
             .eq("userId", TEST_ATTENDEE_1.userId)
             .single();
         const { count: attendanceCountAfter } =
-            await SupabaseDB.EVENT_ATTENDANCE.select("*", {
+            await SupabaseDB.EVENT_ATTENDANCES.select("*", {
                 count: "exact",
                 head: true,
             }).eq("attendee", TEST_ATTENDEE_1.userId);

@@ -26,11 +26,11 @@ async function checkEventAndAttendeeExist(eventId: string, userId: string) {
 
 async function checkForDuplicateAttendance(eventId: string, userId: string) {
     const [isRepeatInEvent, isRepeatInAttendee] = await Promise.all([
-        SupabaseDB.EVENT_ATTENDANCE.select()
+        SupabaseDB.EVENT_ATTENDANCES.select()
             .eq("eventId", eventId)
             .eq("attendee", userId)
             .maybeSingle().throwOnError(),
-        SupabaseDB.ATTENDEE_ATTENDANCE.select()
+        SupabaseDB.ATTENDEE_ATTENDANCES.select()
             .eq("userId", userId)
             .contains("eventsAttended", [eventId])
             .maybeSingle().throwOnError(),
@@ -53,7 +53,7 @@ async function updateAttendeePriority(userId: string) {
 
 async function updateAttendanceRecords(eventId: string, userId: string) {
     const { data: attendeeAttendance } =
-        await SupabaseDB.ATTENDEE_ATTENDANCE.select("eventsAttended")
+        await SupabaseDB.ATTENDEE_ATTENDANCES.select("eventsAttended")
             .eq("userId", userId)
             .maybeSingle()
             .throwOnError();
@@ -62,13 +62,13 @@ async function updateAttendanceRecords(eventId: string, userId: string) {
 
     if (!eventsAttended.includes(eventId)) {
         const newEventsAttended = [...eventsAttended, eventId];
-        await SupabaseDB.ATTENDEE_ATTENDANCE.upsert({
+        await SupabaseDB.ATTENDEE_ATTENDANCES.upsert({
             userId: userId,
             eventsAttended: newEventsAttended,
         }).throwOnError();
     }
 
-    await SupabaseDB.EVENT_ATTENDANCE.insert({
+    await SupabaseDB.EVENT_ATTENDANCES.insert({
         eventId: eventId,
         attendee: userId,
     }).throwOnError();
