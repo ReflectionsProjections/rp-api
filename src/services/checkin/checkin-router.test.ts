@@ -143,9 +143,11 @@ async function insertTestAttendee(overrides: InsertTestAttendeeOverrides = {}) {
     ]);
 }
 
-
 beforeEach(async () => {
-    await SupabaseDB.EVENT_ATTENDANCES.delete().neq("attendee", "NON_EXISTENT_ATTENDEE_ID");
+    await SupabaseDB.EVENT_ATTENDANCES.delete().neq(
+        "attendee",
+        "NON_EXISTENT_ATTENDEE_ID"
+    );
     await SupabaseDB.ATTENDEE_ATTENDANCES.delete().neq("userId", dummyUUID);
     await SupabaseDB.ATTENDEES.delete().neq("userId", dummyUUID);
     await SupabaseDB.REGISTRATIONS.delete().neq("userId", dummyUUID);
@@ -173,8 +175,14 @@ beforeEach(async () => {
 afterAll(async () => {
     await SupabaseDB.EVENT_ATTENDANCES.delete().neq("attendee", "");
     await SupabaseDB.ATTENDEE_ATTENDANCES.delete().neq("userId", "");
-    await SupabaseDB.EVENTS.delete().eq("eventId", REGULAR_EVENT_FOR_CHECKIN.eventId);
-    await SupabaseDB.EVENTS.delete().eq("eventId", GENERAL_CHECKIN_EVENT.eventId);
+    await SupabaseDB.EVENTS.delete().eq(
+        "eventId",
+        REGULAR_EVENT_FOR_CHECKIN.eventId
+    );
+    await SupabaseDB.EVENTS.delete().eq(
+        "eventId",
+        GENERAL_CHECKIN_EVENT.eventId
+    );
     await SupabaseDB.EVENTS.delete().eq("eventId", MEALS_EVENT.eventId);
     await SupabaseDB.ATTENDEES.delete().neq("userId", "");
     await SupabaseDB.REGISTRATIONS.delete().neq("userId", "");
@@ -218,7 +226,7 @@ describe("POST /checkin/scan/staff", () => {
             eventId: REGULAR_EVENT_FOR_CHECKIN.eventId,
             qrCode: VALID_QR_CODE_TEST_ATTENDEE_1,
         };
-    
+
         currentDay = getCurrentDay();
     });
 

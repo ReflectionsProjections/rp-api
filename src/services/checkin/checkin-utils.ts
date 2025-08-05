@@ -29,11 +29,13 @@ async function checkForDuplicateAttendance(eventId: string, userId: string) {
         SupabaseDB.EVENT_ATTENDANCES.select()
             .eq("eventId", eventId)
             .eq("attendee", userId)
-            .maybeSingle().throwOnError(),
+            .maybeSingle()
+            .throwOnError(),
         SupabaseDB.ATTENDEE_ATTENDANCES.select()
             .eq("userId", userId)
             .contains("eventsAttended", [eventId])
-            .maybeSingle().throwOnError(),
+            .maybeSingle()
+            .throwOnError(),
     ]);
 
     if (isRepeatInEvent.data || isRepeatInAttendee.data) {
