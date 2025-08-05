@@ -31,6 +31,9 @@ export const SupabaseDB = {
     get REGISTRATIONS() {
         return supabase.from("registrations");
     },
+    get SUBSCRIPTIONS() {
+        return supabase.from("subscriptions");
+    },
 };
 
 export const RoleTypes: Record<

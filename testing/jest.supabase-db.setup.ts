@@ -39,6 +39,9 @@ function mockSupabase(supabaseUrl: string, supabaseAnonKey: string) {
                 get REGISTRATIONS() {
                     return supabase.from("registrations");
                 },
+                get SUBSCRIPTIONS() {
+                    return supabase.from("subscriptions");
+                },
             },
             __esModule: true,
         };
