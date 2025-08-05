@@ -43,7 +43,7 @@ function mockSupabase(supabaseUrl: string, supabaseAnonKey: string) {
                 get SPEAKERS() {
                     return supabase.from("speakers");
                 },
-              
+
                 get SUBSCRIPTIONS() {
                     return supabase.from("subscriptions");
                 },
