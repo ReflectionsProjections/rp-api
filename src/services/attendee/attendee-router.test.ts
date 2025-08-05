@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, afterAll } from "@jest/globals";
+import { beforeEach, describe, expect, it } from "@jest/globals";
 import { post, del, get } from "../../../testing/testingTools";
 import { TESTER } from "../../../testing/testingTools";
 import { Role } from "../auth/auth-models";
@@ -9,33 +9,6 @@ import { getCurrentDay } from "../checkin/checkin-utils";
 
 const otherEvent = uuidv4();
 const dummyUUID = "00000000-0000-0000-0000-000000000000";
-
-afterAll(async () => {
-    console.log("Cleaning up test environment...");
-
-    try {
-        await SupabaseDB.EVENT_ATTENDANCE.delete()
-            .neq("attendee", "NONEXISTENT_VALUE_THAT_WILL_NEVER_EXIST")
-            .throwOnError();
-        await SupabaseDB.ATTENDEE_ATTENDANCE.delete()
-            .neq("userId", dummyUUID)
-            .throwOnError();
-        await SupabaseDB.EVENTS.delete()
-            .neq("eventId", dummyUUID)
-            .throwOnError();
-        await SupabaseDB.ATTENDEES.delete()
-            .neq("userId", dummyUUID)
-            .throwOnError();
-        await SupabaseDB.REGISTRATIONS.delete()
-            .neq("userId", dummyUUID)
-            .throwOnError();
-        await SupabaseDB.ROLES.delete().neq("userId", dummyUUID).throwOnError();
-    } catch (error) {
-        console.log("Cleanup error (expected):", error);
-    }
-
-    await new Promise((resolve) => setTimeout(resolve, 100));
-});
 
 async function createTestEvent() {
     const testEventId = uuidv4();
@@ -155,12 +128,11 @@ const BASE_TEST_ATTENDEE = {
 };
 
 beforeEach(async () => {
-    // Clear all test data - delete ALL records from all tables
     try {
-        await SupabaseDB.EVENT_ATTENDANCE.delete()
+        await SupabaseDB.EVENT_ATTENDANCES.delete()
             .neq("attendee", "NONEXISTENT_VALUE_THAT_WILL_NEVER_EXIST")
             .throwOnError();
-        await SupabaseDB.ATTENDEE_ATTENDANCE.delete()
+        await SupabaseDB.ATTENDEE_ATTENDANCES.delete()
             .neq("userId", dummyUUID)
             .throwOnError();
         await SupabaseDB.EVENTS.delete()
@@ -184,11 +156,9 @@ beforeEach(async () => {
             .eq("userId", TESTER.userId)
             .throwOnError();
     } catch (error) {
-        // Ignore cleanup errors - they're expected if tables are empty
         console.log("Cleanup in beforeEach (expected):", error);
     }
 
-    // Add a small delay to ensure cleanup completes
     await new Promise((resolve) => setTimeout(resolve, 50));
 });
 
@@ -482,7 +452,6 @@ describe("GET /attendee/points", () => {
 
 describe("GET /attendee/foodwave", () => {
     const currentDay = getCurrentDay();
-    console.log(currentDay);
 
     it("should return foodwave 1 if attendee has priority today", async () => {
         await insertTestAttendee({
