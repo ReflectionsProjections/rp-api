@@ -31,10 +31,10 @@ function mockSupabase(supabaseUrl: string, supabaseAnonKey: string) {
                     return supabase.from("events");
                 },
                 get EVENT_ATTENDANCES() {
-                    return supabase.from("eventAttendance");
+                    return supabase.from("eventAttendances");
                 },
                 get ATTENDEE_ATTENDANCES() {
-                    return supabase.from("attendeeAttendance");
+                    return supabase.from("attendeeAttendances");
                 },
                 get REGISTRATIONS() {
                     return supabase.from("registrations");
