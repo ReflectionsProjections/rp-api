@@ -26,7 +26,7 @@ statsRouter.get(
         const checkinEventIds = checkinEvents.map((event) => event.eventId);
 
         const { data: attendanceRecords } =
-            await SupabaseDB.EVENT_ATTENDANCE.select("attendee")
+            await SupabaseDB.EVENT_ATTENDANCES.select("attendee")
                 .in("eventId", checkinEventIds)
                 .throwOnError();
 

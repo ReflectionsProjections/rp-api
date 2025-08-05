@@ -114,12 +114,12 @@ const CHECKIN_EVENT = {
 };
 
 // Event attendance records to simulate checked-in users
-const EVENT_ATTENDANCE_RITAM = {
+const EVENT_ATTENDANCES_RITAM = {
     eventId: CHECKIN_EVENT.eventId,
     attendee: "a1",
 };
 
-const EVENT_ATTENDANCE_NATHAN = {
+const EVENT_ATTENDANCES_NATHAN = {
     eventId: CHECKIN_EVENT.eventId,
     attendee: "a2",
 };
@@ -217,12 +217,12 @@ const SPEAKER_EVENT = {
 };
 
 // Additional attendance records for testing
-const EVENT_ATTENDANCE_RITAM_SECOND_CHECKIN = {
+const EVENT_ATTENDANCES_RITAM_SECOND_CHECKIN = {
     eventId: SECOND_CHECKIN_EVENT.eventId,
     attendee: "a1",
 };
 
-const EVENT_ATTENDANCE_TIMOTHY_SPEAKER = {
+const EVENT_ATTENDANCES_TIMOTHY_SPEAKER = {
     eventId: SPEAKER_EVENT.eventId,
     attendee: "a3",
 };
@@ -332,7 +332,7 @@ const ATTENDEES_DIETARY = [
 ];
 
 afterAll(async () => {
-    await SupabaseDB.EVENT_ATTENDANCE.delete().neq(
+    await SupabaseDB.EVENT_ATTENDANCES.delete().neq(
         "eventId",
         "00000000-0000-0000-0000-000000000000"
     );
@@ -360,7 +360,7 @@ afterAll(async () => {
 
 describe("GET /stats/check-in", () => {
     beforeEach(async () => {
-        await SupabaseDB.EVENT_ATTENDANCE.delete().neq(
+        await SupabaseDB.EVENT_ATTENDANCES.delete().neq(
             "eventId",
             "00000000-0000-0000-0000-000000000000"
         );
@@ -387,10 +387,10 @@ describe("GET /stats/check-in", () => {
 
         await SupabaseDB.EVENTS.insert([CHECKIN_EVENT]);
 
-        await SupabaseDB.EVENT_ATTENDANCE.insert([
-            EVENT_ATTENDANCE_RITAM,
-            EVENT_ATTENDANCE_NATHAN,
-        ]);
+        await SupabaseDB.EVENT_ATTENDANCES.insert([
+            EVENT_ATTENDANCES_RITAM,
+            EVENT_ATTENDANCES_NATHAN,
+        ]).throwOnError();
     });
 
     it("should return correct count for checked-in attendees", async () => {
@@ -402,7 +402,7 @@ describe("GET /stats/check-in", () => {
     });
 
     it("should return 0 if no attendees are checked in", async () => {
-        await SupabaseDB.EVENT_ATTENDANCE.delete().neq(
+        await SupabaseDB.EVENT_ATTENDANCES.delete().neq(
             "eventId",
             "00000000-0000-0000-0000-000000000000"
         );
@@ -415,7 +415,7 @@ describe("GET /stats/check-in", () => {
     });
 
     it("should return 0 if no CHECKIN events exist", async () => {
-        await SupabaseDB.EVENT_ATTENDANCE.delete().neq(
+        await SupabaseDB.EVENT_ATTENDANCES.delete().neq(
             "eventId",
             "00000000-0000-0000-0000-000000000000"
         );
@@ -449,8 +449,8 @@ describe("GET /stats/check-in", () => {
     it("should count unique attendees even if they checked into multiple CHECKIN events", async () => {
         await SupabaseDB.EVENTS.insert([SECOND_CHECKIN_EVENT]);
 
-        await SupabaseDB.EVENT_ATTENDANCE.insert([
-            EVENT_ATTENDANCE_RITAM_SECOND_CHECKIN,
+        await SupabaseDB.EVENT_ATTENDANCES.insert([
+            EVENT_ATTENDANCES_RITAM_SECOND_CHECKIN,
         ]);
 
         const response = await getAsStaff("/stats/check-in").expect(
@@ -463,8 +463,8 @@ describe("GET /stats/check-in", () => {
     it("should only count attendees who checked into CHECKIN events, not other event types", async () => {
         await SupabaseDB.EVENTS.insert([SPEAKER_EVENT]);
 
-        await SupabaseDB.EVENT_ATTENDANCE.insert([
-            EVENT_ATTENDANCE_TIMOTHY_SPEAKER,
+        await SupabaseDB.EVENT_ATTENDANCES.insert([
+            EVENT_ATTENDANCES_TIMOTHY_SPEAKER,
         ]);
 
         const response = await getAsStaff("/stats/check-in").expect(
@@ -643,7 +643,7 @@ describe("GET /stats/priority-attendee", () => {
 
 describe("GET /stats/attendance/:N", () => {
     beforeEach(async () => {
-        await SupabaseDB.EVENT_ATTENDANCE.delete().neq(
+        await SupabaseDB.EVENT_ATTENDANCES.delete().neq(
             "eventId",
             "00000000-0000-0000-0000-000000000000"
         );
