@@ -3,6 +3,7 @@ import { z } from "zod";
 import jsonwebtoken from "jsonwebtoken";
 import { Config } from "../src/config";
 import { JwtPayloadType, Role } from "../src/services/auth/auth-models";
+import { SupabaseClient } from "@supabase/supabase-js";
 
 type RoleType = z.infer<typeof Role>;
 
@@ -28,7 +29,6 @@ function setRole(request: request.Test, role?: RoleType) {
         userId: TESTER.userId,
         roles: [role],
         displayName: TESTER.displayName,
-        email: TESTER.email,
     } satisfies JwtPayloadType;
 
     const jwt = jsonwebtoken.sign(payload, Config.JWT_SIGNING_SECRET, {
@@ -116,4 +116,28 @@ export function delAsStaff(url: string): request.Test {
 
 export function delAsAdmin(url: string): request.Test {
     return del(url, Role.enum.ADMIN);
+}
+
+export async function clearSupabaseTables(supabase: SupabaseClient) {
+    const tables = [
+        "eventAttendances",
+        "attendeeAttendances",
+        "attendees",
+        "notifications",
+        "registrations",
+        "roles",
+        "events",
+        "corporate",
+        "meetings",
+        "speakers",
+        "staff",
+        "subscriptions",
+    ]; // TODO: Get this from the database
+
+    for (const table of tables!) {
+        const { error } = await supabase.from(table).delete();
+        if (error) {
+            console.warn(`⚠️ Could not clear ${table}:`, error.message);
+        }
+    }
 }

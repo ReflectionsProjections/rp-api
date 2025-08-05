@@ -5,7 +5,7 @@ import { Config, EnvironmentEnum } from "./config";
 import { isTest } from "./utilities";
 import AWS from "aws-sdk";
 
-import databaseMiddleware from "./middleware/database-middleware";
+//import databaseMiddleware from "./middleware/database-middleware";
 // import customCors from "./middleware/cors-middleware";
 import morgan from "morgan";
 import bodyParser from "body-parser";
@@ -53,15 +53,22 @@ const accessLogStream = fs.createWriteStream(`${logDir}/${process.pid}.log`, {
     flags: "a",
 });
 
-if (Config.ENV !== EnvironmentEnum.TESTING) {
-    app.use(morgan("dev", { stream: accessLogStream }));
+switch (Config.ENV) {
+    case EnvironmentEnum.TESTING:
+        break;
+    case EnvironmentEnum.DEVELOPMENT:
+        app.use(morgan("dev"));
+        break;
+    case EnvironmentEnum.PRODUCTION:
+        app.use(morgan("combined", { stream: accessLogStream }));
+        break;
 }
 
 // Parsing
 app.use(bodyParser.json());
 
 // Database
-app.use(databaseMiddleware);
+// app.use(databaseMiddleware);
 
 // API routes
 app.use("/attendee", attendeeRouter);
@@ -82,6 +89,8 @@ app.get("/status", (req, res) => {
     return res.status(StatusCodes.OK).send({
         ok: true,
         message: "API is alive!",
+        timestamp: new Date().toISOString(),
+        environment: Config.ENV,
     });
 });
 

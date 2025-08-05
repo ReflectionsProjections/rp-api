@@ -1,0 +1,15 @@
+# Ignore YAML files to prevent formatting issues
+*.yml
+*.yaml
+
+# Ignore node_modules
+node_modules/
+
+# Ignore build outputs
+dist/
+build/
+.next/
+
+# Ignore package files
+package-lock.json
+yarn.lock 

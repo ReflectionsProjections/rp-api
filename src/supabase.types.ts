@@ -1,10 +1,10 @@
 export type Json =
-    | string
-    | number
-    | boolean
-    | null
-    | { [key: string]: Json | undefined }
-    | Json[];
+      | string
+      | number
+      | boolean
+      | null
+      | { [key: string]: Json | undefined }
+      | Json[];;
 
 export type Database = {
     // Allows to automatically instanciate createClient with right options
@@ -39,7 +39,7 @@ export type Database = {
     };
     public: {
         Tables: {
-            attendee_attendance: {
+            attendeeAttendances: {
                 Row: {
                     eventsAttended: string[];
                     userId: string;
@@ -151,7 +151,7 @@ export type Database = {
                 };
                 Relationships: [];
             };
-            event_attendance: {
+            eventAttendances: {
                 Row: {
                     attendee: string;
                     eventId: string;
