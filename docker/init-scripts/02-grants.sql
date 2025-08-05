@@ -4,9 +4,9 @@ GRANT USAGE ON SCHEMA public TO anon;
 GRANT USAGE ON SCHEMA public TO authenticated;
 GRANT USAGE ON SCHEMA public TO service_role;
 
-GRANT ALL ON TABLE public."attendeeAttendance" TO anon;
-GRANT ALL ON TABLE public."attendeeAttendance" TO authenticated;
-GRANT ALL ON TABLE public."attendeeAttendance" TO service_role;
+GRANT ALL ON TABLE public."attendeeAttendances" TO anon;
+GRANT ALL ON TABLE public."attendeeAttendances" TO authenticated;
+GRANT ALL ON TABLE public."attendeeAttendances" TO service_role;
 
 GRANT ALL ON TABLE public."attendees" TO anon;
 GRANT ALL ON TABLE public."attendees" TO authenticated;
@@ -16,9 +16,9 @@ GRANT ALL ON TABLE public."corporate" TO anon;
 GRANT ALL ON TABLE public."corporate" TO authenticated;
 GRANT ALL ON TABLE public."corporate" TO service_role;
 
-GRANT ALL ON TABLE public."eventAttendance" TO anon;
-GRANT ALL ON TABLE public."eventAttendance" TO authenticated;
-GRANT ALL ON TABLE public."eventAttendance" TO service_role;
+GRANT ALL ON TABLE public."eventAttendances" TO authenticated;
+GRANT ALL ON TABLE public."eventAttendances" TO anon;
+GRANT ALL ON TABLE public."eventAttendances" TO service_role;
 
 GRANT ALL ON TABLE public."events" TO anon;
 GRANT ALL ON TABLE public."events" TO authenticated;
