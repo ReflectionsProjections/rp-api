@@ -1,15 +1,17 @@
 import { Router } from "express";
 import { StatusCodes } from "http-status-codes";
 import { SpeakerValidator, UpdateSpeakerValidator } from "./speakers-schema";
-import { Database } from "../../database";
 import RoleChecker from "../../middleware/role-checker";
 import { Role } from "../auth/auth-models";
+import { SupabaseDB } from "../../supabase";
 
 const speakersRouter = Router();
 
 // Get all speakers
 speakersRouter.get("/", RoleChecker([], true), async (req, res) => {
-    const speakers = await Database.SPEAKERS.find();
+    const { data: speakers } =
+        await SupabaseDB.SPEAKERS.select("*").throwOnError();
+
     return res.status(StatusCodes.OK).json(speakers);
 });
 
@@ -17,7 +19,10 @@ speakersRouter.get("/", RoleChecker([], true), async (req, res) => {
 speakersRouter.get("/:SPEAKERID", RoleChecker([], true), async (req, res) => {
     const speakerId = req.params.SPEAKERID;
 
-    const speaker = await Database.SPEAKERS.findOne({ speakerId });
+    const { data: speaker } = await SupabaseDB.SPEAKERS.select("*")
+        .eq("speakerId", speakerId)
+        .maybeSingle()
+        .throwOnError();
 
     if (!speaker) {
         return res
@@ -35,19 +40,14 @@ speakersRouter.post(
     async (req, res) => {
         const validatedData = SpeakerValidator.parse(req.body);
 
-        const existingSpeaker = await Database.SPEAKERS.findOne({
-            speakerId: validatedData.speakerId,
-        });
+        const { data: newSpeaker } = await SupabaseDB.SPEAKERS.insert(
+            validatedData
+        )
+            .select()
+            .single()
+            .throwOnError();
 
-        if (existingSpeaker) {
-            return res
-                .status(StatusCodes.BAD_REQUEST)
-                .json({ error: "UserAlreadyExists" });
-        }
-
-        const speaker = new Database.SPEAKERS(validatedData);
-        await speaker.save();
-        return res.status(StatusCodes.CREATED).json(speaker);
+        return res.status(StatusCodes.CREATED).json(newSpeaker);
     }
 );
 
@@ -57,22 +57,23 @@ speakersRouter.put(
     RoleChecker([Role.Enum.ADMIN, Role.Enum.STAFF]),
     async (req, res) => {
         const speakerId = req.params.SPEAKERID;
+        const validatedData = UpdateSpeakerValidator.parse(req.body);
 
-        const updateData = UpdateSpeakerValidator.parse(req.body);
+        const { data: updatedSpeaker } = await SupabaseDB.SPEAKERS.update(
+            validatedData
+        )
+            .eq("speakerId", speakerId)
+            .select()
+            .maybeSingle()
+            .throwOnError();
 
-        const speaker = await Database.SPEAKERS.findOneAndUpdate(
-            { speakerId: speakerId },
-            { $set: updateData },
-            { new: true, runValidators: true }
-        );
-
-        if (!speaker) {
+        if (!updatedSpeaker) {
             return res
                 .status(StatusCodes.NOT_FOUND)
                 .json({ error: "DoesNotExist" });
         }
 
-        return res.status(StatusCodes.OK).json(speaker);
+        return res.status(StatusCodes.OK).json(updatedSpeaker);
     }
 );
 
@@ -83,9 +84,12 @@ speakersRouter.delete(
     async (req, res) => {
         const speakerId = req.params.SPEAKERID;
 
-        const deletedSpeaker = await Database.SPEAKERS.findOneAndDelete({
-            speakerId,
-        });
+        const { data: deletedSpeaker } = await SupabaseDB.SPEAKERS.delete()
+            .eq("speakerId", speakerId)
+            .select()
+            .maybeSingle()
+            .throwOnError();
+
         if (!deletedSpeaker) {
             return res
                 .status(StatusCodes.NOT_FOUND)
