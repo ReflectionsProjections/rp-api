@@ -31,6 +31,12 @@ export const SupabaseDB = {
     get REGISTRATIONS() {
         return supabase.from("registrations");
     },
+    get NOTIFICATIONS() {
+        return supabase.from("notifications");
+    },
+    get CUSTOM_TOPICS() {
+        return supabase.from("customTopics");
+    }
 };
 
 export const RoleTypes: Record<

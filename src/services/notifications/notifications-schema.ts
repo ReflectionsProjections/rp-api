@@ -1,16 +1,17 @@
-import mongoose from "mongoose";
 import { z } from "zod";
 
-// Zod schema for notifications
-const NotificationsValidator = z.object({
-    userId: z.coerce.string(),
+const registerDeviceSchema = z.object({
     deviceId: z.string(),
 });
 
-// Mongoose schema for notifications
-const NotificationsSchema = new mongoose.Schema({
-    userId: { type: String, required: true, unique: true },
-    deviceId: { type: String, required: true },
+const sendToTopicSchema = z.object({
+    title: z.string().min(1, { message: "Title cannot be empty" }),
+    body: z.string().min(1, { message: "Body cannot be empty" }),
 });
 
-export { NotificationsSchema, NotificationsValidator };
+const manualTopicSchema = z.object({
+    userId: z.string(),
+    topicName: z.string().min(1),
+});
+
+export { registerDeviceSchema, sendToTopicSchema, manualTopicSchema };
