@@ -16,6 +16,7 @@ import { Role } from "../auth/auth-models";
 const NOW_SECONDS = Math.floor(Date.now() / 1000);
 const ONE_HOUR_SECONDS = 3600;
 
+const dummyUUID = "00000000-0000-0000-0000-000000000000";
 const TEST_ATTENDEE_1 = {
     userId: "attendee001",
     points: 0,
@@ -142,13 +143,14 @@ async function insertTestAttendee(overrides: InsertTestAttendeeOverrides = {}) {
     ]);
 }
 
-beforeAll(async () => {
-    await SupabaseDB.EVENT_ATTENDANCE.delete().neq("attendee", "");
-    await SupabaseDB.ATTENDEE_ATTENDANCE.delete().neq("userId", "");
-    await SupabaseDB.EVENTS.delete().neq("eventId", "");
-    await SupabaseDB.ATTENDEES.delete().neq("userId", "");
-    await SupabaseDB.REGISTRATIONS.delete().neq("userId", "");
-    await SupabaseDB.ROLES.delete().neq("userId", "");
+
+beforeEach(async () => {
+    await SupabaseDB.EVENT_ATTENDANCE.delete().neq("attendee", "NON_EXISTENT_ATTENDEE_ID");
+    await SupabaseDB.ATTENDEE_ATTENDANCE.delete().neq("userId", dummyUUID);
+    await SupabaseDB.EVENTS.delete().neq("eventId", dummyUUID);
+    await SupabaseDB.ATTENDEES.delete().neq("userId", dummyUUID);
+    await SupabaseDB.REGISTRATIONS.delete().neq("userId", dummyUUID);
+    await SupabaseDB.ROLES.delete().neq("userId", dummyUUID);
     await insertTestAttendee();
     const validExpTime = NOW_SECONDS + ONE_HOUR_SECONDS;
     const expiredExpTime = NOW_SECONDS - ONE_HOUR_SECONDS;
