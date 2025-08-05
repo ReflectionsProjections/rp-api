@@ -39,7 +39,7 @@ export type Database = {
     };
     public: {
         Tables: {
-            attendeeAttendance: {
+            attendeeAttendances: {
                 Row: {
                     eventsAttended: string[];
                     userId: string;
@@ -151,7 +151,7 @@ export type Database = {
                 };
                 Relationships: [];
             };
-            eventAttendance: {
+            eventAttendances: {
                 Row: {
                     attendee: string;
                     eventId: string;
