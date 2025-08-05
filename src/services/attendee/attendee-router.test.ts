@@ -129,10 +129,10 @@ const BASE_TEST_ATTENDEE = {
 
 beforeEach(async () => {
     try {
-        await SupabaseDB.EVENT_ATTENDANCE.delete()
+        await SupabaseDB.EVENT_ATTENDANCES.delete()
             .neq("attendee", "NONEXISTENT_VALUE_THAT_WILL_NEVER_EXIST")
             .throwOnError();
-        await SupabaseDB.ATTENDEE_ATTENDANCE.delete()
+        await SupabaseDB.ATTENDEE_ATTENDANCES.delete()
             .neq("userId", dummyUUID)
             .throwOnError();
         await SupabaseDB.EVENTS.delete()
