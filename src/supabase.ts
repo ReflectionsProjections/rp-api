@@ -16,20 +16,26 @@ export const SupabaseDB = {
     get MEETINGS() {
         return supabase.from("meetings");
     },
+    get SPEAKERS() {
+        return supabase.from("speakers");
+    },
     get ATTENDEES() {
         return supabase.from("attendees");
     },
     get EVENTS() {
         return supabase.from("events");
     },
-    get EVENT_ATTENDANCE() {
-        return supabase.from("eventAttendance");
+    get EVENT_ATTENDANCES() {
+        return supabase.from("eventAttendances");
     },
-    get ATTENDEE_ATTENDANCE() {
-        return supabase.from("attendeeAttendance");
+    get ATTENDEE_ATTENDANCES() {
+        return supabase.from("attendeeAttendances");
     },
     get REGISTRATIONS() {
         return supabase.from("registrations");
+    },
+    get SUBSCRIPTIONS() {
+        return supabase.from("subscriptions");
     },
 };
 

@@ -66,7 +66,7 @@ CREATE TABLE public."attendees" (
     "isEligibleTote" boolean DEFAULT false NOT NULL,
     "isEligibleCap" boolean DEFAULT false NOT NULL,
     "favoriteEvents" uuid[] DEFAULT '{}'::uuid[] NOT NULL,
-    "puzzlesCompleted" uuid[] DEFAULT '{}'::uuid[] NOT NULL,
+    "puzzlesCompleted" text[] DEFAULT '{}'::text[] NOT NULL,
     CONSTRAINT "attendees_pkey" PRIMARY KEY ("userId")
 );
 

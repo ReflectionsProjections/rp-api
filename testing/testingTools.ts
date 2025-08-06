@@ -29,6 +29,7 @@ function setRole(request: request.Test, role?: RoleType) {
         userId: TESTER.userId,
         roles: [role],
         displayName: TESTER.displayName,
+        email: TESTER.email,
     } satisfies JwtPayloadType;
 
     const jwt = jsonwebtoken.sign(payload, Config.JWT_SIGNING_SECRET, {
@@ -120,17 +121,17 @@ export function delAsAdmin(url: string): request.Test {
 
 export async function clearSupabaseTables(supabase: SupabaseClient) {
     const tables = [
-        "attendeeAttendance",
+        "eventAttendances",
+        "attendeeAttendances",
         "attendees",
-        "corporate",
-        "events",
-        "eventAttendance",
-        "meetings",
         "notifications",
         "registrations",
         "roles",
-        "staff",
+        "events",
+        "corporate",
+        "meetings",
         "speakers",
+        "staff",
         "subscriptions",
     ]; // TODO: Get this from the database
 
