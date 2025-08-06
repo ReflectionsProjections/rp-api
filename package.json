@@ -11,7 +11,11 @@
         "format:check": "prettier . --check",
         "build": "tsc",
         "verify": "yarn build && yarn lint:check && yarn format:check",
-        "test": "jest --config=testing/jest.config.ts"
+        "test": "jest --config=testing/jest.config.ts --color",
+        "test:docker": "docker compose -f docker-compose.test.yml run --rm test yarn test",
+        "logs": "docker compose logs -f api",
+        "shell": "docker compose exec api sh",
+        "restart": "docker compose restart api"
     },
     "dependencies": {
         "@aws-sdk/client-s3": "^3.496.0",
@@ -19,6 +23,7 @@
         "@aws-sdk/s3-presigned-post": "^3.499.0",
         "@aws-sdk/s3-request-presigner": "^3.496.0",
         "@paralleldrive/cuid2": "^2.2.2",
+        "@supabase/supabase-js": "^2.49.4",
         "@types/cors": "^2.8.17",
         "@types/mustache": "^4.2.5",
         "aws-sdk": "^2.1604.0",
@@ -39,10 +44,12 @@
         "mongoose": "^8.2.3",
         "morgan": "^1.10.0",
         "mustache": "^4.2.0",
+        "node-gyp-build": "^4.8.4",
         "ts-node": "^10.9.2",
         "tsx": "^4.5.0",
         "typescript": "^5.4.5",
-        "uuid": "^9.0.1",
+        "uuid": "^11.1.0",
+        "webidl-conversions": "^7.0.0",
         "zod": "^3.22.4"
     },
     "devDependencies": {
@@ -58,8 +65,9 @@
         "@types/morgan": "^1.9.9",
         "@types/node": "^20.9.3",
         "@types/passport-google-oauth20": "^2.0.14",
+        "@types/pg": "^8.15.2",
         "@types/supertest": "^6.0.2",
-        "@types/uuid": "^9.0.8",
+        "@types/uuid": "^10.0.0",
         "cross-env": "^7.0.3",
         "eslint": "^9.24.0",
         "globals": "^16.0.0",

@@ -1,7 +1,6 @@
 import dotenv from "dotenv";
 
 import { z } from "zod";
-import { getEnv } from "./utilities";
 
 import AWS from "aws-sdk";
 
@@ -16,6 +15,14 @@ export enum EnvironmentEnum {
 export const Environment = z.nativeEnum(EnvironmentEnum);
 
 export const MailingListName = z.enum(["rp_interest"]);
+
+function getEnv(key: string): string {
+    const val = process.env[key];
+    if (val === undefined) {
+        throw new Error(`env value ${key} not found, exiting...`);
+    }
+    return val;
+}
 
 const env = Environment.parse(getEnv("ENV"));
 const API_BASE =
@@ -84,6 +91,7 @@ export const Config = {
 
     JWT_SIGNING_SECRET: getEnv("JWT_SIGNING_SECRET"),
     JWT_EXPIRATION_TIME: "1 day",
+    MOBILE_JWT_EXPIRATION_TIME: "10 days",
     PB_JWT_EXPIRATION_TIME: "1 week",
     STAFF_MEETING_CHECK_IN_WINDOW_SECONDS: 6 * 60 * 60,
 

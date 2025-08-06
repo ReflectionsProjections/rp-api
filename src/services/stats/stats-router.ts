@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { StatusCodes } from "http-status-codes";
-import { Database } from "../../database";
+import { SupabaseDB } from "../../supabase";
 import RoleChecker from "../../middleware/role-checker";
 import { Role } from "../auth/auth-models";
 import { getCurrentDay } from "../checkin/checkin-utils";
@@ -13,11 +13,30 @@ statsRouter.get(
     "/check-in",
     RoleChecker([Role.enum.STAFF], false),
     async (req, res) => {
-        const attendees = await Database.ATTENDEE.find({
-            hasCheckedIn: true,
-        });
+        const { data: checkinEvents } = await SupabaseDB.EVENTS.select(
+            "eventId"
+        )
+            .eq("eventType", "CHECKIN")
+            .throwOnError();
 
-        return res.status(StatusCodes.OK).json({ count: attendees.length });
+        if (!checkinEvents || checkinEvents.length === 0) {
+            return res.status(StatusCodes.OK).json({ count: 0 });
+        }
+
+        const checkinEventIds = checkinEvents.map((event) => event.eventId);
+
+        const { data: attendanceRecords } =
+            await SupabaseDB.EVENT_ATTENDANCES.select("attendee")
+                .in("eventId", checkinEventIds)
+                .throwOnError();
+
+        const uniqueAttendees = new Set(
+            attendanceRecords?.map((record) => record.attendee) || []
+        );
+
+        return res.status(StatusCodes.OK).json({
+            count: uniqueAttendees.size,
+        });
     }
 );
 
@@ -42,11 +61,14 @@ statsRouter.get(
 
         const price = result.data.PRICE;
 
-        const attendees = await Database.ATTENDEE.find({
-            points: { $gte: price },
-        });
+        const { count } = await SupabaseDB.ATTENDEES.select("*", {
+            count: "exact",
+            head: true,
+        })
+            .gte("points", price)
+            .throwOnError();
 
-        return res.status(StatusCodes.OK).json({ count: attendees.length });
+        return res.status(StatusCodes.OK).json({ count: count || 0 });
     }
 );
 
@@ -56,12 +78,27 @@ statsRouter.get(
     RoleChecker([Role.enum.STAFF], false),
     async (req, res) => {
         const day = getCurrentDay();
-        const dayField = `hasPriority.${day}`;
-        const attendees = await Database.ATTENDEE.find({
-            [dayField]: true,
-        });
 
-        return res.status(StatusCodes.OK).json({ count: attendees.length });
+        const dayFieldMap: Record<string, string> = {
+            Mon: "hasPriorityMon",
+            Tue: "hasPriorityTue",
+            Wed: "hasPriorityWed",
+            Thu: "hasPriorityThu",
+            Fri: "hasPriorityFri",
+            Sat: "hasPrioritySat",
+            Sun: "hasPrioritySun",
+        };
+
+        const postgresField = dayFieldMap[day];
+
+        const { count } = await SupabaseDB.ATTENDEES.select("*", {
+            count: "exact",
+            head: true,
+        })
+            .eq(postgresField, true)
+            .throwOnError();
+
+        return res.status(StatusCodes.OK).json({ count: count || 0 });
     }
 );
 
@@ -85,13 +122,17 @@ statsRouter.get(
         }
         const numEvents = result.data.N;
         const currentTime = new Date();
-        const events = await Database.EVENTS.find({
-            endTime: { $lt: currentTime },
-        })
-            .sort({ endTime: -1 })
-            .limit(numEvents);
 
-        const attendanceCounts = events.map((event) => event.attendanceCount);
+        const { data: events } = await SupabaseDB.EVENTS.select(
+            "attendanceCount"
+        )
+            .lt("endTime", currentTime.toISOString())
+            .order("endTime", { ascending: false })
+            .limit(numEvents)
+            .throwOnError();
+
+        const attendanceCounts =
+            events?.map((event) => event.attendanceCount) || [];
 
         return res.status(StatusCodes.OK).json({ attendanceCounts });
     }
@@ -102,85 +143,71 @@ statsRouter.get(
     "/dietary-restrictions",
     RoleChecker([Role.enum.STAFF], false),
     async (req, res) => {
-        const results = await Promise.allSettled([
-            Database.ATTENDEE.countDocuments({
-                allergies: { $size: 0 },
-                dietaryRestrictions: { $size: 0 },
-            }),
-            Database.ATTENDEE.countDocuments({
-                allergies: { $size: 0 },
-                dietaryRestrictions: { $ne: [] },
-            }),
-            Database.ATTENDEE.countDocuments({
-                allergies: { $ne: [] },
-                dietaryRestrictions: { $size: 0 },
-            }),
-            Database.ATTENDEE.countDocuments({
-                allergies: { $ne: [] },
-                dietaryRestrictions: { $ne: [] },
-            }),
-            Database.ATTENDEE.aggregate([
-                {
-                    $unwind: "$allergies",
-                },
-                {
-                    $group: {
-                        _id: "$allergies",
-                        count: { $sum: 1 },
-                    },
-                },
-            ]),
-            Database.ATTENDEE.aggregate([
-                {
-                    $unwind: "$dietaryRestrictions",
-                },
-                {
-                    $group: {
-                        _id: "$dietaryRestrictions",
-                        count: { $sum: 1 },
-                    },
-                },
-            ]),
+        const [
+            { count: noneCount },
+            { count: dietaryOnlyCount },
+            { count: allergiesOnlyCount },
+            { count: bothCount },
+            { data: allergiesData },
+            { data: dietaryRestrictionsData },
+        ] = await Promise.all([
+            // None: empty arrays for both allergies and dietaryRestrictions
+            SupabaseDB.REGISTRATIONS.select("*", { count: "exact", head: true })
+                .filter("allergies", "eq", "{}")
+                .filter("dietaryRestrictions", "eq", "{}")
+                .throwOnError(),
+
+            // Dietary restrictions only: empty allergies, non-empty dietaryRestrictions
+            SupabaseDB.REGISTRATIONS.select("*", { count: "exact", head: true })
+                .filter("allergies", "eq", "{}")
+                .filter("dietaryRestrictions", "neq", "{}")
+                .throwOnError(),
+
+            // Allergies only: non-empty allergies, empty dietaryRestrictions
+            SupabaseDB.REGISTRATIONS.select("*", { count: "exact", head: true })
+                .filter("allergies", "neq", "{}")
+                .filter("dietaryRestrictions", "eq", "{}")
+                .throwOnError(),
+
+            // Both: non-empty arrays for both
+            SupabaseDB.REGISTRATIONS.select("*", { count: "exact", head: true })
+                .filter("allergies", "neq", "{}")
+                .filter("dietaryRestrictions", "neq", "{}")
+                .throwOnError(),
+
+            // Get all allergies to count individual types
+            SupabaseDB.REGISTRATIONS.select("allergies")
+                .filter("allergies", "neq", "{}")
+                .throwOnError(),
+
+            // Get all dietary restrictions to count individual types
+            SupabaseDB.REGISTRATIONS.select("dietaryRestrictions")
+                .filter("dietaryRestrictions", "neq", "{}")
+                .throwOnError(),
         ]);
 
-        for (let i = 0; i < results.length; i++) {
-            if (results[i].status === "rejected") {
-                return res
-                    .status(StatusCodes.INTERNAL_SERVER_ERROR)
-                    .send({ error: "InternalError" });
-            }
-        }
-
-        type mongoQueryType = {
-            _id: string;
-            count: number;
-        };
         const allergyCounts: { [key: string]: number } = {};
-        const unprocessedAllergyCounts = (
-            results[4] as PromiseFulfilledResult<mongoQueryType[]>
-        ).value;
-        for (let i = 0; i < unprocessedAllergyCounts.length; i++) {
-            allergyCounts[unprocessedAllergyCounts[i]._id as string] =
-                unprocessedAllergyCounts[i].count;
-        }
+        allergiesData?.forEach((registration) => {
+            registration.allergies?.forEach((allergy: string) => {
+                allergyCounts[allergy] = (allergyCounts[allergy] || 0) + 1;
+            });
+        });
+
         const dietaryRestrictionCounts: { [key: string]: number } = {};
-        const unprocessedDietaryRestrictionCountss = (
-            results[5] as PromiseFulfilledResult<mongoQueryType[]>
-        ).value;
-        for (let i = 0; i < unprocessedDietaryRestrictionCountss.length; i++) {
-            dietaryRestrictionCounts[
-                unprocessedDietaryRestrictionCountss[i]._id as string
-            ] = unprocessedDietaryRestrictionCountss[i].count;
-        }
+        dietaryRestrictionsData?.forEach((registration) => {
+            registration.dietaryRestrictions?.forEach((restriction: string) => {
+                dietaryRestrictionCounts[restriction] =
+                    (dietaryRestrictionCounts[restriction] || 0) + 1;
+            });
+        });
 
         return res.status(StatusCodes.OK).json({
-            none: (results[0] as PromiseFulfilledResult<number>).value,
-            dietaryRestrictions: (results[1] as PromiseFulfilledResult<number>)
-                .value,
-            allergies: (results[2] as PromiseFulfilledResult<number>).value,
-            both: (results[3] as PromiseFulfilledResult<number>).value,
-            allergyCounts: allergyCounts,
-            dietaryRestrictionCounts: dietaryRestrictionCounts,
+            none: noneCount || 0,
+            dietaryRestrictions: dietaryOnlyCount || 0,
+            allergies: allergiesOnlyCount || 0,
+            both: bothCount || 0,
+            allergyCounts,
+            dietaryRestrictionCounts,
         });
     }
 );
