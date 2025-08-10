@@ -57,36 +57,8 @@ export const Config = {
     // prettier-ignore
     AUTH_ADMIN_WHITELIST: new Set([
         // Dev Chairs/Code-Owners (reach out to these people for questions)
-        "apirani2@illinois.edu",    // Aydan Pirani
-        "divyack2@illinois.edu",    // Divya Koya
-
-        // Directors
-        "ojaswee2@illinois.edu",     // Ojaswee Chaudhary
-        "ritikav2@illinois.edu",     // Ritika Vithani
-
-        // Committee Chairs
-        "adit3@illinois.edu",       // Adit Shah (Ops)
-        "arpitb2@illinois.edu",     // Arpit Bansal (Ops)
-        "mauskar3@illinois.edu",    // Aashna Mauskar (Marketing)
-        "coleej2@illinois.edu",     // Cole Jordan (Marketing)
-        "divyam4@illinois.edu",     // Divya Machineni (Corp)
-        "nzhan2@illinois.edu",      // Nancy Zhang (Design)
-        "preetig3@illinois.edu",    // Preethi Gomathinayagam (Content)
-        "snall6@illinois.edu",      // Sailaja Nallacheruvu (Corp)
-        "sahanah2@illinois.edu",    // Sahana Hariharan (Design)
-        "yosheej2@illinois.edu",    // Yoshee Jain (Content)
-
-        // Dev Team
-        "abahl3@illinois.edu",      // Aryan Bahl
-        "aryanb3@illinois.edu",     // Aryan Bhardwaj
-        "alexy3@illinois.edu",      // Alex Yang
-        "devrp3@illinois.edu",      // Dev Patel
-        "jechang3@illinois.edu",    // Jacob Chang
-        "jeremy19@illinois.edu",    // Jeremy Wu
-        "manyad2@illinois.edu",     // Manya Dua
-        "riyakp2@illinois.edu",     // Riya Patel
-        "ronita2@illinois.edu",     // Ronit Anandani
-        "srd8@illinois.edu",        // Shreenija Daggavolu
+        "ronita2@illinois.edu",    // Ronit Anandani
+        "abahl3@illinois.edu",    // Aryan Bahl
     ]),
 
     JWT_SIGNING_SECRET: getEnv("JWT_SIGNING_SECRET"),
