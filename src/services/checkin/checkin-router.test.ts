@@ -322,9 +322,6 @@ describe("POST /checkin/scan/staff", () => {
     it("should successfully check-in user to a REGULAR event and update records", async () => {
         payload.eventId = REGULAR_EVENT_FOR_CHECKIN.eventId;
         payload.qrCode = VALID_QR_CODE_TEST_ATTENDEE_1;
-        const { data, error } = await SupabaseDB.EVENTS.select()
-            .eq("eventId", payload.eventId)
-            .single();
 
         const response = await postAsAdmin("/checkin/scan/staff")
             .send(payload)
