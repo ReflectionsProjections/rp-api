@@ -31,11 +31,10 @@ async function createTestEvent() {
 
 type RegistrationOverride = {
     userId?: string;
-    displayName?: string;
     email?: string;
     name?: string;
-    university?: string;
-    degree?: string;
+    school?: string;
+    educationLevel?: string;
     isInterestedMechMania?: boolean;
     isInterestedPuzzleBang?: boolean;
     dietaryRestrictions?: string[];
@@ -87,12 +86,16 @@ export async function insertTestAttendee(
         userId,
         email,
         name: "Test User",
-        university: "UIUC", // default test value
-        degree: "BS", // default test value
+        school: "UIUC", // default test value
+        educationLevel: "BS", // default test value
         isInterestedMechMania: true,
         isInterestedPuzzleBang: false,
         dietaryRestrictions: [],
         allergies: [],
+        gender: "Prefer not to say",
+        ethnicity: [],
+        graduationYear: "2027",
+        resume: "resume.pdf",
         ...overrides.registration,
     }).throwOnError();
 
@@ -624,23 +627,31 @@ describe("GET /attendee/emails", () => {
                     userId: "u1",
                     name: "User One",
                     email: "u1@example.com",
-                    university: "N/A",
-                    degree: "N/A",
+                    school: "N/A",
+                    educationLevel: "N/A",
                     isInterestedMechMania: false,
                     isInterestedPuzzleBang: false,
                     dietaryRestrictions: [],
                     allergies: [],
+                    gender: "Prefer not to say",
+                    ethnicity: [],
+                    graduationYear: "2027",
+                    resume: "resume.pdf",
                 },
                 {
                     userId: "u2",
                     name: "User Two",
                     email: "u2@example.com",
-                    university: "N/A",
-                    degree: "N/A",
+                    school: "N/A",
+                    educationLevel: "N/A",
                     isInterestedMechMania: false,
                     isInterestedPuzzleBang: false,
                     dietaryRestrictions: [],
                     allergies: [],
+                    gender: "Prefer not to say",
+                    ethnicity: [],
+                    graduationYear: "2027",
+                    resume: "resume.pdf",
                 },
             ]).throwOnError();
 
