@@ -55,7 +55,6 @@ registrationRouter.get("/draft", RoleChecker([]), async (req, res) => {
 
 registrationRouter.post("/submit", RoleChecker([]), async (req, res) => {
     const payload = res.locals.payload;
-    console.log(payload);
 
     const registrationResult = RegistrationValidator.safeParse(req.body);
     if (!registrationResult.success) {

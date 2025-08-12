@@ -223,8 +223,6 @@ describe("GET /registration/all", () => {
                 StatusCodes.OK
             );
 
-            console.log(res.body);
-
             expect(res.body.length).toBe(1);
             expect(res.body[0]).toHaveProperty("userId");
         }

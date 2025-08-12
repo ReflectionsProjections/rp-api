@@ -4,7 +4,7 @@ import {
     AttendeeCreateValidator,
     EventIdValidator,
 } from "./attendee-validators";
-import { SupabaseDB, User } from "../../supabase";
+import { SupabaseDB } from "../../supabase";
 import RoleChecker from "../../middleware/role-checker";
 import { Role } from "../auth/auth-models";
 import { generateQrHash, getCurrentDay } from "../checkin/checkin-utils";
@@ -201,7 +201,7 @@ attendeeRouter.get(
                 .status(StatusCodes.NOT_FOUND)
                 .json({ error: "UserNotFound" });
         }
-        const hasPriority = user[priorityKey as keyof User];
+        const hasPriority = user[priorityKey as keyof typeof user];
         const dietary = registration?.dietaryRestrictions || [];
         const hasFoodRestrictions = ["VEGAN", "GLUTEN-FREE"].some((r) =>
             dietary.includes(r)
@@ -292,9 +292,9 @@ attendeeRouter.post(
         }
 
         const eligibleKey =
-            `isEligible${merchItem.charAt(0).toUpperCase() + merchItem.slice(1)}` as keyof User;
+            `isEligible${merchItem.charAt(0).toUpperCase() + merchItem.slice(1)}` as keyof typeof user;
         const redeemedKey =
-            `hasRedeemed${merchItem.charAt(0).toUpperCase() + merchItem.slice(1)}` as keyof User;
+            `hasRedeemed${merchItem.charAt(0).toUpperCase() + merchItem.slice(1)}` as keyof typeof user;
 
         if (!user[eligibleKey]) {
             return res
