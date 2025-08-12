@@ -20,6 +20,7 @@
     "dependencies": {
         "@aws-sdk/client-s3": "^3.496.0",
         "@aws-sdk/client-ses": "^3.609.0",
+        "@aws-sdk/client-sesv2": "^3.864.0",
         "@aws-sdk/s3-presigned-post": "^3.499.0",
         "@aws-sdk/s3-request-presigner": "^3.496.0",
         "@paralleldrive/cuid2": "^2.2.2",
@@ -77,5 +78,8 @@
         "supertest": "^7.0.0",
         "ts-jest": "^29.1.4",
         "typescript-eslint": "^8.29.1"
+    },
+    "resolutions": {
+        "esbuild": "0.25.8"
     }
 }
