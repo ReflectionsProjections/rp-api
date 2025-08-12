@@ -218,7 +218,8 @@ describe("POST /subscription/send-email", () => {
         expect(SendEmailCommand).toHaveBeenCalledWith({
             FromEmailAddress: process.env.FROM_EMAIL_ADDRESS,
             Destination: {
-                ToAddresses: subscribers,
+                ToAddresses: [process.env.FROM_EMAIL_ADDRESS],
+                BccAddresses: subscribers,
             },
             Content: {
                 Simple: {
