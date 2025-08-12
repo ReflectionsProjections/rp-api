@@ -284,6 +284,8 @@ export type Database = {
                     personalLinks?: string[];
                     resume?: string;
                     school?: string;
+                    isInterestedMechMania?: boolean;
+                    isInterestedPuzzleBang?: boolean;
                     tags?: string[];
                     userId: string;
                 };
@@ -303,6 +305,8 @@ export type Database = {
                     personalLinks?: string[];
                     resume?: string;
                     school?: string;
+                    isInterestedMechMania?: boolean;
+                    isInterestedPuzzleBang?: boolean;
                     tags?: string[];
                     userId: string;
                 };
@@ -322,6 +326,8 @@ export type Database = {
                     personalLinks?: string[];
                     resume?: string;
                     school?: string;
+                    isInterestedMechMania?: boolean;
+                    isInterestedPuzzleBang?: boolean;
                     tags?: string[];
                     userId?: string;
                 };
@@ -343,6 +349,8 @@ export type Database = {
                     personalLinks: string[];
                     resume: string;
                     school: string;
+                    isInterestedMechMania: boolean;
+                    isInterestedPuzzleBang: boolean;
                     tags: string[];
                     userId: string;
                 };
@@ -362,6 +370,8 @@ export type Database = {
                     personalLinks: string[];
                     resume: string;
                     school: string;
+                    isInterestedMechMania: boolean;
+                    isInterestedPuzzleBang: boolean;
                     tags: string[];
                     userId: string;
                 };
@@ -381,6 +391,8 @@ export type Database = {
                     personalLinks?: string[];
                     resume?: string;
                     school?: string;
+                    isInterestedMechMania?: boolean;
+                    isInterestedPuzzleBang?: boolean;
                     tags?: string[];
                     userId?: string;
                 };

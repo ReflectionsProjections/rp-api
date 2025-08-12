@@ -31,6 +31,8 @@ const VALID_REGISTRATION = {
     ...VALID_DRAFT,
     majors: ["CS"],
     resume: "resume.pdf",
+    isInterestedMechMania: false,
+    isInterestedPuzzleBang: true,
 };
 
 beforeEach(async () => {

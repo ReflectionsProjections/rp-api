@@ -127,6 +127,8 @@ CREATE TABLE public."draft_registrations" (
     "personalLinks" text[] DEFAULT '{}'::text[],
     "resume" text,
     "school" text,
+    "isInterestedMechMania" boolean,
+    "isInterestedPuzzleBang" boolean,
     "tags" text[] DEFAULT '{}'::text[],
     "userId" character varying,
     CONSTRAINT "draft_registrations_pkey" PRIMARY KEY ("userId")
@@ -148,6 +150,8 @@ CREATE TABLE public."registrations" (
     "personalLinks" text[] DEFAULT '{}'::text[] NOT NULL,
     "resume" text NOT NULL,
     "school" text NOT NULL,
+    "isInterestedMechMania" boolean NOT NULL,
+    "isInterestedPuzzleBang" boolean NOT NULL,
     "tags" text[] DEFAULT '{}'::text[] NOT NULL,
     "userId" character varying NOT NULL,
     CONSTRAINT "registrations_pkey" PRIMARY KEY ("userId"),

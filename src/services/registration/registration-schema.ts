@@ -18,6 +18,8 @@ const RegistrationDraftValidator = z.object({
     personalLinks: z.array(z.string()).optional(),
     resume: z.string().optional(),
     school: z.string().optional(),
+    isInterestedMechMania: z.boolean().optional(),
+    isInterestedPuzzleBang: z.boolean().optional(),
     tags: z.array(z.string()).optional(),
 });
 
@@ -38,6 +40,8 @@ const RegistrationValidator = z.object({
     personalLinks: z.array(z.string()),
     resume: z.string(),
     school: z.string(),
+    isInterestedMechMania: z.boolean(),
+    isInterestedPuzzleBang: z.boolean(),
     tags: z.array(z.string()),
 });
 

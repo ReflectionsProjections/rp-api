@@ -325,7 +325,7 @@ describe("POST /checkin/scan/staff", () => {
         const { data, error } = await SupabaseDB.EVENTS.select()
             .eq("eventId", payload.eventId)
             .single();
-        
+
         const response = await postAsAdmin("/checkin/scan/staff")
             .send(payload)
             .expect(StatusCodes.OK);
