@@ -7,8 +7,11 @@ export const supabase = createClient<Database>(
 );
 
 export const SupabaseDB = {
-    get ROLES() {
-        return supabase.from("roles");
+    get AUTH_INFO() {
+        return supabase.from("authInfo");
+    },
+    get AUTH_ROLES() {
+        return supabase.from("authRoles");
     },
     get STAFF() {
         return supabase.from("staff");
@@ -41,7 +44,7 @@ export const SupabaseDB = {
 
 export const RoleTypes: Record<
     string,
-    Database["public"]["Enums"]["role_type"]
+    Database["public"]["Enums"]["roleType"]
 > = {
     USER: "USER",
     STAFF: "STAFF",
@@ -52,7 +55,7 @@ export const RoleTypes: Record<
 
 export const CommitteeTypes: Record<
     string,
-    Database["public"]["Enums"]["committee_names"]
+    Database["public"]["Enums"]["committeeNames"]
 > = {
     CONTENT: "CONTENT",
     CORPORATE: "CORPORATE",

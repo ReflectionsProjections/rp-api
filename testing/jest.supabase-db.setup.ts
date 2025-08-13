@@ -15,8 +15,11 @@ function mockSupabase(supabaseUrl: string, supabaseAnonKey: string) {
         return {
             supabase: supabase,
             SupabaseDB: {
-                get ROLES() {
-                    return supabase.from("roles");
+                get AUTH_INFO() {
+                    return supabase.from("authInfo");
+                },
+                get AUTH_ROLES() {
+                    return supabase.from("authRoles");
                 },
                 get STAFF() {
                     return supabase.from("staff");
