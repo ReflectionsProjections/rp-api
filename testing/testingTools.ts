@@ -8,7 +8,7 @@ import { SupabaseClient } from "@supabase/supabase-js";
 type RoleType = z.infer<typeof Role>;
 
 export const TESTER = {
-    userId: "user123",
+    userId: "test-er-user-id",
     roles: [],
     displayName: "Loid Forger",
     email: "loid.forger@testing.com",
@@ -123,6 +123,7 @@ export async function clearSupabaseTables(supabase: SupabaseClient) {
     const tables = [
         "authInfo",
         "authRoles",
+        "corporate",
         "eventAttendances",
         "attendeeAttendances",
         "attendees",
