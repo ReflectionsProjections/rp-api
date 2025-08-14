@@ -148,6 +148,13 @@ CREATE TABLE public."authRoles" (
     CONSTRAINT "authRoles_pkey" PRIMARY KEY ("userId", "role")
 );
 
+CREATE TABLE public."authCodes" (
+    "email" character varying NOT NULL,
+    "hashedVerificationCode" text NOT NULL,
+    "expTime" timestamp with time zone NOT NULL,
+    CONSTRAINT "authCodes_pkey" PRIMARY KEY ("email")
+)
+
 -- Indexes for auth tables
 CREATE INDEX "authRoles_userId_idx" ON public."authRoles" ("userId");
 CREATE INDEX "authRoles_role_idx"   ON public."authRoles" ("role");

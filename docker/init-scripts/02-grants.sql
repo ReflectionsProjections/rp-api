@@ -17,6 +17,7 @@ GRANT ALL ON TABLE public."authRoles"           TO anon, authenticated, service_
 GRANT ALL ON TABLE public."speakers"            TO anon, authenticated, service_role;
 GRANT ALL ON TABLE public."staff"               TO anon, authenticated, service_role;
 GRANT ALL ON TABLE public."subscriptions"       TO anon, authenticated, service_role;
+GRANT ALL ON TABLE public."authCodes"			TO anon, authenticated, service_role; 
 
 -- Default privileges
 ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON SEQUENCES TO postgres, anon, authenticated, service_role;
