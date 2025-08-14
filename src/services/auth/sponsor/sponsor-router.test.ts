@@ -106,6 +106,24 @@ describe("POST /auth/sponsor/verify", () => {
         expect(payload.iat).toBeGreaterThanOrEqual(start);
     });
 
+    it("fails for valid code after invalid code used", async () => {
+        const badResponse = await post("/auth/sponsor/verify")
+            .send({
+                email: CORPORATE_USER.email,
+                sixDigitCode: "BADCOD",
+            })
+            .expect(StatusCodes.UNAUTHORIZED);
+        expect(badResponse.body).toHaveProperty("error", "InvalidCode");
+
+        const validResponse = await post("/auth/sponsor/verify")
+            .send({
+                email: CORPORATE_USER.email,
+                sixDigitCode: VALID_CODE,
+            })
+            .expect(StatusCodes.UNAUTHORIZED);
+        expect(validResponse.body).toHaveProperty("error", "InvalidCode");
+    });
+
     it("fails for expired codes", async () => {
         await SupabaseDB.AUTH_CODES.update({
             email: CORPORATE_USER.email,
