@@ -121,14 +121,13 @@ export function delAsAdmin(url: string): request.Test {
 
 export async function clearSupabaseTables(supabase: SupabaseClient) {
     const tables = [
-        "authInfo",
-        "authRoles",
-        "corporate",
         "eventAttendances",
         "attendeeAttendances",
         "attendees",
         "notifications",
         "registrations",
+        "authInfo",
+        "authRoles",
         "events",
         "corporate",
         "meetings",

@@ -153,7 +153,7 @@ CREATE TABLE public."authCodes" (
     "hashedVerificationCode" text NOT NULL,
     "expTime" timestamp with time zone NOT NULL,
     CONSTRAINT "authCodes_pkey" PRIMARY KEY ("email")
-)
+);
 
 -- Indexes for auth tables
 CREATE INDEX "authRoles_userId_idx" ON public."authRoles" ("userId");

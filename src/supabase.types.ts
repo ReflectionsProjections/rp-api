@@ -7,7 +7,7 @@ export type Json =
     | Json[];
 
 export type Database = {
-    // Allows to automatically instanciate createClient with right options
+    // Allows to automatically instantiate createClient with right options
     // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
     __InternalSupabase: {
         PostgrestVersion: "12.2.3 (519615d)";
@@ -22,10 +22,10 @@ export type Database = {
         Functions: {
             graphql: {
                 Args: {
+                    extensions?: Json;
                     operationName?: string;
                     query?: string;
                     variables?: Json;
-                    extensions?: Json;
                 };
                 Returns: Json;
             };
@@ -136,6 +136,24 @@ export type Database = {
                     },
                 ];
             };
+            authCodes: {
+                Row: {
+                    email: string;
+                    expTime: string;
+                    hashedVerificationCode: string;
+                };
+                Insert: {
+                    email: string;
+                    expTime: string;
+                    hashedVerificationCode: string;
+                };
+                Update: {
+                    email?: string;
+                    expTime?: string;
+                    hashedVerificationCode?: string;
+                };
+                Relationships: [];
+            };
             authInfo: {
                 Row: {
                     authId: string | null;
@@ -159,15 +177,15 @@ export type Database = {
             };
             authRoles: {
                 Row: {
-                    role: Database["public"]["Enums"]["roleType"];
+                    role: Database["public"]["Enums"]["role_type"];
                     userId: string;
                 };
                 Insert: {
-                    role: Database["public"]["Enums"]["roleType"];
+                    role: Database["public"]["Enums"]["role_type"];
                     userId: string;
                 };
                 Update: {
-                    role?: Database["public"]["Enums"]["roleType"];
+                    role?: Database["public"]["Enums"]["role_type"];
                     userId?: string;
                 };
                 Relationships: [];
@@ -223,7 +241,7 @@ export type Database = {
                     description: string;
                     endTime: string;
                     eventId: string;
-                    eventType: Database["public"]["Enums"]["eventType"];
+                    eventType: Database["public"]["Enums"]["event_type"];
                     imageUrl: string | null;
                     isVirtual: boolean;
                     isVisible: boolean;
@@ -237,7 +255,7 @@ export type Database = {
                     description: string;
                     endTime: string;
                     eventId?: string;
-                    eventType: Database["public"]["Enums"]["eventType"];
+                    eventType: Database["public"]["Enums"]["event_type"];
                     imageUrl?: string | null;
                     isVirtual: boolean;
                     isVisible?: boolean;
@@ -251,7 +269,7 @@ export type Database = {
                     description?: string;
                     endTime?: string;
                     eventId?: string;
-                    eventType?: Database["public"]["Enums"]["eventType"];
+                    eventType?: Database["public"]["Enums"]["event_type"];
                     imageUrl?: string | null;
                     isVirtual?: boolean;
                     isVisible?: boolean;
@@ -264,17 +282,17 @@ export type Database = {
             };
             meetings: {
                 Row: {
-                    committeeType: Database["public"]["Enums"]["committeeNames"];
+                    committeeType: Database["public"]["Enums"]["committee_names"];
                     meetingId: string;
                     startTime: string;
                 };
                 Insert: {
-                    committeeType: Database["public"]["Enums"]["committeeNames"];
+                    committeeType: Database["public"]["Enums"]["committee_names"];
                     meetingId?: string;
                     startTime: string;
                 };
                 Update: {
-                    committeeType?: Database["public"]["Enums"]["committeeNames"];
+                    committeeType?: Database["public"]["Enums"]["committee_names"];
                     meetingId?: string;
                     startTime?: string;
                 };
@@ -409,19 +427,19 @@ export type Database = {
                     attendances: Json;
                     email: string;
                     name: string;
-                    team: Database["public"]["Enums"]["committeeNames"];
+                    team: Database["public"]["Enums"]["committee_names"];
                 };
                 Insert: {
                     attendances?: Json;
                     email: string;
                     name: string;
-                    team: Database["public"]["Enums"]["committeeNames"];
+                    team: Database["public"]["Enums"]["committee_names"];
                 };
                 Update: {
                     attendances?: Json;
                     email?: string;
                     name?: string;
-                    team?: Database["public"]["Enums"]["committeeNames"];
+                    team?: Database["public"]["Enums"]["committee_names"];
                 };
                 Relationships: [];
             };
@@ -448,7 +466,7 @@ export type Database = {
             [_ in never]: never;
         };
         Enums: {
-            committeeNames:
+            committee_names:
                 | "CONTENT"
                 | "CORPORATE"
                 | "DESIGN"
@@ -456,15 +474,15 @@ export type Database = {
                 | "FULL TEAM"
                 | "MARKETING"
                 | "OPERATIONS";
-            eventType:
+            event_type:
                 | "SPEAKER"
                 | "CORPORATE"
                 | "SPECIAL"
                 | "PARTNERS"
                 | "MEALS"
                 | "CHECKIN";
-            roleType: "USER" | "STAFF" | "ADMIN" | "CORPORATE" | "PUZZLEBANG";
-            staffAttendanceType: "PRESENT" | "EXCUSED" | "ABSENT";
+            role_type: "USER" | "STAFF" | "ADMIN" | "CORPORATE" | "PUZZLEBANG";
+            staff_attendance_type: "PRESENT" | "EXCUSED" | "ABSENT";
         };
         CompositeTypes: {
             [_ in never]: never;
@@ -598,7 +616,7 @@ export const Constants = {
     },
     public: {
         Enums: {
-            committeeNames: [
+            committee_names: [
                 "CONTENT",
                 "CORPORATE",
                 "DESIGN",
@@ -607,7 +625,7 @@ export const Constants = {
                 "MARKETING",
                 "OPERATIONS",
             ],
-            eventType: [
+            event_type: [
                 "SPEAKER",
                 "CORPORATE",
                 "SPECIAL",
@@ -615,8 +633,8 @@ export const Constants = {
                 "MEALS",
                 "CHECKIN",
             ],
-            roleType: ["USER", "STAFF", "ADMIN", "CORPORATE", "PUZZLEBANG"],
-            staffAttendanceType: ["PRESENT", "EXCUSED", "ABSENT"],
+            role_type: ["USER", "STAFF", "ADMIN", "CORPORATE", "PUZZLEBANG"],
+            staff_attendance_type: ["PRESENT", "EXCUSED", "ABSENT"],
         },
     },
 } as const;

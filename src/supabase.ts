@@ -47,7 +47,7 @@ export const SupabaseDB = {
 
 export const RoleTypes: Record<
     string,
-    Database["public"]["Enums"]["roleType"]
+    Database["public"]["Enums"]["role_type"]
 > = {
     USER: "USER",
     STAFF: "STAFF",
@@ -58,7 +58,7 @@ export const RoleTypes: Record<
 
 export const CommitteeTypes: Record<
     string,
-    Database["public"]["Enums"]["committeeNames"]
+    Database["public"]["Enums"]["committee_names"]
 > = {
     CONTENT: "CONTENT",
     CORPORATE: "CORPORATE",
