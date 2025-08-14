@@ -13,6 +13,9 @@ export const SupabaseDB = {
     get AUTH_ROLES() {
         return supabase.from("authRoles");
     },
+    get AUTH_CODES() {
+        return supabase.from("authCodes");
+    },
     get CORPORATE() {
         return supabase.from("corporate");
     },

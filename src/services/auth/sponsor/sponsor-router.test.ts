@@ -4,11 +4,11 @@ import * as sponsorUtils from "./sponsor-utils";
 import { post } from "../../../../testing/testingTools";
 import { StatusCodes } from "http-status-codes";
 import { Corporate } from "../corporate-schema";
-import { Database } from "../../../database";
 import { compareSync } from "bcrypt";
 import jsonwebtoken, { JwtPayload } from "jsonwebtoken";
 import Config from "../../../config";
 import { Role } from "../auth-models";
+import { SupabaseDB } from "../../../supabase";
 
 const CORPORATE_USER = {
     email: "sponsor@big-man.corp",
@@ -17,10 +17,10 @@ const CORPORATE_USER = {
 const VALID_CODE = "AAABBB";
 
 beforeEach(async () => {
-    await Database.CORPORATE.create(CORPORATE_USER);
-    await Database.AUTH_CODES.create({
+    await SupabaseDB.CORPORATE.insert(CORPORATE_USER);
+    await SupabaseDB.AUTH_CODES.insert({
         hashedVerificationCode: sponsorUtils.encryptSixDigitCode(VALID_CODE),
-        expTime: Date.now() + 60 * 1000,
+        expTime: new Date(Date.now() + 60 * 1000).toISOString(),
         email: CORPORATE_USER.email,
     });
 });
@@ -55,12 +55,13 @@ describe("POST /auth/sponsor/login", () => {
             expect.stringContaining(sixDigitCode)
         );
 
-        const stored = await Database.AUTH_CODES.findOne({
-            email: CORPORATE_USER.email,
-        });
-        expect(stored?.toObject()).toHaveProperty("hashedVerificationCode");
+        const { data } = await SupabaseDB.AUTH_CODES.select()
+            .eq("email", CORPORATE_USER.email)
+            .single()
+            .throwOnError();
+        expect(data).toHaveProperty("hashedVerificationCode");
         expect(
-            compareSync(sixDigitCode, `${stored?.hashedVerificationCode}`)
+            compareSync(sixDigitCode, `${data.hashedVerificationCode}`)
         ).toBe(true);
     });
 
@@ -74,10 +75,10 @@ describe("POST /auth/sponsor/login", () => {
         expect(mockCreateSixDigitCode).not.toHaveBeenCalled();
         expect(mockSendHTMLEmail).not.toHaveBeenCalled();
 
-        const stored = await Database.AUTH_CODES.findOne({
-            email,
-        });
-        expect(stored?.toObject()).toBeUndefined();
+        const { data } = await SupabaseDB.AUTH_CODES.select()
+            .eq("email", email)
+            .throwOnError();
+        expect(data.length).toBe(0);
     });
 });
 
@@ -106,14 +107,12 @@ describe("POST /auth/sponsor/verify", () => {
     });
 
     it("fails for expired codes", async () => {
-        await Database.AUTH_CODES.updateOne(
-            {
-                email: CORPORATE_USER.email,
-            },
-            {
-                expTime: Math.floor(Date.now() / 1000) - 30,
-            }
-        );
+        await SupabaseDB.AUTH_CODES.update({
+            email: CORPORATE_USER.email,
+            expTime: new Date(Date.now() - 30 * 1000).toISOString(),
+        })
+            .eq("email", CORPORATE_USER.email)
+            .throwOnError();
         const response = await post("/auth/sponsor/verify")
             .send({
                 email: CORPORATE_USER.email,
