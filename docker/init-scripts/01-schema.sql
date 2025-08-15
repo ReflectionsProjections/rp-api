@@ -112,7 +112,7 @@ CREATE TABLE public."notifications" (
     CONSTRAINT "notifications_pkey" PRIMARY KEY ("userId")
 );
 
-CREATE TABLE public."draft_registrations" (
+CREATE TABLE public."draftRegistrations" (
     "allergies" text[] DEFAULT '{}'::text[] NOT NULL,
     "allergiesOther" text NOT NULL,
     "dietaryRestrictions" text[] DEFAULT '{}'::text[] NOT NULL,
@@ -137,7 +137,7 @@ CREATE TABLE public."draft_registrations" (
     "isInterestedPuzzleBang" boolean NOT NULL,
     "tags" text[] DEFAULT '{}'::text[] NOT NULL,
     "userId" character varying NOT NULL,
-    CONSTRAINT "draft_registrations_pkey" PRIMARY KEY ("userId")
+    CONSTRAINT "draftRegistrations_pkey" PRIMARY KEY ("userId")
 );
 
 CREATE TABLE public."registrations" (

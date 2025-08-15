@@ -324,7 +324,7 @@ export type Database = {
                     },
                 ];
             };
-            draft_registrations: {
+            draftRegistrations: {
                 Row: {
                     allergies: string[];
                     allergiesOther: string;

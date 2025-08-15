@@ -125,7 +125,7 @@ export async function clearSupabaseTables(supabase: SupabaseClient) {
         "attendeeAttendances",
         "attendees",
         "notifications",
-        "draft_registrations",
+        "draftRegistrations",
         "registrations",
         "authInfo",
         "authRoles",
