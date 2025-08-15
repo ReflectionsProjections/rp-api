@@ -120,7 +120,6 @@ registrationRouter.post("/submit", RoleChecker([]), async (req, res) => {
                     ? registration.minors.join(", ")
                     : "N/A",
             name: registration.name,
-            hasResume: registration.resume !== undefined,
             school: registration.school,
             isInterestedMechMania: registration.isInterestedMechMania,
             isInterestedPuzzleBang: registration.isInterestedPuzzleBang,
