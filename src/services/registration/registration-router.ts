@@ -78,15 +78,14 @@ registrationRouter.post("/submit", RoleChecker([]), async (req, res) => {
         .eq("userId", payload.userId)
         .single();
 
-    await SupabaseDB.DRAFT_REGISTRATIONS.upsert(registration).throwOnError();
-    await SupabaseDB.REGISTRATIONS.upsert(registration).throwOnError();
-
-    await SupabaseDB.AUTH_ROLES.upsert({
-        userId: payload.userId,
-        role: Role.Enum.USER,
-    }).throwOnError();
-
-    await SupabaseDB.ATTENDEES.upsert(attendee).throwOnError();
+    await Promise.all([
+        SupabaseDB.REGISTRATIONS.upsert(registration).throwOnError(),
+        SupabaseDB.AUTH_ROLES.upsert({
+            userId: payload.userId,
+            role: Role.Enum.USER,
+        }).throwOnError(),
+        SupabaseDB.ATTENDEES.upsert(attendee).throwOnError(),
+    ]);
 
     if (!existing) {
         const substitution = {
@@ -116,6 +115,8 @@ registrationRouter.post("/submit", RoleChecker([]), async (req, res) => {
             name: registration.name,
             hasResume: registration.resume !== undefined,
             school: registration.school,
+            isInterestedMechMania: registration.isInterestedMechMania,
+            isInterestedPuzzleBang: registration.isInterestedPuzzleBang,
             opportunities:
                 registration.opportunities.length > 0
                     ? registration.opportunities.join(", ")

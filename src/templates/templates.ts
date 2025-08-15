@@ -30,6 +30,18 @@ const templates = {
                             </ul>
                         </li>
                         {{/personalLinks.length}}
+                        {{#isInterestedMechMania}}
+                        <li> <b> Interested in MechMania: </b> Yes </li>
+                        {{/isInterestedMechMania}}
+                        {{^isInterestedMechMania}}
+                        <li> <b> Interested in MechMania: </b> No </li>
+                        {{/isInterestedMechMania}}
+                        {{#isInterestedPuzzleBang}}
+                        <li> <b> Interested in PuzzleBang: </b> Yes </li>
+                        {{/isInterestedPuzzleBang}}
+                        {{^isInterestedPuzzleBang}}
+                        <li> <b> Interested in PuzzleBang: </b> No </li>
+                        {{/isInterestedPuzzleBang}}
                         <li> <b> Interest Tags: </b> {{tags}} </li>
                         <li> <b> Opportunities Interest: </b> {{opportunities}} </li>
                         {{#hasResume}}

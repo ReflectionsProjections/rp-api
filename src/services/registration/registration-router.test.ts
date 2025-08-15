@@ -10,29 +10,50 @@ jest.mock("../ses/ses-utils", () => ({
 }));
 
 const VALID_DRAFT = {
-    userId: "1234",
-    name: "Draft User",
-    email: "fake@gmail.com",
-    school: "UIUC",
-    educationLevel: "Undergraduate",
-    graduationYear: "2026",
-    dietaryRestrictions: ["Vegetarian"],
     allergies: ["Peanuts"],
-    gender: "Non-binary",
+    allergiesOther: "",
+    dietaryRestrictions: ["Vegetarian"],
+    dietaryOther: "",
+    educationLevel: "Undergraduate",
+    educationOther: "",
+    email: "test@example.com",
     ethnicity: ["Asian"],
-    personalLinks: ["https://draft.com"],
-    tags: ["tag1", "tag2"],
+    ethnicityOther: "",
+    gender: "Male",
+    genderOther: "",
+    graduationYear: "2025",
+    howDidYouHear: ["Social Media"],
+    majors: ["Computer Science"],
+    minors: ["Mathematics"],
+    name: "Test User",
     opportunities: ["Internship"],
-    howDidYouHear: ["Newsletter"],
-    minors: [],
+    personalLinks: ["https://github.com/testuser"],
+    resume: "test-resume.pdf",
+    school: "University of Illinois",
+    isInterestedMechMania: true,
+    isInterestedPuzzleBang: false,
+    tags: ["backend", "frontend"],
 };
 
 const VALID_REGISTRATION = {
-    ...VALID_DRAFT,
-    majors: ["CS"],
-    resume: "resume.pdf",
-    isInterestedMechMania: false,
-    isInterestedPuzzleBang: true,
+    allergies: ["Peanuts"],
+    dietaryRestrictions: ["Vegetarian"],
+    educationLevel: "Undergraduate",
+    email: "test@example.com",
+    ethnicity: ["Asian"],
+    gender: "Male",
+    graduationYear: "2025",
+    howDidYouHear: ["Social Media"],
+    majors: ["Computer Science"],
+    minors: ["Mathematics"],
+    name: "Test User",
+    opportunities: ["Internship"],
+    personalLinks: ["https://github.com/testuser"],
+    resume: "test-resume.pdf",
+    school: "University of Illinois",
+    isInterestedMechMania: true,
+    isInterestedPuzzleBang: false,
+    tags: ["backend", "frontend"],
 };
 
 beforeEach(async () => {
@@ -148,14 +169,6 @@ describe("POST /registration/submit", () => {
         await post("/registration/submit", Role.enum.USER)
             .send(VALID_REGISTRATION)
             .expect(StatusCodes.OK);
-
-        const { data: draft_reg } = await SupabaseDB.DRAFT_REGISTRATIONS.select(
-            "*"
-        )
-            .eq("userId", TESTER.userId)
-            .single()
-            .throwOnError();
-        expect(draft_reg).toBeDefined();
 
         const { data: reg } = await SupabaseDB.REGISTRATIONS.select("*")
             .eq("userId", TESTER.userId)
