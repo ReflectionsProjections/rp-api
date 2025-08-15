@@ -1,5 +1,4 @@
 import { Router } from "express";
-import { Database } from "../../../database";
 import { StatusCodes } from "http-status-codes";
 import { sendHTMLEmail } from "../../ses/ses-utils";
 import jsonwebtoken from "jsonwebtoken";
@@ -14,27 +13,32 @@ import {
     AuthSponsorLoginValidator,
     AuthSponsorVerifyValidator,
 } from "./sponsor-schema";
+import { SupabaseDB } from "../../../supabase";
 
 const authSponsorRouter = Router();
 
 authSponsorRouter.post("/login", async (req, res) => {
     const { email } = AuthSponsorLoginValidator.parse(req.body);
-    const existing = await Database.CORPORATE.findOne({ email: email });
+    const { data: existing } = await SupabaseDB.CORPORATE.select()
+        .eq("email", email)
+        .maybeSingle()
+        .throwOnError();
     if (!existing) {
         return res.sendStatus(StatusCodes.UNAUTHORIZED);
     }
 
     const sixDigitCode = createSixDigitCode();
-    const expTime = Math.floor(Date.now() / 1000) + Config.VERIFY_EXP_TIME_MS;
+    const expTime = new Date(
+        Date.now() + Config.VERIFY_EXP_TIME_MS
+    ).toISOString();
     const hashedVerificationCode = encryptSixDigitCode(sixDigitCode);
-    await Database.AUTH_CODES.findOneAndUpdate(
-        { email },
-        {
-            hashedVerificationCode,
-            expTime,
-        },
-        { upsert: true }
-    );
+    await SupabaseDB.AUTH_CODES.upsert({
+        email,
+        hashedVerificationCode,
+        expTime,
+    })
+        .eq("email", email)
+        .throwOnError();
 
     const emailBody = mustache.render(templates.SPONSOR_VERIFICATION, {
         code: sixDigitCode,
@@ -46,12 +50,14 @@ authSponsorRouter.post("/login", async (req, res) => {
 
 authSponsorRouter.post("/verify", async (req, res) => {
     const { email, sixDigitCode } = AuthSponsorVerifyValidator.parse(req.body);
-    const sponsorData = await Database.AUTH_CODES.findOneAndDelete({
-        email,
-    });
-    const corpResponse = await Database.CORPORATE.findOne({
-        email: email,
-    });
+    const { data: sponsorData } = await SupabaseDB.AUTH_CODES.delete()
+        .eq("email", email)
+        .select()
+        .maybeSingle()
+        .throwOnError();
+    const { data: corpResponse } = await SupabaseDB.CORPORATE.select()
+        .eq("email", email)
+        .maybeSingle();
 
     if (!sponsorData) {
         return res.status(StatusCodes.UNAUTHORIZED).send({
@@ -69,7 +75,8 @@ authSponsorRouter.post("/verify", async (req, res) => {
         });
     }
 
-    if (Math.floor(Date.now() / 1000) > sponsorData.expTime) {
+    const expTimeDate = new Date(sponsorData.expTime);
+    if (Date.now() > expTimeDate.getTime()) {
         return res.status(StatusCodes.UNAUTHORIZED).send({
             error: "ExpiredCode",
         });

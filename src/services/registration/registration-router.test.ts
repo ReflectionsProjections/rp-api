@@ -38,24 +38,23 @@ const VALID_REGISTRATION = {
 beforeEach(async () => {
     jest.clearAllMocks();
 
-    await SupabaseDB.ATTENDEES.delete().neq(
-        "userId",
-        "00000000-0000-0000-0000-000000000000"
-    );
-    await SupabaseDB.DRAFT_REGISTRATIONS.delete().neq(
-        "userId",
-        "00000000-0000-0000-0000-000000000000"
-    );
-    await SupabaseDB.REGISTRATIONS.delete().neq(
-        "userId",
-        "00000000-0000-0000-0000-000000000000"
-    );
-    await SupabaseDB.ROLES.delete().neq(
-        "userId",
-        "00000000-0000-0000-0000-000000000000"
-    );
+    await SupabaseDB.ATTENDEES.delete()
+        .neq("userId", "00000000-0000-0000-0000-000000000000")
+        .throwOnError();
+    await SupabaseDB.DRAFT_REGISTRATIONS.delete()
+        .neq("userId", "00000000-0000-0000-0000-000000000000")
+        .throwOnError();
+    await SupabaseDB.REGISTRATIONS.delete()
+        .neq("userId", "00000000-0000-0000-0000-000000000000")
+        .throwOnError();
+    await SupabaseDB.AUTH_ROLES.delete()
+        .neq("userId", "00000000-0000-0000-0000-000000000000")
+        .throwOnError();
 
-    await SupabaseDB.ROLES.insert(TESTER);
+    await SupabaseDB.AUTH_INFO.insert({
+        ...TESTER,
+        roles: undefined,
+    }).throwOnError();
 });
 
 describe("POST /registration/draft", () => {
@@ -170,11 +169,12 @@ describe("POST /registration/submit", () => {
             .throwOnError();
         expect(attendee).toBeDefined();
 
-        const { data: roles } = await SupabaseDB.ROLES.select("*")
+        await SupabaseDB.AUTH_ROLES.select("*")
             .eq("userId", TESTER.userId)
+            .eq("role", Role.Enum.USER)
             .single()
             .throwOnError();
-        expect(roles?.roles).toContain(Role.enum.USER);
+
         expect(sendHTMLEmail).toHaveBeenCalled();
     });
 
@@ -189,7 +189,8 @@ describe("POST /registration/submit", () => {
 
         const { data: reg } = await SupabaseDB.REGISTRATIONS.select("*")
             .eq("userId", TESTER.userId)
-            .single();
+            .single()
+            .throwOnError();
         expect(reg?.name).toBe("Updated Name");
 
         expect(sendHTMLEmail).not.toHaveBeenCalled();

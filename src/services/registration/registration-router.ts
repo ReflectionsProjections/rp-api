@@ -81,21 +81,9 @@ registrationRouter.post("/submit", RoleChecker([]), async (req, res) => {
     await SupabaseDB.DRAFT_REGISTRATIONS.upsert(registration).throwOnError();
     await SupabaseDB.REGISTRATIONS.upsert(registration).throwOnError();
 
-    const { data: existingRoleRecord } = await SupabaseDB.ROLES.select("roles")
-        .eq("userId", payload.userId)
-        .single();
-
-    let updatedRoles: Role[] = [Role.enum.USER]; // Default if no existing record
-    if (existingRoleRecord && existingRoleRecord.roles) {
-        const currentRoles = existingRoleRecord.roles as Role[];
-        updatedRoles = [...new Set([...currentRoles, Role.enum.USER])];
-    }
-
-    await SupabaseDB.ROLES.upsert({
+    await SupabaseDB.AUTH_ROLES.upsert({
         userId: payload.userId,
-        displayName: payload.displayName,
-        email: payload.email,
-        roles: updatedRoles,
+        role: Role.Enum.USER,
     }).throwOnError();
 
     await SupabaseDB.ATTENDEES.upsert(attendee).throwOnError();

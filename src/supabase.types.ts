@@ -7,7 +7,7 @@ export type Json =
     | Json[];
 
 export type Database = {
-    // Allows to automatically instanciate createClient with right options
+    // Allows to automatically instantiate createClient with right options
     // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
     __InternalSupabase: {
         PostgrestVersion: "12.2.3 (519615d)";
@@ -22,10 +22,10 @@ export type Database = {
         Functions: {
             graphql: {
                 Args: {
+                    extensions?: Json;
                     operationName?: string;
                     query?: string;
                     variables?: Json;
-                    extensions?: Json;
                 };
                 Returns: Json;
             };
@@ -57,7 +57,7 @@ export type Database = {
                         foreignKeyName: "attendee_attendance_user_id_fkey";
                         columns: ["userId"];
                         isOneToOne: true;
-                        referencedRelation: "roles";
+                        referencedRelation: "authInfo";
                         referencedColumns: ["userId"];
                     },
                 ];
@@ -131,10 +131,64 @@ export type Database = {
                         foreignKeyName: "attendees_user_id_fkey";
                         columns: ["userId"];
                         isOneToOne: true;
-                        referencedRelation: "roles";
+                        referencedRelation: "authInfo";
                         referencedColumns: ["userId"];
                     },
                 ];
+            };
+            authCodes: {
+                Row: {
+                    email: string;
+                    expTime: string;
+                    hashedVerificationCode: string;
+                };
+                Insert: {
+                    email: string;
+                    expTime: string;
+                    hashedVerificationCode: string;
+                };
+                Update: {
+                    email?: string;
+                    expTime?: string;
+                    hashedVerificationCode?: string;
+                };
+                Relationships: [];
+            };
+            authInfo: {
+                Row: {
+                    authId: string | null;
+                    displayName: string;
+                    email: string;
+                    userId: string;
+                };
+                Insert: {
+                    authId?: string | null;
+                    displayName: string;
+                    email: string;
+                    userId: string;
+                };
+                Update: {
+                    authId?: string | null;
+                    displayName?: string;
+                    email?: string;
+                    userId?: string;
+                };
+                Relationships: [];
+            };
+            authRoles: {
+                Row: {
+                    role: Database["public"]["Enums"]["role_type"];
+                    userId: string;
+                };
+                Insert: {
+                    role: Database["public"]["Enums"]["role_type"];
+                    userId: string;
+                };
+                Update: {
+                    role?: Database["public"]["Enums"]["role_type"];
+                    userId?: string;
+                };
+                Relationships: [];
             };
             corporate: {
                 Row: {
@@ -262,7 +316,7 @@ export type Database = {
                         foreignKeyName: "notifications_user_id_fkey";
                         columns: ["userId"];
                         isOneToOne: true;
-                        referencedRelation: "roles";
+                        referencedRelation: "authInfo";
                         referencedColumns: ["userId"];
                     },
                 ];
@@ -401,31 +455,10 @@ export type Database = {
                         foreignKeyName: "registrations_user_id_fkey";
                         columns: ["userId"];
                         isOneToOne: true;
-                        referencedRelation: "roles";
+                        referencedRelation: "authInfo";
                         referencedColumns: ["userId"];
                     },
                 ];
-            };
-            roles: {
-                Row: {
-                    displayName: string;
-                    email: string;
-                    roles: Database["public"]["Enums"]["role_type"][];
-                    userId: string;
-                };
-                Insert: {
-                    displayName: string;
-                    email: string;
-                    roles?: Database["public"]["Enums"]["role_type"][];
-                    userId: string;
-                };
-                Update: {
-                    displayName?: string;
-                    email?: string;
-                    roles?: Database["public"]["Enums"]["role_type"][];
-                    userId?: string;
-                };
-                Relationships: [];
             };
             speakers: {
                 Row: {
