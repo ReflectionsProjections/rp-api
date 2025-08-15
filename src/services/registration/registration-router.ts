@@ -79,12 +79,19 @@ registrationRouter.post("/submit", RoleChecker([]), async (req, res) => {
         .single();
 
     await Promise.all([
-        SupabaseDB.REGISTRATIONS.upsert(registration).throwOnError(),
-        SupabaseDB.AUTH_ROLES.upsert({
-            userId: payload.userId,
-            role: Role.Enum.USER,
+        SupabaseDB.REGISTRATIONS.upsert(registration, {
+            onConflict: "userId",
         }).throwOnError(),
-        SupabaseDB.ATTENDEES.upsert(attendee).throwOnError(),
+        SupabaseDB.AUTH_ROLES.upsert(
+            {
+                userId: payload.userId,
+                role: Role.Enum.USER,
+            },
+            { onConflict: "userId,role", ignoreDuplicates: true }
+        ).throwOnError(),
+        SupabaseDB.ATTENDEES.upsert(attendee, {
+            onConflict: "userId",
+        }).throwOnError(),
     ]);
 
     if (!existing) {
