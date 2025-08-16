@@ -156,19 +156,19 @@ export type Database = {
             };
             authInfo: {
                 Row: {
-                    authId: string | null;
+                    authId: string;
                     displayName: string;
                     email: string;
                     userId: string;
                 };
                 Insert: {
-                    authId?: string | null;
+                    authId: string;
                     displayName: string;
                     email: string;
                     userId: string;
                 };
                 Update: {
-                    authId?: string | null;
+                    authId?: string;
                     displayName?: string;
                     email?: string;
                     userId?: string;
