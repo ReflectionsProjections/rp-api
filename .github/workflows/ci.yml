@@ -57,6 +57,8 @@ jobs:
         with:
           node-version: "18.x"
           cache: "yarn"
+      - name: setup docker buildx
+        uses: docker/setup-buildx-action@v3
       - name: Install dependencies
         run: yarn
       - name: Create .env file
@@ -75,5 +77,16 @@ jobs:
           JWT_EXPIRY="3600"
           FORCE_COLOR="true"
           EOF
+      - name: Pull
+        run: docker compose -f docker-compose.test.yml pull
+      - name: Bake
+        uses: docker/bake-action@v2
+        with:
+          load: true
+          set: |
+            *.cache-to=type=gha,mode=max
+            *.cache-from=type=gha
+      - name: Build
+        run: docker compose -f docker-compose.test.yml build
       - name: Test
-        run: yarn test:docker
+        run: docker compose -f docker-compose.test.yml run --rm test yarn test
