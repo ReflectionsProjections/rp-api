@@ -207,6 +207,30 @@ describe("updateDatabaseWithAuthPayload", () => {
         ]);
     });
 
+    it("should do nothing to an existing staff user", async () => {
+        await SupabaseDB.AUTH_ROLES.upsert({
+            userId: AUTH_STAFF_USER.userId,
+            role: Role.Enum.STAFF,
+        }).throwOnError();
+
+        const updatedUserId =
+            await updateDatabaseWithAuthPayload(AUTH_STAFF_PAYLOAD);
+        expect(updatedUserId).toBe(AUTH_STAFF_USER.userId);
+
+        const { data: info } = await SupabaseDB.AUTH_INFO.select()
+            .eq("userId", AUTH_STAFF_USER.userId)
+            .single();
+        expect(info).toMatchObject(AUTH_STAFF_USER);
+        const { data: roles } = await SupabaseDB.AUTH_ROLES.select().eq(
+            "userId",
+            AUTH_STAFF_USER.userId
+        );
+        expect(roles?.map((entry) => entry.role)).toEqual([
+            Role.Enum.USER,
+            Role.Enum.STAFF,
+        ]);
+    });
+
     it("should create a new admin user", async () => {
         await SupabaseDB.AUTH_INFO.delete().eq(
             "userId",
@@ -236,6 +260,30 @@ describe("updateDatabaseWithAuthPayload", () => {
     });
 
     it("should update a new admin user", async () => {
+        const updatedUserId =
+            await updateDatabaseWithAuthPayload(AUTH_ADMIN_PAYLOAD);
+        expect(updatedUserId).toBe(AUTH_ADMIN_USER.userId);
+
+        const { data: info } = await SupabaseDB.AUTH_INFO.select()
+            .eq("userId", AUTH_ADMIN_USER.userId)
+            .single();
+        expect(info).toMatchObject(AUTH_ADMIN_USER);
+        const { data: roles } = await SupabaseDB.AUTH_ROLES.select().eq(
+            "userId",
+            AUTH_ADMIN_USER.userId
+        );
+        expect(roles?.map((entry) => entry.role)).toEqual([
+            Role.Enum.USER,
+            Role.Enum.ADMIN,
+        ]);
+    });
+
+    it("should do nothing to an existing admin user", async () => {
+        await SupabaseDB.AUTH_ROLES.upsert({
+            userId: AUTH_ADMIN_USER.userId,
+            role: Role.Enum.ADMIN,
+        }).throwOnError();
+
         const updatedUserId =
             await updateDatabaseWithAuthPayload(AUTH_ADMIN_PAYLOAD);
         expect(updatedUserId).toBe(AUTH_ADMIN_USER.userId);
@@ -286,7 +334,7 @@ describe("generateJWT", () => {
             await SupabaseDB.AUTH_ROLES.upsert({
                 role: addRole,
                 userId: AUTH_USER.userId,
-            }).eq("userId", AUTH_USER.userId);
+            });
         }
 
         const start = Math.floor(Date.now() / 1000);

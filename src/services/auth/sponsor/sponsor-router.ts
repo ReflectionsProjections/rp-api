@@ -32,13 +32,16 @@ authSponsorRouter.post("/login", async (req, res) => {
         Date.now() + Config.VERIFY_EXP_TIME_MS
     ).toISOString();
     const hashedVerificationCode = encryptSixDigitCode(sixDigitCode);
-    await SupabaseDB.AUTH_CODES.upsert({
-        email,
-        hashedVerificationCode,
-        expTime,
-    })
-        .eq("email", email)
-        .throwOnError();
+    await SupabaseDB.AUTH_CODES.upsert(
+        {
+            email,
+            hashedVerificationCode,
+            expTime,
+        },
+        {
+            onConflict: "email",
+        }
+    ).throwOnError();
 
     const emailBody = mustache.render(templates.SPONSOR_VERIFICATION, {
         code: sixDigitCode,

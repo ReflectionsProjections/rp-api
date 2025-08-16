@@ -34,14 +34,17 @@ export async function updateDatabaseWithAuthPayload(
     const userId = data ? data.userId : randomUUID();
 
     // Create or update that user
-    await SupabaseDB.AUTH_INFO.upsert({
-        authId,
-        email,
-        displayName,
-        userId,
-    })
-        .eq("authId", authId)
-        .throwOnError();
+    await SupabaseDB.AUTH_INFO.upsert(
+        {
+            authId,
+            email,
+            displayName,
+            userId,
+        },
+        {
+            onConflict: "authId",
+        }
+    ).throwOnError();
 
     // If the user is STAFF, add the staff role to them
     const { data: staff } = await SupabaseDB.STAFF.select()
@@ -51,7 +54,7 @@ export async function updateDatabaseWithAuthPayload(
         await SupabaseDB.AUTH_ROLES.upsert({
             userId,
             role: Role.Enum.STAFF,
-        }).eq("userId", userId);
+        });
     }
 
     // If the user is ADMIN, add the admin role to them
@@ -59,7 +62,7 @@ export async function updateDatabaseWithAuthPayload(
         await SupabaseDB.AUTH_ROLES.upsert({
             userId,
             role: Role.Enum.ADMIN,
-        }).eq("userId", userId);
+        });
     }
 
     // Return the userId updated
