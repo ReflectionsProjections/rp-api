@@ -75,12 +75,21 @@ export async function insertTestAttendee(
     const email = TESTER.email;
 
     // Insert role
-    await SupabaseDB.ROLES.insert({
-        userId,
-        displayName: "Test User",
-        email,
-        roles: [Role.enum.USER],
-    }).throwOnError();
+    await SupabaseDB.AUTH_INFO.insert([
+        {
+            userId: userId,
+            displayName: "Test User",
+            email,
+            authId: null,
+        },
+    ]).throwOnError();
+
+    await SupabaseDB.AUTH_ROLES.insert([
+        {
+            userId: userId,
+            role: Role.enum.USER,
+        },
+    ]).throwOnError();
 
     // Insert registration
     await SupabaseDB.REGISTRATIONS.insert({
@@ -144,9 +153,17 @@ beforeEach(async () => {
         await SupabaseDB.REGISTRATIONS.delete()
             .neq("userId", dummyUUID)
             .throwOnError();
-        await SupabaseDB.ROLES.delete().neq("userId", dummyUUID).throwOnError();
+        await SupabaseDB.AUTH_ROLES.delete()
+            .eq("userId", dummyUUID)
+            .throwOnError();
+        await SupabaseDB.AUTH_INFO.delete()
+            .eq("userId", dummyUUID)
+            .throwOnError();
 
-        await SupabaseDB.ROLES.delete()
+        await SupabaseDB.AUTH_ROLES.delete()
+            .eq("userId", TESTER.userId)
+            .throwOnError();
+        await SupabaseDB.AUTH_INFO.delete()
             .eq("userId", TESTER.userId)
             .throwOnError();
         await SupabaseDB.REGISTRATIONS.delete()
@@ -375,12 +392,21 @@ describe("POST /attendee/", () => {
     };
 
     beforeEach(async () => {
-        await SupabaseDB.ROLES.insert({
-            userId: VALID_ATTENDEE_PAYLOAD.userId,
-            email: "test@test.com",
-            displayName: "Test",
-            roles: [Role.Enum.USER],
-        });
+        await SupabaseDB.AUTH_INFO.insert([
+            {
+                userId: VALID_ATTENDEE_PAYLOAD.userId,
+                displayName: "Test",
+                email: "test@test.com",
+                authId: null,
+            },
+        ]).throwOnError();
+
+        await SupabaseDB.AUTH_ROLES.insert([
+            {
+                userId: VALID_ATTENDEE_PAYLOAD.userId,
+                role: Role.enum.USER,
+            },
+        ]).throwOnError();
     });
 
     it("should create a new attendee with valid data", async () => {
@@ -557,12 +583,21 @@ describe("GET /attendee/id/:userId", () => {
     const targetId = "some-user-id";
 
     beforeEach(async () => {
-        await SupabaseDB.ROLES.insert({
-            userId: targetId,
-            email: "some-user@test.com",
-            displayName: "Some User",
-            roles: [Role.Enum.USER],
-        });
+        await SupabaseDB.AUTH_INFO.insert([
+            {
+                userId: targetId,
+                displayName: "Some User",
+                email: "some-user@test.com",
+                authId: null,
+            },
+        ]).throwOnError();
+
+        await SupabaseDB.AUTH_ROLES.insert([
+            {
+                userId: targetId,
+                role: Role.enum.USER,
+            },
+        ]).throwOnError();
     });
 
     it.each([
@@ -604,18 +639,29 @@ describe("GET /attendee/emails", () => {
     ])(
         "should return all attendee emails and userIds for %s role",
         async ({ role }) => {
-            await SupabaseDB.ROLES.insert([
+            await SupabaseDB.AUTH_INFO.insert([
                 {
                     userId: "u1",
                     email: "u1@example.com",
                     displayName: "User One",
-                    roles: [],
+                    authId: null,
                 },
                 {
                     userId: "u2",
                     email: "u2@example.com",
                     displayName: "User Two",
-                    roles: [],
+                    authId: null,
+                },
+            ]).throwOnError();
+
+            await SupabaseDB.AUTH_ROLES.insert([
+                {
+                    userId: "u1",
+                    role: Role.enum.USER,
+                },
+                {
+                    userId: "u2",
+                    role: Role.enum.USER,
                 },
             ]).throwOnError();
 
