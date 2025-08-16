@@ -91,13 +91,22 @@ async function insertTestAttendee(overrides: InsertTestAttendeeOverrides = {}) {
     const userId = overrides.userId || "attendee001";
     const email = overrides.email || "attendee001@test.com";
 
-    await SupabaseDB.ROLES.delete().eq("userId", userId);
-    await SupabaseDB.ROLES.insert([
+    await SupabaseDB.AUTH_ROLES.delete().eq("userId", userId);
+    await SupabaseDB.AUTH_INFO.delete().eq("userId", userId);
+
+    await SupabaseDB.AUTH_INFO.insert([
         {
             userId: userId,
             displayName: "Attendee 001",
             email,
-            roles: [Role.enum.USER],
+            authId: null,
+        },
+    ]);
+
+    await SupabaseDB.AUTH_ROLES.insert([
+        {
+            userId: userId,
+            role: Role.enum.USER,
         },
     ]);
 
@@ -151,7 +160,8 @@ beforeEach(async () => {
     await SupabaseDB.ATTENDEE_ATTENDANCES.delete().neq("userId", dummyUUID);
     await SupabaseDB.ATTENDEES.delete().neq("userId", dummyUUID);
     await SupabaseDB.REGISTRATIONS.delete().neq("userId", dummyUUID);
-    await SupabaseDB.ROLES.delete().neq("userId", dummyUUID);
+    await SupabaseDB.AUTH_ROLES.delete().eq("userId", dummyUUID);
+    await SupabaseDB.AUTH_INFO.delete().eq("userId", dummyUUID);
     await SupabaseDB.EVENTS.delete().neq("eventId", dummyUUID);
     await insertTestAttendee();
     const validExpTime = NOW_SECONDS + ONE_HOUR_SECONDS;
@@ -186,7 +196,8 @@ afterAll(async () => {
     await SupabaseDB.EVENTS.delete().eq("eventId", MEALS_EVENT.eventId);
     await SupabaseDB.ATTENDEES.delete().neq("userId", "");
     await SupabaseDB.REGISTRATIONS.delete().neq("userId", "");
-    await SupabaseDB.ROLES.delete().neq("userId", "non-existent-user");
+    await SupabaseDB.AUTH_ROLES.delete().eq("userId", "non-existent-user");
+    await SupabaseDB.AUTH_INFO.delete().eq("userId", "non-existent-user");
 });
 
 describe("POST /checkin/scan/staff", () => {
@@ -322,10 +333,7 @@ describe("POST /checkin/scan/staff", () => {
     it("should successfully check-in user to a REGULAR event and update records", async () => {
         payload.eventId = REGULAR_EVENT_FOR_CHECKIN.eventId;
         payload.qrCode = VALID_QR_CODE_TEST_ATTENDEE_1;
-        const { data, error } = await SupabaseDB.EVENTS.select()
-            .eq("eventId", payload.eventId)
-            .single();
-        
+
         const response = await postAsAdmin("/checkin/scan/staff")
             .send(payload)
             .expect(StatusCodes.OK);
