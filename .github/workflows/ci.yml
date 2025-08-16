@@ -73,6 +73,7 @@ jobs:
           POSTGRES_PORT="${{ vars.POSTGRES_PORT }}"
           PGRST_DB_SCHEMAS="public"
           JWT_EXPIRY="3600"
+          FORCE_COLOR="true"
           EOF
       - name: Test
         run: yarn test:docker
