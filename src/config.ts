@@ -62,9 +62,9 @@ export const Config = {
     ]),
 
     JWT_SIGNING_SECRET: getEnv("JWT_SIGNING_SECRET"),
-    JWT_EXPIRATION_TIME: "1 day",
-    MOBILE_JWT_EXPIRATION_TIME: "10 days",
-    PB_JWT_EXPIRATION_TIME: "1 week",
+    JWT_EXPIRATION_TIME: "1 day" as const,
+    MOBILE_JWT_EXPIRATION_TIME: "10 days" as const,
+    PB_JWT_EXPIRATION_TIME: "1 week" as const,
     STAFF_MEETING_CHECK_IN_WINDOW_SECONDS: 6 * 60 * 60,
 
     S3_ACCESS_KEY: getEnv("S3_ACCESS_KEY"),
