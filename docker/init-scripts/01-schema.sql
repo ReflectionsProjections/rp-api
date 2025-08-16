@@ -136,10 +136,11 @@ CREATE TABLE public."registrations" (
 
 CREATE TABLE public."authInfo" (
     "userId" character varying NOT NULL,
-    "authId" text,
+    "authId" text NOT NULL,
     "email" text NOT NULL,
     "displayName" text NOT NULL,
-    CONSTRAINT "authInfo_pkey" PRIMARY KEY ("userId")
+    CONSTRAINT "authInfo_pkey" PRIMARY KEY ("userId"),
+    CONSTRAINT "authInfo_authId_key" UNIQUE ("authId")
 );
 
 CREATE TABLE public."authRoles" (
