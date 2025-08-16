@@ -75,26 +75,41 @@ const ATTENDEE_TIMOTHY = {
     puzzlesCompleted: [],
 };
 
-// Roles records required for foreign key constraints
-const ROLE_RITAM = {
+// Auth records required for foreign key constraints
+const AUTH_INFO_RITAM = {
     userId: "a1",
     displayName: "Ritam Test",
     email: "ritam@test.com",
-    roles: [Role.enum.USER],
+    authId: null,
 };
 
-const ROLE_NATHAN = {
+const AUTH_INFO_NATHAN = {
     userId: "a2",
     displayName: "Nathan Test",
     email: "nathan@test.com",
-    roles: [Role.enum.USER],
+    authId: null,
 };
 
-const ROLE_TIMOTHY = {
+const AUTH_INFO_TIMOTHY = {
     userId: "a3",
     displayName: "Timothy Test",
     email: "timothy@test.com",
-    roles: [Role.enum.USER],
+    authId: null,
+};
+
+const AUTH_ROLES_RITAM = {
+    userId: "a1",
+    role: Role.enum.USER,
+};
+
+const AUTH_ROLES_NATHAN = {
+    userId: "a2",
+    role: Role.enum.USER,
+};
+
+const AUTH_ROLES_TIMOTHY = {
+    userId: "a3",
+    role: Role.enum.USER,
 };
 
 // CHECKIN event for testing check-in functionality
@@ -352,7 +367,12 @@ afterAll(async () => {
         "00000000-0000-0000-0000-000000000000"
     );
 
-    await SupabaseDB.ROLES.delete().neq(
+    await SupabaseDB.AUTH_ROLES.delete().neq(
+        "userId",
+        "00000000-0000-0000-0000-000000000000"
+    );
+
+    await SupabaseDB.AUTH_INFO.delete().neq(
         "userId",
         "00000000-0000-0000-0000-000000000000"
     );
@@ -372,12 +392,25 @@ describe("GET /stats/check-in", () => {
             "userId",
             "00000000-0000-0000-0000-000000000000"
         );
-        await SupabaseDB.ROLES.delete().neq(
+        await SupabaseDB.AUTH_ROLES.delete().neq(
+            "userId",
+            "00000000-0000-0000-0000-000000000000"
+        );
+        await SupabaseDB.AUTH_INFO.delete().neq(
             "userId",
             "00000000-0000-0000-0000-000000000000"
         );
 
-        await SupabaseDB.ROLES.insert([ROLE_RITAM, ROLE_NATHAN, ROLE_TIMOTHY]);
+        await SupabaseDB.AUTH_INFO.insert([
+            AUTH_INFO_RITAM,
+            AUTH_INFO_NATHAN,
+            AUTH_INFO_TIMOTHY,
+        ]);
+        await SupabaseDB.AUTH_ROLES.insert([
+            AUTH_ROLES_RITAM,
+            AUTH_ROLES_NATHAN,
+            AUTH_ROLES_TIMOTHY,
+        ]);
 
         await SupabaseDB.ATTENDEES.insert([
             ATTENDEE_RITAM,
@@ -427,12 +460,25 @@ describe("GET /stats/check-in", () => {
             "userId",
             "00000000-0000-0000-0000-000000000000"
         );
-        await SupabaseDB.ROLES.delete().neq(
+        await SupabaseDB.AUTH_ROLES.delete().neq(
+            "userId",
+            "00000000-0000-0000-0000-000000000000"
+        );
+        await SupabaseDB.AUTH_INFO.delete().neq(
             "userId",
             "00000000-0000-0000-0000-000000000000"
         );
 
-        await SupabaseDB.ROLES.insert([ROLE_RITAM, ROLE_NATHAN, ROLE_TIMOTHY]);
+        await SupabaseDB.AUTH_INFO.insert([
+            AUTH_INFO_RITAM,
+            AUTH_INFO_NATHAN,
+            AUTH_INFO_TIMOTHY,
+        ]);
+        await SupabaseDB.AUTH_ROLES.insert([
+            AUTH_ROLES_RITAM,
+            AUTH_ROLES_NATHAN,
+            AUTH_ROLES_TIMOTHY,
+        ]);
         await SupabaseDB.ATTENDEES.insert([
             ATTENDEE_RITAM,
             ATTENDEE_NATHAN,
@@ -491,12 +537,25 @@ describe("GET /stats/merch-item/:PRICE", () => {
             "userId",
             "00000000-0000-0000-0000-000000000000"
         );
-        await SupabaseDB.ROLES.delete().neq(
+        await SupabaseDB.AUTH_ROLES.delete().neq(
+            "userId",
+            "00000000-0000-0000-0000-000000000000"
+        );
+        await SupabaseDB.AUTH_INFO.delete().neq(
             "userId",
             "00000000-0000-0000-0000-000000000000"
         );
 
-        await SupabaseDB.ROLES.insert([ROLE_RITAM, ROLE_NATHAN, ROLE_TIMOTHY]);
+        await SupabaseDB.AUTH_INFO.insert([
+            AUTH_INFO_RITAM,
+            AUTH_INFO_NATHAN,
+            AUTH_INFO_TIMOTHY,
+        ]);
+        await SupabaseDB.AUTH_ROLES.insert([
+            AUTH_ROLES_RITAM,
+            AUTH_ROLES_NATHAN,
+            AUTH_ROLES_TIMOTHY,
+        ]);
 
         await SupabaseDB.ATTENDEES.insert([
             ATTENDEE_RITAM,
@@ -583,12 +642,25 @@ describe("GET /stats/priority-attendee", () => {
             "userId",
             "00000000-0000-0000-0000-000000000000"
         );
-        await SupabaseDB.ROLES.delete().neq(
+        await SupabaseDB.AUTH_ROLES.delete().neq(
+            "userId",
+            "00000000-0000-0000-0000-000000000000"
+        );
+        await SupabaseDB.AUTH_INFO.delete().neq(
             "userId",
             "00000000-0000-0000-0000-000000000000"
         );
 
-        await SupabaseDB.ROLES.insert([ROLE_RITAM, ROLE_NATHAN, ROLE_TIMOTHY]);
+        await SupabaseDB.AUTH_INFO.insert([
+            AUTH_INFO_RITAM,
+            AUTH_INFO_NATHAN,
+            AUTH_INFO_TIMOTHY,
+        ]);
+        await SupabaseDB.AUTH_ROLES.insert([
+            AUTH_ROLES_RITAM,
+            AUTH_ROLES_NATHAN,
+            AUTH_ROLES_TIMOTHY,
+        ]);
 
         await SupabaseDB.ATTENDEES.insert([
             ATTENDEE_RITAM,
@@ -711,19 +783,29 @@ describe("GET /stats/dietary-restrictions", () => {
             "00000000-0000-0000-0000-000000000000"
         );
 
-        await SupabaseDB.ROLES.delete().neq(
+        await SupabaseDB.AUTH_ROLES.delete().neq(
+            "userId",
+            "00000000-0000-0000-0000-000000000000"
+        );
+        await SupabaseDB.AUTH_INFO.delete().neq(
             "userId",
             "00000000-0000-0000-0000-000000000000"
         );
 
-        const requiredRoles = ATTENDEES_DIETARY.map((attendee) => ({
+        const requiredAuthInfo = ATTENDEES_DIETARY.map((attendee) => ({
             userId: attendee.userId,
             displayName: attendee.name,
             email: attendee.email,
-            roles: [Role.enum.USER],
+            authId: null,
         }));
 
-        await SupabaseDB.ROLES.insert(requiredRoles);
+        const requiredAuthRoles = ATTENDEES_DIETARY.map((attendee) => ({
+            userId: attendee.userId,
+            role: Role.enum.USER,
+        }));
+
+        await SupabaseDB.AUTH_INFO.insert(requiredAuthInfo);
+        await SupabaseDB.AUTH_ROLES.insert(requiredAuthRoles);
 
         await SupabaseDB.REGISTRATIONS.insert(ATTENDEES_DIETARY);
     });
