@@ -42,6 +42,7 @@ services:
       - JWT_SECRET=${JWT_SECRET}
       - JWT_EXPIRY=${JWT_EXPIRY:-3600}
       - PGRST_DB_SCHEMAS=${PGRST_DB_SCHEMAS:-public}
+      - GITHUB_ACTIONS=${GITHUB_ACTIONS} # Required for jest to know when we're on GitHub Actions
     env_file:
       - .env
     depends_on:
