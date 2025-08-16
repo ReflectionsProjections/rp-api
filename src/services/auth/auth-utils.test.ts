@@ -84,7 +84,7 @@ jest.mock("crypto", () => {
 });
 
 beforeEach(async () => {
-    await SupabaseDB.STAFF.insert(STAFF)
+    await SupabaseDB.STAFF.insert(STAFF);
     await SupabaseDB.AUTH_INFO.insert([
         AUTH_USER,
         AUTH_STAFF_USER,

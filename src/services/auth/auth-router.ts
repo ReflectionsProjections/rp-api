@@ -3,10 +3,7 @@ import { StatusCodes } from "http-status-codes";
 import Config from "../../config";
 import RoleChecker from "../../middleware/role-checker";
 import { Platform, Role } from "../auth/auth-models";
-import {
-    AuthLoginValidator,
-    AuthRoleChangeRequest,
-} from "./auth-schema";
+import { AuthLoginValidator, AuthRoleChangeRequest } from "./auth-schema";
 import authSponsorRouter from "./sponsor/sponsor-router";
 import { CorporateDeleteRequest, CorporateValidator } from "./corporate-schema";
 import {

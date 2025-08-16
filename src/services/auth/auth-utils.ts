@@ -44,7 +44,9 @@ export async function updateDatabaseWithAuthPayload(
         .throwOnError();
 
     // If the user is STAFF, add the staff role to them
-    const {data: staff} = await SupabaseDB.STAFF.select().eq("email", email).maybeSingle();
+    const { data: staff } = await SupabaseDB.STAFF.select()
+        .eq("email", email)
+        .maybeSingle();
     if (staff) {
         await SupabaseDB.AUTH_ROLES.upsert({
             userId,
