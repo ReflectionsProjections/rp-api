@@ -49,13 +49,18 @@ async function insertTestAttendee(overrides: InsertTestAttendeeOverrides = {}) {
     const userId = overrides.userId || TEST_USER_ID;
     const email = overrides.email || TEST_EMAIL;
 
-    // Roles (needed first because of FK constraint)
-    await SupabaseDB.ROLES.insert([
+    await SupabaseDB.AUTH_INFO.insert([
         {
             userId: userId,
             displayName: "Ritam",
             email,
-            roles: [Role.enum.PUZZLEBANG],
+            authId: null,
+        },
+    ]).throwOnError();
+    await SupabaseDB.AUTH_ROLES.insert([
+        {
+            userId: userId,
+            role: Role.enum.PUZZLEBANG,
         },
     ]).throwOnError();
 
@@ -75,11 +80,13 @@ describe("POST /puzzlebang", () => {
         // Clean up all possibly conflicting data
         await SupabaseDB.ATTENDEES.delete().eq("userId", TEST_USER_ID);
         await SupabaseDB.REGISTRATIONS.delete().eq("userId", TEST_USER_ID);
-        await SupabaseDB.ROLES.delete().eq("userId", TEST_USER_ID);
+        await SupabaseDB.AUTH_ROLES.delete().eq("userId", TEST_USER_ID);
+        await SupabaseDB.AUTH_INFO.delete().eq("userId", TEST_USER_ID);
 
         await SupabaseDB.ATTENDEES.delete().eq("userId", "nonexistent");
         await SupabaseDB.REGISTRATIONS.delete().eq("userId", "nonexistent");
-        await SupabaseDB.ROLES.delete().eq("userId", "nonexistent");
+        await SupabaseDB.AUTH_ROLES.delete().eq("userId", "nonexistent");
+        await SupabaseDB.AUTH_INFO.delete().eq("userId", "nonexistent");
     });
 
     afterEach(async () => {
@@ -90,7 +97,10 @@ describe("POST /puzzlebang", () => {
         await SupabaseDB.REGISTRATIONS.delete()
             .eq("userId", TEST_USER_ID)
             .throwOnError();
-        await SupabaseDB.ROLES.delete()
+        await SupabaseDB.AUTH_ROLES.delete()
+            .eq("userId", TEST_USER_ID)
+            .throwOnError();
+        await SupabaseDB.AUTH_INFO.delete()
             .eq("userId", TEST_USER_ID)
             .throwOnError();
 
@@ -100,7 +110,10 @@ describe("POST /puzzlebang", () => {
         await SupabaseDB.REGISTRATIONS.delete()
             .eq("userId", "nonexistent")
             .throwOnError();
-        await SupabaseDB.ROLES.delete()
+        await SupabaseDB.AUTH_ROLES.delete()
+            .eq("userId", "nonexistent")
+            .throwOnError();
+        await SupabaseDB.AUTH_INFO.delete()
             .eq("userId", "nonexistent")
             .throwOnError();
     });
@@ -133,14 +146,20 @@ describe("POST /puzzlebang", () => {
 
     it("should return 404 if attendee not found", async () => {
         // Insert dummy user to satisfy FKs
-        await SupabaseDB.ROLES.insert([
+        await SupabaseDB.AUTH_INFO.insert([
             {
                 userId: "nonexistent",
                 displayName: "Fake User",
                 email: "fake@example.com",
-                roles: [Role.enum.PUZZLEBANG],
+                authId: null,
             },
-        ]);
+        ]).throwOnError();
+        await SupabaseDB.AUTH_ROLES.insert([
+            {
+                userId: "nonexistent",
+                role: Role.enum.PUZZLEBANG,
+            },
+        ]).throwOnError();
         await SupabaseDB.REGISTRATIONS.insert([
             makeTestRegistration({
                 userId: "nonexistent",
@@ -156,14 +175,20 @@ describe("POST /puzzlebang", () => {
     });
 
     it("should return 403 if user does not have PUZZLEBANG role", async () => {
-        await SupabaseDB.ROLES.insert([
+        await SupabaseDB.AUTH_INFO.insert([
             {
                 userId: TEST_USER_ID,
                 displayName: "Ritam",
                 email: TEST_EMAIL,
-                roles: [Role.enum.USER], // not PUZZLEBANG
+                authId: null,
             },
-        ]);
+        ]).throwOnError();
+        await SupabaseDB.AUTH_ROLES.insert([
+            {
+                userId: TEST_USER_ID,
+                role: Role.enum.USER,
+            },
+        ]).throwOnError();
         await SupabaseDB.REGISTRATIONS.insert([makeTestRegistration()]);
         await SupabaseDB.ATTENDEES.insert([makeTestAttendee()]);
 
