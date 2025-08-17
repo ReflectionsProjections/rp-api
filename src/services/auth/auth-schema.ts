@@ -10,10 +10,6 @@ export const RoleValidator = z.object({
     roles: z.array(Role).default([]),
 });
 
-export const AuthCreateUserRequest = z.object({
-    email: z.string().email(),
-});
-
 export const AuthLoginValidator = z.union([
     // Web platform - no codeVerifier needed
     z.object({

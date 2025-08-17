@@ -77,49 +77,6 @@ beforeEach(async () => {
     await SupabaseDB.CORPORATE.insert([CORPORATE_USER, CORPORATE_OTHER_USER]);
 });
 
-describe("POST /auth/", () => {
-    it("should create the user", async () => {
-        const res = await postAsAdmin("/auth/")
-            .send({
-                email: "new@example.com",
-            })
-            .expect(StatusCodes.OK);
-
-        const expected = {
-            userId: RANDOM_UUID,
-            displayName: "",
-            email: "new@example.com",
-        };
-        expect(res.body).toMatchObject(expected);
-
-        const { data } = await SupabaseDB.AUTH_INFO.select()
-            .eq("userId", RANDOM_UUID)
-            .single()
-            .throwOnError();
-        expect(data).toMatchObject({ ...expected, authId: null });
-    });
-
-    it("should fail to create if the user already exists", async () => {
-        const res = await postAsAdmin("/auth/")
-            .send({
-                email: OTHER_USER.email,
-            })
-            .expect(StatusCodes.BAD_REQUEST);
-
-        expect(res.body).toHaveProperty("error", "AlreadyExists");
-    });
-
-    it("should require admin permissions", async () => {
-        const res = await postAsStaff("/auth/")
-            .send({
-                email: "new@example.com",
-            })
-            .expect(StatusCodes.FORBIDDEN);
-
-        expect(res.body).toHaveProperty("error", "Forbidden");
-    });
-});
-
 describe("DELETE /auth/", () => {
     it("should remove the requested role", async () => {
         const res = await delAsAdmin("/auth/")
