@@ -111,7 +111,6 @@ attendeeRouter.get(
 // Create a new attendee
 attendeeRouter.post("/", async (req, res) => {
     const { userId, tags } = AttendeeCreateValidator.parse(req.body);
-    console.log("userId", userId);
 
     const newAttendee = {
         userId: userId,
