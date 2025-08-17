@@ -3,15 +3,10 @@ import { StatusCodes } from "http-status-codes";
 import Config from "../../config";
 import RoleChecker from "../../middleware/role-checker";
 import { Platform, Role } from "../auth/auth-models";
-import {
-    AuthCreateUserRequest,
-    AuthLoginValidator,
-    AuthRoleChangeRequest,
-} from "./auth-schema";
+import { AuthLoginValidator, AuthRoleChangeRequest } from "./auth-schema";
 import authSponsorRouter from "./sponsor/sponsor-router";
 import { CorporateDeleteRequest, CorporateValidator } from "./corporate-schema";
 import {
-    createUserByEmail,
     generateJWT,
     payloadHasProperScopes,
     updateDatabaseWithAuthPayload,
@@ -35,24 +30,6 @@ const oauthClients = {
 };
 
 authRouter.use("/sponsor", authSponsorRouter);
-
-// Create a new user for a specific email
-authRouter.post("/", RoleChecker([Role.Enum.ADMIN]), async (req, res) => {
-    const { email } = AuthCreateUserRequest.parse(req.body);
-
-    const { data: existing } = await SupabaseDB.AUTH_INFO.select()
-        .eq("email", email)
-        .maybeSingle()
-        .throwOnError();
-    if (existing) {
-        return res.status(StatusCodes.BAD_REQUEST).json({
-            error: "AlreadyExists",
-        });
-    }
-
-    const newUser = await createUserByEmail(email);
-    return res.status(StatusCodes.OK).send(newUser);
-});
 
 // Remove role from userId (admin only endpoint)
 authRouter.delete("/", RoleChecker([Role.Enum.ADMIN]), async (req, res) => {

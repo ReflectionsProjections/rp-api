@@ -65,6 +65,7 @@ CREATE TABLE public."attendees" (
     "isEligibleButton" boolean DEFAULT false NOT NULL,
     "isEligibleTote" boolean DEFAULT false NOT NULL,
     "isEligibleCap" boolean DEFAULT false NOT NULL,
+    "tags" text[] DEFAULT '{}'::text[] NOT NULL,
     "favoriteEvents" uuid[] DEFAULT '{}'::uuid[] NOT NULL,
     "puzzlesCompleted" text[] DEFAULT '{}'::text[] NOT NULL,
     CONSTRAINT "attendees_pkey" PRIMARY KEY ("userId")
@@ -111,35 +112,64 @@ CREATE TABLE public."notifications" (
     CONSTRAINT "notifications_pkey" PRIMARY KEY ("userId")
 );
 
-CREATE TABLE public."registrations" (
-    "userId" character varying NOT NULL,
-    "name" text NOT NULL,
-    "email" text NOT NULL,
-    "university" text NOT NULL,
-    "graduation" text,
-    "major" text,
-    "dietaryRestrictions" text[] DEFAULT '{}'::text[] NOT NULL,
+CREATE TABLE public."draftRegistrations" (
     "allergies" text[] DEFAULT '{}'::text[] NOT NULL,
-    "gender" text,
-    "ethnicity" text[] DEFAULT '{}'::text[],
-    "hearAboutRp" text[] DEFAULT '{}'::text[],
-    "portfolios" text[] DEFAULT '{}'::text[] NOT NULL,
-    "jobInterest" text[] DEFAULT '{}'::text[],
+    "allergiesOther" text NOT NULL,
+    "dietaryRestrictions" text[] DEFAULT '{}'::text[] NOT NULL,
+    "dietaryOther" text NOT NULL,
+    "educationLevel" text NOT NULL,
+    "educationOther" text NOT NULL,
+    "email" text NOT NULL,
+    "ethnicity" text[] DEFAULT '{}'::text[] NOT NULL,
+    "ethnicityOther" text NOT NULL,
+    "gender" text NOT NULL,
+    "genderOther" text NOT NULL,
+    "graduationYear" text NOT NULL,
+    "howDidYouHear" text[] DEFAULT '{}'::text[] NOT NULL,
+    "majors" text[] DEFAULT '{}'::text[] NOT NULL,
+    "minors" text[] DEFAULT '{}'::text[] NOT NULL,
+    "name" text NOT NULL,
+    "opportunities" text[] DEFAULT '{}'::text[] NOT NULL,
+    "personalLinks" text[] DEFAULT '{}'::text[] NOT NULL,
+    "resume" text DEFAULT '' NOT NULL,
+    "school" text NOT NULL,
     "isInterestedMechMania" boolean NOT NULL,
     "isInterestedPuzzleBang" boolean NOT NULL,
-    "hasResume" boolean DEFAULT false NOT NULL,
-    "hasSubmitted" boolean DEFAULT false NOT NULL,
-    "degree" text NOT NULL,
+    "tags" text[] DEFAULT '{}'::text[] NOT NULL,
+    "userId" character varying NOT NULL,
+    CONSTRAINT "draftRegistrations_pkey" PRIMARY KEY ("userId")
+);
+
+CREATE TABLE public."registrations" (
+    "allergies" text[] DEFAULT '{}'::text[] NOT NULL,
+    "dietaryRestrictions" text[] DEFAULT '{}'::text[] NOT NULL,
+    "educationLevel" text NOT NULL,
+    "email" text NOT NULL,
+    "ethnicity" text[] DEFAULT '{}'::text[] NOT NULL,
+    "gender" text NOT NULL,
+    "graduationYear" text NOT NULL,
+    "howDidYouHear" text[] DEFAULT '{}'::text[] NOT NULL,
+    "majors" text[] DEFAULT '{}'::text[] NOT NULL,
+    "minors" text[] DEFAULT '{}'::text[] NOT NULL,
+    "name" text NOT NULL,
+    "opportunities" text[] DEFAULT '{}'::text[] NOT NULL,
+    "personalLinks" text[] DEFAULT '{}'::text[] NOT NULL,
+    "school" text NOT NULL,
+    "isInterestedMechMania" boolean NOT NULL,
+    "isInterestedPuzzleBang" boolean NOT NULL,
+    "tags" text[] DEFAULT '{}'::text[] NOT NULL,
+    "userId" character varying NOT NULL,
     CONSTRAINT "registrations_pkey" PRIMARY KEY ("userId"),
     CONSTRAINT "registrations_email_key" UNIQUE ("email")
 );
 
 CREATE TABLE public."authInfo" (
     "userId" character varying NOT NULL,
-    "authId" text,
+    "authId" text NOT NULL,
     "email" text NOT NULL,
     "displayName" text NOT NULL,
-    CONSTRAINT "authInfo_pkey" PRIMARY KEY ("userId")
+    CONSTRAINT "authInfo_pkey" PRIMARY KEY ("userId"),
+    CONSTRAINT "authInfo_authId_key" UNIQUE ("authId")
 );
 
 CREATE TABLE public."authRoles" (

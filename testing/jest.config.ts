@@ -35,4 +35,10 @@ const config: Config = {
     ],
 };
 
+/* GitHub CI specific config */
+const githubActions = process.env.GITHUB_ACTIONS;
+if (githubActions != undefined && githubActions != "0" && githubActions != "") {
+    config.reporters = [["github-actions", { silent: false }], "summary"];
+}
+
 export default config;

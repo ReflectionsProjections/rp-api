@@ -25,6 +25,9 @@ export const SupabaseDB = {
     get MEETINGS() {
         return supabase.from("meetings");
     },
+    get DRAFT_REGISTRATIONS() {
+        return supabase.from("draftRegistrations");
+    },
     get SPEAKERS() {
         return supabase.from("speakers");
     },

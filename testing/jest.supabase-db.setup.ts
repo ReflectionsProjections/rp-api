@@ -33,6 +33,9 @@ function mockSupabase(supabaseUrl: string, supabaseAnonKey: string) {
                 get MEETINGS() {
                     return supabase.from("meetings");
                 },
+                get DRAFT_REGISTRATIONS() {
+                    return supabase.from("draftRegistrations");
+                },
                 get ATTENDEES() {
                     return supabase.from("attendees");
                 },

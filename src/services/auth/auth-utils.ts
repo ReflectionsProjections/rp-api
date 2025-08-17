@@ -17,18 +17,6 @@ export function payloadHasProperScopes(
     return "email" in payload && "sub" in payload && "name" in payload;
 }
 
-export async function createUserByEmail(email: string) {
-    const { data } = await SupabaseDB.AUTH_INFO.insert({
-        userId: randomUUID(),
-        email,
-        displayName: "",
-    })
-        .select()
-        .single()
-        .throwOnError();
-    return data;
-}
-
 export async function updateDatabaseWithAuthPayload(
     payload: TokenPayloadWithProperScopes
 ): Promise<string> {
@@ -36,9 +24,9 @@ export async function updateDatabaseWithAuthPayload(
     const displayName = payload.name;
     const email = payload.email;
 
-    // Check for an existing user with matching email
+    // Check for an existing user
     const { data } = await SupabaseDB.AUTH_INFO.select("userId")
-        .eq("email", email)
+        .eq("authId", authId)
         .maybeSingle()
         .throwOnError();
 
@@ -46,21 +34,35 @@ export async function updateDatabaseWithAuthPayload(
     const userId = data ? data.userId : randomUUID();
 
     // Create or update that user
-    await SupabaseDB.AUTH_INFO.upsert({
-        authId,
-        email,
-        displayName,
-        userId,
-    })
-        .eq("userId", userId)
-        .throwOnError();
+    await SupabaseDB.AUTH_INFO.upsert(
+        {
+            authId,
+            email,
+            displayName,
+            userId,
+        },
+        {
+            onConflict: "authId",
+        }
+    ).throwOnError();
+
+    // If the user is STAFF, add the staff role to them
+    const { data: staff } = await SupabaseDB.STAFF.select()
+        .eq("email", email)
+        .maybeSingle();
+    if (staff) {
+        await SupabaseDB.AUTH_ROLES.upsert({
+            userId,
+            role: Role.Enum.STAFF,
+        });
+    }
 
     // If the user is ADMIN, add the admin role to them
     if (Config.AUTH_ADMIN_WHITELIST.has(email)) {
         await SupabaseDB.AUTH_ROLES.upsert({
             userId,
             role: Role.Enum.ADMIN,
-        }).eq("email", email);
+        });
     }
 
     // Return the userId updated
