@@ -64,7 +64,6 @@ export type Database = {
             };
             attendees: {
                 Row: {
-                    tags: string[];
                     favoriteEvents: string[];
                     hasPriorityFri: boolean;
                     hasPriorityMon: boolean;
@@ -83,10 +82,10 @@ export type Database = {
                     isEligibleTshirt: boolean;
                     points: number;
                     puzzlesCompleted: string[];
+                    tags: string[];
                     userId: string;
                 };
                 Insert: {
-                    tags?: string[];
                     favoriteEvents?: string[];
                     hasPriorityFri?: boolean;
                     hasPriorityMon?: boolean;
@@ -105,10 +104,10 @@ export type Database = {
                     isEligibleTshirt?: boolean;
                     points?: number;
                     puzzlesCompleted?: string[];
+                    tags?: string[];
                     userId: string;
                 };
                 Update: {
-                    tags?: string[];
                     favoriteEvents?: string[];
                     hasPriorityFri?: boolean;
                     hasPriorityMon?: boolean;
@@ -127,6 +126,7 @@ export type Database = {
                     isEligibleTshirt?: boolean;
                     points?: number;
                     puzzlesCompleted?: string[];
+                    tags?: string[];
                     userId?: string;
                 };
                 Relationships: [
@@ -180,15 +180,15 @@ export type Database = {
             };
             authRoles: {
                 Row: {
-                    role: Database["public"]["Enums"]["role_type"];
+                    role: Database["public"]["Enums"]["roleType"];
                     userId: string;
                 };
                 Insert: {
-                    role: Database["public"]["Enums"]["role_type"];
+                    role: Database["public"]["Enums"]["roleType"];
                     userId: string;
                 };
                 Update: {
-                    role?: Database["public"]["Enums"]["role_type"];
+                    role?: Database["public"]["Enums"]["roleType"];
                     userId?: string;
                 };
                 Relationships: [];
@@ -205,6 +205,87 @@ export type Database = {
                 Update: {
                     email?: string;
                     name?: string;
+                };
+                Relationships: [];
+            };
+            draftRegistrations: {
+                Row: {
+                    allergies: string[];
+                    allergiesOther: string;
+                    dietaryOther: string;
+                    dietaryRestrictions: string[];
+                    educationLevel: string;
+                    educationOther: string;
+                    email: string;
+                    ethnicity: string[];
+                    ethnicityOther: string;
+                    gender: string;
+                    genderOther: string;
+                    graduationYear: string;
+                    howDidYouHear: string[];
+                    isInterestedMechMania: boolean;
+                    isInterestedPuzzleBang: boolean;
+                    majors: string[];
+                    minors: string[];
+                    name: string;
+                    opportunities: string[];
+                    personalLinks: string[];
+                    resume: string;
+                    school: string;
+                    tags: string[];
+                    userId: string;
+                };
+                Insert: {
+                    allergies?: string[];
+                    allergiesOther: string;
+                    dietaryOther: string;
+                    dietaryRestrictions?: string[];
+                    educationLevel: string;
+                    educationOther: string;
+                    email: string;
+                    ethnicity?: string[];
+                    ethnicityOther: string;
+                    gender: string;
+                    genderOther: string;
+                    graduationYear: string;
+                    howDidYouHear?: string[];
+                    isInterestedMechMania: boolean;
+                    isInterestedPuzzleBang: boolean;
+                    majors?: string[];
+                    minors?: string[];
+                    name: string;
+                    opportunities?: string[];
+                    personalLinks?: string[];
+                    resume?: string;
+                    school: string;
+                    tags?: string[];
+                    userId: string;
+                };
+                Update: {
+                    allergies?: string[];
+                    allergiesOther?: string;
+                    dietaryOther?: string;
+                    dietaryRestrictions?: string[];
+                    educationLevel?: string;
+                    educationOther?: string;
+                    email?: string;
+                    ethnicity?: string[];
+                    ethnicityOther?: string;
+                    gender?: string;
+                    genderOther?: string;
+                    graduationYear?: string;
+                    howDidYouHear?: string[];
+                    isInterestedMechMania?: boolean;
+                    isInterestedPuzzleBang?: boolean;
+                    majors?: string[];
+                    minors?: string[];
+                    name?: string;
+                    opportunities?: string[];
+                    personalLinks?: string[];
+                    resume?: string;
+                    school?: string;
+                    tags?: string[];
+                    userId?: string;
                 };
                 Relationships: [];
             };
@@ -244,7 +325,7 @@ export type Database = {
                     description: string;
                     endTime: string;
                     eventId: string;
-                    eventType: Database["public"]["Enums"]["event_type"];
+                    eventType: Database["public"]["Enums"]["eventType"];
                     imageUrl: string | null;
                     isVirtual: boolean;
                     isVisible: boolean;
@@ -258,7 +339,7 @@ export type Database = {
                     description: string;
                     endTime: string;
                     eventId?: string;
-                    eventType: Database["public"]["Enums"]["event_type"];
+                    eventType: Database["public"]["Enums"]["eventType"];
                     imageUrl?: string | null;
                     isVirtual: boolean;
                     isVisible?: boolean;
@@ -272,7 +353,7 @@ export type Database = {
                     description?: string;
                     endTime?: string;
                     eventId?: string;
-                    eventType?: Database["public"]["Enums"]["event_type"];
+                    eventType?: Database["public"]["Enums"]["eventType"];
                     imageUrl?: string | null;
                     isVirtual?: boolean;
                     isVisible?: boolean;
@@ -285,17 +366,17 @@ export type Database = {
             };
             meetings: {
                 Row: {
-                    committeeType: Database["public"]["Enums"]["committee_names"];
+                    committeeType: Database["public"]["Enums"]["committeeNames"];
                     meetingId: string;
                     startTime: string;
                 };
                 Insert: {
-                    committeeType: Database["public"]["Enums"]["committee_names"];
+                    committeeType: Database["public"]["Enums"]["committeeNames"];
                     meetingId?: string;
                     startTime: string;
                 };
                 Update: {
-                    committeeType?: Database["public"]["Enums"]["committee_names"];
+                    committeeType?: Database["public"]["Enums"]["committeeNames"];
                     meetingId?: string;
                     startTime?: string;
                 };
@@ -324,86 +405,6 @@ export type Database = {
                     },
                 ];
             };
-            draftRegistrations: {
-                Row: {
-                    allergies: string[];
-                    allergiesOther: string;
-                    dietaryRestrictions: string[];
-                    dietaryOther: string;
-                    educationLevel: string;
-                    educationOther: string;
-                    email: string;
-                    ethnicity: string[];
-                    ethnicityOther: string;
-                    gender: string;
-                    genderOther: string;
-                    graduationYear: string;
-                    howDidYouHear: string[];
-                    majors: string[];
-                    minors: string[];
-                    name: string;
-                    opportunities: string[];
-                    personalLinks: string[];
-                    resume: string;
-                    school: string;
-                    isInterestedMechMania: boolean;
-                    isInterestedPuzzleBang: boolean;
-                    tags: string[];
-                    userId: string;
-                };
-                Insert: {
-                    allergies: string[];
-                    allergiesOther: string;
-                    dietaryRestrictions: string[];
-                    dietaryOther: string;
-                    educationLevel: string;
-                    educationOther: string;
-                    email: string;
-                    ethnicity: string[];
-                    ethnicityOther: string;
-                    gender: string;
-                    genderOther: string;
-                    graduationYear: string;
-                    howDidYouHear: string[];
-                    majors: string[];
-                    minors: string[];
-                    name: string;
-                    opportunities: string[];
-                    personalLinks: string[];
-                    resume: string;
-                    school: string;
-                    isInterestedMechMania: boolean;
-                    isInterestedPuzzleBang: boolean;
-                    tags: string[];
-                    userId: string;
-                };
-                Update: {
-                    allergies?: string[];
-                    allergiesOther?: string;
-                    dietaryRestrictions?: string[];
-                    dietaryOther?: string;
-                    educationLevel?: string;
-                    educationOther?: string;
-                    email?: string;
-                    ethnicity?: string[];
-                    ethnicityOther?: string;
-                    gender?: string;
-                    genderOther?: string;
-                    graduationYear?: string;
-                    howDidYouHear?: string[];
-                    majors?: string[];
-                    minors?: string[];
-                    name?: string;
-                    opportunities?: string[];
-                    personalLinks?: string[];
-                    resume?: string;
-                    school?: string;
-                    isInterestedMechMania?: boolean;
-                    isInterestedPuzzleBang?: boolean;
-                    tags?: string[];
-                    userId?: string;
-                };
-            };
             registrations: {
                 Row: {
                     allergies: string[];
@@ -414,37 +415,35 @@ export type Database = {
                     gender: string;
                     graduationYear: string;
                     howDidYouHear: string[];
+                    isInterestedMechMania: boolean;
+                    isInterestedPuzzleBang: boolean;
                     majors: string[];
                     minors: string[];
                     name: string;
                     opportunities: string[];
                     personalLinks: string[];
-                    resume: string;
                     school: string;
-                    isInterestedMechMania: boolean;
-                    isInterestedPuzzleBang: boolean;
                     tags: string[];
                     userId: string;
                 };
                 Insert: {
-                    allergies: string[];
-                    dietaryRestrictions: string[];
+                    allergies?: string[];
+                    dietaryRestrictions?: string[];
                     educationLevel: string;
                     email: string;
-                    ethnicity: string[];
+                    ethnicity?: string[];
                     gender: string;
                     graduationYear: string;
-                    howDidYouHear: string[];
-                    majors: string[];
-                    minors: string[];
-                    name: string;
-                    opportunities: string[];
-                    personalLinks: string[];
-                    resume: string;
-                    school: string;
+                    howDidYouHear?: string[];
                     isInterestedMechMania: boolean;
                     isInterestedPuzzleBang: boolean;
-                    tags: string[];
+                    majors?: string[];
+                    minors?: string[];
+                    name: string;
+                    opportunities?: string[];
+                    personalLinks?: string[];
+                    school: string;
+                    tags?: string[];
                     userId: string;
                 };
                 Update: {
@@ -456,15 +455,14 @@ export type Database = {
                     gender?: string;
                     graduationYear?: string;
                     howDidYouHear?: string[];
+                    isInterestedMechMania?: boolean;
+                    isInterestedPuzzleBang?: boolean;
                     majors?: string[];
                     minors?: string[];
                     name?: string;
                     opportunities?: string[];
                     personalLinks?: string[];
-                    resume?: string;
                     school?: string;
-                    isInterestedMechMania?: boolean;
-                    isInterestedPuzzleBang?: boolean;
                     tags?: string[];
                     userId?: string;
                 };
@@ -513,19 +511,19 @@ export type Database = {
                     attendances: Json;
                     email: string;
                     name: string;
-                    team: Database["public"]["Enums"]["committee_names"];
+                    team: Database["public"]["Enums"]["committeeNames"];
                 };
                 Insert: {
                     attendances?: Json;
                     email: string;
                     name: string;
-                    team: Database["public"]["Enums"]["committee_names"];
+                    team: Database["public"]["Enums"]["committeeNames"];
                 };
                 Update: {
                     attendances?: Json;
                     email?: string;
                     name?: string;
-                    team?: Database["public"]["Enums"]["committee_names"];
+                    team?: Database["public"]["Enums"]["committeeNames"];
                 };
                 Relationships: [];
             };
@@ -552,7 +550,7 @@ export type Database = {
             [_ in never]: never;
         };
         Enums: {
-            committee_names:
+            committeeNames:
                 | "CONTENT"
                 | "CORPORATE"
                 | "DESIGN"
@@ -560,15 +558,15 @@ export type Database = {
                 | "FULL TEAM"
                 | "MARKETING"
                 | "OPERATIONS";
-            event_type:
+            eventType:
                 | "SPEAKER"
                 | "CORPORATE"
                 | "SPECIAL"
                 | "PARTNERS"
                 | "MEALS"
                 | "CHECKIN";
-            role_type: "USER" | "STAFF" | "ADMIN" | "CORPORATE" | "PUZZLEBANG";
-            staff_attendance_type: "PRESENT" | "EXCUSED" | "ABSENT";
+            roleType: "USER" | "STAFF" | "ADMIN" | "CORPORATE" | "PUZZLEBANG";
+            staffAttendanceType: "PRESENT" | "EXCUSED" | "ABSENT";
         };
         CompositeTypes: {
             [_ in never]: never;
@@ -702,7 +700,7 @@ export const Constants = {
     },
     public: {
         Enums: {
-            committee_names: [
+            committeeNames: [
                 "CONTENT",
                 "CORPORATE",
                 "DESIGN",
@@ -711,7 +709,7 @@ export const Constants = {
                 "MARKETING",
                 "OPERATIONS",
             ],
-            event_type: [
+            eventType: [
                 "SPEAKER",
                 "CORPORATE",
                 "SPECIAL",
@@ -719,8 +717,8 @@ export const Constants = {
                 "MEALS",
                 "CHECKIN",
             ],
-            role_type: ["USER", "STAFF", "ADMIN", "CORPORATE", "PUZZLEBANG"],
-            staff_attendance_type: ["PRESENT", "EXCUSED", "ABSENT"],
+            roleType: ["USER", "STAFF", "ADMIN", "CORPORATE", "PUZZLEBANG"],
+            staffAttendanceType: ["PRESENT", "EXCUSED", "ABSENT"],
         },
     },
 } as const;
