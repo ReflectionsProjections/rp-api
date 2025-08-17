@@ -93,9 +93,9 @@ describe("DELETE /auth/", () => {
         const { data: roleRows } = await SupabaseDB.AUTH_ROLES.select()
             .eq("userId", OTHER_USER.userId)
             .throwOnError();
-        expect(
-            roleRows.map((row: { role: Role }) => row.role)
-        ).toMatchObject([Role.Enum.USER]);
+        expect(roleRows.map((row: { role: Role }) => row.role)).toMatchObject([
+            Role.Enum.USER,
+        ]);
     });
 
     it("should give the not found error when the user doesn't exist", async () => {
@@ -137,9 +137,7 @@ describe("PUT /auth/", () => {
         const { data: roleRows } = await SupabaseDB.AUTH_ROLES.select()
             .eq("userId", OTHER_USER.userId)
             .throwOnError();
-        expect(
-            roleRows.map((row: { role: Role }) => row.role)
-        ).toMatchObject([
+        expect(roleRows.map((row: { role: Role }) => row.role)).toMatchObject([
             ...OTHER_USER_ROLES.map((row) => row.role),
             Role.Enum.PUZZLEBANG,
         ]);
