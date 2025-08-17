@@ -93,7 +93,9 @@ describe("DELETE /auth/", () => {
         const { data: roleRows } = await SupabaseDB.AUTH_ROLES.select()
             .eq("userId", OTHER_USER.userId)
             .throwOnError();
-        expect(roleRows.map((row: { role: string }) => row.role)).toMatchObject([Role.Enum.USER]);
+        expect(
+            roleRows.map((row: { role: typeof Role.Enum }) => row.role)
+        ).toMatchObject([Role.Enum.USER]);
     });
 
     it("should give the not found error when the user doesn't exist", async () => {
@@ -135,7 +137,9 @@ describe("PUT /auth/", () => {
         const { data: roleRows } = await SupabaseDB.AUTH_ROLES.select()
             .eq("userId", OTHER_USER.userId)
             .throwOnError();
-        expect(roleRows.map((row: { role: string }) => row.role)).toMatchObject([
+        expect(
+            roleRows.map((row: { role: typeof Role.Enum }) => row.role)
+        ).toMatchObject([
             ...OTHER_USER_ROLES.map((row) => row.role),
             Role.Enum.PUZZLEBANG,
         ]);
@@ -317,9 +321,9 @@ describe("POST /auth/login/:PLATFORM", () => {
                         "userId",
                         expected.userId
                     );
-                expect(roleRows?.map((row: { role: string }) => row.role)).toEqual(
-                    expected.roles
-                );
+                expect(
+                    roleRows?.map((row: { role: typeof Role.Enum }) => row.role)
+                ).toEqual(expected.roles);
             });
 
             it("should login as an existing user with a valid code", async () => {
@@ -366,9 +370,9 @@ describe("POST /auth/login/:PLATFORM", () => {
                         "userId",
                         TESTER_USER.userId
                     );
-                expect(roleRows?.map((row: { role: string }) => row.role)).toEqual(
-                    expected.roles
-                );
+                expect(
+                    roleRows?.map((row: { role: typeof Role.Enum }) => row.role)
+                ).toEqual(expected.roles);
             });
 
             it("fails to login with an invalid code", async () => {

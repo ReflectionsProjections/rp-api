@@ -225,7 +225,7 @@ authRouter.get("/info", RoleChecker([]), async (req, res) => {
         .throwOnError();
     const user = {
         ...info,
-        roles: roleRows.map((row) => row.role),
+        roles: roleRows.map((row: { role: typeof Role.Enum }) => row.role),
     };
     return res.status(StatusCodes.OK).json(user);
 });
@@ -238,7 +238,7 @@ authRouter.get("/:ROLE", RoleChecker([Role.Enum.STAFF]), async (req, res) => {
     const { data } = await SupabaseDB.AUTH_ROLES.select("userId")
         .eq("role", role)
         .throwOnError();
-    const userIds = data.map((row) => row.userId);
+    const userIds = data.map((row: { userId: string }) => row.userId);
     return res.status(StatusCodes.OK).json(userIds);
 });
 
