@@ -91,44 +91,45 @@ async function insertTestAttendee(overrides: InsertTestAttendeeOverrides = {}) {
     const userId = overrides.userId || "attendee001";
     const email = overrides.email || "attendee001@test.com";
 
-    await SupabaseDB.AUTH_ROLES.delete().eq("userId", userId);
-    await SupabaseDB.AUTH_INFO.delete().eq("userId", userId);
-
+    await SupabaseDB.AUTH_ROLES.delete().eq("userId", userId).throwOnError();
+    await SupabaseDB.AUTH_INFO.delete().eq("userId", userId).throwOnError();
     await SupabaseDB.AUTH_INFO.insert([
         {
             userId: userId,
             displayName: "Attendee 001",
             email,
-            authId: null,
+            authId: "null",
         },
-    ]);
+    ]).throwOnError();
 
     await SupabaseDB.AUTH_ROLES.insert([
         {
             userId: userId,
             role: Role.enum.USER,
         },
-    ]);
+    ]).throwOnError();
 
     await SupabaseDB.REGISTRATIONS.insert([
         {
             userId: userId,
             name: "Attendee 001",
             email,
-            degree: "Bachelors",
-            university: "UIUC",
+            school: "UIUC",
+            educationLevel: "BS",
             isInterestedMechMania: false,
             isInterestedPuzzleBang: true,
             allergies: [],
             dietaryRestrictions: [],
-            ethnicity: null,
-            gender: null,
+            ethnicity: [],
+            gender: "prefer not say",
+            graduationYear: "2027",
         },
-    ]);
+    ]).throwOnError();
 
     await SupabaseDB.ATTENDEES.insert([
         {
             userId: userId,
+            tags: ["testtag1", "testtag2"],
             points: 0,
             puzzlesCompleted: [],
             hasPriorityFri: false,
@@ -149,7 +150,7 @@ async function insertTestAttendee(overrides: InsertTestAttendeeOverrides = {}) {
             favoriteEvents: [],
             ...overrides,
         },
-    ]);
+    ]).throwOnError();
 }
 
 beforeEach(async () => {
