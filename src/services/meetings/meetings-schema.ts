@@ -39,7 +39,7 @@ export const MeetingSchema = new Schema({
     },
 });
 
-export type MeetingType = Database["public"]["Tables"]["meetings"]["Row"]
+export type MeetingType = Database["public"]["Tables"]["meetings"]["Row"];
 
 export const createMeetingValidator = z.object({
     committeeType: CommitteeNames,
