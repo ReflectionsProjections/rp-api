@@ -75,26 +75,41 @@ const ATTENDEE_TIMOTHY = {
     puzzlesCompleted: [],
 };
 
-// Roles records required for foreign key constraints
-const ROLE_RITAM = {
+// Auth records required for foreign key constraints
+const AUTH_INFO_RITAM = {
     userId: "a1",
     displayName: "Ritam Test",
     email: "ritam@test.com",
-    roles: [Role.enum.USER],
+    authId: null,
 };
 
-const ROLE_NATHAN = {
+const AUTH_INFO_NATHAN = {
     userId: "a2",
     displayName: "Nathan Test",
     email: "nathan@test.com",
-    roles: [Role.enum.USER],
+    authId: null,
 };
 
-const ROLE_TIMOTHY = {
+const AUTH_INFO_TIMOTHY = {
     userId: "a3",
     displayName: "Timothy Test",
     email: "timothy@test.com",
-    roles: [Role.enum.USER],
+    authId: null,
+};
+
+const AUTH_ROLES_RITAM = {
+    userId: "a1",
+    role: Role.enum.USER,
+};
+
+const AUTH_ROLES_NATHAN = {
+    userId: "a2",
+    role: Role.enum.USER,
+};
+
+const AUTH_ROLES_TIMOTHY = {
+    userId: "a3",
+    role: Role.enum.USER,
 };
 
 // CHECKIN event for testing check-in functionality
@@ -233,101 +248,96 @@ const ATTENDEES_DIETARY = [
         userId: "a1",
         name: "Test User 1",
         email: "a1@test.com",
-        university: "University of Illinois",
-        degree: "Computer Science",
-        graduation: "2025",
-        major: "Computer Science",
+        school: "University of Illinois",
+        educationLevel: "Computer Science",
+        graduationYear: "2025",
+        majors: ["Computer Science"],
         dietaryRestrictions: [],
         allergies: [],
-        gender: null,
+        gender: "Prefer not to say",
         ethnicity: [],
-        hearAboutRp: [],
-        portfolios: [],
-        jobInterest: [],
+        howDidYouHear: [],
+        personalLinks: [],
+        opportunities: [],
         isInterestedMechMania: false,
         isInterestedPuzzleBang: false,
-        hasResume: false,
-        hasSubmitted: false,
+        resume: "resume.pdf",
     },
     {
         userId: "a2",
         name: "Test User 2",
         email: "a2@test.com",
-        university: "University of Illinois",
-        degree: "Computer Science",
-        graduation: "2024",
-        major: "Computer Science",
+        school: "University of Illinois",
+        educationLevel: "Computer Science",
+        graduationYear: "2024",
+        majors: ["Computer Science"],
         dietaryRestrictions: ["Vegetarian"],
         allergies: [],
-        gender: null,
+        gender: "Prefer not to say",
         ethnicity: [],
-        hearAboutRp: [],
-        portfolios: [],
-        jobInterest: [],
+        howDidYouHear: [],
+        personalLinks: [],
+        opportunities: [],
         isInterestedMechMania: false,
         isInterestedPuzzleBang: false,
-        hasResume: false,
-        hasSubmitted: false,
+        resume: "resume.pdf",
     },
     {
         userId: "a3",
         name: "Test User 3",
         email: "a3@test.com",
-        university: "University of Illinois",
-        degree: "Computer Science",
-        graduation: "2023",
-        major: "Computer Science",
+        school: "University of Illinois",
+        educationLevel: "Computer Science",
+        graduationYear: "2023",
+        majors: ["Computer Science"],
         dietaryRestrictions: [],
         allergies: ["Peanuts"],
-        gender: null,
+        gender: "Prefer not to say",
         ethnicity: [],
-        hearAboutRp: [],
-        portfolios: [],
-        jobInterest: [],
+        howDidYouHear: [],
+        personalLinks: [],
+        opportunities: [],
         isInterestedMechMania: false,
         isInterestedPuzzleBang: false,
-        hasResume: false,
-        hasSubmitted: false,
+        resume: "resume.pdf",
     },
     {
         userId: "a4",
         name: "Test User 4",
         email: "a4@test.com",
-        university: "University of Illinois",
-        degree: "Computer Science",
-        graduation: "2022",
-        major: "Computer Science",
+        school: "University of Illinois",
+        educationLevel: "Computer Science",
+        graduationYear: "2022",
+        majors: ["Computer Science"],
         dietaryRestrictions: ["Vegan"],
         allergies: ["Shellfish"],
-        gender: null,
+        gender: "Prefer not to say",
         ethnicity: [],
-        hearAboutRp: [],
-        portfolios: [],
-        jobInterest: [],
+        howDidYouHear: [],
+        personalLinks: [],
+        opportunities: [],
         isInterestedMechMania: false,
         isInterestedPuzzleBang: false,
-        hasResume: false,
-        hasSubmitted: false,
+        resume: "resume.pdf",
     },
     {
         userId: "a5",
         name: "Test User 5",
         email: "a5@test.com",
-        university: "University of Illinois",
-        degree: "Computer Science",
-        graduation: "2021",
-        major: "Computer Science",
+        school: "University of Illinois",
+        educationLevel: "Computer Science",
+        graduationYear: "2021",
+        majors: ["Computer Science"],
         dietaryRestrictions: ["Vegetarian"],
         allergies: ["Peanuts"],
-        gender: null,
+        gender: "Prefer not to say",
         ethnicity: [],
-        hearAboutRp: [],
-        portfolios: [],
-        jobInterest: [],
+        howDidYouHear: [],
+        personalLinks: [],
+        opportunities: [],
         isInterestedMechMania: false,
         isInterestedPuzzleBang: false,
-        hasResume: false,
-        hasSubmitted: false,
+        resume: "resume.pdf",
     },
 ];
 
@@ -352,7 +362,12 @@ afterAll(async () => {
         "00000000-0000-0000-0000-000000000000"
     );
 
-    await SupabaseDB.ROLES.delete().neq(
+    await SupabaseDB.AUTH_ROLES.delete().neq(
+        "userId",
+        "00000000-0000-0000-0000-000000000000"
+    );
+
+    await SupabaseDB.AUTH_INFO.delete().neq(
         "userId",
         "00000000-0000-0000-0000-000000000000"
     );
@@ -372,12 +387,25 @@ describe("GET /stats/check-in", () => {
             "userId",
             "00000000-0000-0000-0000-000000000000"
         );
-        await SupabaseDB.ROLES.delete().neq(
+        await SupabaseDB.AUTH_ROLES.delete().neq(
+            "userId",
+            "00000000-0000-0000-0000-000000000000"
+        );
+        await SupabaseDB.AUTH_INFO.delete().neq(
             "userId",
             "00000000-0000-0000-0000-000000000000"
         );
 
-        await SupabaseDB.ROLES.insert([ROLE_RITAM, ROLE_NATHAN, ROLE_TIMOTHY]);
+        await SupabaseDB.AUTH_INFO.insert([
+            AUTH_INFO_RITAM,
+            AUTH_INFO_NATHAN,
+            AUTH_INFO_TIMOTHY,
+        ]);
+        await SupabaseDB.AUTH_ROLES.insert([
+            AUTH_ROLES_RITAM,
+            AUTH_ROLES_NATHAN,
+            AUTH_ROLES_TIMOTHY,
+        ]);
 
         await SupabaseDB.ATTENDEES.insert([
             ATTENDEE_RITAM,
@@ -427,12 +455,25 @@ describe("GET /stats/check-in", () => {
             "userId",
             "00000000-0000-0000-0000-000000000000"
         );
-        await SupabaseDB.ROLES.delete().neq(
+        await SupabaseDB.AUTH_ROLES.delete().neq(
+            "userId",
+            "00000000-0000-0000-0000-000000000000"
+        );
+        await SupabaseDB.AUTH_INFO.delete().neq(
             "userId",
             "00000000-0000-0000-0000-000000000000"
         );
 
-        await SupabaseDB.ROLES.insert([ROLE_RITAM, ROLE_NATHAN, ROLE_TIMOTHY]);
+        await SupabaseDB.AUTH_INFO.insert([
+            AUTH_INFO_RITAM,
+            AUTH_INFO_NATHAN,
+            AUTH_INFO_TIMOTHY,
+        ]);
+        await SupabaseDB.AUTH_ROLES.insert([
+            AUTH_ROLES_RITAM,
+            AUTH_ROLES_NATHAN,
+            AUTH_ROLES_TIMOTHY,
+        ]);
         await SupabaseDB.ATTENDEES.insert([
             ATTENDEE_RITAM,
             ATTENDEE_NATHAN,
@@ -491,12 +532,25 @@ describe("GET /stats/merch-item/:PRICE", () => {
             "userId",
             "00000000-0000-0000-0000-000000000000"
         );
-        await SupabaseDB.ROLES.delete().neq(
+        await SupabaseDB.AUTH_ROLES.delete().neq(
+            "userId",
+            "00000000-0000-0000-0000-000000000000"
+        );
+        await SupabaseDB.AUTH_INFO.delete().neq(
             "userId",
             "00000000-0000-0000-0000-000000000000"
         );
 
-        await SupabaseDB.ROLES.insert([ROLE_RITAM, ROLE_NATHAN, ROLE_TIMOTHY]);
+        await SupabaseDB.AUTH_INFO.insert([
+            AUTH_INFO_RITAM,
+            AUTH_INFO_NATHAN,
+            AUTH_INFO_TIMOTHY,
+        ]);
+        await SupabaseDB.AUTH_ROLES.insert([
+            AUTH_ROLES_RITAM,
+            AUTH_ROLES_NATHAN,
+            AUTH_ROLES_TIMOTHY,
+        ]);
 
         await SupabaseDB.ATTENDEES.insert([
             ATTENDEE_RITAM,
@@ -583,12 +637,25 @@ describe("GET /stats/priority-attendee", () => {
             "userId",
             "00000000-0000-0000-0000-000000000000"
         );
-        await SupabaseDB.ROLES.delete().neq(
+        await SupabaseDB.AUTH_ROLES.delete().neq(
+            "userId",
+            "00000000-0000-0000-0000-000000000000"
+        );
+        await SupabaseDB.AUTH_INFO.delete().neq(
             "userId",
             "00000000-0000-0000-0000-000000000000"
         );
 
-        await SupabaseDB.ROLES.insert([ROLE_RITAM, ROLE_NATHAN, ROLE_TIMOTHY]);
+        await SupabaseDB.AUTH_INFO.insert([
+            AUTH_INFO_RITAM,
+            AUTH_INFO_NATHAN,
+            AUTH_INFO_TIMOTHY,
+        ]);
+        await SupabaseDB.AUTH_ROLES.insert([
+            AUTH_ROLES_RITAM,
+            AUTH_ROLES_NATHAN,
+            AUTH_ROLES_TIMOTHY,
+        ]);
 
         await SupabaseDB.ATTENDEES.insert([
             ATTENDEE_RITAM,
@@ -711,21 +778,31 @@ describe("GET /stats/dietary-restrictions", () => {
             "00000000-0000-0000-0000-000000000000"
         );
 
-        await SupabaseDB.ROLES.delete().neq(
+        await SupabaseDB.AUTH_ROLES.delete().neq(
+            "userId",
+            "00000000-0000-0000-0000-000000000000"
+        );
+        await SupabaseDB.AUTH_INFO.delete().neq(
             "userId",
             "00000000-0000-0000-0000-000000000000"
         );
 
-        const requiredRoles = ATTENDEES_DIETARY.map((attendee) => ({
+        const requiredAuthInfo = ATTENDEES_DIETARY.map((attendee) => ({
             userId: attendee.userId,
             displayName: attendee.name,
             email: attendee.email,
-            roles: [Role.enum.USER],
+            authId: null,
         }));
 
-        await SupabaseDB.ROLES.insert(requiredRoles);
+        const requiredAuthRoles = ATTENDEES_DIETARY.map((attendee) => ({
+            userId: attendee.userId,
+            role: Role.enum.USER,
+        }));
 
-        await SupabaseDB.REGISTRATIONS.insert(ATTENDEES_DIETARY);
+        await SupabaseDB.AUTH_INFO.insert(requiredAuthInfo);
+        await SupabaseDB.AUTH_ROLES.insert(requiredAuthRoles);
+
+        await SupabaseDB.REGISTRATIONS.insert(ATTENDEES_DIETARY).throwOnError();
     });
 
     it("should return correct dietary/allergy aggregation counts", async () => {
