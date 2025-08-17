@@ -790,11 +790,11 @@ describe("GET /stats/dietary-restrictions", () => {
             "00000000-0000-0000-0000-000000000000"
         );
 
-        const requiredAuthInfo = ATTENDEES_DIETARY.map((attendee) => ({
+        const requiredAuthInfo = ATTENDEES_DIETARY.map((attendee, index) => ({
             userId: attendee.userId,
             displayName: attendee.name,
             email: attendee.email,
-            authId: "auth_attendee",
+            authId: `auth_attendee_${index}`,
         }));
 
         const requiredAuthRoles = ATTENDEES_DIETARY.map((attendee) => ({
