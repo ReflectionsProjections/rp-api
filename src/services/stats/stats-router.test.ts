@@ -11,6 +11,7 @@ const now = new Date();
 
 const ATTENDEE_RITAM = {
     userId: "a1",
+    tags: ["testtag1", "testtag2"],
     points: 10,
     hasPriorityMon: currentDay === "Mon",
     hasPriorityTue: currentDay === "Tue",
@@ -33,6 +34,7 @@ const ATTENDEE_RITAM = {
 
 const ATTENDEE_NATHAN = {
     userId: "a2",
+    tags: ["testtag1", "testtag2"],
     points: 25,
     hasPriorityMon: false,
     hasPriorityTue: false,
@@ -55,6 +57,7 @@ const ATTENDEE_NATHAN = {
 
 const ATTENDEE_TIMOTHY = {
     userId: "a3",
+    tags: ["testtag1", "testtag2"],
     points: 20,
     hasPriorityMon: false,
     hasPriorityTue: false,
@@ -80,21 +83,21 @@ const AUTH_INFO_RITAM = {
     userId: "a1",
     displayName: "Ritam Test",
     email: "ritam@test.com",
-    authId: null,
+    authId: "auth_ritam",
 };
 
 const AUTH_INFO_NATHAN = {
     userId: "a2",
     displayName: "Nathan Test",
     email: "nathan@test.com",
-    authId: null,
+    authId: "auth_nathan",
 };
 
 const AUTH_INFO_TIMOTHY = {
     userId: "a3",
     displayName: "Timothy Test",
     email: "timothy@test.com",
-    authId: null,
+    authId: "auth_timothy",
 };
 
 const AUTH_ROLES_RITAM = {
@@ -247,6 +250,7 @@ const ATTENDEES_DIETARY = [
     {
         userId: "a1",
         name: "Test User 1",
+        tags: ["testtag1", "testtag2"],
         email: "a1@test.com",
         school: "University of Illinois",
         educationLevel: "Computer Science",
@@ -261,11 +265,11 @@ const ATTENDEES_DIETARY = [
         opportunities: [],
         isInterestedMechMania: false,
         isInterestedPuzzleBang: false,
-        resume: "resume.pdf",
     },
     {
         userId: "a2",
         name: "Test User 2",
+        tags: ["testtag1", "testtag2"],
         email: "a2@test.com",
         school: "University of Illinois",
         educationLevel: "Computer Science",
@@ -280,11 +284,11 @@ const ATTENDEES_DIETARY = [
         opportunities: [],
         isInterestedMechMania: false,
         isInterestedPuzzleBang: false,
-        resume: "resume.pdf",
     },
     {
         userId: "a3",
         name: "Test User 3",
+        tags: ["testtag1", "testtag2"],
         email: "a3@test.com",
         school: "University of Illinois",
         educationLevel: "Computer Science",
@@ -299,11 +303,11 @@ const ATTENDEES_DIETARY = [
         opportunities: [],
         isInterestedMechMania: false,
         isInterestedPuzzleBang: false,
-        resume: "resume.pdf",
     },
     {
         userId: "a4",
         name: "Test User 4",
+        tags: ["testtag1", "testtag2"],
         email: "a4@test.com",
         school: "University of Illinois",
         educationLevel: "Computer Science",
@@ -318,11 +322,11 @@ const ATTENDEES_DIETARY = [
         opportunities: [],
         isInterestedMechMania: false,
         isInterestedPuzzleBang: false,
-        resume: "resume.pdf",
     },
     {
         userId: "a5",
         name: "Test User 5",
+        tags: ["testtag1", "testtag2"],
         email: "a5@test.com",
         school: "University of Illinois",
         educationLevel: "Computer Science",
@@ -337,7 +341,6 @@ const ATTENDEES_DIETARY = [
         opportunities: [],
         isInterestedMechMania: false,
         isInterestedPuzzleBang: false,
-        resume: "resume.pdf",
     },
 ];
 
@@ -791,7 +794,7 @@ describe("GET /stats/dietary-restrictions", () => {
             userId: attendee.userId,
             displayName: attendee.name,
             email: attendee.email,
-            authId: null,
+            authId: "auth_attendee",
         }));
 
         const requiredAuthRoles = ATTENDEES_DIETARY.map((attendee) => ({
