@@ -110,13 +110,15 @@ attendeeRouter.get(
 
 // Create a new attendee
 attendeeRouter.post("/", async (req, res) => {
-    const { userId } = AttendeeCreateValidator.parse(req.body);
+    const { userId, tags } = AttendeeCreateValidator.parse(req.body);
+    console.log("userId", userId);
 
     const newAttendee = {
         userId: userId,
         points: 0,
         favoriteEvents: [],
         puzzlesCompleted: [],
+        tags: tags,
         isEligibleTshirt: false,
         isEligibleCap: false,
         isEligibleTote: false,
@@ -132,11 +134,14 @@ attendeeRouter.post("/", async (req, res) => {
         hasPriorityFri: false,
         hasPrioritySat: false,
         hasPrioritySun: false,
-    };
+    }; // TODO: add a validator????
 
     await SupabaseDB.ATTENDEES.insert(newAttendee).throwOnError();
 
-    return res.status(StatusCodes.CREATED).json({ userId: userId });
+    return res.status(StatusCodes.CREATED).json({
+        userId: userId,
+        tags: tags,
+    });
 });
 
 // generates a unique QR code for each attendee

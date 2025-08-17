@@ -9,7 +9,7 @@ type RoleType = z.infer<typeof Role>;
 
 export const TESTER = {
     userId: "test-er-user-id",
-    roles: [],
+    authId: "test-er-auth-id",
     displayName: "Loid Forger",
     email: "loid.forger@testing.com",
 };
