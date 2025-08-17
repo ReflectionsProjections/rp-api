@@ -94,7 +94,7 @@ describe("DELETE /auth/", () => {
             .eq("userId", OTHER_USER.userId)
             .throwOnError();
         expect(
-            roleRows.map((row: { role: typeof Role.Enum }) => row.role)
+            roleRows.map((row: { role: Role }) => row.role)
         ).toMatchObject([Role.Enum.USER]);
     });
 
@@ -138,7 +138,7 @@ describe("PUT /auth/", () => {
             .eq("userId", OTHER_USER.userId)
             .throwOnError();
         expect(
-            roleRows.map((row: { role: typeof Role.Enum }) => row.role)
+            roleRows.map((row: { role: Role }) => row.role)
         ).toMatchObject([
             ...OTHER_USER_ROLES.map((row) => row.role),
             Role.Enum.PUZZLEBANG,
@@ -322,7 +322,7 @@ describe("POST /auth/login/:PLATFORM", () => {
                         expected.userId
                     );
                 expect(
-                    roleRows?.map((row: { role: typeof Role.Enum }) => row.role)
+                    roleRows?.map((row: { role: Role }) => row.role)
                 ).toEqual(expected.roles);
             });
 
@@ -371,7 +371,7 @@ describe("POST /auth/login/:PLATFORM", () => {
                         TESTER_USER.userId
                     );
                 expect(
-                    roleRows?.map((row: { role: typeof Role.Enum }) => row.role)
+                    roleRows?.map((row: { role: Role }) => row.role)
                 ).toEqual(expected.roles);
             });
 

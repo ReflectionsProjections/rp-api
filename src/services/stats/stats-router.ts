@@ -4,7 +4,7 @@ import { SupabaseDB } from "../../supabase";
 import RoleChecker from "../../middleware/role-checker";
 import { Role } from "../auth/auth-models";
 import { getCurrentDay } from "../checkin/checkin-utils";
-import { AttendeeSchema } from "../attendee/attendee-schema";
+import { AttendeeType } from "../attendee/attendee-schema";
 import { z } from "zod";
 
 const statsRouter = Router();
@@ -35,7 +35,7 @@ statsRouter.get(
 
         const uniqueAttendees = new Set(
             attendanceRecords?.map(
-                (record: { attendee: typeof AttendeeSchema }) => record.attendee
+                (record: { attendee: AttendeeType }) => record.attendee
             ) || []
         );
 

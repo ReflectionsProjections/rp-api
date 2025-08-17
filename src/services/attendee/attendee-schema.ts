@@ -1,4 +1,5 @@
 import { Schema } from "mongoose";
+import { Database } from "../../supabase.types";
 
 export type DayKey = "Mon" | "Tue" | "Wed" | "Thu" | "Fri" | "Sat" | "Sun";
 
@@ -81,3 +82,5 @@ export const AttendeeAttendanceSchema = new Schema({
     },
     eventsAttended: [{ type: String, ref: "Event", required: true }],
 });
+
+export type AttendeeType = Database["public"]["Tables"]["attendees"]["Row"]

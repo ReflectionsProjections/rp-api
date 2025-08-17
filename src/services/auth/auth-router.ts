@@ -225,7 +225,7 @@ authRouter.get("/info", RoleChecker([]), async (req, res) => {
         .throwOnError();
     const user = {
         ...info,
-        roles: roleRows.map((row: { role: typeof Role.Enum }) => row.role),
+        roles: roleRows.map((row: { role: Role }) => row.role),
     };
     return res.status(StatusCodes.OK).json(user);
 });
