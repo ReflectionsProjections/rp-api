@@ -74,25 +74,3 @@ export const CommitteeTypes: Record<
     MARKETING: "MARKETING",
     OPERATIONS: "OPERATIONS",
 };
-
-export interface User {
-    userId: string;
-    points: number;
-    favoriteEvents: string[];
-    puzzlesCompleted: string[];
-    hasPriorityMon: boolean;
-    hasPriorityTue: boolean;
-    hasPriorityWed: boolean;
-    hasPriorityThu: boolean;
-    hasPriorityFri: boolean;
-    hasPrioritySat: boolean;
-    hasPrioritySun: boolean;
-    isEligibleTshirt: boolean;
-    isEligibleCap: boolean;
-    isEligibleTote: boolean;
-    isEligibleButton: boolean;
-    hasRedeemedTshirt: boolean;
-    hasRedeemedCap: boolean;
-    hasRedeemedTote: boolean;
-    hasRedeemedButton: boolean;
-}

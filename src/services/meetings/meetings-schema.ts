@@ -1,5 +1,5 @@
 import { Schema } from "mongoose";
-
+import { Database } from "../../supabase.types";
 import { z } from "zod";
 import { v4 as uuidv4 } from "uuid";
 
@@ -38,6 +38,8 @@ export const MeetingSchema = new Schema({
         required: true,
     },
 });
+
+export type MeetingType = Database["public"]["Tables"]["meetings"]["Row"]
 
 export const createMeetingValidator = z.object({
     committeeType: CommitteeNames,

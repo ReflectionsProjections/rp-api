@@ -85,7 +85,7 @@ export async function getJwtPayloadFromDatabase(
     const { data: rolesRows } = await SupabaseDB.AUTH_ROLES.select()
         .eq("userId", userId)
         .throwOnError();
-    const roles = rolesRows.map((row: { role: typeof Role.Enum }) => row.role);
+    const roles = rolesRows.map((row: { role: Role }) => row.role);
 
     return {
         userId,
