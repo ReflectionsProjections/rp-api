@@ -19,8 +19,12 @@ async function checkEventAndAttendeeExist(eventId: string, userId: string) {
         SupabaseDB.ATTENDEES.select("userId").eq("userId", userId).single(),
     ]);
 
-    if (!eventRes.data || !attendeeRes.data) {
-        throw new Error("Event or Attendee not found");
+    if (!eventRes.data) {
+        throw new Error("Event not found");
+    }
+
+    if (!attendeeRes.data) {
+        throw new Error(`Attendee ${userId} not found`);
     }
 }
 
