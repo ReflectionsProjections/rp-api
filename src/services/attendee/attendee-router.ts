@@ -69,7 +69,7 @@ attendeeRouter.delete(
         }
 
         const updatedFavorites = (attendee?.favoriteEvents || []).filter(
-            (id) => id !== eventId
+            (id: string) => id !== eventId
         );
         await SupabaseDB.ATTENDEES.update({
             favoriteEvents: updatedFavorites,
