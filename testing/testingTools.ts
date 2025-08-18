@@ -121,62 +121,65 @@ export function delAsAdmin(url: string): request.Test {
 
 export async function clearSupabaseTables(supabase: SupabaseClient) {
     const tables: Record<string, Record<string, string>> = {
-        "eventAttendances": {
+        eventAttendances: {
             column: "eventId",
             value: "00000000-0000-0000-0000-000000000000",
         },
-        "attendeeAttendances": {
+        attendeeAttendances: {
             column: "userId",
             value: "00000000-0000-0000-0000-000000000000",
         },
-        "attendees": {
+        attendees: {
             column: "userId",
             value: "00000000-0000-0000-0000-000000000000",
         },
-        "notifications": {
+        notifications: {
             column: "userId",
             value: "00000000-0000-0000-0000-000000000000",
         },
-        "draftRegistrations": {
+        draftRegistrations: {
             column: "userId",
             value: "00000000-0000-0000-0000-000000000000",
         },
-        "registrations": {
+        registrations: {
             column: "userId",
             value: "00000000-0000-0000-0000-000000000000",
         },
-        "authInfo": {
+        authInfo: {
             column: "userId",
             value: "00000000-0000-0000-0000-000000000000",
         },
-        "authRoles": {
+        authRoles: {
             column: "userId",
             value: "00000000-0000-0000-0000-000000000000",
         },
-        "authCodes": {
+        authCodes: {
             column: "email",
             value: "NON_EXISTENT_EMAIL",
         },
-        "events": {
+        events: {
             column: "eventId",
             value: "00000000-0000-0000-0000-000000000000",
         },
-        "corporate": {
+        corporate: {
             column: "email",
             value: "NON_EXISTENT_EMAIL",
         },
-        "staff": {
+        staff: {
             column: "email",
             value: "NON_EXISTENT_EMAIL",
         },
-        "subscriptions": {
+        subscriptions: {
             column: "mailingList",
             value: "NON_EXISTENT_MAILING_LIST",
         },
     }; // TODO: Get this from the database
 
     for (const table of Object.keys(tables)) {
-        const { error } = await supabase.from(table).delete().neq(tables[table].column, tables[table].value);
+        const { error } = await supabase
+            .from(table)
+            .delete()
+            .neq(tables[table].column, tables[table].value);
         if (error) {
             console.warn(`⚠️ Could not clear ${table}:`, error.message);
         }

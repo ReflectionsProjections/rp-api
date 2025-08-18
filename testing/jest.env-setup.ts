@@ -20,4 +20,3 @@ process.env.S3_BUCKET_NAME =
     "theduckwalkeduptothelemonadestandandhesaidtothemanrunningthestandheygotanygrapesandthenthemangotmadandshottheduck";
 process.env.S3_REGION = "aok";
 process.env.USERID_ENCRYPTION_KEY = "whatissecurity";
-
