@@ -7,7 +7,7 @@ import {
 } from "./meetings-schema";
 import RoleChecker from "../../middleware/role-checker";
 import { Role } from "../auth/auth-models";
-import { SupabaseDB } from "../../supabase";
+import { SupabaseDB } from "../../database";
 import { MeetingType } from "./meetings-schema";
 
 const meetingsRouter = Router();

@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from "@jest/globals";
 import { post, postAsStaff, postAsAdmin } from "../../../testing/testingTools";
 import { StatusCodes } from "http-status-codes";
-import { SupabaseDB } from "../../supabase";
+import { SupabaseDB } from "../../database";
 import {
     CheckinEventPayload,
     ScanPayload,

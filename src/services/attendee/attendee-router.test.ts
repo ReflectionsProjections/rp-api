@@ -3,7 +3,7 @@ import { post, del, get } from "../../../testing/testingTools";
 import { TESTER } from "../../../testing/testingTools";
 import { Role } from "../auth/auth-models";
 import { StatusCodes } from "http-status-codes";
-import { SupabaseDB } from "../../supabase";
+import { SupabaseDB } from "../../database";
 import { v4 as uuidv4 } from "uuid";
 import { getCurrentDay } from "../checkin/checkin-utils";
 

@@ -18,7 +18,7 @@ import * as googleAuthLibrary from "google-auth-library";
 import Config from "../../config";
 import jsonwebtoken, { JwtPayload } from "jsonwebtoken";
 import { Corporate } from "./corporate-schema";
-import { SupabaseDB } from "../../supabase";
+import { SupabaseDB } from "../../database";
 
 const TESTER_USER = {
     authId: "1234-5678",

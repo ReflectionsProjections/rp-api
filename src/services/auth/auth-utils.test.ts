@@ -8,7 +8,7 @@ import { AuthInfo, AuthRole } from "./auth-schema";
 import { Role } from "./auth-models";
 import jsonwebtoken, { JwtPayload } from "jsonwebtoken";
 import Config from "../../config";
-import { SupabaseDB } from "../../supabase";
+import { SupabaseDB } from "../../database";
 import { Staff } from "../staff/staff-schema";
 
 const AUTH_USER = {

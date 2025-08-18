@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, afterAll } from "@jest/globals";
 import { StatusCodes } from "http-status-codes";
-import { SupabaseDB } from "../../supabase";
+import { SupabaseDB } from "../../database";
 import { Role } from "../auth/auth-models";
 import { getAsStaff, get } from "../../../testing/testingTools";
 import { getCurrentDay } from "../checkin/checkin-utils";

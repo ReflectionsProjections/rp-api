@@ -4,7 +4,7 @@ import {
     AttendeeCreateValidator,
     EventIdValidator,
 } from "./attendee-validators";
-import { SupabaseDB } from "../../supabase";
+import { SupabaseDB } from "../../database";
 import RoleChecker from "../../middleware/role-checker";
 import { Role } from "../auth/auth-models";
 import { generateQrHash, getCurrentDay } from "../checkin/checkin-utils";

@@ -1,5 +1,5 @@
 import { Schema } from "mongoose";
-import { Database } from "../../supabase.types";
+import { Database } from "../../database.types";
 
 export type DayKey = "Mon" | "Tue" | "Wed" | "Thu" | "Fri" | "Sat" | "Sun";
 

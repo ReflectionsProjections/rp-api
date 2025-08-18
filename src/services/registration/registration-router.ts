@@ -4,7 +4,7 @@ import {
     RegistrationDraftValidator,
     RegistrationValidator,
 } from "./registration-schema";
-import { SupabaseDB } from "../../supabase";
+import { SupabaseDB } from "../../database";
 import RoleChecker from "../../middleware/role-checker";
 import { AttendeeCreateValidator } from "../attendee/attendee-validators";
 import cors from "cors";

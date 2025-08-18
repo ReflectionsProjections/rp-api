@@ -6,6 +6,8 @@ CREATE SCHEMA public;
 ALTER SCHEMA public OWNER TO postgres;
 COMMENT ON SCHEMA public IS 'standard public schema';
 
+ALTER DATABASE postgres SET TIMEZONE TO 'UTC';
+
 -- Create types
 CREATE TYPE public."committeeNames" AS ENUM (
     'CONTENT',
@@ -86,8 +88,8 @@ CREATE TABLE public."eventAttendances" (
 CREATE TABLE public."events" (
     "eventId" uuid DEFAULT gen_random_uuid() NOT NULL,
     "name" text NOT NULL,
-    "startTime" timestamp without time zone NOT NULL,
-    "endTime" timestamp without time zone NOT NULL,
+    "startTime" timestamp with time zone NOT NULL,
+    "endTime" timestamp with time zone NOT NULL,
     "points" integer NOT NULL,
     "description" text NOT NULL,
     "isVirtual" boolean NOT NULL,
