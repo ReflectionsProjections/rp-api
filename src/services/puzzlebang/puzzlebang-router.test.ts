@@ -1,7 +1,7 @@
 import { post } from "../../../testing/testingTools";
 import { Role } from "../auth/auth-models";
 import { StatusCodes } from "http-status-codes";
-import { SupabaseDB } from "../../supabase";
+import { SupabaseDB } from "../../database";
 
 const TEST_USER_ID = "ritam123";
 const TEST_EMAIL = "ritam@test.com";

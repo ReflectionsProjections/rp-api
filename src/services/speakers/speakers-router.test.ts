@@ -14,7 +14,7 @@ import {
 import { StatusCodes } from "http-status-codes";
 import { v4 as uuidv4 } from "uuid";
 import { SpeakerType, UpdateSpeakerType } from "./speakers-schema";
-import { SupabaseDB } from "../../supabase";
+import { SupabaseDB } from "../../database";
 
 const SPEAKER_1_ID = uuidv4();
 const SPEAKER_2_ID = uuidv4();

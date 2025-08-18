@@ -1,10 +1,9 @@
 import { Router } from "express";
 import { StatusCodes } from "http-status-codes";
-import { SupabaseDB } from "../../supabase";
+import { SupabaseDB } from "../../database";
 import RoleChecker from "../../middleware/role-checker";
 import { Role } from "../auth/auth-models";
 import { getCurrentDay } from "../checkin/checkin-utils";
-import { AttendeeType } from "../attendee/attendee-schema";
 import { z } from "zod";
 
 const statsRouter = Router();
@@ -35,7 +34,7 @@ statsRouter.get(
 
         const uniqueAttendees = new Set(
             attendanceRecords?.map(
-                (record: { attendee: AttendeeType }) => record.attendee
+                (record: { attendee: string }) => record.attendee
             ) || []
         );
 

@@ -3,7 +3,7 @@ import { StatusCodes } from "http-status-codes";
 import { get, post, TESTER } from "../../../testing/testingTools";
 import { Role } from "../auth/auth-models";
 import { sendHTMLEmail } from "../ses/ses-utils";
-import { SupabaseDB } from "../../supabase";
+import { SupabaseDB } from "../../database";
 
 jest.mock("../ses/ses-utils", () => ({
     sendHTMLEmail: jest.fn(),

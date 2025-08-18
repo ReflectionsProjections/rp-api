@@ -13,7 +13,7 @@ import {
     AuthSponsorLoginValidator,
     AuthSponsorVerifyValidator,
 } from "./sponsor-schema";
-import { SupabaseDB } from "../../../supabase";
+import { SupabaseDB } from "../../../database";
 
 const authSponsorRouter = Router();
 

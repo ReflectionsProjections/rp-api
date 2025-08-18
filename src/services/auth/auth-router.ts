@@ -12,7 +12,7 @@ import {
     updateDatabaseWithAuthPayload,
 } from "./auth-utils";
 import { OAuth2Client } from "google-auth-library";
-import { SupabaseDB } from "../../supabase";
+import { SupabaseDB } from "../../database";
 
 const authRouter = Router();
 

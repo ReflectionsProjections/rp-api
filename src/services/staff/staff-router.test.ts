@@ -12,7 +12,7 @@ import {
     TESTER,
 } from "../../../testing/testingTools";
 import { StatusCodes } from "http-status-codes";
-import { SupabaseDB } from "../../supabase";
+import { SupabaseDB } from "../../database";
 import Config from "../../config";
 import { CommitteeNames } from "../meetings/meetings-schema";
 import { Staff, StaffAttendanceTypeEnum, StaffValidator } from "./staff-schema";

@@ -1,4 +1,4 @@
-import { SupabaseDB } from "../../supabase";
+import { SupabaseDB } from "../../database";
 import crypto from "crypto";
 import { Config } from "../../config";
 import { EventType } from "../events/events-schema";

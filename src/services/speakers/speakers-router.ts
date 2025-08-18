@@ -3,7 +3,7 @@ import { StatusCodes } from "http-status-codes";
 import { SpeakerValidator, UpdateSpeakerValidator } from "./speakers-schema";
 import RoleChecker from "../../middleware/role-checker";
 import { Role } from "../auth/auth-models";
-import { SupabaseDB } from "../../supabase";
+import { SupabaseDB } from "../../database";
 
 const speakersRouter = Router();
 

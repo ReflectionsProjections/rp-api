@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from "@jest/globals";
 import { post } from "../../../testing/testingTools";
 import { StatusCodes } from "http-status-codes";
-import { SupabaseDB } from "../../supabase";
+import { SupabaseDB } from "../../database";
 import { IncomingSubscription } from "./subscription-schema";
 
 const EMAIL_1 = "testuser@example.com";

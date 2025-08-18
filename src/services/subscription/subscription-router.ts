@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { StatusCodes } from "http-status-codes";
 import { SubscriptionValidator } from "./subscription-schema";
-import { SupabaseDB } from "../../supabase";
+import { SupabaseDB } from "../../database";
 import cors from "cors";
 
 const subscriptionRouter = Router();

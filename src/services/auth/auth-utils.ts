@@ -1,7 +1,12 @@
 // Create a function to generate GoogleStrategy instances
 import { TokenPayload } from "google-auth-library";
+<<<<<<< Updated upstream
 import { Config, EnvironmentEnum } from "../../config";
 import { SupabaseDB } from "../../supabase";
+=======
+import { Config } from "../../config";
+import { SupabaseDB } from "../../database";
+>>>>>>> Stashed changes
 import { JwtPayloadType, Role } from "./auth-models";
 import jsonwebtoken from "jsonwebtoken";
 import { randomUUID } from "crypto";

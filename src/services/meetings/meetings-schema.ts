@@ -1,5 +1,5 @@
 import { Schema } from "mongoose";
-import { Database } from "../../supabase.types";
+import { Database } from "../../database.types";
 import { z } from "zod";
 import { v4 as uuidv4 } from "uuid";
 

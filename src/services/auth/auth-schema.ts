@@ -1,7 +1,7 @@
 import { Schema } from "mongoose";
 import { z } from "zod";
 import { Platform, Role } from "./auth-models";
-import { Database } from "../../supabase.types";
+import { Database } from "../../database.types";
 
 export const RoleValidator = z.object({
     userId: z.coerce.string(),

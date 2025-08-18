@@ -7,7 +7,7 @@ import {
     UpdateStaffAttendanceValidator,
     AttendancesMap,
 } from "./staff-schema";
-import { SupabaseDB } from "../../supabase";
+import { SupabaseDB } from "../../database";
 import RoleChecker from "../../middleware/role-checker";
 import { JwtPayloadType, Role } from "../auth/auth-models";
 import Config from "../../config";

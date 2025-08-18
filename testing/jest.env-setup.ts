@@ -21,4 +21,3 @@ process.env.S3_BUCKET_NAME =
 process.env.S3_REGION = "aok";
 process.env.USERID_ENCRYPTION_KEY = "whatissecurity";
 
-process.env.SUPABASE_URL = "http://kong:8000";

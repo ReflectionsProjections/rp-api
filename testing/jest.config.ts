@@ -13,7 +13,6 @@ const config: Config = {
     setupFiles: ["../testing/jest.env-setup.ts"],
     setupFilesAfterEnv: [
         "../testing/jest.db-setup.ts",
-        "../testing/jest.supabase-db.setup.ts",
     ],
 
     testPathIgnorePatterns: [
