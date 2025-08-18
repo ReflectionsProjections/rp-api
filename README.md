@@ -12,6 +12,7 @@ This is the backend API service for Reflections | Projections 2025, built with N
 2. **Set up environment variables:**
    - Reach out to your Dev Chairs for the `.env` file
    - Place it in the root of the `rp-api` directory
+   - **Optional**: Add `DEV_ADMIN_EMAIL=your.email@example.com` to your `.env` file for local admin access
 
 3. **Start the full development environment:**
    ```bash

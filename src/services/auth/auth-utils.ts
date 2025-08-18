@@ -1,6 +1,6 @@
 // Create a function to generate GoogleStrategy instances
 import { TokenPayload } from "google-auth-library";
-import { Config } from "../../config";
+import { Config, EnvironmentEnum } from "../../config";
 import { SupabaseDB } from "../../supabase";
 import { JwtPayloadType, Role } from "./auth-models";
 import jsonwebtoken from "jsonwebtoken";
@@ -52,6 +52,19 @@ export async function updateDatabaseWithAuthPayload(
         .maybeSingle();
     if (staff) {
         await SupabaseDB.AUTH_ROLES.upsert({
+            userId,
+            role: Role.Enum.STAFF,
+        });
+    }
+
+    // In development, allow a specific email to be admin for local testing
+    if (Config.ENV === EnvironmentEnum.DEVELOPMENT && Config.DEV_ADMIN_EMAIL && email === Config.DEV_ADMIN_EMAIL) {
+        await SupabaseDB.AUTH_ROLES.insert({
+            userId,
+            role: Role.Enum.ADMIN,
+        });
+
+        await SupabaseDB.AUTH_ROLES.insert({
             userId,
             role: Role.Enum.STAFF,
         });
