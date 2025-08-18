@@ -1,4 +1,4 @@
-import { Database } from "../../database";
+import { SupabaseDB } from "../../database";
 import crypto from "crypto";
 import { Config } from "../../config";
 import { EventType } from "../events/events-schema";
@@ -14,28 +14,35 @@ export function getCurrentDay() {
 }
 
 async function checkEventAndAttendeeExist(eventId: string, userId: string) {
-    const [event, attendee] = await Promise.all([
-        Database.EVENTS.exists({ eventId }),
-        Database.ATTENDEE.exists({ userId }),
+    const [eventRes, attendeeRes] = await Promise.all([
+        SupabaseDB.EVENTS.select("eventId").eq("eventId", eventId).single(),
+        SupabaseDB.ATTENDEES.select("userId").eq("userId", userId).single(),
     ]);
 
-    if (!event || !attendee) {
-        throw new Error("Event or Attendee not found");
+    if (!eventRes.data) {
+        throw new Error("Event not found");
     }
 
-    return Promise.resolve();
+    if (!attendeeRes.data) {
+        throw new Error(`Attendee ${userId} not found`);
+    }
 }
 
 async function checkForDuplicateAttendance(eventId: string, userId: string) {
-    const [isRepeatEvent, isRepeatAttendee] = await Promise.all([
-        Database.EVENTS_ATTENDANCE.exists({ eventId, attendees: userId }),
-        Database.ATTENDEE_ATTENDANCE.exists({
-            userId,
-            eventsAttended: eventId,
-        }),
+    const [isRepeatInEvent, isRepeatInAttendee] = await Promise.all([
+        SupabaseDB.EVENT_ATTENDANCES.select()
+            .eq("eventId", eventId)
+            .eq("attendee", userId)
+            .maybeSingle()
+            .throwOnError(),
+        SupabaseDB.ATTENDEE_ATTENDANCES.select()
+            .eq("userId", userId)
+            .contains("eventsAttended", [eventId])
+            .maybeSingle()
+            .throwOnError(),
     ]);
 
-    if (isRepeatEvent || isRepeatAttendee) {
+    if (isRepeatInEvent.data || isRepeatInAttendee.data) {
         throw new Error("IsDuplicate");
     }
 }
@@ -43,78 +50,86 @@ async function checkForDuplicateAttendance(eventId: string, userId: string) {
 // Update attendee priority for the current day
 async function updateAttendeePriority(userId: string) {
     const day = getCurrentDay();
-    await Database.ATTENDEE.findOneAndUpdate(
-        { userId },
-        { $set: { [`hasPriority.${day}`]: true } }
-    );
+    await SupabaseDB.ATTENDEES.update({
+        [`hasPriority${day}`]: true,
+    })
+        .eq("userId", userId)
+        .throwOnError();
 }
 
 async function updateAttendanceRecords(eventId: string, userId: string) {
-    await Promise.all([
-        Database.EVENTS_ATTENDANCE.findOneAndUpdate(
-            { eventId },
-            { $addToSet: { attendees: userId } },
-            { new: true, upsert: true }
-        ),
-        Database.ATTENDEE_ATTENDANCE.findOneAndUpdate(
-            { userId },
-            { $addToSet: { eventsAttended: eventId } },
-            { new: true, upsert: true }
-        ),
-        Database.EVENTS.findOneAndUpdate(
-            { eventId },
-            { $inc: { attendanceCount: 1 } },
-            { new: true, upsert: true }
-        ),
-    ]);
+    const { data: attendeeAttendance } =
+        await SupabaseDB.ATTENDEE_ATTENDANCES.select("eventsAttended")
+            .eq("userId", userId)
+            .maybeSingle()
+            .throwOnError();
+
+    const eventsAttended = attendeeAttendance?.eventsAttended || [];
+
+    if (!eventsAttended.includes(eventId)) {
+        const newEventsAttended = [...eventsAttended, eventId];
+        await SupabaseDB.ATTENDEE_ATTENDANCES.upsert({
+            userId: userId,
+            eventsAttended: newEventsAttended,
+        }).throwOnError();
+    }
+
+    await SupabaseDB.EVENT_ATTENDANCES.insert({
+        eventId: eventId,
+        attendee: userId,
+    }).throwOnError();
+
+    const { data: eventData } = await SupabaseDB.EVENTS.select(
+        "attendanceCount"
+    )
+        .eq("eventId", eventId)
+        .single()
+        .throwOnError();
+
+    const currentCount = eventData?.attendanceCount || 0;
+    await SupabaseDB.EVENTS.update({ attendanceCount: currentCount + 1 })
+        .eq("eventId", eventId)
+        .throwOnError();
 }
 
 async function assignPixelsToUser(userId: string, pixels: number) {
-    const updatedDoc = await Database.ATTENDEE.findOneAndUpdate(
-        { userId },
-        { $inc: { points: pixels } },
-        { new: true }
-    );
+    const { data: attendee } = await SupabaseDB.ATTENDEES.select("points")
+        .eq("userId", userId)
+        .single()
+        .throwOnError();
 
-    const new_points = updatedDoc!.points;
+    const newPoints = (attendee?.points || 0) + pixels;
+
     const updatedFields = {
-        "isEligibleMerch.Cap": new_points >= 50,
-        "isEligibleMerch.Tote": new_points >= 35,
-        "isEligibleMerch.Button": new_points >= 20,
-        "isEligibleMerch.Tshirt": new_points >= 0,
+        points: newPoints,
+        isEligibleCap: newPoints >= 50,
+        isEligibleTote: newPoints >= 35,
+        isEligibleButton: newPoints >= 20,
+        isEligibleTshirt: newPoints >= 0,
     };
 
-    await Database.ATTENDEE.findOneAndUpdate(
-        { userId },
-        { $set: updatedFields }
-    );
-}
-
-async function markUserAsCheckedIn(userId: string) {
-    await Database.ATTENDEE.findOneAndUpdate(
-        { userId },
-        { hasCheckedIn: true }
-    );
+    await SupabaseDB.ATTENDEES.update(updatedFields)
+        .eq("userId", userId)
+        .throwOnError();
 }
 
 export async function checkInUserToEvent(eventId: string, userId: string) {
     await checkEventAndAttendeeExist(eventId, userId);
     await checkForDuplicateAttendance(eventId, userId);
 
-    const event = await Database.EVENTS.findOne({ eventId });
-    if (!event) {
-        throw new Error("Event not found");
-    }
+    const { data: event } = await SupabaseDB.EVENTS.select("eventType, points")
+        .eq("eventId", eventId)
+        .single()
+        .throwOnError();
 
-    // check for checkin event, and for meals
-    if (event.eventType == EventType.Enum.CHECKIN) {
-        await markUserAsCheckedIn(userId);
-    } else if (event.eventType != EventType.Enum.MEALS) {
+    if (
+        event.eventType !== EventType.Enum.MEALS &&
+        event.eventType !== EventType.Enum.CHECKIN
+    ) {
         await updateAttendeePriority(userId);
     }
 
     await updateAttendanceRecords(eventId, userId);
-
     await assignPixelsToUser(userId, event.points);
 }
 

@@ -1,0 +1,51 @@
+services:
+  api:
+    extends:
+      file: docker-compose.api.yml
+      service: api
+    depends_on:
+      db:
+        condition: service_healthy
+      kong:
+        condition: service_healthy
+    networks:
+      - rp-network
+
+  studio:
+    extends:
+      file: docker-compose.db.yml
+      service: studio
+    networks:
+      - rp-network
+
+  kong:
+    extends:
+      file: docker-compose.db.yml
+      service: kong
+    networks:
+      - rp-network
+
+  rest:
+    extends:
+      file: docker-compose.db.yml
+      service: rest
+    networks:
+      - rp-network
+
+  meta:
+    extends:
+      file: docker-compose.db.yml
+      service: meta
+    networks:
+      - rp-network
+
+  db:
+    extends:
+      file: docker-compose.db.yml
+      service: db
+    networks:
+      - rp-network
+
+networks:
+  rp-network:
+    driver: bridge

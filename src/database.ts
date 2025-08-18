@@ -1,116 +1,76 @@
-import mongoose, { Schema, Document, InferSchemaType } from "mongoose";
-import { StaffSchema, StaffValidator } from "./services/staff/staff-schema";
-import {
-    AttendeeAttendanceSchema,
-    AttendeeSchema,
-} from "./services/attendee/attendee-schema";
-import {
-    EventSchema,
-    internalEventView,
-} from "./services/events/events-schema";
-import {
-    EventAttendanceSchema,
-    EventAttendanceValidator,
-} from "./services/events/events-schema";
-import { RoleValidator, RoleSchema } from "./services/auth/auth-schema";
-import {
-    RegistrationSchema,
-    RegistrationValidator,
-} from "./services/registration/registration-schema";
-import {
-    SubscriptionSchemaValidator,
-    SubscriptionSchema,
-} from "./services/subscription/subscription-schema";
-import {
-    NotificationsSchema,
-    NotificationsValidator,
-} from "./services/notifications/notifications-schema";
-import {
-    SpeakerSchema,
-    SpeakerValidator,
-} from "./services/speakers/speakers-schema";
-import {
-    SponsorAuthSchema,
-    SponsorAuthValidator,
-} from "./services/auth/sponsor/sponsor-schema";
-import {
-    CorporateSchema,
-    CorporateValidator,
-} from "./services/auth/corporate-schema";
-import {
-    MeetingSchema,
-    meetingView,
-} from "./services/meetings/meetings-schema";
-import { AnyZodObject } from "zod";
+import { createClient } from "@supabase/supabase-js";
+import { Database } from "./database.types";
 
-mongoose.set("toObject", { versionKey: false });
+export const supabase = createClient<Database>(
+    process.env.SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_KEY!
+);
 
-function initializeModel<T extends Schema>(
-    modelName: string,
-    schema: T,
-    object: AnyZodObject
-) {
-    schema.pre("validate", function (next) {
-        const data = this.toObject();
-        try {
-            // Validate the data against the Zod schema
-            object.parse(data);
-            next();
-        } catch (error) {
-            next(new Error(error as string));
-        }
-    });
+export const SupabaseDB = {
+    get AUTH_INFO() {
+        return supabase.from("authInfo");
+    },
+    get AUTH_ROLES() {
+        return supabase.from("authRoles");
+    },
+    get AUTH_CODES() {
+        return supabase.from("authCodes");
+    },
+    get CORPORATE() {
+        return supabase.from("corporate");
+    },
+    get STAFF() {
+        return supabase.from("staff");
+    },
+    get MEETINGS() {
+        return supabase.from("meetings");
+    },
+    get DRAFT_REGISTRATIONS() {
+        return supabase.from("draftRegistrations");
+    },
+    get SPEAKERS() {
+        return supabase.from("speakers");
+    },
+    get ATTENDEES() {
+        return supabase.from("attendees");
+    },
+    get EVENTS() {
+        return supabase.from("events");
+    },
+    get EVENT_ATTENDANCES() {
+        return supabase.from("eventAttendances");
+    },
+    get ATTENDEE_ATTENDANCES() {
+        return supabase.from("attendeeAttendances");
+    },
+    get REGISTRATIONS() {
+        return supabase.from("registrations");
+    },
+    get SUBSCRIPTIONS() {
+        return supabase.from("subscriptions");
+    },
+};
 
-    schema.set("toObject", {
-        transform(doc, ret) {
-            delete ret._id;
-            delete ret.__v;
-        },
-    });
+export const RoleTypes: Record<
+    string,
+    Database["public"]["Enums"]["roleType"]
+> = {
+    USER: "USER",
+    STAFF: "STAFF",
+    ADMIN: "ADMIN",
+    CORPORATE: "CORPORATE",
+    PUZZLEBANG: "PUZZLEBANG",
+};
 
-    return mongoose.model<Document & InferSchemaType<T>>(modelName, schema);
-}
-
-// Example usage
-export const Database = {
-    ROLES: initializeModel("roles", RoleSchema, RoleValidator),
-    EVENTS: initializeModel("events", EventSchema, internalEventView),
-    EVENTS_ATTENDANCE: initializeModel(
-        "events_attendance",
-        EventAttendanceSchema,
-        EventAttendanceValidator
-    ),
-    ATTENDEE: mongoose.model("attendee", AttendeeSchema),
-    ATTENDEE_ATTENDANCE: mongoose.model(
-        "attendee_attendance",
-        AttendeeAttendanceSchema
-    ),
-    STAFF: initializeModel("staff", StaffSchema, StaffValidator),
-    SUBSCRIPTIONS: initializeModel(
-        "subscriptions",
-        SubscriptionSchema,
-        SubscriptionSchemaValidator
-    ),
-    REGISTRATION: initializeModel(
-        "registration",
-        RegistrationSchema,
-        RegistrationValidator
-    ),
-    NOTIFICATIONS: initializeModel(
-        "notifications",
-        NotificationsSchema,
-        NotificationsValidator
-    ),
-    AUTH_CODES: initializeModel(
-        "auth_codes",
-        SponsorAuthSchema,
-        SponsorAuthValidator
-    ),
-    SPEAKERS: initializeModel("speakers", SpeakerSchema, SpeakerValidator),
-    CORPORATE: initializeModel(
-        "corporate",
-        CorporateSchema,
-        CorporateValidator
-    ),
-    MEETINGS: initializeModel("meetings", MeetingSchema, meetingView),
+export const CommitteeTypes: Record<
+    string,
+    Database["public"]["Enums"]["committeeNames"]
+> = {
+    CONTENT: "CONTENT",
+    CORPORATE: "CORPORATE",
+    DESIGN: "DESIGN",
+    DEV: "DEV",
+    FULLTEAM: "FULL TEAM",
+    MARKETING: "MARKETING",
+    OPERATIONS: "OPERATIONS",
 };

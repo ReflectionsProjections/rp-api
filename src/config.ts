@@ -1,7 +1,6 @@
 import dotenv from "dotenv";
 
 import { z } from "zod";
-import { getEnv } from "./utilities";
 
 import AWS from "aws-sdk";
 
@@ -16,6 +15,14 @@ export enum EnvironmentEnum {
 export const Environment = z.nativeEnum(EnvironmentEnum);
 
 export const MailingListName = z.enum(["rp_interest"]);
+
+function getEnv(key: string): string {
+    const val = process.env[key];
+    if (val === undefined) {
+        throw new Error(`env value ${key} not found, exiting...`);
+    }
+    return val;
+}
 
 const env = Environment.parse(getEnv("ENV"));
 const API_BASE =
@@ -50,41 +57,17 @@ export const Config = {
     // prettier-ignore
     AUTH_ADMIN_WHITELIST: new Set([
         // Dev Chairs/Code-Owners (reach out to these people for questions)
-        "apirani2@illinois.edu",    // Aydan Pirani
-        "divyack2@illinois.edu",    // Divya Koya
-
-        // Directors
-        "ojaswee2@illinois.edu",     // Ojaswee Chaudhary
-        "ritikav2@illinois.edu",     // Ritika Vithani
-
-        // Committee Chairs
-        "adit3@illinois.edu",       // Adit Shah (Ops)
-        "arpitb2@illinois.edu",     // Arpit Bansal (Ops)
-        "mauskar3@illinois.edu",    // Aashna Mauskar (Marketing)
-        "coleej2@illinois.edu",     // Cole Jordan (Marketing)
-        "divyam4@illinois.edu",     // Divya Machineni (Corp)
-        "nzhan2@illinois.edu",      // Nancy Zhang (Design)
-        "preetig3@illinois.edu",    // Preethi Gomathinayagam (Content)
-        "snall6@illinois.edu",      // Sailaja Nallacheruvu (Corp)
-        "sahanah2@illinois.edu",    // Sahana Hariharan (Design)
-        "yosheej2@illinois.edu",    // Yoshee Jain (Content)
-
-        // Dev Team
-        "abahl3@illinois.edu",      // Aryan Bahl
-        "aryanb3@illinois.edu",     // Aryan Bhardwaj
-        "alexy3@illinois.edu",      // Alex Yang
-        "devrp3@illinois.edu",      // Dev Patel
-        "jechang3@illinois.edu",    // Jacob Chang
-        "jeremy19@illinois.edu",    // Jeremy Wu
-        "manyad2@illinois.edu",     // Manya Dua
-        "riyakp2@illinois.edu",     // Riya Patel
-        "ronita2@illinois.edu",     // Ronit Anandani
-        "srd8@illinois.edu",        // Shreenija Daggavolu
+        "ronita2@illinois.edu",    // Ronit Anandani
+        "abahl3@illinois.edu",    // Aryan Bahl
     ]),
 
+    // Development admin email - allows developer email to be admin in development
+    DEV_ADMIN_EMAIL: process.env.DEV_ADMIN_EMAIL,
+
     JWT_SIGNING_SECRET: getEnv("JWT_SIGNING_SECRET"),
-    JWT_EXPIRATION_TIME: "1 day",
-    PB_JWT_EXPIRATION_TIME: "1 week",
+    JWT_EXPIRATION_TIME: "1 day" as const,
+    MOBILE_JWT_EXPIRATION_TIME: "10 days" as const,
+    PB_JWT_EXPIRATION_TIME: "1 week" as const,
     STAFF_MEETING_CHECK_IN_WINDOW_SECONDS: 6 * 60 * 60,
 
     S3_ACCESS_KEY: getEnv("S3_ACCESS_KEY"),
@@ -101,9 +84,8 @@ export const Config = {
     // QR Scanning
     QR_HASH_ITERATIONS: 10000,
     QR_HASH_SECRET: getEnv("QR_HASH_SECRET"),
-    USERID_ENCRYPTION_KEY: getEnv("USERID_ENCRYPTION_KEY"),
-    API_RESUME_UPDATE_ROUTE: `${API_BASE}/attendee/resume/update/`,
-    WEB_RESUME_REUPLOAD_ROUTE: `${WEB_BASE}/update`,
+    WEB_REGISTER_ROUTE: `${WEB_BASE}/register`,
+    WEB_RESUME_ROUTE: `${WEB_BASE}/resume`,
     OUTGOING_EMAIL_ADDRESSES: z.enum(["no-reply@reflectionsprojections.org"]),
     LOG_DIR:
         env === EnvironmentEnum.PRODUCTION ? "/home/ubuntu/logs" : "./logs",

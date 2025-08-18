@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "@jest/globals";
+import { beforeEach, describe, expect, it, afterAll } from "@jest/globals";
 import {
     get,
     getAsStaff,
@@ -13,44 +13,54 @@ import {
     delAsStaff,
     delAsAdmin,
 } from "../../../testing/testingTools";
-import { z } from "zod";
 import { StatusCodes } from "http-status-codes";
-import { Database } from "../../database";
-import { meetingView, createMeetingValidator } from "./meetings-schema";
+import { CommitteeTypes } from "../../database";
+import { v4 as uuidv4 } from "uuid";
+import { SupabaseDB } from "../../database";
 
-type MeetingType = z.infer<typeof meetingView>;
+const TEST_MEETING_1_ID = uuidv4();
+const TEST_MEETING_2_ID = uuidv4();
 
 const TEST_MEETING_1 = {
-    meetingId: "test-meeting-1",
-    committeeType: "DEV",
-    startTime: new Date(),
-} satisfies MeetingType;
+    meetingId: TEST_MEETING_1_ID,
+    committeeType: CommitteeTypes.DEV,
+    startTime: new Date().toISOString(),
+};
 
 const EXPECTED_TEST_MEETING_1_RESPONSE = {
     meetingId: TEST_MEETING_1.meetingId,
     committeeType: TEST_MEETING_1.committeeType,
-    startTime: TEST_MEETING_1.startTime.toISOString(),
+    startTime: TEST_MEETING_1.startTime,
 };
 
 const TEST_MEETING_2 = {
-    meetingId: "test-meeting-2",
-    committeeType: "CONTENT",
-    startTime: new Date(),
-} satisfies MeetingType;
+    meetingId: TEST_MEETING_2_ID,
+    committeeType: CommitteeTypes.CONTENT,
+    startTime: new Date().toISOString(),
+};
 
 const EXPECTED_TEST_MEETING_2_RESPONSE = {
     meetingId: TEST_MEETING_2.meetingId,
     committeeType: TEST_MEETING_2.committeeType,
-    startTime: TEST_MEETING_2.startTime.toISOString(),
+    startTime: TEST_MEETING_2.startTime,
 };
 
-const UNREAL_MEETING_ID = "not_a_real_meeting_id";
+const UNREAL_MEETING_ID = uuidv4();
 
-// Runs these before running the tests - putting the test meetings into database
 beforeEach(async () => {
-    await Database.MEETINGS.deleteMany({}); // clear whatever used to be there, not sure if this is needed
-    await Database.MEETINGS.create(TEST_MEETING_1);
-    await Database.MEETINGS.create(TEST_MEETING_2);
+    await SupabaseDB.MEETINGS.delete().neq(
+        "meetingId",
+        "00000000-0000-0000-0000-000000000000"
+    );
+
+    await SupabaseDB.MEETINGS.insert([TEST_MEETING_1, TEST_MEETING_2]);
+});
+
+afterAll(async () => {
+    await SupabaseDB.MEETINGS.delete().in("meetingId", [
+        TEST_MEETING_1_ID,
+        TEST_MEETING_2_ID,
+    ]);
 });
 
 describe("GET /meetings/", () => {
@@ -72,7 +82,10 @@ describe("GET /meetings/", () => {
     });
 
     it("should return empty array if no meetings exist", async () => {
-        await Database.MEETINGS.deleteMany({}); // delete everything in it
+        await SupabaseDB.MEETINGS.delete().neq(
+            "meetingId",
+            "00000000-0000-0000-0000-000000000000"
+        );
         const response = await getAsAdmin("/meetings").expect(StatusCodes.OK);
         expect(response.body).toEqual([]);
     });
@@ -117,7 +130,7 @@ Post test cases
 
 describe("POST /meetings/", () => {
     const newMeetingData = {
-        committeeType: "DEV",
+        committeeType: CommitteeTypes.DEV,
         startTime: new Date().toISOString(),
     };
 
@@ -131,9 +144,21 @@ describe("POST /meetings/", () => {
             newMeetingData.startTime
         );
         expect(response.body).toHaveProperty("meetingId");
-        expect(() =>
-            createMeetingValidator.parse(newMeetingData)
-        ).not.toThrow();
+
+        // Verify the meeting was actually created in the database
+        const { data: result, error } = await SupabaseDB.MEETINGS.select("*")
+            .eq("meetingId", response.body.meetingId)
+            .single();
+
+        if (error) throw error;
+
+        const dbMeeting = {
+            meetingId: result.meetingId,
+            committeeType: result.committeeType,
+            startTime: new Date(result.startTime).toISOString(),
+        };
+
+        expect(dbMeeting).toMatchObject(newMeetingData);
     });
 
     it("should return 400 if required fields are missing", async () => {
@@ -201,7 +226,7 @@ Put test cases
 describe("PUT /meetings/:meetingId", () => {
     it("should allow an admin to edit a meeting", async () => {
         const updatedData = {
-            committeeType: "CORPORATE",
+            committeeType: CommitteeTypes.CORPORATE,
             startTime: new Date().toISOString(),
         };
         const response = await putAsAdmin(
@@ -233,7 +258,7 @@ describe("PUT /meetings/:meetingId", () => {
         async ({ requester, expectedStatus }) => {
             const response = await requester()
                 .send({
-                    committeeType: "FULL TEAM",
+                    committeeType: CommitteeTypes.FULLTEAM,
                     startTime: new Date().toISOString(),
                 })
                 .expect(expectedStatus);
@@ -255,18 +280,18 @@ describe("PUT /meetings/:meetingId", () => {
 
     it("should return 404 Not Found if meeting does not exist", async () => {
         const updateData = {
-            committeeType: "DESIGN",
+            committeeType: CommitteeTypes.DESIGN,
             startTime: new Date().toISOString(),
         };
 
-        await putAsAdmin(`/meetings/nonexistent-id`)
+        await putAsAdmin(`/meetings/${UNREAL_MEETING_ID}`)
             .send(updateData)
             .expect(StatusCodes.NOT_FOUND);
     });
 
     it("should allow admins to edit just one field", async () => {
         const updateDataOneParam = {
-            committeeType: "DESIGN",
+            committeeType: CommitteeTypes.DESIGN,
         };
 
         const response = await putAsAdmin(
@@ -279,7 +304,7 @@ describe("PUT /meetings/:meetingId", () => {
         );
         expect(response.body.meetingId).toBe(TEST_MEETING_2.meetingId);
         expect(new Date(response.body.startTime).toISOString()).toBe(
-            new Date(TEST_MEETING_2.startTime).toISOString()
+            TEST_MEETING_2.startTime
         );
     });
 });
@@ -321,7 +346,7 @@ describe("DELETE /meetings/:meetingId", () => {
     );
 
     it("should return 404 Not Found if meeting does not exist", async () => {
-        await delAsAdmin(`/meetings/nonexistent-id`).expect(
+        await delAsAdmin(`/meetings/${UNREAL_MEETING_ID}`).expect(
             StatusCodes.NOT_FOUND
         );
     });

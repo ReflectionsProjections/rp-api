@@ -1,12 +1,11 @@
-import { Schema } from "mongoose";
 import { z } from "zod";
-import { v4 as uuidv4 } from "uuid";
+import { CommitteeTypes } from "../../database";
 
 // Zod schema for staff
 export const StaffValidator = z.object({
-    userId: z.coerce.string(),
+    email: z.coerce.string(),
     name: z.string(),
-    team: z.string(),
+    team: z.nativeEnum(CommitteeTypes),
 
     // add preprocessor to convert a map into a plain javascript object
     attendances: z
@@ -27,6 +26,7 @@ export enum StaffAttendanceTypeEnum {
     ABSENT = "ABSENT",
 }
 export const StaffAttendanceType = z.nativeEnum(StaffAttendanceTypeEnum);
+export type AttendancesMap = Record<string, StaffAttendanceTypeEnum>;
 
 export const CheckInValidator = z.object({
     meetingId: z.string(),
@@ -37,26 +37,26 @@ export const UpdateStaffAttendanceValidator = z.object({
     attendanceType: StaffAttendanceType,
 });
 
-// Mongoose schema for staff
-export const StaffSchema = new Schema({
-    userId: {
-        type: String,
-        required: true,
-        unique: true,
-        default: () => uuidv4(),
-    },
-    name: {
-        type: String,
-        required: true,
-    },
-    team: {
-        type: String,
-        required: true,
-    },
-    attendances: {
-        type: Map,
-        of: String,
-        default: {},
-        required: true,
-    },
-});
+// // Mongoose schema for staff
+// export const StaffSchema = new Schema({
+//     email: {
+//         type: String,
+//         required: true,
+//         unique: true,
+//         default: () => uuidv4(),
+//     },
+//     name: {
+//         type: String,
+//         required: true,
+//     },
+//     team: {
+//         type: CommitteeTypes,
+//         required: true,
+//     },
+//     attendances: {
+//         type: Map,
+//         of: String,
+//         default: {},
+//         required: true,
+//     },
+// });

@@ -1,58 +1,77 @@
-import { afterEach, beforeAll, afterAll, jest } from "@jest/globals";
-import { MongoMemoryServer } from "mongodb-memory-server";
-import * as Config from "../src/config";
-import mongoose from "mongoose";
+import { clearSupabaseTables } from "./testingTools";
+import { afterEach, jest, beforeAll } from "@jest/globals";
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
 
-function mockConfig(dbUrl: string) {
-    jest.mock("../src/config.ts", () => {
-        const actual = jest.requireActual("../src/config.ts") as typeof Config;
+let supabase: SupabaseClient;
 
-        const newConfig: typeof Config.default = {
-            ...actual.default,
-            DATABASE_HOST: dbUrl,
-            ENV: Config.EnvironmentEnum.TESTING,
-        };
+function mockSupabase(supabaseUrl: string, supabaseServiceKey: string) {
+    supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+    if (!supabase) {
+        throw new Error("Failed to create test Supabase client");
+    }
+
+    jest.mock("../src/database", () => {
         return {
-            ...actual,
-            default: newConfig,
+            supabase: supabase,
+            SupabaseDB: {
+                get AUTH_INFO() {
+                    return supabase.from("authInfo");
+                },
+                get AUTH_ROLES() {
+                    return supabase.from("authRoles");
+                },
+                get AUTH_CODES() {
+                    return supabase.from("authCodes");
+                },
+                get CORPORATE() {
+                    return supabase.from("corporate");
+                },
+                get STAFF() {
+                    return supabase.from("staff");
+                },
+                get MEETINGS() {
+                    return supabase.from("meetings");
+                },
+                get DRAFT_REGISTRATIONS() {
+                    return supabase.from("draftRegistrations");
+                },
+                get ATTENDEES() {
+                    return supabase.from("attendees");
+                },
+                get EVENTS() {
+                    return supabase.from("events");
+                },
+                get EVENT_ATTENDANCES() {
+                    return supabase.from("eventAttendances");
+                },
+                get ATTENDEE_ATTENDANCES() {
+                    return supabase.from("attendeeAttendances");
+                },
+                get REGISTRATIONS() {
+                    return supabase.from("registrations");
+                },
+
+                get SPEAKERS() {
+                    return supabase.from("speakers");
+                },
+
+                get SUBSCRIPTIONS() {
+                    return supabase.from("subscriptions");
+                },
+            },
             __esModule: true,
         };
     });
+
+    (globalThis as typeof globalThis & { supabase: SupabaseClient }).supabase =
+        supabase;
 }
 
-let mongod: MongoMemoryServer | undefined = undefined;
-
 beforeAll(async () => {
-    if (!mongod) {
-        mongod = await MongoMemoryServer.create();
-    }
-    const uri = `${mongod.getUri()}`;
-    if (mongoose.connections.length > 0) {
-        await mongoose.disconnect();
-    }
-    await mongoose.connect(
-        `${uri}?retryWrites=true&w=majority&appName=rp-dev-cluster`
-    );
-    mockConfig(`${uri}?retryWrites=true&w=majority&appName=rp-dev-cluster`);
+    mockSupabase(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_KEY!);
 });
 
 afterEach(async () => {
-    const collections = await mongoose.connection.db
-        .listCollections()
-        .toArray();
-    for (const collection of collections) {
-        await mongoose.connection.db.collection(collection.name).deleteMany({});
-    }
-});
-
-afterAll(async () => {
-    for (const connection of mongoose.connections) {
-        await connection.dropDatabase();
-        await connection.destroy();
-    }
-    await mongoose.disconnect();
-    if (mongod) {
-        await mongod.stop();
-    }
+    await clearSupabaseTables(supabase);
 });

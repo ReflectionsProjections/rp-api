@@ -1,78 +1,124 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { StatusCodes } from "http-status-codes";
 import { get, post, TESTER } from "../../../testing/testingTools";
-import { Database } from "../../database";
 import { Role } from "../auth/auth-models";
 import { sendHTMLEmail } from "../ses/ses-utils";
+import { SupabaseDB } from "../../database";
 
 jest.mock("../ses/ses-utils", () => ({
     sendHTMLEmail: jest.fn(),
 }));
 
-jest.mock("./registration-utils", () => ({
-    ...(jest.requireActual(
-        "./registration-utils"
-    ) as typeof import("./registration-utils")),
-    generateEncryptedId: jest.fn(() => Promise.resolve("mock-encrypted-id")),
-}));
+const VALID_DRAFT = {
+    allergies: ["Peanuts"],
+    allergiesOther: "",
+    dietaryRestrictions: ["Vegetarian"],
+    dietaryOther: "",
+    educationLevel: "Undergraduate",
+    educationOther: "",
+    email: "test@example.com",
+    ethnicity: ["Asian"],
+    ethnicityOther: "",
+    gender: "Male",
+    genderOther: "",
+    graduationYear: "2025",
+    howDidYouHear: ["Social Media"],
+    majors: ["Computer Science"],
+    minors: ["Mathematics"],
+    name: "Test User",
+    opportunities: ["Internship"],
+    personalLinks: ["https://github.com/testuser"],
+    school: "University of Illinois",
+    isInterestedMechMania: true,
+    isInterestedPuzzleBang: false,
+    tags: ["backend", "frontend"],
+};
 
 const VALID_REGISTRATION = {
-    name: "TEST TESTER",
-    email: "test@tester.com",
-    university: "UIUC",
-    graduation: "2027",
-    major: "CS + Econ",
-    degree: "Bachelor",
-    dietaryRestrictions: [],
-    allergies: [],
-    gender: "Male",
+    allergies: ["Peanuts"],
+    dietaryRestrictions: ["Vegetarian"],
+    educationLevel: "Undergraduate",
+    email: "test@example.com",
     ethnicity: ["Asian"],
-    hearAboutRP: ["Website"],
-    portfolios: ["https://portfolio.com"],
-    jobInterest: ["API", "RP Dev Team"],
-    isInterestedMechMania: false,
-    isInterestedPuzzleBang: true,
-    hasResume: true,
+    gender: "Male",
+    graduationYear: "2025",
+    howDidYouHear: ["Social Media"],
+    majors: ["Computer Science"],
+    minors: ["Mathematics"],
+    name: "Test User",
+    opportunities: ["Internship"],
+    personalLinks: ["https://github.com/testuser"],
+    school: "University of Illinois",
+    isInterestedMechMania: true,
+    isInterestedPuzzleBang: false,
+    tags: ["backend", "frontend"],
 };
 
 beforeEach(async () => {
-    await Database.REGISTRATION.deleteMany({});
-    await Database.ROLES.deleteMany({});
-    await Database.ATTENDEE.deleteMany({});
+    jest.clearAllMocks();
+
+    await SupabaseDB.ATTENDEES.delete()
+        .neq("userId", "00000000-0000-0000-0000-000000000000")
+        .throwOnError();
+    await SupabaseDB.DRAFT_REGISTRATIONS.delete()
+        .neq("userId", "00000000-0000-0000-0000-000000000000")
+        .throwOnError();
+    await SupabaseDB.REGISTRATIONS.delete()
+        .neq("userId", "00000000-0000-0000-0000-000000000000")
+        .throwOnError();
+    await SupabaseDB.AUTH_ROLES.delete()
+        .neq("userId", "00000000-0000-0000-0000-000000000000")
+        .throwOnError();
+
+    await SupabaseDB.AUTH_INFO.insert({
+        ...TESTER,
+        roles: undefined,
+    }).throwOnError();
 });
 
-describe("POST /registration/save", () => {
+describe("POST /registration/draft", () => {
     it("should save a registration draft for an authenticated user", async () => {
-        const response = await post("/registration/save", Role.enum.USER)
-            .send(VALID_REGISTRATION)
+        const response = await post("/registration/draft", Role.enum.USER)
+            .send(VALID_DRAFT)
             .expect(StatusCodes.OK);
 
         expect(response.body.userId).toBe(TESTER.userId);
-        expect(response.body.hasSubmitted).toBeFalsy();
 
-        const dbEntry = await Database.REGISTRATION.findOne({
-            userId: TESTER.userId,
-        });
+        const { data: dbEntry } = await SupabaseDB.DRAFT_REGISTRATIONS.select(
+            "*"
+        )
+            .eq("userId", TESTER.userId)
+            .single()
+            .throwOnError();
         expect(dbEntry).toBeDefined();
-        expect(dbEntry?.hasSubmitted).toBe(false);
     });
 
     it("should not allow unauthenticated users to save registration", async () => {
-        await post("/registration/save")
+        await post("/registration/draft")
             .send(VALID_REGISTRATION)
             .expect(StatusCodes.UNAUTHORIZED);
     });
 
-    it("should return 409 if user already submitted registration", async () => {
-        await Database.REGISTRATION.create({
-            ...VALID_REGISTRATION,
+    it("should update an existing draft", async () => {
+        await SupabaseDB.DRAFT_REGISTRATIONS.insert({
+            ...VALID_DRAFT,
             userId: TESTER.userId,
-            hasSubmitted: true,
-        });
+        }).throwOnError();
+        const updatedDraft = { ...VALID_DRAFT, name: "Updated Name" };
+        const res = await post("/registration/draft", Role.enum.USER)
+            .send(updatedDraft)
+            .expect(StatusCodes.OK);
 
-        await post("/registration/save", Role.enum.USER)
-            .send(VALID_REGISTRATION)
-            .expect(StatusCodes.CONFLICT);
+        expect(res.body.name).toEqual("Updated Name");
+
+        const { data: dbEntry } = await SupabaseDB.DRAFT_REGISTRATIONS.select(
+            "*"
+        )
+            .eq("userId", TESTER.userId)
+            .single()
+            .throwOnError();
+        expect(dbEntry).toBeDefined();
+        expect(dbEntry.name).toBe("Updated Name");
     });
 
     it("should return 400 for invalid registration data", async () => {
@@ -81,32 +127,84 @@ describe("POST /registration/save", () => {
             email: "not-an-email",
         };
 
-        await post("/registration/save", Role.enum.USER)
+        await post("/registration/draft", Role.enum.USER)
             .send(invalidRegistration)
             .expect(StatusCodes.BAD_REQUEST);
     });
 });
 
+describe("GET /registration/draft", () => {
+    it("should get registration draft for an authenticated user", async () => {
+        await SupabaseDB.DRAFT_REGISTRATIONS.insert({
+            ...VALID_DRAFT,
+            userId: TESTER.userId,
+        }).throwOnError();
+
+        const response = await get(
+            "/registration/draft",
+            Role.enum.USER
+        ).expect(StatusCodes.OK);
+
+        expect(response.body.userId).toBe(TESTER.userId);
+        expect(response.body.name).toBe(VALID_DRAFT.name);
+    });
+
+    it("should return 401 for unauthenticated users", async () => {
+        await get("/registration/draft").expect(StatusCodes.UNAUTHORIZED);
+    });
+
+    it("should return 404 if no registration draft found", async () => {
+        const response = await get(
+            "/registration/draft",
+            Role.enum.USER
+        ).expect(StatusCodes.NOT_FOUND);
+        expect(response.body).toEqual({ error: "DoesNotExist" });
+    });
+});
+
 describe("POST /registration/submit", () => {
-    it("should submit registration, create attendee, and assign USER role", async () => {
+    it("should submit registration, create attendee, assign USER role, and send confirmation email", async () => {
         await post("/registration/submit", Role.enum.USER)
             .send(VALID_REGISTRATION)
             .expect(StatusCodes.OK);
 
-        const reg = await Database.REGISTRATION.findOne({
-            userId: TESTER.userId,
-        });
-        expect(reg?.hasSubmitted).toBe(true);
+        const { data: reg } = await SupabaseDB.REGISTRATIONS.select("*")
+            .eq("userId", TESTER.userId)
+            .single()
+            .throwOnError();
+        expect(reg).toBeDefined();
 
-        const attendee = await Database.ATTENDEE.findOne({
-            userId: TESTER.userId,
-        });
+        const { data: attendee } = await SupabaseDB.ATTENDEES.select("*")
+            .eq("userId", TESTER.userId)
+            .single()
+            .throwOnError();
         expect(attendee).toBeDefined();
-        expect(attendee?.email).toBe(VALID_REGISTRATION.email);
 
-        const roles = await Database.ROLES.findOne({ userId: TESTER.userId });
-        expect(roles?.roles).toContain(Role.enum.USER);
+        await SupabaseDB.AUTH_ROLES.select("*")
+            .eq("userId", TESTER.userId)
+            .eq("role", Role.Enum.USER)
+            .single()
+            .throwOnError();
+
         expect(sendHTMLEmail).toHaveBeenCalled();
+    });
+
+    it("updates existing registration", async () => {
+        await SupabaseDB.REGISTRATIONS.insert({
+            ...VALID_REGISTRATION,
+            userId: TESTER.userId,
+        }).throwOnError();
+        await post("/registration/submit", Role.Enum.USER)
+            .send({ ...VALID_REGISTRATION, name: "Updated Name" })
+            .expect(StatusCodes.OK);
+
+        const { data: reg } = await SupabaseDB.REGISTRATIONS.select("*")
+            .eq("userId", TESTER.userId)
+            .single()
+            .throwOnError();
+        expect(reg?.name).toBe("Updated Name");
+
+        expect(sendHTMLEmail).not.toHaveBeenCalled();
     });
 
     it("should not allow unauthenticated users to submit", async () => {
@@ -115,22 +213,10 @@ describe("POST /registration/submit", () => {
             .expect(StatusCodes.UNAUTHORIZED);
     });
 
-    it("should return 409 if user already submitted", async () => {
-        await Database.REGISTRATION.create({
-            ...VALID_REGISTRATION,
-            userId: TESTER.userId,
-            hasSubmitted: true,
-        });
-
-        await post("/registration/submit", Role.enum.USER)
-            .send(VALID_REGISTRATION)
-            .expect(StatusCodes.CONFLICT);
-    });
-
     it("should return 400 for invalid registration data", async () => {
         const invalidData = {
             ...VALID_REGISTRATION,
-            name: "", // I think we shouldn't allow empty names
+            name: undefined,
         };
 
         await post("/registration/submit", Role.enum.USER)
@@ -139,128 +225,30 @@ describe("POST /registration/submit", () => {
     });
 });
 
-describe("GET /registration", () => {
-    it("should get registration data for an authenticated user", async () => {
-        await Database.REGISTRATION.create({
-            ...VALID_REGISTRATION,
-            userId: TESTER.userId,
-            hasSubmitted: true,
-        });
-
-        const response = await get("/registration", Role.enum.USER).expect(
-            StatusCodes.OK
-        );
-        expect(response.body.registration.userId).toBe(TESTER.userId);
-        expect(response.body.registration.hasSubmitted).toBe(true);
-    });
-
-    it("should return 401 if no registration data found", async () => {
-        await get("/registration").expect(StatusCodes.UNAUTHORIZED);
-    });
-
-    it("should return error if no registration data found", async () => {
-        // was timing out, changed return in the router to fix this
-        const response = await get("/registration", Role.enum.USER).expect(
-            StatusCodes.NOT_FOUND
-        );
-        expect(response.body).toEqual({ error: "DoesNotExist" });
-    });
-});
-
 describe("GET /registration/all", () => {
-    const baseRegistration = {
-        graduation: "2025",
-        major: "CS",
-        jobInterest: ["Backend"],
-        degree: "Bachelor",
-        name: "Test User",
-        email: "test@example.com",
-        university: "UIUC",
-        dietaryRestrictions: [],
-        allergies: [],
-        gender: "random gender",
-        ethnicity: [],
-        hearAboutRP: [],
-        portfolios: ["https://portfolio.com"],
-        isInterestedMechMania: false,
-        isInterestedPuzzleBang: false,
-        hasResume: true,
-        hasSubmitted: true,
-    };
+    it.each([Role.enum.ADMIN, Role.enum.CORPORATE])(
+        "should return registrants for %s",
+        async (role) => {
+            await post("/registration/submit", Role.Enum.USER).send(
+                VALID_REGISTRATION
+            );
 
-    beforeEach(async () => {
-        await Database.REGISTRATION.deleteMany({});
-    });
+            const res = await get("/registration/all", role).expect(
+                StatusCodes.OK
+            );
 
-    it("should return registrants for matching filters", async () => {
-        const docs = Array.from({ length: 1000 }, (_, i) => ({
-            ...baseRegistration,
-            userId: `filter-user-${i}`,
-            email: `filter-user-${i}@test.com`,
-        }));
+            expect(res.body.length).toBe(1);
+            expect(res.body[0]).toHaveProperty("userId");
+        }
+    );
 
-        await Database.REGISTRATION.insertMany(docs);
-
-        const filters = {
-            graduations: ["2025"],
-            majors: ["CS"],
-            jobInterests: ["Backend"],
-            degrees: ["Bachelor"],
-        };
-
-        const response = await get("/registration/all", Role.enum.ADMIN)
-            .send(filters)
-            .expect(StatusCodes.OK);
-
-        expect(response.body.registrants.length).toBe(1000);
-        expect(response.body.registrants[0]).toHaveProperty("userId");
-    });
-
-    it("should return 401 if unauthenticated", async () => {
-        await get("/registration/all")
-            .send({})
-            .expect(StatusCodes.UNAUTHORIZED);
-    });
-
-    it("should return 403 if user is not ADMIN or CORPORATE", async () => {
-        await get("/registration/all", Role.enum.USER)
-            .send({})
-            .expect(StatusCodes.FORBIDDEN);
-    });
-    it("should not return registrants who do not match hasSubmitted and hasResume filters", async () => {
-        await Database.REGISTRATION.insertMany([
-            {
-                ...baseRegistration,
-                userId: "valid-user",
-                email: "validfellow@test.com",
-                hasResume: true,
-                hasSubmitted: true,
-            },
-            {
-                ...baseRegistration,
-                userId: "no-resume",
-                email: "noresume@test.com",
-                hasResume: false,
-                hasSubmitted: true,
-            },
-            {
-                ...baseRegistration,
-                userId: "not-submitted",
-                email: "notsubmitted@test.com",
-                hasResume: true,
-                hasSubmitted: false,
-            },
-        ]);
-
-        const response = await get("/registration/all", Role.enum.ADMIN).expect(
-            StatusCodes.OK
+    it("returns 403 for non-ADMIN/CORPORATE", async () => {
+        await get("/registration/all", Role.Enum.STAFF).expect(
+            StatusCodes.FORBIDDEN
         );
+    });
 
-        const userIds = response.body.registrants.map(
-            (r: { userId: string }) => r.userId
-        );
-        expect(userIds).toContain("valid-user");
-        expect(userIds).not.toContain("no-resume");
-        expect(userIds).not.toContain("not-submitted");
+    it("should return 401 for unauthenticated users", async () => {
+        await get("/registration/all").expect(StatusCodes.UNAUTHORIZED);
     });
 });

@@ -1,4 +1,5 @@
 import { Schema } from "mongoose";
+import { Database } from "../../database.types";
 
 export type DayKey = "Mon" | "Tue" | "Wed" | "Thu" | "Fri" | "Sat" | "Sun";
 
@@ -10,7 +11,6 @@ export const AttendeeSchema = new Schema({
     events: [{ type: String, ref: "Event", default: [] }],
     dietaryRestrictions: { type: [String], required: true },
     allergies: { type: [String], required: true },
-    hasCheckedIn: { type: Boolean, default: false },
     points: { type: Number, default: 0 },
     hasPriority: {
         type: new Schema(
@@ -82,3 +82,5 @@ export const AttendeeAttendanceSchema = new Schema({
     },
     eventsAttended: [{ type: String, ref: "Event", required: true }],
 });
+
+export type AttendeeType = Database["public"]["Tables"]["attendees"]["Row"];
