@@ -423,6 +423,7 @@ export type Database = {
                     opportunities: string[];
                     personalLinks: string[];
                     school: string;
+                    hasResume: boolean;
                     tags: string[];
                     userId: string;
                 };
@@ -444,6 +445,7 @@ export type Database = {
                     personalLinks?: string[];
                     school: string;
                     tags?: string[];
+                    hasResume?: boolean;
                     userId: string;
                 };
                 Update: {
@@ -464,6 +466,7 @@ export type Database = {
                     personalLinks?: string[];
                     school?: string;
                     tags?: string[];
+                    hasResume?: boolean;
                     userId?: string;
                 };
                 Relationships: [
