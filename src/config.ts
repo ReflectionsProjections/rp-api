@@ -60,7 +60,7 @@ export const Config = {
         "ronita2@illinois.edu",    // Ronit Anandani
         "abahl3@illinois.edu",    // Aryan Bahl
     ]),
-    
+
     // Development admin email - allows developer email to be admin in development
     DEV_ADMIN_EMAIL: process.env.DEV_ADMIN_EMAIL,
 

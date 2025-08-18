@@ -58,7 +58,11 @@ export async function updateDatabaseWithAuthPayload(
     }
 
     // In development, allow a specific email to be admin for local testing
-    if (Config.ENV === EnvironmentEnum.DEVELOPMENT && Config.DEV_ADMIN_EMAIL && email === Config.DEV_ADMIN_EMAIL) {
+    if (
+        Config.ENV === EnvironmentEnum.DEVELOPMENT &&
+        Config.DEV_ADMIN_EMAIL &&
+        email === Config.DEV_ADMIN_EMAIL
+    ) {
         await SupabaseDB.AUTH_ROLES.insert({
             userId,
             role: Role.Enum.ADMIN,

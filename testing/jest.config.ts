@@ -11,9 +11,7 @@ const config: Config = {
 
     // Setup files
     setupFiles: ["../testing/jest.env-setup.ts"],
-    setupFilesAfterEnv: [
-        "../testing/jest.db-setup.ts",
-    ],
+    setupFilesAfterEnv: ["../testing/jest.db-setup.ts"],
 
     testPathIgnorePatterns: [
         "/app.ts", // Ignore app.ts

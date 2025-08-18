@@ -1,31 +1,31 @@
-import { Router } from "express";
-import RoleChecker from "../../middleware/role-checker";
-import { Role } from "../auth/auth-models";
-import { StatusCodes } from "http-status-codes";
-import { NotificationsValidator } from "./notifications-schema";
-import { Database } from "../../database";
+// import { Router } from "express";
+// import RoleChecker from "../../middleware/role-checker";
+// import { Role } from "../auth/auth-models";
+// import { StatusCodes } from "http-status-codes";
+// import { NotificationsValidator } from "./notifications-schema";
+// import { SupabaseDB } from "../../database";
 
-const notificationsRouter = Router();
+// const notificationsRouter = Router();
 
-// Register user’s device identifier under their userId
-notificationsRouter.post(
-    "/",
-    RoleChecker([Role.enum.USER]),
-    async (req, res) => {
-        const payload = res.locals.payload;
+// // Register user’s device identifier under their userId
+// notificationsRouter.post(
+//     "/",
+//     RoleChecker([Role.enum.USER]),
+//     async (req, res) => {
+//         const payload = res.locals.payload;
 
-        const notificationEnrollmentData = NotificationsValidator.parse(
-            req.body
-        );
-        // Upsert the user-device mapping info
-        await Database.NOTIFICATIONS.findOneAndUpdate(
-            { userId: payload.userId },
-            { deviceId: notificationEnrollmentData.deviceId },
-            { upsert: true }
-        );
+//         const notificationEnrollmentData = NotificationsValidator.parse(
+//             req.body
+//         );
+//         // Upsert the user-device mapping info
+//         await SupabaseDB.NOTIFICATIONS.findOneAndUpdate(
+//             { userId: payload.userId },
+//             { deviceId: notificationEnrollmentData.deviceId },
+//             { upsert: true }
+//         );
 
-        return res.status(StatusCodes.OK).json(notificationEnrollmentData);
-    }
-);
+//         return res.status(StatusCodes.OK).json(notificationEnrollmentData);
+//     }
+// );
 
-export default notificationsRouter;
+// export default notificationsRouter;
