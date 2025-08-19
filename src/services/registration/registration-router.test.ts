@@ -52,6 +52,28 @@ const VALID_REGISTRATION = {
     isInterestedMechMania: true,
     isInterestedPuzzleBang: false,
     tags: ["backend", "frontend"],
+    hasResume: true,
+};
+
+const VALID_REGISTRATION_NO_RESUME = {
+    allergies: ["Peanuts"],
+    dietaryRestrictions: ["Vegetarian"],
+    educationLevel: "Undergraduate",
+    email: "test2@example.com",
+    ethnicity: ["Asian"],
+    gender: "Male",
+    graduationYear: "2025",
+    howDidYouHear: ["Social Media"],
+    majors: ["Computer Science"],
+    minors: ["Mathematics"],
+    name: "Test User 2",
+    opportunities: ["Internship"],
+    personalLinks: ["https://github.com/testuser2"],
+    school: "University of Illinois",
+    isInterestedMechMania: true,
+    isInterestedPuzzleBang: false,
+    tags: ["backend", "frontend"],
+    hasResume: false,
 };
 
 beforeEach(async () => {
@@ -227,11 +249,23 @@ describe("POST /registration/submit", () => {
 
 describe("GET /registration/all", () => {
     it.each([Role.enum.ADMIN, Role.enum.CORPORATE])(
-        "should return registrants for %s",
+        "should return only registrants with resumes for %s",
         async (role) => {
             await post("/registration/submit", Role.Enum.USER).send(
                 VALID_REGISTRATION
             );
+
+            await SupabaseDB.AUTH_INFO.insert({
+                userId: "test-user-2",
+                authId: "123",
+                displayName: "User 2",
+                email: "test2@example.org",
+            });
+
+            await SupabaseDB.REGISTRATIONS.insert({
+                ...VALID_REGISTRATION_NO_RESUME,
+                userId: "test-user-2",
+            }).throwOnError();
 
             const res = await get("/registration/all", role).expect(
                 StatusCodes.OK
@@ -239,6 +273,7 @@ describe("GET /registration/all", () => {
 
             expect(res.body.length).toBe(1);
             expect(res.body[0]).toHaveProperty("userId");
+            expect(res.body[0].name).toBe("Test User");
         }
     );
 

@@ -44,9 +44,11 @@ const templates = {
                         {{/isInterestedPuzzleBang}}
                         <li> <b> Interest Tags: </b> {{tags}} </li>
                         <li> <b> Opportunities Interest: </b> {{opportunities}} </li>
+                        {{#hasResume}}
                         <li>
                             <a href="${Config.WEB_RESUME_ROUTE}">View your uploaded resume</a>
                         </li>
+                        {{/hasResume}}
                     </ul>
 
                 </div>

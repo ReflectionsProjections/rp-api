@@ -42,6 +42,7 @@ const RegistrationValidator = z.object({
     name: z.string(),
     opportunities: z.array(z.string()),
     personalLinks: z.array(z.string()),
+    hasResume: z.boolean(),
     school: z.string(),
     isInterestedMechMania: z.boolean(),
     isInterestedPuzzleBang: z.boolean(),

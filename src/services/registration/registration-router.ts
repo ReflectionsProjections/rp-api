@@ -120,6 +120,7 @@ registrationRouter.post("/submit", RoleChecker([]), async (req, res) => {
                     ? registration.minors.join(", ")
                     : "N/A",
             name: registration.name,
+            hasResume: registration.hasResume,
             school: registration.school,
             isInterestedMechMania: registration.isInterestedMechMania,
             isInterestedPuzzleBang: registration.isInterestedPuzzleBang,
@@ -150,7 +151,9 @@ registrationRouter.get(
     async (req, res) => {
         const { data } = await SupabaseDB.REGISTRATIONS.select(
             "userId, name, majors, minors, school, educationLevel, graduationYear, opportunities, personalLinks"
-        ).throwOnError();
+        )
+            .eq("hasResume", true)
+            .throwOnError();
 
         return res.status(StatusCodes.OK).json(data);
     }
