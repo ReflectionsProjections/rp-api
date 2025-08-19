@@ -160,6 +160,7 @@ CREATE TABLE public."registrations" (
     "isInterestedMechMania" boolean NOT NULL,
     "isInterestedPuzzleBang" boolean NOT NULL,
     "tags" text[] DEFAULT '{}'::text[] NOT NULL,
+    "hasResume" boolean DEFAULT false NOT NULL,
     "userId" character varying NOT NULL,
     CONSTRAINT "registrations_pkey" PRIMARY KEY ("userId"),
     CONSTRAINT "registrations_email_key" UNIQUE ("email")
