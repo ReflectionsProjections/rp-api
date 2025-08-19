@@ -6,313 +6,422 @@ const templates = {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
+    <noscript>
+        <xml>
+            <o:OfficeDocumentSettings>
+                <o:PixelsPerInch>96</o:PixelsPerInch>
+            </o:OfficeDocumentSettings>
+        </xml>
+    </noscript>
+    <![endif]-->
+    <style type="text/css">
+        /* Reset and compatibility */
+        body, table, td, p, a, li, blockquote {
+            -webkit-text-size-adjust: 100% !important;
+            -ms-text-size-adjust: 100% !important;
+        }
+        
+        table, td {
+            mso-table-lspace: 0pt !important;
+            mso-table-rspace: 0pt !important;
+        }
+        
+        /* Force colors in dark mode */
+        [data-ogsc] *,
+        [data-ogsb] *,
+        .darkmode *,
+        [data-darkreader] *,
+        u + .body * {
+            background-color: transparent !important;
+        }
+        
+        [data-ogsc] .email-container,
+        [data-ogsb] .email-container,
+        .darkmode .email-container {
+            background-color: #ffffff !important;
+        }
+        
+        [data-ogsc] .main-bg,
+        [data-ogsb] .main-bg,
+        .darkmode .main-bg {
+            background-color: #f8f9fa !important;
+        }
+        
+        [data-ogsc] .header-bg,
+        [data-ogsb] .header-bg,
+        .darkmode .header-bg {
+            background-color: #c0392b !important;
+        }
+        
+        [data-ogsc] .info-bg,
+        [data-ogsb] .info-bg,
+        .darkmode .info-bg {
+            background-color: #f8f9fa !important;
+        }
+        
+        /* Outlook link fixes */
+        [data-ogsc] a,
+        [data-ogsb] a,
+        .darkmode a {
+            color: #c0392b !important;
+            text-decoration: underline !important;
+        }
+        
+        /* Main styles */
         body {
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #0a0a0a;
-            color: #ffffff;
-            line-height: 1.6;
+            margin: 0 !important;
+            padding: 0 !important;
+            font-family: Arial, Helvetica, sans-serif !important;
+            background-color: #f8f9fa !important;
+            color: #2c3e50 !important;
+            line-height: 1.6 !important;
+        }
+        
+        .main-bg {
+            background-color: #f8f9fa !important;
+            padding: 20px 0 !important;
+            width: 100% !important;
         }
         
         .email-container {
-            max-width: 600px;
-            margin: 0 auto;
-            background-color: #1a1a1a;
-            box-shadow: 0 0 20px rgba(255, 0, 0, 0.3);
+            max-width: 600px !important;
+            margin: 0 auto !important;
+            background-color: #ffffff !important;
+            border: 1px solid #e1e8ed !important;
+            border-radius: 8px !important;
+            overflow: hidden !important;
         }
         
-        .header {
-            background: linear-gradient(135deg, #8B0000 0%, #FF0000 50%, #8B0000 100%);
-            padding: 30px 20px;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
+        .header-table {
+            width: 100% !important;
+            border-collapse: collapse !important;
         }
         
-        .header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: repeating-linear-gradient(
-                45deg,
-                transparent,
-                transparent 10px,
-                rgba(255, 255, 255, 0.1) 10px,
-                rgba(255, 255, 255, 0.1) 20px
-            );
+        .header-bg {
+            background-color: #c0392b !important;
+            padding: 30px 20px !important;
+            text-align: center !important;
         }
         
-        .header h1 {
-            margin: 0;
-            font-size: 24px;
-            font-weight: 700;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            position: relative;
-            z-index: 1;
+        .header-title {
+            margin: 0 !important;
+            font-size: 24px !important;
+            font-weight: bold !important;
+            letter-spacing: 1px !important;
+            text-transform: uppercase !important;
+            color: #ffffff !important;
+            font-family: Arial, Helvetica, sans-serif !important;
         }
         
-        .content {
-            padding: 40px 30px;
+        .content-table {
+            width: 100% !important;
+            border-collapse: collapse !important;
+        }
+        
+        .content-area {
+            padding: 40px 30px !important;
+            background-color: #ffffff !important;
         }
         
         .welcome-text {
-            font-size: 18px;
-            margin-bottom: 25px;
-            color: #ffffff;
+            font-size: 16px !important;
+            margin: 0 0 25px 0 !important;
+            color: #2c3e50 !important;
+            line-height: 1.6 !important;
+            font-family: Arial, Helvetica, sans-serif !important;
         }
         
+        .update-table {
+            width: 100% !important;
+            border-collapse: collapse !important;
+            margin: 25px 0 !important;
+        }
+        
+        .update-box {
+            background-color: #f8f9fa !important;
+            border: 2px solid #c0392b !important;
+            border-radius: 8px !important;
+            padding: 20px !important;
+            text-align: center !important;
+            font-family: Arial, Helvetica, sans-serif !important;
+            font-size: 16px !important;
+            color: #2c3e50 !important;
+        }
+        
+        /* Outlook-specific link styling */
         .update-link {
-            background-color: #2a2a2a;
-            border: 2px solid #FF0000;
-            border-radius: 8px;
-            padding: 20px;
-            margin: 25px 0;
-            text-align: center;
+            color: #c0392b !important;
+            text-decoration: underline !important;
+            font-weight: bold !important;
+            font-size: 16px !important;
+            font-family: Arial, Helvetica, sans-serif !important;
         }
         
-        .update-link a {
-            color: #FF0000;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 16px;
+        /* Additional Outlook link fixes */
+        span.MsoHyperlink {
+            color: #c0392b !important;
+            text-decoration: underline !important;
         }
         
-        .update-link a:hover {
-            color: #ffffff;
-            text-decoration: underline;
+        span.MsoHyperlinkFollowed {
+            color: #a93226 !important;
+            text-decoration: underline !important;
         }
         
         .section-title {
-            font-size: 20px;
-            font-weight: 600;
-            margin: 30px 0 20px 0;
-            color: #FF0000;
-            border-bottom: 2px solid #FF0000;
-            padding-bottom: 5px;
+            font-size: 18px !important;
+            font-weight: bold !important;
+            margin: 30px 0 20px 0 !important;
+            color: #c0392b !important;
+            border-bottom: 2px solid #c0392b !important;
+            padding-bottom: 5px !important;
+            font-family: Arial, Helvetica, sans-serif !important;
         }
         
-        .info-grid {
-            background-color: #2a2a2a;
-            border-radius: 10px;
-            padding: 25px;
-            margin: 20px 0;
-            border: 1px solid #333333;
+        .info-table {
+            width: 100% !important;
+            border-collapse: collapse !important;
+            margin: 20px 0 !important;
         }
         
-        .info-item {
-            display: flex;
-            margin-bottom: 12px;
-            padding: 8px 0;
-            border-bottom: 1px solid #333333;
+        .info-bg {
+            background-color: #f8f9fa !important;
+            border-radius: 8px !important;
         }
         
-        .info-item:last-child {
-            border-bottom: none;
-            margin-bottom: 0;
+        .info-row {
+            border-bottom: 1px solid #ecf0f1 !important;
+        }
+        
+        .info-row:last-child {
+            border-bottom: none !important;
         }
         
         .info-label {
-            font-weight: 600;
-            color: #FF0000;
-            min-width: 140px;
-            flex-shrink: 0;
+            font-weight: bold !important;
+            color: #7f8c8d !important;
+            width: 140px !important;
+            padding: 12px 15px !important;
+            vertical-align: top !important;
+            font-family: Arial, Helvetica, sans-serif !important;
+            font-size: 14px !important;
         }
         
         .info-value {
-            color: #ffffff;
-            flex: 1;
+            color: #2c3e50 !important;
+            padding: 12px 15px !important;
+            font-family: Arial, Helvetica, sans-serif !important;
+            font-size: 14px !important;
         }
         
-        .nested-list {
-            margin-left: 20px;
-            margin-top: 8px;
+        .nested-link {
+            color: #c0392b !important;
+            text-decoration: underline !important;
+            font-family: Arial, Helvetica, sans-serif !important;
         }
         
-        .nested-list li {
-            margin-bottom: 5px;
+        .resume-table {
+            margin-top: 10px !important;
         }
         
-        .nested-list a {
-            color: #FF0000;
-            text-decoration: none;
+        .resume-button {
+            background-color: #c0392b !important;
+            color: #ffffff !important;
+            padding: 10px 20px !important;
+            text-decoration: none !important;
+            border-radius: 6px !important;
+            display: inline-block !important;
+            font-weight: bold !important;
+            font-size: 14px !important;
+            font-family: Arial, Helvetica, sans-serif !important;
+            border: none !important;
         }
         
-        .nested-list a:hover {
-            color: #ffffff;
-            text-decoration: underline;
+        .footer-table {
+            width: 100% !important;
+            border-collapse: collapse !important;
         }
         
-        .resume-link {
-            background: linear-gradient(135deg, #FF0000 0%, #8B0000 100%);
-            color: white;
-            padding: 12px 25px;
-            text-decoration: none;
-            border-radius: 6px;
-            display: inline-block;
-            font-weight: 600;
-            margin-top: 10px;
-            transition: all 0.3s ease;
+        .footer-area {
+            background-color: #ecf0f1 !important;
+            padding: 20px !important;
+            text-align: center !important;
+            border-top: 1px solid #bdc3c7 !important;
+            font-size: 14px !important;
+            color: #7f8c8d !important;
+            font-family: Arial, Helvetica, sans-serif !important;
         }
         
-        .resume-link:hover {
-            background: linear-gradient(135deg, #8B0000 0%, #FF0000 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(255, 0, 0, 0.3);
-        }
-        
-        .footer {
-            background-color: #0a0a0a;
-            padding: 20px;
-            text-align: center;
-            border-top: 1px solid #333333;
-            font-size: 14px;
-            color: #888888;
-        }
-        
-        @media (max-width: 600px) {
-            .content {
-                padding: 20px 15px;
+        /* Mobile responsive */
+        @media only screen and (max-width: 600px) {
+            .content-area {
+                padding: 20px 15px !important;
             }
             
-            .info-item {
-                flex-direction: column;
+            .info-label,
+            .info-value {
+                display: block !important;
+                width: 100% !important;
+                padding: 8px 15px !important;
             }
             
             .info-label {
-                min-width: auto;
-                margin-bottom: 4px;
+                padding-bottom: 4px !important;
             }
         }
     </style>
 </head>
 <body>
-    <div class="email-container">
-        <div class="header">
-            <h1>R|P 2025 Registration Confirmed</h1>
-        </div>
-        
-        <div class="content">
-            <p class="welcome-text">
-                Thank you for registering for R|P 2025. We have received your information and will be sending next steps shortly.
-            </p>
-            
-            <div class="update-link">
-                Need to update your registration? 
-                <a href="${Config.WEB_REGISTER_ROUTE}">Return to the registration form</a>
-                to edit your responses!
-            </div>
-            
-            <h2 class="section-title">Your Registration Details</h2>
-            
-            <div class="info-grid">
-                <div class="info-item">
-                    <span class="info-label">Name:</span>
-                    <span class="info-value">{{name}}</span>
-                </div>
-                
-                <div class="info-item">
-                    <span class="info-label">School:</span>
-                    <span class="info-value">{{school}}</span>
-                </div>
-                
-                <div class="info-item">
-                    <span class="info-label">Education Level:</span>
-                    <span class="info-value">{{educationLevel}}</span>
-                </div>
-                
-                <div class="info-item">
-                    <span class="info-label">Graduation Year:</span>
-                    <span class="info-value">{{graduationYear}}</span>
-                </div>
-                
-                <div class="info-item">
-                    <span class="info-label">Majors:</span>
-                    <span class="info-value">{{majors}}</span>
-                </div>
-                
-                <div class="info-item">
-                    <span class="info-label">Minors:</span>
-                    <span class="info-value">{{minors}}</span>
-                </div>
-                
-                <div class="info-item">
-                    <span class="info-label">Dietary Restrictions:</span>
-                    <span class="info-value">{{dietaryRestrictions}}</span>
-                </div>
-                
-                <div class="info-item">
-                    <span class="info-label">Allergies:</span>
-                    <span class="info-value">{{allergies}}</span>
-                </div>
-                
-                <div class="info-item">
-                    <span class="info-label">Gender:</span>
-                    <span class="info-value">{{gender}}</span>
-                </div>
-                
-                <div class="info-item">
-                    <span class="info-label">Race/Ethnicity:</span>
-                    <span class="info-value">{{ethnicity}}</span>
-                </div>
-                
-                {{#personalLinks.length}}
-                <div class="info-item">
-                    <span class="info-label">Personal Links:</span>
-                    <span class="info-value">
-                        <div class="nested-list">
-                            {{#personalLinks}}<div><a href="{{.}}">{{.}}</a></div>{{/personalLinks}}
-                        </div>
-                    </span>
-                </div>
-                {{/personalLinks.length}}
-                
-                <div class="info-item">
-                    <span class="info-label">Interested in MechMania:</span>
-                    <span class="info-value">
-                        {{#isInterestedMechMania}}Yes{{/isInterestedMechMania}}
-                        {{^isInterestedMechMania}}No{{/isInterestedMechMania}}
-                    </span>
-                </div>
-                
-                <div class="info-item">
-                    <span class="info-label">Interested in PuzzleBang:</span>
-                    <span class="info-value">
-                        {{#isInterestedPuzzleBang}}Yes{{/isInterestedPuzzleBang}}
-                        {{^isInterestedPuzzleBang}}No{{/isInterestedPuzzleBang}}
-                    </span>
-                </div>
-                
-                <div class="info-item">
-                    <span class="info-label">Interest Tags:</span>
-                    <span class="info-value">{{tags}}</span>
-                </div>
-                
-                <div class="info-item">
-                    <span class="info-label">Opportunities Interest:</span>
-                    <span class="info-value">{{opportunities}}</span>
-                </div>
-                
-                {{#hasResume}}
-                <div class="info-item">
-                    <span class="info-label">Resume:</span>
-                    <span class="info-value">
-                        <a href="${Config.WEB_RESUME_ROUTE}" class="resume-link">View Your Resume</a>
-                    </span>
-                </div>
-                {{/hasResume}}
-            </div>
-        </div>
-        
-        <div class="footer">
-            <p>R|P 2025 • Reflections | Projections</p>
-        </div>
-    </div>
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" class="main-bg">
+        <tr>
+            <td align="center">
+                <table class="email-container" cellpadding="0" cellspacing="0" border="0">
+                    <tr>
+                        <td>
+                            <table class="header-table" cellpadding="0" cellspacing="0" border="0">
+                                <tr>
+                                    <td class="header-bg">
+                                        <h1 class="header-title">R|P 2025 Registration Confirmed</h1>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td>
+                            <table class="content-table" cellpadding="0" cellspacing="0" border="0">
+                                <tr>
+                                    <td class="content-area">
+                                        <p class="welcome-text">
+                                            Thank you for registering for R|P 2025. We have received your information and will be sending next steps shortly.
+                                        </p>
+                                        
+                                        <table class="update-table" cellpadding="0" cellspacing="0" border="0">
+                                            <tr>
+                                                <td class="update-box">
+                                                    Need to update your registration? 
+                                                    <a href="${Config.WEB_REGISTER_ROUTE}" class="update-link">Return to the registration form</a>
+                                                    to edit your responses!
+                                                </td>
+                                            </tr>
+                                        </table>
+                                        
+                                        <h2 class="section-title">Your Registration Details</h2>
+                                        
+                                        <table class="info-table" cellpadding="0" cellspacing="0" border="0">
+                                            <tr>
+                                                <td class="info-bg">
+                                                    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                                                        <tr class="info-row">
+                                                            <td class="info-label">Name:</td>
+                                                            <td class="info-value">{{name}}</td>
+                                                        </tr>
+                                                        <tr class="info-row">
+                                                            <td class="info-label">School:</td>
+                                                            <td class="info-value">{{school}}</td>
+                                                        </tr>
+                                                        <tr class="info-row">
+                                                            <td class="info-label">Education Level:</td>
+                                                            <td class="info-value">{{educationLevel}}</td>
+                                                        </tr>
+                                                        <tr class="info-row">
+                                                            <td class="info-label">Graduation Year:</td>
+                                                            <td class="info-value">{{graduationYear}}</td>
+                                                        </tr>
+                                                        <tr class="info-row">
+                                                            <td class="info-label">Majors:</td>
+                                                            <td class="info-value">{{majors}}</td>
+                                                        </tr>
+                                                        <tr class="info-row">
+                                                            <td class="info-label">Minors:</td>
+                                                            <td class="info-value">{{minors}}</td>
+                                                        </tr>
+                                                        <tr class="info-row">
+                                                            <td class="info-label">Dietary Restrictions:</td>
+                                                            <td class="info-value">{{dietaryRestrictions}}</td>
+                                                        </tr>
+                                                        <tr class="info-row">
+                                                            <td class="info-label">Allergies:</td>
+                                                            <td class="info-value">{{allergies}}</td>
+                                                        </tr>
+                                                        <tr class="info-row">
+                                                            <td class="info-label">Gender:</td>
+                                                            <td class="info-value">{{gender}}</td>
+                                                        </tr>
+                                                        <tr class="info-row">
+                                                            <td class="info-label">Race/Ethnicity:</td>
+                                                            <td class="info-value">{{ethnicity}}</td>
+                                                        </tr>
+                                                        {{#personalLinks.length}}
+                                                        <tr class="info-row">
+                                                            <td class="info-label">Personal Links:</td>
+                                                            <td class="info-value">
+                                                                {{#personalLinks}}<a href="{{.}}" class="nested-link">{{.}}</a><br>{{/personalLinks}}
+                                                            </td>
+                                                        </tr>
+                                                        {{/personalLinks.length}}
+                                                        <tr class="info-row">
+                                                            <td class="info-label">Interested in MechMania:</td>
+                                                            <td class="info-value">
+                                                                {{#isInterestedMechMania}}Yes{{/isInterestedMechMania}}
+                                                                {{^isInterestedMechMania}}No{{/isInterestedMechMania}}
+                                                            </td>
+                                                        </tr>
+                                                        <tr class="info-row">
+                                                            <td class="info-label">Interested in PuzzleBang:</td>
+                                                            <td class="info-value">
+                                                                {{#isInterestedPuzzleBang}}Yes{{/isInterestedPuzzleBang}}
+                                                                {{^isInterestedPuzzleBang}}No{{/isInterestedPuzzleBang}}
+                                                            </td>
+                                                        </tr>
+                                                        <tr class="info-row">
+                                                            <td class="info-label">Interest Tags:</td>
+                                                            <td class="info-value">{{tags}}</td>
+                                                        </tr>
+                                                        <tr class="info-row">
+                                                            <td class="info-label">Opportunities Interest:</td>
+                                                            <td class="info-value">{{opportunities}}</td>
+                                                        </tr>
+                                                        {{#hasResume}}
+                                                        <tr class="info-row">
+                                                            <td class="info-label">Resume:</td>
+                                                            <td class="info-value">
+                                                                <table class="resume-table" cellpadding="0" cellspacing="0" border="0">
+                                                                    <tr>
+                                                                        <td>
+                                                                            <a href="${Config.WEB_RESUME_ROUTE}" class="resume-button">View Your Resume</a>
+                                                                        </td>
+                                                                    </tr>
+                                                                </table>
+                                                            </td>
+                                                        </tr>
+                                                        {{/hasResume}}
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td>
+                            <table class="footer-table" cellpadding="0" cellspacing="0" border="0">
+                                <tr>
+                                    <td class="footer-area">
+                                        R|P 2025 • Reflections | Projections
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
 </body>
 </html>`,
     REGISTRATION_CONFIRMATION_OLD: `<!DOCTYPE html>
