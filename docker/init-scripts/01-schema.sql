@@ -57,14 +57,12 @@ CREATE TABLE public."attendees" (
     "hasPriorityFri" boolean DEFAULT false NOT NULL,
     "hasPrioritySat" boolean DEFAULT false NOT NULL,
     "hasPrioritySun" boolean DEFAULT false NOT NULL,
-    "hasRedeemedTshirt" boolean DEFAULT false NOT NULL,
-    "hasRedeemedButton" boolean DEFAULT false NOT NULL,
-    "hasRedeemedTote" boolean DEFAULT false NOT NULL,
-    "hasRedeemedCap" boolean DEFAULT false NOT NULL,
-    "isEligibleTshirt" boolean DEFAULT true NOT NULL,
-    "isEligibleButton" boolean DEFAULT false NOT NULL,
-    "isEligibleTote" boolean DEFAULT false NOT NULL,
-    "isEligibleCap" boolean DEFAULT false NOT NULL,
+    "isEligibleTier1" boolean DEFAULT false NOT NULL,
+    "hasRedeemedTier1" boolean DEFAULT false NOT NULL,
+    "isEligibleTier2" boolean DEFAULT false NOT NULL,
+    "hasRedeemedTier2" boolean DEFAULT false NOT NULL,
+    "isEligibleTier3" boolean DEFAULT false NOT NULL,
+    "hasRedeemedTier3" boolean DEFAULT false NOT NULL,
     "tags" text[] DEFAULT '{}'::text[] NOT NULL,
     "favoriteEvents" uuid[] DEFAULT '{}'::uuid[] NOT NULL,
     "puzzlesCompleted" text[] DEFAULT '{}'::text[] NOT NULL,
@@ -97,6 +95,16 @@ CREATE TABLE public."events" (
     "attendanceCount" integer DEFAULT 0 NOT NULL,
     "eventType" public."eventType" NOT NULL,
     CONSTRAINT "events_pkey" PRIMARY KEY ("eventId")
+);
+
+CREATE TABLE public."leaderboardSubmissions" (
+    "submissionId" uuid DEFAULT gen_random_uuid() NOT NULL,
+    "day" date NOT NULL,
+    "nValue" integer NOT NULL,
+    "submittedAt" timestamp with time zone DEFAULT now() NOT NULL,
+    "submittedBy" character varying NOT NULL,
+    CONSTRAINT "leaderboardSubmissions_pkey" PRIMARY KEY ("submissionId"),
+    CONSTRAINT "leaderboardSubmissions_day_unique" UNIQUE ("day")
 );
 
 CREATE TABLE public."meetings" (
@@ -233,3 +241,6 @@ ALTER TABLE ONLY public."notifications"
 
 ALTER TABLE ONLY public."registrations"
     ADD CONSTRAINT "registrations_user_id_fkey" FOREIGN KEY ("userId") REFERENCES public."authInfo"("userId");
+
+ALTER TABLE ONLY public."leaderboardSubmissions"
+    ADD CONSTRAINT "leaderboard_submissions_submitted_by_fkey" FOREIGN KEY ("submittedBy") REFERENCES public."authInfo"("userId");
