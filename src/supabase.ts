@@ -49,6 +49,9 @@ export const SupabaseDB = {
     get SUBSCRIPTIONS() {
         return supabase.from("subscriptions");
     },
+    get LEADERBOARD_SUBMISSIONS() {
+        return supabase.from("leaderboardSubmissions");
+    },
 };
 
 export const RoleTypes: Record<
@@ -78,6 +81,7 @@ export const CommitteeTypes: Record<
 export interface User {
     userId: string;
     points: number;
+    tags: string[];
     favoriteEvents: string[];
     puzzlesCompleted: string[];
     hasPriorityMon: boolean;
@@ -87,12 +91,10 @@ export interface User {
     hasPriorityFri: boolean;
     hasPrioritySat: boolean;
     hasPrioritySun: boolean;
-    isEligibleTshirt: boolean;
-    isEligibleCap: boolean;
-    isEligibleTote: boolean;
-    isEligibleButton: boolean;
-    hasRedeemedTshirt: boolean;
-    hasRedeemedCap: boolean;
-    hasRedeemedTote: boolean;
-    hasRedeemedButton: boolean;
+    isEligibleTier1: boolean;
+    isEligibleTier2: boolean;
+    isEligibleTier3: boolean;
+    hasRedeemedTier1: boolean;
+    hasRedeemedTier2: boolean;
+    hasRedeemedTier3: boolean;
 }

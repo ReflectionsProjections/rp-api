@@ -73,14 +73,12 @@ export type Database = {
                     hasPriorityThu: boolean;
                     hasPriorityTue: boolean;
                     hasPriorityWed: boolean;
-                    hasRedeemedButton: boolean;
-                    hasRedeemedCap: boolean;
-                    hasRedeemedTote: boolean;
-                    hasRedeemedTshirt: boolean;
-                    isEligibleButton: boolean;
-                    isEligibleCap: boolean;
-                    isEligibleTote: boolean;
-                    isEligibleTshirt: boolean;
+                    hasRedeemedTier1: boolean;
+                    hasRedeemedTier2: boolean;
+                    hasRedeemedTier3: boolean;
+                    isEligibleTier1: boolean;
+                    isEligibleTier2: boolean;
+                    isEligibleTier3: boolean;
                     points: number;
                     puzzlesCompleted: string[];
                     userId: string;
@@ -95,14 +93,12 @@ export type Database = {
                     hasPriorityThu?: boolean;
                     hasPriorityTue?: boolean;
                     hasPriorityWed?: boolean;
-                    hasRedeemedButton?: boolean;
-                    hasRedeemedCap?: boolean;
-                    hasRedeemedTote?: boolean;
-                    hasRedeemedTshirt?: boolean;
-                    isEligibleButton?: boolean;
-                    isEligibleCap?: boolean;
-                    isEligibleTote?: boolean;
-                    isEligibleTshirt?: boolean;
+                    hasRedeemedTier1?: boolean;
+                    hasRedeemedTier2?: boolean;
+                    hasRedeemedTier3?: boolean;
+                    isEligibleTier1?: boolean;
+                    isEligibleTier2?: boolean;
+                    isEligibleTier3?: boolean;
                     points?: number;
                     puzzlesCompleted?: string[];
                     userId: string;
@@ -117,14 +113,12 @@ export type Database = {
                     hasPriorityThu?: boolean;
                     hasPriorityTue?: boolean;
                     hasPriorityWed?: boolean;
-                    hasRedeemedButton?: boolean;
-                    hasRedeemedCap?: boolean;
-                    hasRedeemedTote?: boolean;
-                    hasRedeemedTshirt?: boolean;
-                    isEligibleButton?: boolean;
-                    isEligibleCap?: boolean;
-                    isEligibleTote?: boolean;
-                    isEligibleTshirt?: boolean;
+                    hasRedeemedTier1?: boolean;
+                    hasRedeemedTier2?: boolean;
+                    hasRedeemedTier3?: boolean;
+                    isEligibleTier1?: boolean;
+                    isEligibleTier2?: boolean;
+                    isEligibleTier3?: boolean;
                     points?: number;
                     puzzlesCompleted?: string[];
                     userId?: string;
@@ -528,6 +522,38 @@ export type Database = {
                     team?: Database["public"]["Enums"]["committee_names"];
                 };
                 Relationships: [];
+            };
+            leaderboardSubmissions: {
+                Row: {
+                    day: string;
+                    nValue: number;
+                    submissionId: string;
+                    submittedAt: string;
+                    submittedBy: string;
+                };
+                Insert: {
+                    day: string;
+                    nValue: number;
+                    submissionId?: string;
+                    submittedAt?: string;
+                    submittedBy: string;
+                };
+                Update: {
+                    day?: string;
+                    nValue?: number;
+                    submissionId?: string;
+                    submittedAt?: string;
+                    submittedBy?: string;
+                };
+                Relationships: [
+                    {
+                        foreignKeyName: "leaderboard_submissions_submitted_by_fkey";
+                        columns: ["submittedBy"];
+                        isOneToOne: false;
+                        referencedRelation: "authInfo";
+                        referencedColumns: ["userId"];
+                    },
+                ];
             };
             subscriptions: {
                 Row: {
