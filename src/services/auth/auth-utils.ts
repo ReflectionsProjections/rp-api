@@ -63,12 +63,12 @@ export async function updateDatabaseWithAuthPayload(
         Config.DEV_ADMIN_EMAIL &&
         email === Config.DEV_ADMIN_EMAIL
     ) {
-        await SupabaseDB.AUTH_ROLES.insert({
+        await SupabaseDB.AUTH_ROLES.upsert({
             userId,
             role: Role.Enum.ADMIN,
         });
 
-        await SupabaseDB.AUTH_ROLES.insert({
+        await SupabaseDB.AUTH_ROLES.upsert({
             userId,
             role: Role.Enum.STAFF,
         });
