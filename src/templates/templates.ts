@@ -6,6 +6,7 @@ const templates = {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!--[if mso]>
     <noscript>
         <xml>
             <o:OfficeDocumentSettings>
@@ -26,7 +27,7 @@ const templates = {
             mso-table-rspace: 0pt !important;
         }
         
-        /* Force colors in dark mode */
+        /* Force colors in dark mode - Outlook and other clients */
         [data-ogsc] *,
         [data-ogsb] *,
         .darkmode *,
@@ -50,7 +51,7 @@ const templates = {
         [data-ogsc] .header-bg,
         [data-ogsb] .header-bg,
         .darkmode .header-bg {
-            background-color: #c0392b !important;
+            background-color: #2c3e50 !important;
         }
         
         [data-ogsc] .info-bg,
@@ -59,19 +60,11 @@ const templates = {
             background-color: #f8f9fa !important;
         }
         
-        /* Outlook link fixes */
-        [data-ogsc] a,
-        [data-ogsb] a,
-        .darkmode a {
-            color: #c0392b !important;
-            text-decoration: underline !important;
-        }
-        
         /* Main styles */
         body {
             margin: 0 !important;
             padding: 0 !important;
-            font-family: Arial, Helvetica, sans-serif !important;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, Arial, sans-serif !important;
             background-color: #f8f9fa !important;
             color: #2c3e50 !important;
             line-height: 1.6 !important;
@@ -80,25 +73,19 @@ const templates = {
         .main-bg {
             background-color: #f8f9fa !important;
             padding: 20px 0 !important;
-            width: 100% !important;
         }
         
         .email-container {
             max-width: 600px !important;
             margin: 0 auto !important;
             background-color: #ffffff !important;
-            border: 1px solid #e1e8ed !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
             border-radius: 8px !important;
             overflow: hidden !important;
         }
         
-        .header-table {
-            width: 100% !important;
-            border-collapse: collapse !important;
-        }
-        
         .header-bg {
-            background-color: #c0392b !important;
+            background-color: #2c3e50 !important;
             padding: 30px 20px !important;
             text-align: center !important;
         }
@@ -106,16 +93,11 @@ const templates = {
         .header-title {
             margin: 0 !important;
             font-size: 24px !important;
-            font-weight: bold !important;
+            font-weight: 600 !important;
             letter-spacing: 1px !important;
             text-transform: uppercase !important;
             color: #ffffff !important;
-            font-family: Arial, Helvetica, sans-serif !important;
-        }
-        
-        .content-table {
-            width: 100% !important;
-            border-collapse: collapse !important;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, Arial, sans-serif !important;
         }
         
         .content-area {
@@ -125,16 +107,10 @@ const templates = {
         
         .welcome-text {
             font-size: 16px !important;
-            margin: 0 0 25px 0 !important;
+            margin-bottom: 25px !important;
             color: #2c3e50 !important;
             line-height: 1.6 !important;
-            font-family: Arial, Helvetica, sans-serif !important;
-        }
-        
-        .update-table {
-            width: 100% !important;
-            border-collapse: collapse !important;
-            margin: 25px 0 !important;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, Arial, sans-serif !important;
         }
         
         .update-box {
@@ -142,40 +118,26 @@ const templates = {
             border: 2px solid #c0392b !important;
             border-radius: 8px !important;
             padding: 20px !important;
+            margin: 25px 0 !important;
             text-align: center !important;
-            font-family: Arial, Helvetica, sans-serif !important;
-            font-size: 16px !important;
-            color: #2c3e50 !important;
         }
         
-        /* Outlook-specific link styling */
         .update-link {
             color: #c0392b !important;
-            text-decoration: underline !important;
-            font-weight: bold !important;
+            text-decoration: none !important;
+            font-weight: 600 !important;
             font-size: 16px !important;
-            font-family: Arial, Helvetica, sans-serif !important;
-        }
-        
-        /* Additional Outlook link fixes */
-        span.MsoHyperlink {
-            color: #c0392b !important;
-            text-decoration: underline !important;
-        }
-        
-        span.MsoHyperlinkFollowed {
-            color: #a93226 !important;
-            text-decoration: underline !important;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, Arial, sans-serif !important;
         }
         
         .section-title {
             font-size: 18px !important;
-            font-weight: bold !important;
+            font-weight: 600 !important;
             margin: 30px 0 20px 0 !important;
             color: #c0392b !important;
             border-bottom: 2px solid #c0392b !important;
             padding-bottom: 5px !important;
-            font-family: Arial, Helvetica, sans-serif !important;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, Arial, sans-serif !important;
         }
         
         .info-table {
@@ -198,30 +160,26 @@ const templates = {
         }
         
         .info-label {
-            font-weight: bold !important;
+            font-weight: 600 !important;
             color: #7f8c8d !important;
-            width: 140px !important;
+            min-width: 140px !important;
             padding: 12px 15px !important;
             vertical-align: top !important;
-            font-family: Arial, Helvetica, sans-serif !important;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, Arial, sans-serif !important;
             font-size: 14px !important;
         }
         
         .info-value {
             color: #2c3e50 !important;
             padding: 12px 15px !important;
-            font-family: Arial, Helvetica, sans-serif !important;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, Arial, sans-serif !important;
             font-size: 14px !important;
         }
         
         .nested-link {
             color: #c0392b !important;
-            text-decoration: underline !important;
-            font-family: Arial, Helvetica, sans-serif !important;
-        }
-        
-        .resume-table {
-            margin-top: 10px !important;
+            text-decoration: none !important;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, Arial, sans-serif !important;
         }
         
         .resume-button {
@@ -231,15 +189,10 @@ const templates = {
             text-decoration: none !important;
             border-radius: 6px !important;
             display: inline-block !important;
-            font-weight: bold !important;
+            font-weight: 500 !important;
+            margin-top: 10px !important;
             font-size: 14px !important;
-            font-family: Arial, Helvetica, sans-serif !important;
-            border: none !important;
-        }
-        
-        .footer-table {
-            width: 100% !important;
-            border-collapse: collapse !important;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, Arial, sans-serif !important;
         }
         
         .footer-area {
@@ -249,13 +202,22 @@ const templates = {
             border-top: 1px solid #bdc3c7 !important;
             font-size: 14px !important;
             color: #7f8c8d !important;
-            font-family: Arial, Helvetica, sans-serif !important;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, Arial, sans-serif !important;
         }
         
         /* Mobile responsive */
         @media only screen and (max-width: 600px) {
             .content-area {
                 padding: 20px 15px !important;
+            }
+            
+            .info-table {
+                display: block !important;
+            }
+            
+            .info-row {
+                display: block !important;
+                margin-bottom: 12px !important;
             }
             
             .info-label,
@@ -272,156 +234,114 @@ const templates = {
     </style>
 </head>
 <body>
-    <table width="100%" cellpadding="0" cellspacing="0" border="0" class="main-bg">
-        <tr>
-            <td align="center">
-                <table class="email-container" cellpadding="0" cellspacing="0" border="0">
-                    <tr>
-                        <td>
-                            <table class="header-table" cellpadding="0" cellspacing="0" border="0">
-                                <tr>
-                                    <td class="header-bg">
-                                        <h1 class="header-title">R|P 2025 Registration Confirmed</h1>
-                                    </td>
-                                </tr>
-                            </table>
-                        </td>
-                    </tr>
-                    
-                    <tr>
-                        <td>
-                            <table class="content-table" cellpadding="0" cellspacing="0" border="0">
-                                <tr>
-                                    <td class="content-area">
-                                        <p class="welcome-text">
-                                            Thank you for registering for R|P 2025. We have received your information and will be sending next steps shortly.
-                                        </p>
-                                        
-                                        <table class="update-table" cellpadding="0" cellspacing="0" border="0">
-                                            <tr>
-                                                <td class="update-box">
-                                                    Need to update your registration? 
-                                                    <a href="${Config.WEB_REGISTER_ROUTE}" class="update-link">Return to the registration form</a>
-                                                    to edit your responses!
-                                                </td>
-                                            </tr>
-                                        </table>
-                                        
-                                        <h2 class="section-title">Your Registration Details</h2>
-                                        
-                                        <table class="info-table" cellpadding="0" cellspacing="0" border="0">
-                                            <tr>
-                                                <td class="info-bg">
-                                                    <table width="100%" cellpadding="0" cellspacing="0" border="0">
-                                                        <tr class="info-row">
-                                                            <td class="info-label">Name:</td>
-                                                            <td class="info-value">{{name}}</td>
-                                                        </tr>
-                                                        <tr class="info-row">
-                                                            <td class="info-label">School:</td>
-                                                            <td class="info-value">{{school}}</td>
-                                                        </tr>
-                                                        <tr class="info-row">
-                                                            <td class="info-label">Education Level:</td>
-                                                            <td class="info-value">{{educationLevel}}</td>
-                                                        </tr>
-                                                        <tr class="info-row">
-                                                            <td class="info-label">Graduation Year:</td>
-                                                            <td class="info-value">{{graduationYear}}</td>
-                                                        </tr>
-                                                        <tr class="info-row">
-                                                            <td class="info-label">Majors:</td>
-                                                            <td class="info-value">{{majors}}</td>
-                                                        </tr>
-                                                        <tr class="info-row">
-                                                            <td class="info-label">Minors:</td>
-                                                            <td class="info-value">{{minors}}</td>
-                                                        </tr>
-                                                        <tr class="info-row">
-                                                            <td class="info-label">Dietary Restrictions:</td>
-                                                            <td class="info-value">{{dietaryRestrictions}}</td>
-                                                        </tr>
-                                                        <tr class="info-row">
-                                                            <td class="info-label">Allergies:</td>
-                                                            <td class="info-value">{{allergies}}</td>
-                                                        </tr>
-                                                        <tr class="info-row">
-                                                            <td class="info-label">Gender:</td>
-                                                            <td class="info-value">{{gender}}</td>
-                                                        </tr>
-                                                        <tr class="info-row">
-                                                            <td class="info-label">Race/Ethnicity:</td>
-                                                            <td class="info-value">{{ethnicity}}</td>
-                                                        </tr>
-                                                        {{#personalLinks.length}}
-                                                        <tr class="info-row">
-                                                            <td class="info-label">Personal Links:</td>
-                                                            <td class="info-value">
-                                                                {{#personalLinks}}<a href="{{.}}" class="nested-link">{{.}}</a><br>{{/personalLinks}}
-                                                            </td>
-                                                        </tr>
-                                                        {{/personalLinks.length}}
-                                                        <tr class="info-row">
-                                                            <td class="info-label">Interested in MechMania:</td>
-                                                            <td class="info-value">
-                                                                {{#isInterestedMechMania}}Yes{{/isInterestedMechMania}}
-                                                                {{^isInterestedMechMania}}No{{/isInterestedMechMania}}
-                                                            </td>
-                                                        </tr>
-                                                        <tr class="info-row">
-                                                            <td class="info-label">Interested in PuzzleBang:</td>
-                                                            <td class="info-value">
-                                                                {{#isInterestedPuzzleBang}}Yes{{/isInterestedPuzzleBang}}
-                                                                {{^isInterestedPuzzleBang}}No{{/isInterestedPuzzleBang}}
-                                                            </td>
-                                                        </tr>
-                                                        <tr class="info-row">
-                                                            <td class="info-label">Interest Tags:</td>
-                                                            <td class="info-value">{{tags}}</td>
-                                                        </tr>
-                                                        <tr class="info-row">
-                                                            <td class="info-label">Opportunities Interest:</td>
-                                                            <td class="info-value">{{opportunities}}</td>
-                                                        </tr>
-                                                        {{#hasResume}}
-                                                        <tr class="info-row">
-                                                            <td class="info-label">Resume:</td>
-                                                            <td class="info-value">
-                                                                <table class="resume-table" cellpadding="0" cellspacing="0" border="0">
-                                                                    <tr>
-                                                                        <td>
-                                                                            <a href="${Config.WEB_RESUME_ROUTE}" class="resume-button">View Your Resume</a>
-                                                                        </td>
-                                                                    </tr>
-                                                                </table>
-                                                            </td>
-                                                        </tr>
-                                                        {{/hasResume}}
-                                                    </table>
-                                                </td>
-                                            </tr>
-                                        </table>
-                                    </td>
-                                </tr>
-                            </table>
-                        </td>
-                    </tr>
-                    
-                    <tr>
-                        <td>
-                            <table class="footer-table" cellpadding="0" cellspacing="0" border="0">
-                                <tr>
-                                    <td class="footer-area">
-                                        R|P 2025 • Reflections | Projections
-                                    </td>
-                                </tr>
-                            </table>
-                        </td>
-                    </tr>
-                </table>
-            </td>
-        </tr>
-    </table>
+    <div class="main-bg">
+        <div class="email-container">
+            <div class="header-bg">
+                <h1 class="header-title">R|P 2025 Registration Confirmed</h1>
+            </div>
+            
+            <div class="content-area">
+                <p class="welcome-text">
+                    Thank you for registering for R|P 2025. We have received your information and will be sending next steps shortly.
+                </p>
+                
+                <div class="update-box">
+                    Need to update your registration? 
+                    <a href="${Config.WEB_REGISTER_ROUTE}" class="update-link">Return to the registration form</a>
+                    to edit your responses!
+                </div>
+                
+                <h2 class="section-title">Your Registration Details</h2>
+                
+                <div class="info-bg">
+                    <table class="info-table" cellpadding="0" cellspacing="0" border="0">
+                        <tr class="info-row">
+                            <td class="info-label">Name:</td>
+                            <td class="info-value">{{name}}</td>
+                        </tr>
+                        <tr class="info-row">
+                            <td class="info-label">School:</td>
+                            <td class="info-value">{{school}}</td>
+                        </tr>
+                        <tr class="info-row">
+                            <td class="info-label">Education Level:</td>
+                            <td class="info-value">{{educationLevel}}</td>
+                        </tr>
+                        <tr class="info-row">
+                            <td class="info-label">Graduation Year:</td>
+                            <td class="info-value">{{graduationYear}}</td>
+                        </tr>
+                        <tr class="info-row">
+                            <td class="info-label">Majors:</td>
+                            <td class="info-value">{{majors}}</td>
+                        </tr>
+                        <tr class="info-row">
+                            <td class="info-label">Minors:</td>
+                            <td class="info-value">{{minors}}</td>
+                        </tr>
+                        <tr class="info-row">
+                            <td class="info-label">Dietary Restrictions:</td>
+                            <td class="info-value">{{dietaryRestrictions}}</td>
+                        </tr>
+                        <tr class="info-row">
+                            <td class="info-label">Allergies:</td>
+                            <td class="info-value">{{allergies}}</td>
+                        </tr>
+                        <tr class="info-row">
+                            <td class="info-label">Gender:</td>
+                            <td class="info-value">{{gender}}</td>
+                        </tr>
+                        <tr class="info-row">
+                            <td class="info-label">Race/Ethnicity:</td>
+                            <td class="info-value">{{ethnicity}}</td>
+                        </tr>
+                        {{#personalLinks.length}}
+                        <tr class="info-row">
+                            <td class="info-label">Personal Links:</td>
+                            <td class="info-value">
+                                {{#personalLinks}}<a href="{{.}}" class="nested-link">{{.}}</a><br>{{/personalLinks}}
+                            </td>
+                        </tr>
+                        {{/personalLinks.length}}
+                        <tr class="info-row">
+                            <td class="info-label">Interested in MechMania:</td>
+                            <td class="info-value">
+                                {{#isInterestedMechMania}}Yes{{/isInterestedMechMania}}
+                                {{^isInterestedMechMania}}No{{/isInterestedMechMania}}
+                            </td>
+                        </tr>
+                        <tr class="info-row">
+                            <td class="info-label">Interested in PuzzleBang:</td>
+                            <td class="info-value">
+                                {{#isInterestedPuzzleBang}}Yes{{/isInterestedPuzzleBang}}
+                                {{^isInterestedPuzzleBang}}No{{/isInterestedPuzzleBang}}
+                            </td>
+                        </tr>
+                        <tr class="info-row">
+                            <td class="info-label">Interest Tags:</td>
+                            <td class="info-value">{{tags}}</td>
+                        </tr>
+                        <tr class="info-row">
+                            <td class="info-label">Opportunities Interest:</td>
+                            <td class="info-value">{{opportunities}}</td>
+                        </tr>
+                        {{#hasResume}}
+                        <tr class="info-row">
+                            <td class="info-label">Resume:</td>
+                            <td class="info-value">
+                                <a href="${Config.WEB_RESUME_ROUTE}" class="resume-button">View Your Resume</a>
+                            </td>
+                        </tr>
+                        {{/hasResume}}
+                    </table>
+                </div>
+            </div>
+            
+            <div class="footer-area">
+                R|P 2025 • Reflections | Projections
+            </div>
+        </div>
+    </div>
 </body>
 </html>`,
     REGISTRATION_CONFIRMATION_OLD: `<!DOCTYPE html>
