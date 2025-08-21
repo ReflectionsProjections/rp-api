@@ -6,13 +6,6 @@ const templates = {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <noscript>
-        <xml>
-            <o:OfficeDocumentSettings>
-                <o:PixelsPerInch>96</o:PixelsPerInch>
-            </o:OfficeDocumentSettings>
-        </xml>
-    </noscript>
     <![endif]-->
     <style type="text/css">
         /* Reset and compatibility */
@@ -99,8 +92,14 @@ const templates = {
         
         .header-bg {
             background-color: #c0392b !important;
-            padding: 30px 20px !important;
             text-align: center !important;
+        }
+        
+        .header-image {
+            max-width: 100% !important;
+            height: auto !important;
+            display: block !important;
+            margin: 0 auto !important;
         }
         
         .header-title {
@@ -281,7 +280,7 @@ const templates = {
                             <table class="header-table" cellpadding="0" cellspacing="0" border="0">
                                 <tr>
                                     <td class="header-bg">
-                                        <h1 class="header-title">R|P 2025 Registration Confirmed</h1>
+                                        <img src="${Config.EMAIL_HEADER_HREF}" alt="R|P 2025 Registration Confirmed" class="header-image" />
                                     </td>
                                 </tr>
                             </table>
