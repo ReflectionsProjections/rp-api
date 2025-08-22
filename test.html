@@ -1,12 +1,10 @@
-import Config from "../config";
-
-const templates = {
-    REGISTRATION_CONFIRMATION: `<!doctype html>
+<!doctype html>
 <html>
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <style type="text/css">
+            /* Reset and compatibility */
             body,
             table,
             td,
@@ -24,7 +22,7 @@ const templates = {
                 mso-table-rspace: 0pt !important;
             }
 
-            /* not showing broken image thingie */
+            /* Ensure images don't show broken image icons */
             img {
                 -ms-interpolation-mode: bicubic !important;
                 border: 0 !important;
@@ -33,7 +31,7 @@ const templates = {
                 display: block !important;
             }
 
-            /* dark mode */
+            /* Force dark theme colors */
             [data-ogsc] *,
             [data-ogsb] *,
             .darkmode *,
@@ -66,6 +64,7 @@ const templates = {
                 background-color: #2a2a2a !important;
             }
 
+            /* Outlook link fixes */
             [data-ogsc] a,
             [data-ogsb] a,
             .darkmode a {
@@ -74,6 +73,7 @@ const templates = {
                 border-bottom: 1px solid #ff0000 !important;
             }
 
+            /* Main dark theme styles */
             body {
                 margin: 0 !important;
                 padding: 0 !important;
@@ -98,6 +98,7 @@ const templates = {
                 position: relative !important;
             }
 
+            /* Top geometric border */
             .top-border {
                 height: 4px !important;
                 background: repeating-linear-gradient(
@@ -132,6 +133,7 @@ const templates = {
                 vertical-align: middle !important;
             }
 
+            /* Image container - always has background */
             .header-image-container {
                 position: relative !important;
                 display: block !important;
@@ -205,6 +207,7 @@ const templates = {
                 text-align: center !important;
             }
 
+            /* Typography for header fallback */
             .year-badge {
                 font-size: 12px !important;
                 font-weight: bold !important;
@@ -237,6 +240,7 @@ const templates = {
                 text-shadow: 0 0 10px #ff0000 !important;
             }
 
+            /* Header decorative elements */
             .header-decoration {
                 margin: 15px 0 0 0 !important;
                 height: 2px !important;
@@ -251,6 +255,7 @@ const templates = {
                 margin-right: auto !important;
             }
 
+            /* Header bottom border */
             .header-bottom-border {
                 height: 3px !important;
                 background-color: #ff0000 !important;
@@ -476,6 +481,7 @@ const templates = {
                 ) !important;
             }
 
+            /* Fixes for email clients that don't support CSS transforms */
             .fallback-no-transform {
                 padding: 40px 20px !important;
                 text-align: center !important;
@@ -544,6 +550,7 @@ const templates = {
                             <td class="top-border"></td>
                         </tr>
 
+            <!-- Header with robust image fallback -->
             <tr>
                 <td>
                     <table
@@ -555,7 +562,7 @@ const templates = {
                         <tr>
                             <td class="header-bg">
                                 
-                                <!-- Outlook Fallback -->
+                                <!-- Outlook MSO Fallback -->
                                 <!--[if mso]>
                                 <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background: linear-gradient(135deg, #1a1a1a 0%, #2a1a1a 100%);">
                                     <tr>
@@ -578,7 +585,7 @@ const templates = {
                                 </table>
                                 <![endif]-->
                                 
-                                <!-- NON OUTLOOK -->
+                                <!-- Non-Outlook clients -->
                                 <!--[if !mso]><!-->
                                 <div class="header-image-container">
                                     <img
@@ -608,11 +615,12 @@ const templates = {
                 </td>
             </tr>
 
+                        <!-- Header bottom border -->
                         <tr>
                             <td class="header-bottom-border"></td>
                         </tr>
 
-                        <!-- CONTENT -->
+                        <!-- Content -->
                         <tr>
                             <td>
                                 <table
@@ -953,10 +961,12 @@ const templates = {
                            </td>
                        </tr>
 
+                       <!-- Footer top border -->
                        <tr>
                            <td class="footer-top-border"></td>
                        </tr>
 
+                       <!-- Footer -->
                        <tr>
                            <td>
                                <table
@@ -978,111 +988,4 @@ const templates = {
            </tr>
        </table>
    </body>
-</html>`,
-    REGISTRATION_CONFIRMATION_OLD: `<!DOCTYPE html>
-        <html>
-            <body>
-                <div class="container">
-                    <p> Thank you for registering for R|P 2025. We have received your information, and will be sending next steps shortly.  </p>
-                    
-                    <p> Need to update your registration? Return to the 
-                        <a href="${Config.WEB_REGISTER_ROUTE}">registration form</a>
-                    to edit your responses!</p>
-
-                    <p> For your reference, your submission included the following information: </p>
-                    <ul>
-                        <li> <b> Name: </b>  {{name}} </li>
-                        <li> <b> School: </b>  {{school}} </li>
-                        <li> <b> Education Level: </b>  {{educationLevel}} </li>
-                        <li> <b> Graduation Year: </b>  {{graduationYear}} </li>
-                        <li> <b> Majors: </b>  {{majors}} </li>
-                        <li> <b> Minors: </b>  {{minors}} </li>
-                        <li> <b> Dietary Restrictions: </b> {{dietaryRestrictions}} </li>
-                        <li> <b> Allergies: </b> {{allergies}} </li>
-                        <li> <b> Gender: </b> {{gender}} </li>
-                        <li> <b> Race/Ethnicity: </b> {{ethnicity}} </li>
-                        {{#personalLinks.length}}
-                        <li><b>Personal Links:</b>
-                            <ul>
-                                {{#personalLinks}}<li><a href="{{.}}">{{.}}</a></li>{{/personalLinks}}
-                            </ul>
-                        </li>
-                        {{/personalLinks.length}}
-                        {{#isInterestedMechMania}}
-                        <li> <b> Interested in MechMania: </b> Yes </li>
-                        {{/isInterestedMechMania}}
-                        {{^isInterestedMechMania}}
-                        <li> <b> Interested in MechMania: </b> No </li>
-                        {{/isInterestedMechMania}}
-                        {{#isInterestedPuzzleBang}}
-                        <li> <b> Interested in PuzzleBang: </b> Yes </li>
-                        {{/isInterestedPuzzleBang}}
-                        {{^isInterestedPuzzleBang}}
-                        <li> <b> Interested in PuzzleBang: </b> No </li>
-                        {{/isInterestedPuzzleBang}}
-                        <li> <b> Interest Tags: </b> {{tags}} </li>
-                        <li> <b> Opportunities Interest: </b> {{opportunities}} </li>
-                        {{#hasResume}}
-                        <li>
-                            <a href="${Config.WEB_RESUME_ROUTE}">View your uploaded resume</a>
-                        </li>
-                        {{/hasResume}}
-                    </ul>
-
-                </div>
-            </body>
-        </html>
-    `,
-
-    SPONSOR_VERIFICATION: `
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Verification Code</title>
-        <style>
-            body {
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                height: 50vh;
-                margin: 0;
-                font-family: Arial, sans-serif;
-                background-color: #f7f7f7;
-            }
-            .container {
-                background-color: #ffffff;
-                padding: 20px 40px;
-                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-                border-radius: 10px;
-                text-align: center;
-            }
-            h1 {
-                font-size: 24px;
-                color: #333333;
-                margin-bottom: 10px;
-            }
-            .code {
-                font-size: 32px;
-                font-weight: bold;
-                color: #e74c3c;
-                letter-spacing: 2px;
-                background-color: #f2f2f2;
-                padding: 10px 20px;
-                border-radius: 5px;
-                display: inline-block;
-            }
-        </style>
-    </head>
-    <body>
-        <div class="container">
-            <h2>Here is your <a href="https://sponsor.reflectionsprojections.org/login/">SponsorRP</a> verification code:</h2>
-            <div class="code">{{code}}</div>
-            <p> Note that this verification code will expire approximately 10 minutes from now. </p>
-        </div>
-    </body>
-    </html>`,
-};
-
-export default templates;
+</html>
