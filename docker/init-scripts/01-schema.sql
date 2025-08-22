@@ -48,6 +48,17 @@ CREATE TYPE public."tierType" AS ENUM (
     'TIER3'
 );
 
+CREATE TYPE public."iconColorType" AS ENUM (
+    'BLUE',
+    'RED',
+    'GREEN',
+    'YELLOW',
+    'PINK',
+    'BLACK',
+    'PURPLE',
+    'ORANGE'
+);
+
 -- Create tables
 CREATE TABLE public."attendeeAttendances" (
     "userId" character varying NOT NULL,
@@ -67,6 +78,7 @@ CREATE TABLE public."attendees" (
     "hasPrioritySun" boolean DEFAULT false NOT NULL,
     "currentTier" public."tierType" DEFAULT 'TIER1' NOT NULL,
     "redeemedTiers" public."tierType"[] DEFAULT '{}'::public."tierType"[] NOT NULL,
+    "icon" public."iconColorType" DEFAULT 'RED' NOT NULL,
     "tags" text[] DEFAULT '{}'::text[] NOT NULL,
     "favoriteEvents" uuid[] DEFAULT '{}'::uuid[] NOT NULL,
     "puzzlesCompleted" text[] DEFAULT '{}'::text[] NOT NULL,
