@@ -61,10 +61,13 @@ export const Config = {
         "abahl3@illinois.edu",    // Aryan Bahl
     ]),
 
+    // Development admin email - allows developer email to be admin in development
+    DEV_ADMIN_EMAIL: process.env.DEV_ADMIN_EMAIL,
+
     JWT_SIGNING_SECRET: getEnv("JWT_SIGNING_SECRET"),
-    JWT_EXPIRATION_TIME: "1 day",
-    MOBILE_JWT_EXPIRATION_TIME: "10 days",
-    PB_JWT_EXPIRATION_TIME: "1 week",
+    JWT_EXPIRATION_TIME: "1 day" as const,
+    MOBILE_JWT_EXPIRATION_TIME: "10 days" as const,
+    PB_JWT_EXPIRATION_TIME: "1 week" as const,
     STAFF_MEETING_CHECK_IN_WINDOW_SECONDS: 6 * 60 * 60,
 
     S3_ACCESS_KEY: getEnv("S3_ACCESS_KEY"),
@@ -75,15 +78,14 @@ export const Config = {
     RESUME_URL_EXPIRY_SECONDS: 60,
 
     HASH_SALT_ROUNDS: 10,
-    VERIFY_EXP_TIME_MS: 300,
+    VERIFY_EXP_TIME_MS: 10 * 60 * 1000,
     SPONSOR_ENTIRES_PER_PAGE: 60,
 
     // QR Scanning
     QR_HASH_ITERATIONS: 10000,
     QR_HASH_SECRET: getEnv("QR_HASH_SECRET"),
-    USERID_ENCRYPTION_KEY: getEnv("USERID_ENCRYPTION_KEY"),
-    API_RESUME_UPDATE_ROUTE: `${API_BASE}/attendee/resume/update/`,
-    WEB_RESUME_REUPLOAD_ROUTE: `${WEB_BASE}/update`,
+    WEB_REGISTER_ROUTE: `${WEB_BASE}/register`,
+    WEB_RESUME_ROUTE: `${WEB_BASE}/resume`,
     OUTGOING_EMAIL_ADDRESSES: z.enum(["no-reply@reflectionsprojections.org"]),
     LOG_DIR:
         env === EnvironmentEnum.PRODUCTION ? "/home/ubuntu/logs" : "./logs",

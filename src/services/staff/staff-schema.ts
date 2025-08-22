@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { CommitteeTypes } from "../../supabase";
+import { CommitteeTypes } from "../../database";
 
 // Zod schema for staff
 export const StaffValidator = z.object({

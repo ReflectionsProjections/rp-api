@@ -7,7 +7,7 @@ export type Json =
     | Json[];
 
 export type Database = {
-    // Allows to automatically instanciate createClient with right options
+    // Allows to automatically instantiate createClient with right options
     // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
     __InternalSupabase: {
         PostgrestVersion: "12.2.3 (519615d)";
@@ -22,10 +22,10 @@ export type Database = {
         Functions: {
             graphql: {
                 Args: {
+                    extensions?: Json;
                     operationName?: string;
                     query?: string;
                     variables?: Json;
-                    extensions?: Json;
                 };
                 Returns: Json;
             };
@@ -57,7 +57,7 @@ export type Database = {
                         foreignKeyName: "attendee_attendance_user_id_fkey";
                         columns: ["userId"];
                         isOneToOne: true;
-                        referencedRelation: "roles";
+                        referencedRelation: "authInfo";
                         referencedColumns: ["userId"];
                     },
                 ];
@@ -82,6 +82,7 @@ export type Database = {
                     isEligibleTshirt: boolean;
                     points: number;
                     puzzlesCompleted: string[];
+                    tags: string[];
                     userId: string;
                 };
                 Insert: {
@@ -103,6 +104,7 @@ export type Database = {
                     isEligibleTshirt?: boolean;
                     points?: number;
                     puzzlesCompleted?: string[];
+                    tags?: string[];
                     userId: string;
                 };
                 Update: {
@@ -124,6 +126,7 @@ export type Database = {
                     isEligibleTshirt?: boolean;
                     points?: number;
                     puzzlesCompleted?: string[];
+                    tags?: string[];
                     userId?: string;
                 };
                 Relationships: [
@@ -131,10 +134,64 @@ export type Database = {
                         foreignKeyName: "attendees_user_id_fkey";
                         columns: ["userId"];
                         isOneToOne: true;
-                        referencedRelation: "roles";
+                        referencedRelation: "authInfo";
                         referencedColumns: ["userId"];
                     },
                 ];
+            };
+            authCodes: {
+                Row: {
+                    email: string;
+                    expTime: string;
+                    hashedVerificationCode: string;
+                };
+                Insert: {
+                    email: string;
+                    expTime: string;
+                    hashedVerificationCode: string;
+                };
+                Update: {
+                    email?: string;
+                    expTime?: string;
+                    hashedVerificationCode?: string;
+                };
+                Relationships: [];
+            };
+            authInfo: {
+                Row: {
+                    authId: string;
+                    displayName: string;
+                    email: string;
+                    userId: string;
+                };
+                Insert: {
+                    authId: string;
+                    displayName: string;
+                    email: string;
+                    userId: string;
+                };
+                Update: {
+                    authId?: string;
+                    displayName?: string;
+                    email?: string;
+                    userId?: string;
+                };
+                Relationships: [];
+            };
+            authRoles: {
+                Row: {
+                    role: Database["public"]["Enums"]["roleType"];
+                    userId: string;
+                };
+                Insert: {
+                    role: Database["public"]["Enums"]["roleType"];
+                    userId: string;
+                };
+                Update: {
+                    role?: Database["public"]["Enums"]["roleType"];
+                    userId?: string;
+                };
+                Relationships: [];
             };
             corporate: {
                 Row: {
@@ -148,6 +205,87 @@ export type Database = {
                 Update: {
                     email?: string;
                     name?: string;
+                };
+                Relationships: [];
+            };
+            draftRegistrations: {
+                Row: {
+                    allergies: string[];
+                    allergiesOther: string;
+                    dietaryOther: string;
+                    dietaryRestrictions: string[];
+                    educationLevel: string;
+                    educationOther: string;
+                    email: string;
+                    ethnicity: string[];
+                    ethnicityOther: string;
+                    gender: string;
+                    genderOther: string;
+                    graduationYear: string;
+                    howDidYouHear: string[];
+                    isInterestedMechMania: boolean;
+                    isInterestedPuzzleBang: boolean;
+                    majors: string[];
+                    minors: string[];
+                    name: string;
+                    opportunities: string[];
+                    personalLinks: string[];
+                    resume: string;
+                    school: string;
+                    tags: string[];
+                    userId: string;
+                };
+                Insert: {
+                    allergies?: string[];
+                    allergiesOther: string;
+                    dietaryOther: string;
+                    dietaryRestrictions?: string[];
+                    educationLevel: string;
+                    educationOther: string;
+                    email: string;
+                    ethnicity?: string[];
+                    ethnicityOther: string;
+                    gender: string;
+                    genderOther: string;
+                    graduationYear: string;
+                    howDidYouHear?: string[];
+                    isInterestedMechMania: boolean;
+                    isInterestedPuzzleBang: boolean;
+                    majors?: string[];
+                    minors?: string[];
+                    name: string;
+                    opportunities?: string[];
+                    personalLinks?: string[];
+                    resume?: string;
+                    school: string;
+                    tags?: string[];
+                    userId: string;
+                };
+                Update: {
+                    allergies?: string[];
+                    allergiesOther?: string;
+                    dietaryOther?: string;
+                    dietaryRestrictions?: string[];
+                    educationLevel?: string;
+                    educationOther?: string;
+                    email?: string;
+                    ethnicity?: string[];
+                    ethnicityOther?: string;
+                    gender?: string;
+                    genderOther?: string;
+                    graduationYear?: string;
+                    howDidYouHear?: string[];
+                    isInterestedMechMania?: boolean;
+                    isInterestedPuzzleBang?: boolean;
+                    majors?: string[];
+                    minors?: string[];
+                    name?: string;
+                    opportunities?: string[];
+                    personalLinks?: string[];
+                    resume?: string;
+                    school?: string;
+                    tags?: string[];
+                    userId?: string;
                 };
                 Relationships: [];
             };
@@ -187,7 +325,7 @@ export type Database = {
                     description: string;
                     endTime: string;
                     eventId: string;
-                    eventType: Database["public"]["Enums"]["event_type"];
+                    eventType: Database["public"]["Enums"]["eventType"];
                     imageUrl: string | null;
                     isVirtual: boolean;
                     isVisible: boolean;
@@ -201,7 +339,7 @@ export type Database = {
                     description: string;
                     endTime: string;
                     eventId?: string;
-                    eventType: Database["public"]["Enums"]["event_type"];
+                    eventType: Database["public"]["Enums"]["eventType"];
                     imageUrl?: string | null;
                     isVirtual: boolean;
                     isVisible?: boolean;
@@ -215,7 +353,7 @@ export type Database = {
                     description?: string;
                     endTime?: string;
                     eventId?: string;
-                    eventType?: Database["public"]["Enums"]["event_type"];
+                    eventType?: Database["public"]["Enums"]["eventType"];
                     imageUrl?: string | null;
                     isVirtual?: boolean;
                     isVisible?: boolean;
@@ -228,17 +366,17 @@ export type Database = {
             };
             meetings: {
                 Row: {
-                    committeeType: Database["public"]["Enums"]["committee_names"];
+                    committeeType: Database["public"]["Enums"]["committeeNames"];
                     meetingId: string;
                     startTime: string;
                 };
                 Insert: {
-                    committeeType: Database["public"]["Enums"]["committee_names"];
+                    committeeType: Database["public"]["Enums"]["committeeNames"];
                     meetingId?: string;
                     startTime: string;
                 };
                 Update: {
-                    committeeType?: Database["public"]["Enums"]["committee_names"];
+                    committeeType?: Database["public"]["Enums"]["committeeNames"];
                     meetingId?: string;
                     startTime?: string;
                 };
@@ -262,7 +400,7 @@ export type Database = {
                         foreignKeyName: "notifications_user_id_fkey";
                         columns: ["userId"];
                         isOneToOne: true;
-                        referencedRelation: "roles";
+                        referencedRelation: "authInfo";
                         referencedColumns: ["userId"];
                     },
                 ];
@@ -270,62 +408,65 @@ export type Database = {
             registrations: {
                 Row: {
                     allergies: string[];
-                    degree: string;
                     dietaryRestrictions: string[];
+                    educationLevel: string;
                     email: string;
-                    ethnicity: string[] | null;
-                    gender: string | null;
-                    graduation: string | null;
-                    hasResume: boolean;
-                    hasSubmitted: boolean;
-                    hearAboutRp: string[] | null;
+                    ethnicity: string[];
+                    gender: string;
+                    graduationYear: string;
+                    howDidYouHear: string[];
                     isInterestedMechMania: boolean;
                     isInterestedPuzzleBang: boolean;
-                    jobInterest: string[] | null;
-                    major: string | null;
+                    majors: string[];
+                    minors: string[];
                     name: string;
-                    portfolios: string[];
-                    university: string;
+                    opportunities: string[];
+                    personalLinks: string[];
+                    school: string;
+                    hasResume: boolean;
+                    tags: string[];
                     userId: string;
                 };
                 Insert: {
                     allergies?: string[];
-                    degree: string;
                     dietaryRestrictions?: string[];
+                    educationLevel: string;
                     email: string;
-                    ethnicity?: string[] | null;
-                    gender?: string | null;
-                    graduation?: string | null;
-                    hasResume?: boolean;
-                    hasSubmitted?: boolean;
-                    hearAboutRp?: string[] | null;
+                    ethnicity?: string[];
+                    gender: string;
+                    graduationYear: string;
+                    howDidYouHear?: string[];
                     isInterestedMechMania: boolean;
                     isInterestedPuzzleBang: boolean;
-                    jobInterest?: string[] | null;
-                    major?: string | null;
+                    majors?: string[];
+                    minors?: string[];
                     name: string;
-                    portfolios?: string[];
-                    university: string;
+                    opportunities?: string[];
+                    personalLinks?: string[];
+                    school: string;
+                    tags?: string[];
+                    hasResume?: boolean;
                     userId: string;
                 };
                 Update: {
                     allergies?: string[];
-                    degree?: string;
                     dietaryRestrictions?: string[];
+                    educationLevel?: string;
                     email?: string;
-                    ethnicity?: string[] | null;
-                    gender?: string | null;
-                    graduation?: string | null;
-                    hasResume?: boolean;
-                    hasSubmitted?: boolean;
-                    hearAboutRp?: string[] | null;
+                    ethnicity?: string[];
+                    gender?: string;
+                    graduationYear?: string;
+                    howDidYouHear?: string[];
                     isInterestedMechMania?: boolean;
                     isInterestedPuzzleBang?: boolean;
-                    jobInterest?: string[] | null;
-                    major?: string | null;
+                    majors?: string[];
+                    minors?: string[];
                     name?: string;
-                    portfolios?: string[];
-                    university?: string;
+                    opportunities?: string[];
+                    personalLinks?: string[];
+                    school?: string;
+                    tags?: string[];
+                    hasResume?: boolean;
                     userId?: string;
                 };
                 Relationships: [
@@ -333,31 +474,10 @@ export type Database = {
                         foreignKeyName: "registrations_user_id_fkey";
                         columns: ["userId"];
                         isOneToOne: true;
-                        referencedRelation: "roles";
+                        referencedRelation: "authInfo";
                         referencedColumns: ["userId"];
                     },
                 ];
-            };
-            roles: {
-                Row: {
-                    displayName: string;
-                    email: string;
-                    roles: Database["public"]["Enums"]["role_type"][];
-                    userId: string;
-                };
-                Insert: {
-                    displayName: string;
-                    email: string;
-                    roles?: Database["public"]["Enums"]["role_type"][];
-                    userId: string;
-                };
-                Update: {
-                    displayName?: string;
-                    email?: string;
-                    roles?: Database["public"]["Enums"]["role_type"][];
-                    userId?: string;
-                };
-                Relationships: [];
             };
             speakers: {
                 Row: {
@@ -394,19 +514,19 @@ export type Database = {
                     attendances: Json;
                     email: string;
                     name: string;
-                    team: Database["public"]["Enums"]["committee_names"];
+                    team: Database["public"]["Enums"]["committeeNames"];
                 };
                 Insert: {
                     attendances?: Json;
                     email: string;
                     name: string;
-                    team: Database["public"]["Enums"]["committee_names"];
+                    team: Database["public"]["Enums"]["committeeNames"];
                 };
                 Update: {
                     attendances?: Json;
                     email?: string;
                     name?: string;
-                    team?: Database["public"]["Enums"]["committee_names"];
+                    team?: Database["public"]["Enums"]["committeeNames"];
                 };
                 Relationships: [];
             };
@@ -433,7 +553,7 @@ export type Database = {
             [_ in never]: never;
         };
         Enums: {
-            committee_names:
+            committeeNames:
                 | "CONTENT"
                 | "CORPORATE"
                 | "DESIGN"
@@ -441,15 +561,15 @@ export type Database = {
                 | "FULL TEAM"
                 | "MARKETING"
                 | "OPERATIONS";
-            event_type:
+            eventType:
                 | "SPEAKER"
                 | "CORPORATE"
                 | "SPECIAL"
                 | "PARTNERS"
                 | "MEALS"
                 | "CHECKIN";
-            role_type: "USER" | "STAFF" | "ADMIN" | "CORPORATE" | "PUZZLEBANG";
-            staff_attendance_type: "PRESENT" | "EXCUSED" | "ABSENT";
+            roleType: "USER" | "STAFF" | "ADMIN" | "CORPORATE" | "PUZZLEBANG";
+            staffAttendanceType: "PRESENT" | "EXCUSED" | "ABSENT";
         };
         CompositeTypes: {
             [_ in never]: never;
@@ -583,7 +703,7 @@ export const Constants = {
     },
     public: {
         Enums: {
-            committee_names: [
+            committeeNames: [
                 "CONTENT",
                 "CORPORATE",
                 "DESIGN",
@@ -592,7 +712,7 @@ export const Constants = {
                 "MARKETING",
                 "OPERATIONS",
             ],
-            event_type: [
+            eventType: [
                 "SPEAKER",
                 "CORPORATE",
                 "SPECIAL",
@@ -600,8 +720,8 @@ export const Constants = {
                 "MEALS",
                 "CHECKIN",
             ],
-            role_type: ["USER", "STAFF", "ADMIN", "CORPORATE", "PUZZLEBANG"],
-            staff_attendance_type: ["PRESENT", "EXCUSED", "ABSENT"],
+            roleType: ["USER", "STAFF", "ADMIN", "CORPORATE", "PUZZLEBANG"],
+            staffAttendanceType: ["PRESENT", "EXCUSED", "ABSENT"],
         },
     },
 } as const;

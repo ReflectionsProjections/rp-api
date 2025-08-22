@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from "@jest/globals";
 import { post, getAsAdmin, postAsAdmin } from "../../../testing/testingTools";
 import { StatusCodes } from "http-status-codes";
-import { SupabaseDB } from "../../supabase";
+import { SupabaseDB } from "../../database";
 import { IncomingSubscription } from "./subscription-schema";
 import { SendEmailCommand } from "@aws-sdk/client-sesv2";
 

@@ -11,10 +11,7 @@ const config: Config = {
 
     // Setup files
     setupFiles: ["../testing/jest.env-setup.ts"],
-    setupFilesAfterEnv: [
-        "../testing/jest.db-setup.ts",
-        "../testing/jest.supabase-db.setup.ts",
-    ],
+    setupFilesAfterEnv: ["../testing/jest.db-setup.ts"],
 
     testPathIgnorePatterns: [
         "/app.ts", // Ignore app.ts
@@ -34,5 +31,11 @@ const config: Config = {
         "!**/*.spec.ts",
     ],
 };
+
+/* GitHub CI specific config */
+const githubActions = process.env.GITHUB_ACTIONS;
+if (githubActions != undefined && githubActions != "0" && githubActions != "") {
+    config.reporters = [["github-actions", { silent: false }], "summary"];
+}
 
 export default config;

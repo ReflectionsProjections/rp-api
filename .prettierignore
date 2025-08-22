@@ -13,3 +13,6 @@ build/
 # Ignore package files
 package-lock.json
 yarn.lock 
+
+# Ignore README
+README.md

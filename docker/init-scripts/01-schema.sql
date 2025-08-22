@@ -6,6 +6,8 @@ CREATE SCHEMA public;
 ALTER SCHEMA public OWNER TO postgres;
 COMMENT ON SCHEMA public IS 'standard public schema';
 
+ALTER DATABASE postgres SET TIMEZONE TO 'UTC';
+
 -- Create types
 CREATE TYPE public."committeeNames" AS ENUM (
     'CONTENT',
@@ -65,6 +67,7 @@ CREATE TABLE public."attendees" (
     "isEligibleButton" boolean DEFAULT false NOT NULL,
     "isEligibleTote" boolean DEFAULT false NOT NULL,
     "isEligibleCap" boolean DEFAULT false NOT NULL,
+    "tags" text[] DEFAULT '{}'::text[] NOT NULL,
     "favoriteEvents" uuid[] DEFAULT '{}'::uuid[] NOT NULL,
     "puzzlesCompleted" text[] DEFAULT '{}'::text[] NOT NULL,
     CONSTRAINT "attendees_pkey" PRIMARY KEY ("userId")
@@ -85,8 +88,8 @@ CREATE TABLE public."eventAttendances" (
 CREATE TABLE public."events" (
     "eventId" uuid DEFAULT gen_random_uuid() NOT NULL,
     "name" text NOT NULL,
-    "startTime" timestamp without time zone NOT NULL,
-    "endTime" timestamp without time zone NOT NULL,
+    "startTime" timestamp with time zone NOT NULL,
+    "endTime" timestamp with time zone NOT NULL,
     "points" integer NOT NULL,
     "description" text NOT NULL,
     "isVirtual" boolean NOT NULL,
@@ -111,37 +114,84 @@ CREATE TABLE public."notifications" (
     CONSTRAINT "notifications_pkey" PRIMARY KEY ("userId")
 );
 
-CREATE TABLE public."registrations" (
-    "userId" character varying NOT NULL,
-    "name" text NOT NULL,
-    "email" text NOT NULL,
-    "university" text NOT NULL,
-    "graduation" text,
-    "major" text,
-    "dietaryRestrictions" text[] DEFAULT '{}'::text[] NOT NULL,
+CREATE TABLE public."draftRegistrations" (
     "allergies" text[] DEFAULT '{}'::text[] NOT NULL,
-    "gender" text,
-    "ethnicity" text[] DEFAULT '{}'::text[],
-    "hearAboutRp" text[] DEFAULT '{}'::text[],
-    "portfolios" text[] DEFAULT '{}'::text[] NOT NULL,
-    "jobInterest" text[] DEFAULT '{}'::text[],
+    "allergiesOther" text NOT NULL,
+    "dietaryRestrictions" text[] DEFAULT '{}'::text[] NOT NULL,
+    "dietaryOther" text NOT NULL,
+    "educationLevel" text NOT NULL,
+    "educationOther" text NOT NULL,
+    "email" text NOT NULL,
+    "ethnicity" text[] DEFAULT '{}'::text[] NOT NULL,
+    "ethnicityOther" text NOT NULL,
+    "gender" text NOT NULL,
+    "genderOther" text NOT NULL,
+    "graduationYear" text NOT NULL,
+    "howDidYouHear" text[] DEFAULT '{}'::text[] NOT NULL,
+    "majors" text[] DEFAULT '{}'::text[] NOT NULL,
+    "minors" text[] DEFAULT '{}'::text[] NOT NULL,
+    "name" text NOT NULL,
+    "opportunities" text[] DEFAULT '{}'::text[] NOT NULL,
+    "personalLinks" text[] DEFAULT '{}'::text[] NOT NULL,
+    "resume" text DEFAULT '' NOT NULL,
+    "school" text NOT NULL,
     "isInterestedMechMania" boolean NOT NULL,
     "isInterestedPuzzleBang" boolean NOT NULL,
+    "tags" text[] DEFAULT '{}'::text[] NOT NULL,
+    "userId" character varying NOT NULL,
+    CONSTRAINT "draftRegistrations_pkey" PRIMARY KEY ("userId")
+);
+
+CREATE TABLE public."registrations" (
+    "allergies" text[] DEFAULT '{}'::text[] NOT NULL,
+    "dietaryRestrictions" text[] DEFAULT '{}'::text[] NOT NULL,
+    "educationLevel" text NOT NULL,
+    "email" text NOT NULL,
+    "ethnicity" text[] DEFAULT '{}'::text[] NOT NULL,
+    "gender" text NOT NULL,
+    "graduationYear" text NOT NULL,
+    "howDidYouHear" text[] DEFAULT '{}'::text[] NOT NULL,
+    "majors" text[] DEFAULT '{}'::text[] NOT NULL,
+    "minors" text[] DEFAULT '{}'::text[] NOT NULL,
+    "name" text NOT NULL,
+    "opportunities" text[] DEFAULT '{}'::text[] NOT NULL,
+    "personalLinks" text[] DEFAULT '{}'::text[] NOT NULL,
+    "school" text NOT NULL,
+    "isInterestedMechMania" boolean NOT NULL,
+    "isInterestedPuzzleBang" boolean NOT NULL,
+    "tags" text[] DEFAULT '{}'::text[] NOT NULL,
     "hasResume" boolean DEFAULT false NOT NULL,
-    "hasSubmitted" boolean DEFAULT false NOT NULL,
-    "degree" text NOT NULL,
+    "userId" character varying NOT NULL,
     CONSTRAINT "registrations_pkey" PRIMARY KEY ("userId"),
     CONSTRAINT "registrations_email_key" UNIQUE ("email")
 );
 
-CREATE TABLE public."roles" (
+CREATE TABLE public."authInfo" (
     "userId" character varying NOT NULL,
-    "displayName" text NOT NULL,
+    "authId" text NOT NULL,
     "email" text NOT NULL,
-    "roles" public."roleType"[] DEFAULT '{}'::public."roleType"[] NOT NULL,
-    CONSTRAINT "roles_pkey" PRIMARY KEY ("userId"),
-    CONSTRAINT "roles_email_key" UNIQUE ("email")
+    "displayName" text NOT NULL,
+    CONSTRAINT "authInfo_pkey" PRIMARY KEY ("userId"),
+    CONSTRAINT "authInfo_authId_key" UNIQUE ("authId")
 );
+
+CREATE TABLE public."authRoles" (
+    "userId" character varying NOT NULL,
+    "role" public."roleType" NOT NULL,
+    CONSTRAINT "authRoles_pkey" PRIMARY KEY ("userId", "role")
+);
+
+CREATE TABLE public."authCodes" (
+    "email" character varying NOT NULL,
+    "hashedVerificationCode" text NOT NULL,
+    "expTime" timestamp with time zone NOT NULL,
+    CONSTRAINT "authCodes_pkey" PRIMARY KEY ("email")
+);
+
+-- Indexes for auth tables
+CREATE INDEX "authRoles_userId_idx" ON public."authRoles" ("userId");
+CREATE INDEX "authRoles_role_idx"   ON public."authRoles" ("role");
+CREATE INDEX "authInfo_authId_idx"  ON public."authInfo"  ("authId");
 
 CREATE TABLE public."speakers" (
     "speakerId" uuid DEFAULT gen_random_uuid() NOT NULL,
@@ -170,10 +220,10 @@ CREATE TABLE public."subscriptions" (
 
 -- Add foreign key constraints
 ALTER TABLE ONLY public."attendeeAttendances"
-    ADD CONSTRAINT "attendee_attendance_user_id_fkey" FOREIGN KEY ("userId") REFERENCES public."roles"("userId");
+    ADD CONSTRAINT "attendee_attendance_user_id_fkey" FOREIGN KEY ("userId") REFERENCES public."authInfo"("userId");
 
 ALTER TABLE ONLY public."attendees"
-    ADD CONSTRAINT "attendees_user_id_fkey" FOREIGN KEY ("userId") REFERENCES public."roles"("userId");
+    ADD CONSTRAINT "attendees_user_id_fkey" FOREIGN KEY ("userId") REFERENCES public."authInfo"("userId");
 
 ALTER TABLE ONLY public."eventAttendances"
     ADD CONSTRAINT "event_attendance_attendee_fkey" FOREIGN KEY ("attendee") REFERENCES public."attendees"("userId");
@@ -182,7 +232,7 @@ ALTER TABLE ONLY public."eventAttendances"
     ADD CONSTRAINT "event_attendance_event_id_fkey" FOREIGN KEY ("eventId") REFERENCES public."events"("eventId");
 
 ALTER TABLE ONLY public."notifications"
-    ADD CONSTRAINT "notifications_user_id_fkey" FOREIGN KEY ("userId") REFERENCES public."roles"("userId");
+    ADD CONSTRAINT "notifications_user_id_fkey" FOREIGN KEY ("userId") REFERENCES public."authInfo"("userId");
 
 ALTER TABLE ONLY public."registrations"
-    ADD CONSTRAINT "registrations_user_id_fkey" FOREIGN KEY ("userId") REFERENCES public."roles"("userId");
+    ADD CONSTRAINT "registrations_user_id_fkey" FOREIGN KEY ("userId") REFERENCES public."authInfo"("userId");

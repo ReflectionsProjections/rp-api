@@ -4,15 +4,10 @@ import {
     AttendeeCreateValidator,
     EventIdValidator,
 } from "./attendee-validators";
-import { SupabaseDB } from "../../supabase";
+import { SupabaseDB } from "../../database";
 import RoleChecker from "../../middleware/role-checker";
 import { Role } from "../auth/auth-models";
 import { generateQrHash, getCurrentDay } from "../checkin/checkin-utils";
-
-import { decryptId } from "./attendee-utils";
-
-import { generateJWT } from "../auth/auth-utils";
-import Config from "../../config";
 
 const attendeeRouter = Router();
 
@@ -74,7 +69,7 @@ attendeeRouter.delete(
         }
 
         const updatedFavorites = (attendee?.favoriteEvents || []).filter(
-            (id) => id !== eventId
+            (id: string) => id !== eventId
         );
         await SupabaseDB.ATTENDEES.update({
             favoriteEvents: updatedFavorites,
@@ -115,13 +110,14 @@ attendeeRouter.get(
 
 // Create a new attendee
 attendeeRouter.post("/", async (req, res) => {
-    const { userId } = AttendeeCreateValidator.parse(req.body);
+    const { userId, tags } = AttendeeCreateValidator.parse(req.body);
 
     const newAttendee = {
         userId: userId,
         points: 0,
         favoriteEvents: [],
         puzzlesCompleted: [],
+        tags: tags,
         isEligibleTshirt: false,
         isEligibleCap: false,
         isEligibleTote: false,
@@ -137,11 +133,14 @@ attendeeRouter.post("/", async (req, res) => {
         hasPriorityFri: false,
         hasPrioritySat: false,
         hasPrioritySun: false,
-    };
+    }; // TODO: add a validator????
 
     await SupabaseDB.ATTENDEES.insert(newAttendee).throwOnError();
 
-    return res.status(StatusCodes.CREATED).json({ userId: userId });
+    return res.status(StatusCodes.CREATED).json({
+        userId: userId,
+        tags: tags,
+    });
 });
 
 // generates a unique QR code for each attendee
@@ -320,13 +319,5 @@ attendeeRouter.post(
         return res.status(StatusCodes.OK).json({ message: "Item Redeemed!" });
     }
 );
-
-attendeeRouter.get("/resume/update/:ENCODED_ID", async (req, res) => {
-    const encodedId = req.params.ENCODED_ID;
-    const decryptedId = await decryptId(encodedId);
-    const token = await generateJWT(decryptedId);
-    const uploadURL = Config.WEB_RESUME_REUPLOAD_ROUTE + `?token=${token}`;
-    return res.redirect(uploadURL);
-});
 
 export default attendeeRouter;

@@ -14,9 +14,9 @@ import {
     delAsAdmin,
 } from "../../../testing/testingTools";
 import { StatusCodes } from "http-status-codes";
-import { CommitteeTypes } from "../../supabase";
+import { CommitteeTypes } from "../../database";
 import { v4 as uuidv4 } from "uuid";
-import { SupabaseDB } from "../../supabase";
+import { SupabaseDB } from "../../database";
 
 const TEST_MEETING_1_ID = uuidv4();
 const TEST_MEETING_2_ID = uuidv4();

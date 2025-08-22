@@ -1,11 +1,12 @@
 import { post } from "../../../testing/testingTools";
 import { Role } from "../auth/auth-models";
 import { StatusCodes } from "http-status-codes";
-import { SupabaseDB } from "../../supabase";
+import { SupabaseDB } from "../../database";
 
 const TEST_USER_ID = "ritam123";
 const TEST_EMAIL = "ritam@test.com";
 const PUZZLE_ID = "P1";
+const TEST_AUTH_ID = "auth_test_id";
 
 jest.setTimeout(100000);
 
@@ -23,14 +24,15 @@ function makeTestRegistration(overrides = {}) {
         userId: TEST_USER_ID,
         name: "Ritam",
         email: TEST_EMAIL,
-        degree: "Bachelors",
-        university: "UIUC",
+        educationLevel: "Bachelors",
+        school: "UIUC",
         isInterestedMechMania: false,
         isInterestedPuzzleBang: true,
         allergies: [],
         dietaryRestrictions: [],
-        ethnicity: null,
-        gender: null,
+        ethnicity: [],
+        gender: "Prefer not to say",
+        graduationYear: "2027",
         ...overrides,
     };
 }
@@ -47,13 +49,18 @@ async function insertTestAttendee(overrides: InsertTestAttendeeOverrides = {}) {
     const userId = overrides.userId || TEST_USER_ID;
     const email = overrides.email || TEST_EMAIL;
 
-    // Roles (needed first because of FK constraint)
-    await SupabaseDB.ROLES.insert([
+    await SupabaseDB.AUTH_INFO.insert([
         {
             userId: userId,
             displayName: "Ritam",
             email,
-            roles: [Role.enum.PUZZLEBANG],
+            authId: TEST_AUTH_ID,
+        },
+    ]).throwOnError();
+    await SupabaseDB.AUTH_ROLES.insert([
+        {
+            userId: userId,
+            role: Role.enum.PUZZLEBANG,
         },
     ]).throwOnError();
 
@@ -73,11 +80,13 @@ describe("POST /puzzlebang", () => {
         // Clean up all possibly conflicting data
         await SupabaseDB.ATTENDEES.delete().eq("userId", TEST_USER_ID);
         await SupabaseDB.REGISTRATIONS.delete().eq("userId", TEST_USER_ID);
-        await SupabaseDB.ROLES.delete().eq("userId", TEST_USER_ID);
+        await SupabaseDB.AUTH_ROLES.delete().eq("userId", TEST_USER_ID);
+        await SupabaseDB.AUTH_INFO.delete().eq("userId", TEST_USER_ID);
 
         await SupabaseDB.ATTENDEES.delete().eq("userId", "nonexistent");
         await SupabaseDB.REGISTRATIONS.delete().eq("userId", "nonexistent");
-        await SupabaseDB.ROLES.delete().eq("userId", "nonexistent");
+        await SupabaseDB.AUTH_ROLES.delete().eq("userId", "nonexistent");
+        await SupabaseDB.AUTH_INFO.delete().eq("userId", "nonexistent");
     });
 
     afterEach(async () => {
@@ -88,7 +97,10 @@ describe("POST /puzzlebang", () => {
         await SupabaseDB.REGISTRATIONS.delete()
             .eq("userId", TEST_USER_ID)
             .throwOnError();
-        await SupabaseDB.ROLES.delete()
+        await SupabaseDB.AUTH_ROLES.delete()
+            .eq("userId", TEST_USER_ID)
+            .throwOnError();
+        await SupabaseDB.AUTH_INFO.delete()
             .eq("userId", TEST_USER_ID)
             .throwOnError();
 
@@ -98,7 +110,10 @@ describe("POST /puzzlebang", () => {
         await SupabaseDB.REGISTRATIONS.delete()
             .eq("userId", "nonexistent")
             .throwOnError();
-        await SupabaseDB.ROLES.delete()
+        await SupabaseDB.AUTH_ROLES.delete()
+            .eq("userId", "nonexistent")
+            .throwOnError();
+        await SupabaseDB.AUTH_INFO.delete()
             .eq("userId", "nonexistent")
             .throwOnError();
     });
@@ -131,14 +146,20 @@ describe("POST /puzzlebang", () => {
 
     it("should return 404 if attendee not found", async () => {
         // Insert dummy user to satisfy FKs
-        await SupabaseDB.ROLES.insert([
+        await SupabaseDB.AUTH_INFO.insert([
             {
                 userId: "nonexistent",
                 displayName: "Fake User",
                 email: "fake@example.com",
-                roles: [Role.enum.PUZZLEBANG],
+                authId: TEST_AUTH_ID,
             },
-        ]);
+        ]).throwOnError();
+        await SupabaseDB.AUTH_ROLES.insert([
+            {
+                userId: "nonexistent",
+                role: Role.enum.PUZZLEBANG,
+            },
+        ]).throwOnError();
         await SupabaseDB.REGISTRATIONS.insert([
             makeTestRegistration({
                 userId: "nonexistent",
@@ -154,14 +175,20 @@ describe("POST /puzzlebang", () => {
     });
 
     it("should return 403 if user does not have PUZZLEBANG role", async () => {
-        await SupabaseDB.ROLES.insert([
+        await SupabaseDB.AUTH_INFO.insert([
             {
                 userId: TEST_USER_ID,
                 displayName: "Ritam",
                 email: TEST_EMAIL,
-                roles: [Role.enum.USER], // not PUZZLEBANG
+                authId: TEST_AUTH_ID,
             },
-        ]);
+        ]).throwOnError();
+        await SupabaseDB.AUTH_ROLES.insert([
+            {
+                userId: TEST_USER_ID,
+                role: Role.enum.USER,
+            },
+        ]).throwOnError();
         await SupabaseDB.REGISTRATIONS.insert([makeTestRegistration()]);
         await SupabaseDB.ATTENDEES.insert([makeTestAttendee()]);
 

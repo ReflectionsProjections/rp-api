@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { StatusCodes } from "http-status-codes";
-import { SupabaseDB } from "../../supabase";
+import { SupabaseDB } from "../../database";
 import RoleChecker from "../../middleware/role-checker";
 import { Role } from "../auth/auth-models";
 import { getCurrentDay } from "../checkin/checkin-utils";
@@ -23,7 +23,9 @@ statsRouter.get(
             return res.status(StatusCodes.OK).json({ count: 0 });
         }
 
-        const checkinEventIds = checkinEvents.map((event) => event.eventId);
+        const checkinEventIds = checkinEvents.map(
+            (event: { eventId: string }) => event.eventId
+        );
 
         const { data: attendanceRecords } =
             await SupabaseDB.EVENT_ATTENDANCES.select("attendee")
@@ -31,7 +33,9 @@ statsRouter.get(
                 .throwOnError();
 
         const uniqueAttendees = new Set(
-            attendanceRecords?.map((record) => record.attendee) || []
+            attendanceRecords?.map(
+                (record: { attendee: string }) => record.attendee
+            ) || []
         );
 
         return res.status(StatusCodes.OK).json({
@@ -132,7 +136,9 @@ statsRouter.get(
             .throwOnError();
 
         const attendanceCounts =
-            events?.map((event) => event.attendanceCount) || [];
+            events?.map(
+                (event: { attendanceCount: number }) => event.attendanceCount
+            ) || [];
 
         return res.status(StatusCodes.OK).json({ attendanceCounts });
     }
@@ -187,19 +193,23 @@ statsRouter.get(
         ]);
 
         const allergyCounts: { [key: string]: number } = {};
-        allergiesData?.forEach((registration) => {
+        allergiesData?.forEach((registration: { allergies: string[] }) => {
             registration.allergies?.forEach((allergy: string) => {
                 allergyCounts[allergy] = (allergyCounts[allergy] || 0) + 1;
             });
         });
 
         const dietaryRestrictionCounts: { [key: string]: number } = {};
-        dietaryRestrictionsData?.forEach((registration) => {
-            registration.dietaryRestrictions?.forEach((restriction: string) => {
-                dietaryRestrictionCounts[restriction] =
-                    (dietaryRestrictionCounts[restriction] || 0) + 1;
-            });
-        });
+        dietaryRestrictionsData?.forEach(
+            (registration: { dietaryRestrictions: string[] }) => {
+                registration.dietaryRestrictions?.forEach(
+                    (restriction: string) => {
+                        dietaryRestrictionCounts[restriction] =
+                            (dietaryRestrictionCounts[restriction] || 0) + 1;
+                    }
+                );
+            }
+        );
 
         return res.status(StatusCodes.OK).json({
             none: noneCount || 0,

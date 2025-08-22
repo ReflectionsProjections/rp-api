@@ -36,7 +36,7 @@ RUN mkdir -p /app/logs
 
 EXPOSE 3000 8000
 
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+HEALTHCHECK --timeout=3s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:3000/status || exit 1
 
 ENTRYPOINT ["/usr/bin/tini", "--"]
