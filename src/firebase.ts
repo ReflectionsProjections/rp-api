@@ -3,6 +3,12 @@ import * as dotenv from "dotenv";
 
 dotenv.config();
 
-admin.initializeApp();
+const serviceAccount = require("../reflections-projections-firebase-adminsdk-fbsvc-333621fea7.json");
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount)
+});
 
 export { admin };
+
+

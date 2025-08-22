@@ -49,6 +49,13 @@ CREATE TABLE public."attendeeAttendances" (
     CONSTRAINT "attendeeAttendance_pkey" PRIMARY KEY ("userId")
 );
 
+CREATE TABLE public."customTopics" (
+    "topicId" uuid DEFAULT gen_random_uuid() NOT NULL,
+    "topicName" text NOT NULL,
+    CONSTRAINT "customTopicsPkey" PRIMARY KEY ("topicId"),
+    CONSTRAINT "customTopicsTopicNameKey" UNIQUE ("topicName")
+);
+
 CREATE TABLE public."attendees" (
     "userId" character varying NOT NULL,
     "points" integer DEFAULT 0 NOT NULL,

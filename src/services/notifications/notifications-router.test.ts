@@ -1,7 +1,7 @@
 import { post, del, get } from "../../../testing/testingTools";
 import { Role } from "../auth/auth-models";
 import { StatusCodes } from "http-status-codes";
-import { SupabaseDB } from "../../supabase";
+import { SupabaseDB } from "../../database";
 import { v4 as uuidv4 } from "uuid";
 
 const mockSubscribe = jest.fn();
@@ -26,18 +26,6 @@ const TEST_EMAIL = "loid.forger@testing.com";
 
 jest.setTimeout(100000);
 
-async function cleanDatabase() {
-    await SupabaseDB.EVENT_ATTENDANCE.delete().eq("attendee", TEST_USER_ID);
-
-    // Now delete from tables that reference 'roles'
-    await SupabaseDB.ATTENDEE_ATTENDANCE.delete().eq("userId", TEST_USER_ID);
-    await SupabaseDB.ATTENDEES.delete().eq("userId", TEST_USER_ID);
-    await SupabaseDB.NOTIFICATIONS.delete().eq("userId", TEST_USER_ID);
-    await SupabaseDB.REGISTRATIONS.delete().eq("userId", TEST_USER_ID);
-
-    // Finally, delete the user from the parent 'roles' table
-    await SupabaseDB.ROLES.delete().eq("userId", TEST_USER_ID);
-}
 
 function makeTestAttendee(overrides = {}) {
     return {
@@ -59,8 +47,17 @@ function makeTestRegistration(overrides = {}) {
         isInterestedPuzzleBang: true,
         allergies: [],
         dietaryRestrictions: [],
-        ethnicity: null,
-        gender: null,
+        ethnicity: [],
+        gender: "",
+        educationLevel: "Undergraduate",
+        graduationYear: "2025",
+        school: "UIUC",
+        phone: "1234567890",
+        shirtSize: "M",
+        discord: "testdiscord",
+        github: "testgithub",
+        linkedin: "testlinkedin",
+        resume: null,
         ...overrides,
     };
 }
@@ -77,13 +74,19 @@ async function insertTestUser(overrides: InsertTestAttendeeOverrides = {}) {
     const userId = overrides.userId || TEST_USER_ID;
     const email = overrides.email || TEST_EMAIL;
 
-    // Roles (needed first because of FK constraint)
-    await SupabaseDB.ROLES.insert([
+    await SupabaseDB.AUTH_INFO.insert([
         {
             userId: userId,
             displayName: "Ritam",
             email,
-            roles: [Role.enum.USER],
+            authId: "null",
+        },
+    ]).throwOnError();
+
+    await SupabaseDB.AUTH_ROLES.insert([
+        {
+            userId: userId,
+            role: Role.enum.USER,
         },
     ]).throwOnError();
 
@@ -107,7 +110,6 @@ async function insertTestUser(overrides: InsertTestAttendeeOverrides = {}) {
 
 describe("/notifications", () => {
     beforeEach(async () => {
-        await cleanDatabase();
         jest.clearAllMocks(); // Clear mocks
     });
 
@@ -115,18 +117,26 @@ describe("/notifications", () => {
         await SupabaseDB.ATTENDEES.delete().eq("userId", TEST_USER_ID);
         await SupabaseDB.NOTIFICATIONS.delete().eq("userId", TEST_USER_ID);
         await SupabaseDB.REGISTRATIONS.delete().eq("userId", TEST_USER_ID);
-        await SupabaseDB.ROLES.delete().eq("userId", TEST_USER_ID);
+        await SupabaseDB.AUTH_ROLES.delete().eq("userId", TEST_USER_ID).throwOnError();
+        await SupabaseDB.AUTH_INFO.delete().eq("userId", TEST_USER_ID).throwOnError();
     });
 
     describe("POST /notifications/register", () => {
         it("should create a notification entry and subscribe to the allUsers topic", async () => {
             // Setup: Insert a user without a notification entry
-            await SupabaseDB.ROLES.insert([
+            await SupabaseDB.AUTH_INFO.insert([
                 {
                     userId: TEST_USER_ID,
                     displayName: "Ritam",
                     email: TEST_EMAIL,
-                    roles: [Role.enum.USER],
+                    authId: "null",
+                },
+            ]).throwOnError();
+
+            await SupabaseDB.AUTH_ROLES.insert([
+                {
+                    userId: TEST_USER_ID,
+                    role: Role.enum.USER,
                 },
             ]).throwOnError();
             await SupabaseDB.REGISTRATIONS.insert([
