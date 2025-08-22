@@ -186,7 +186,7 @@
     "@smithy/util-waiter" "^4.0.5"
     tslib "^2.6.2"
 
-"@aws-sdk/client-sesv2@^3.864.0":
+"@aws-sdk/client-sesv2@^3.873.0":
   version "3.873.0"
   resolved "https://registry.yarnpkg.com/@aws-sdk/client-sesv2/-/client-sesv2-3.873.0.tgz#88de94e210379c389e592115b162879f5f493fc4"
   integrity sha512-4NofVF7QjEQv0wX1mM2ZTVb0IxOZ2paAw2nLv3tPSlXKFtVF3AfMLOvOvL4ympCZSi1zC9FvBGrRrIr+X9wTfg==
