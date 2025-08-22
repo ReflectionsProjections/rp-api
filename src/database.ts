@@ -54,7 +54,7 @@ export const SupabaseDB = {
     },
     get CUSTOM_TOPICS() {
         return supabase.from("customTopics");
-    }
+    },
 };
 
 export const RoleTypes: Record<

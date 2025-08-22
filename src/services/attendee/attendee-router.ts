@@ -15,7 +15,6 @@ import { generateJWT } from "../auth/auth-utils";
 import Config from "../../config";
 import { admin } from "../../firebase";
 
-
 const attendeeRouter = Router();
 
 // Favorite an event for an attendee

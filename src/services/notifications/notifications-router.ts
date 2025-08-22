@@ -21,7 +21,8 @@ notificationsRouter.post(
         // const payload = res.locals.payload;
         // const userId = payload.userId;
         const userId = "123";
-        const deviceId = "cQBYOfCAZ0JkulTJWi31rS:APA91bHe6jXBkmtNOkI_V4HgL9vg9jfi3_jTJCIXkTuHks02VJ6ctTzmIB0csPL4FxLpLhZwOSXncu-xGhBg2K8ZCVaY1U0wnv5a1GOiKGTVpruRZ7CNKbE";
+        const deviceId =
+            "cQBYOfCAZ0JkulTJWi31rS:APA91bHe6jXBkmtNOkI_V4HgL9vg9jfi3_jTJCIXkTuHks02VJ6ctTzmIB0csPL4FxLpLhZwOSXncu-xGhBg2K8ZCVaY1U0wnv5a1GOiKGTVpruRZ7CNKbE";
         // const notificationEnrollmentData = registerDeviceSchema.parse(req.body);
         await SupabaseDB.NOTIFICATIONS.upsert({
             userId: userId,
@@ -32,13 +33,10 @@ notificationsRouter.post(
             .throwOnError();
 
         // sign them up for the default topic: all users (notify everyone who has the app)
-        await admin
-            .messaging()
-            .subscribeToTopic(deviceId, "allUsers");
+        await admin.messaging().subscribeToTopic(deviceId, "allUsers");
 
         // return res.status(StatusCodes.CREATED).json(notificationEnrollmentData);
         return res.status(StatusCodes.CREATED);
-
     }
 );
 

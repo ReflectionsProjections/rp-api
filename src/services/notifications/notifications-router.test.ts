@@ -26,7 +26,6 @@ const TEST_EMAIL = "loid.forger@testing.com";
 
 jest.setTimeout(100000);
 
-
 function makeTestAttendee(overrides = {}) {
     return {
         userId: TEST_USER_ID,
@@ -117,8 +116,12 @@ describe("/notifications", () => {
         await SupabaseDB.ATTENDEES.delete().eq("userId", TEST_USER_ID);
         await SupabaseDB.NOTIFICATIONS.delete().eq("userId", TEST_USER_ID);
         await SupabaseDB.REGISTRATIONS.delete().eq("userId", TEST_USER_ID);
-        await SupabaseDB.AUTH_ROLES.delete().eq("userId", TEST_USER_ID).throwOnError();
-        await SupabaseDB.AUTH_INFO.delete().eq("userId", TEST_USER_ID).throwOnError();
+        await SupabaseDB.AUTH_ROLES.delete()
+            .eq("userId", TEST_USER_ID)
+            .throwOnError();
+        await SupabaseDB.AUTH_INFO.delete()
+            .eq("userId", TEST_USER_ID)
+            .throwOnError();
     });
 
     describe("POST /notifications/register", () => {
