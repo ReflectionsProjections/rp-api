@@ -4,7 +4,7 @@ import {
     AttendeeCreateValidator,
     EventIdValidator,
 } from "./attendee-validators";
-import { SupabaseDB, User } from "../../supabase";
+import { SupabaseDB } from "../../database";
 import RoleChecker from "../../middleware/role-checker";
 import { Role } from "../auth/auth-models";
 import { generateQrHash, getCurrentDay } from "../checkin/checkin-utils";
@@ -14,6 +14,7 @@ import { decryptId } from "./attendee-utils";
 import { generateJWT } from "../auth/auth-utils";
 import Config from "../../config";
 import { admin } from "../../firebase";
+
 
 const attendeeRouter = Router();
 
@@ -90,7 +91,7 @@ attendeeRouter.delete(
         }
 
         const updatedFavorites = (attendee?.favoriteEvents || []).filter(
-            (id) => id !== eventId
+            (id: string) => id !== eventId
         );
         await SupabaseDB.ATTENDEES.update({
             favoriteEvents: updatedFavorites,
@@ -147,13 +148,14 @@ attendeeRouter.get(
 
 // Create a new attendee
 attendeeRouter.post("/", async (req, res) => {
-    const { userId } = AttendeeCreateValidator.parse(req.body);
+    const { userId, tags } = AttendeeCreateValidator.parse(req.body);
 
     const newAttendee = {
         userId: userId,
         points: 0,
         favoriteEvents: [],
         puzzlesCompleted: [],
+        tags: tags,
         isEligibleTshirt: false,
         isEligibleCap: false,
         isEligibleTote: false,
@@ -169,11 +171,14 @@ attendeeRouter.post("/", async (req, res) => {
         hasPriorityFri: false,
         hasPrioritySat: false,
         hasPrioritySun: false,
-    };
+    }; // TODO: add a validator????
 
     await SupabaseDB.ATTENDEES.insert(newAttendee).throwOnError();
 
-    return res.status(StatusCodes.CREATED).json({ userId: userId });
+    return res.status(StatusCodes.CREATED).json({
+        userId: userId,
+        tags: tags,
+    });
 });
 
 // generates a unique QR code for each attendee
@@ -238,7 +243,7 @@ attendeeRouter.get(
                 .status(StatusCodes.NOT_FOUND)
                 .json({ error: "UserNotFound" });
         }
-        const hasPriority = user[priorityKey as keyof User];
+        const hasPriority = user[priorityKey as keyof typeof user];
         const dietary = registration?.dietaryRestrictions || [];
         const hasFoodRestrictions = ["VEGAN", "GLUTEN-FREE"].some((r) =>
             dietary.includes(r)
@@ -329,9 +334,9 @@ attendeeRouter.post(
         }
 
         const eligibleKey =
-            `isEligible${merchItem.charAt(0).toUpperCase() + merchItem.slice(1)}` as keyof User;
+            `isEligible${merchItem.charAt(0).toUpperCase() + merchItem.slice(1)}` as keyof typeof user;
         const redeemedKey =
-            `hasRedeemed${merchItem.charAt(0).toUpperCase() + merchItem.slice(1)}` as keyof User;
+            `hasRedeemed${merchItem.charAt(0).toUpperCase() + merchItem.slice(1)}` as keyof typeof user;
 
         if (!user[eligibleKey]) {
             return res
@@ -352,13 +357,5 @@ attendeeRouter.post(
         return res.status(StatusCodes.OK).json({ message: "Item Redeemed!" });
     }
 );
-
-attendeeRouter.get("/resume/update/:ENCODED_ID", async (req, res) => {
-    const encodedId = req.params.ENCODED_ID;
-    const decryptedId = await decryptId(encodedId);
-    const token = await generateJWT(decryptedId);
-    const uploadURL = Config.WEB_RESUME_REUPLOAD_ROUTE + `?token=${token}`;
-    return res.redirect(uploadURL);
-});
 
 export default attendeeRouter;

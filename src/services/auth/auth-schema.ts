@@ -1,6 +1,7 @@
-import { InferSchemaType, Schema } from "mongoose";
+import { Schema } from "mongoose";
 import { z } from "zod";
 import { Platform, Role } from "./auth-models";
+import { Database } from "../../database.types";
 
 export const RoleValidator = z.object({
     userId: z.coerce.string(),
@@ -29,8 +30,8 @@ export const AuthLoginValidator = z.union([
 ]);
 
 export const AuthRoleChangeRequest = z.object({
-    email: z.string().email(),
-    role: z.string(),
+    userId: z.string(),
+    role: Role,
 });
 
 export const RoleSchema = new Schema(
@@ -56,4 +57,5 @@ export const RoleSchema = new Schema(
     },
     { timestamps: { createdAt: "createdAt" } }
 );
-export type Roles = InferSchemaType<typeof RoleSchema>;
+export type AuthInfo = Database["public"]["Tables"]["authInfo"]["Row"];
+export type AuthRole = Database["public"]["Tables"]["authRoles"]["Row"];

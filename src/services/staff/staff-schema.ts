@@ -1,7 +1,5 @@
-import { Schema } from "mongoose";
 import { z } from "zod";
-import { v4 as uuidv4 } from "uuid";
-import { CommitteeTypes } from "../../supabase";
+import { CommitteeTypes } from "../../database";
 
 // Zod schema for staff
 export const StaffValidator = z.object({

@@ -1,0 +1,61 @@
+version: "3.8"
+
+services:
+  db:
+    extends:
+      file: docker-compose.db.yml
+      service: db
+    networks:
+      - rp-network
+
+  kong:
+    extends:
+      file: docker-compose.db.yml
+      service: kong
+    networks:
+      - rp-network
+
+  rest:
+    extends:
+      file: docker-compose.db.yml
+      service: rest
+    networks:
+      - rp-network
+
+  test:
+    build: .
+    container_name: rp-test
+    tty: true
+    stdin_open: true
+    volumes:
+      - .:/app
+    environment:
+      - NODE_ENV=TESTING
+      - POSTGRES_HOST=db
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - POSTGRES_DB=${POSTGRES_DB:-postgres}
+      - POSTGRES_PORT=${POSTGRES_PORT:-5432}
+      - SUPABASE_URL=http://kong:8000
+      - SUPABASE_ANON_KEY=${ANON_KEY}
+      - SUPABASE_SERVICE_KEY=${SERVICE_ROLE_KEY}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRY=${JWT_EXPIRY:-3600}
+      - PGRST_DB_SCHEMAS=${PGRST_DB_SCHEMAS:-public}
+      - GITHUB_ACTIONS=${GITHUB_ACTIONS} # Required for jest to know when we're on GitHub Actions
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+      kong:
+        condition: service_healthy
+      rest:
+        condition: service_started
+    networks:
+      - rp-network
+    command: ["yarn", "test"]
+
+networks:
+  rp-network:
+    driver: bridge

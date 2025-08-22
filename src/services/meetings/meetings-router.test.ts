@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "@jest/globals";
+import { beforeEach, describe, expect, it, afterAll } from "@jest/globals";
 import {
     get,
     getAsStaff,
@@ -14,9 +14,9 @@ import {
     delAsAdmin,
 } from "../../../testing/testingTools";
 import { StatusCodes } from "http-status-codes";
-import { CommitteeTypes } from "../../supabase";
+import { CommitteeTypes } from "../../database";
 import { v4 as uuidv4 } from "uuid";
-import { SupabaseDB } from "../../supabase";
+import { SupabaseDB } from "../../database";
 
 const TEST_MEETING_1_ID = uuidv4();
 const TEST_MEETING_2_ID = uuidv4();
@@ -24,49 +24,42 @@ const TEST_MEETING_2_ID = uuidv4();
 const TEST_MEETING_1 = {
     meetingId: TEST_MEETING_1_ID,
     committeeType: CommitteeTypes.DEV,
-    startTime: new Date(),
+    startTime: new Date().toISOString(),
 };
 
 const EXPECTED_TEST_MEETING_1_RESPONSE = {
     meetingId: TEST_MEETING_1.meetingId,
     committeeType: TEST_MEETING_1.committeeType,
-    startTime: TEST_MEETING_1.startTime.toISOString(),
+    startTime: TEST_MEETING_1.startTime,
 };
 
 const TEST_MEETING_2 = {
     meetingId: TEST_MEETING_2_ID,
     committeeType: CommitteeTypes.CONTENT,
-    startTime: new Date(),
+    startTime: new Date().toISOString(),
 };
 
 const EXPECTED_TEST_MEETING_2_RESPONSE = {
     meetingId: TEST_MEETING_2.meetingId,
     committeeType: TEST_MEETING_2.committeeType,
-    startTime: TEST_MEETING_2.startTime.toISOString(),
+    startTime: TEST_MEETING_2.startTime,
 };
 
 const UNREAL_MEETING_ID = uuidv4();
 
-// Runs these before running the tests
 beforeEach(async () => {
-    // Clear existing meetings
     await SupabaseDB.MEETINGS.delete().neq(
-        "meeting_id",
+        "meetingId",
         "00000000-0000-0000-0000-000000000000"
     );
 
-    // Insert test meetings
-    await SupabaseDB.MEETINGS.insert([
-        {
-            meeting_id: TEST_MEETING_1.meetingId,
-            committee_type: TEST_MEETING_1.committeeType,
-            start_time: TEST_MEETING_1.startTime,
-        },
-        {
-            meeting_id: TEST_MEETING_2.meetingId,
-            committee_type: TEST_MEETING_2.committeeType,
-            start_time: TEST_MEETING_2.startTime,
-        },
+    await SupabaseDB.MEETINGS.insert([TEST_MEETING_1, TEST_MEETING_2]);
+});
+
+afterAll(async () => {
+    await SupabaseDB.MEETINGS.delete().in("meetingId", [
+        TEST_MEETING_1_ID,
+        TEST_MEETING_2_ID,
     ]);
 });
 
@@ -90,7 +83,7 @@ describe("GET /meetings/", () => {
 
     it("should return empty array if no meetings exist", async () => {
         await SupabaseDB.MEETINGS.delete().neq(
-            "meeting_id",
+            "meetingId",
             "00000000-0000-0000-0000-000000000000"
         );
         const response = await getAsAdmin("/meetings").expect(StatusCodes.OK);
@@ -154,15 +147,15 @@ describe("POST /meetings/", () => {
 
         // Verify the meeting was actually created in the database
         const { data: result, error } = await SupabaseDB.MEETINGS.select("*")
-            .eq("meeting_id", response.body.meetingId)
+            .eq("meetingId", response.body.meetingId)
             .single();
 
         if (error) throw error;
 
         const dbMeeting = {
-            meetingId: result.meeting_id,
-            committeeType: result.committee_type,
-            startTime: result.start_time.toISOString(),
+            meetingId: result.meetingId,
+            committeeType: result.committeeType,
+            startTime: new Date(result.startTime).toISOString(),
         };
 
         expect(dbMeeting).toMatchObject(newMeetingData);
@@ -265,7 +258,7 @@ describe("PUT /meetings/:meetingId", () => {
         async ({ requester, expectedStatus }) => {
             const response = await requester()
                 .send({
-                    committeeType: CommitteeTypes.FULL_TEAM,
+                    committeeType: CommitteeTypes.FULLTEAM,
                     startTime: new Date().toISOString(),
                 })
                 .expect(expectedStatus);
@@ -291,7 +284,7 @@ describe("PUT /meetings/:meetingId", () => {
             startTime: new Date().toISOString(),
         };
 
-        await putAsAdmin(`/meetings/nonexistent-id`)
+        await putAsAdmin(`/meetings/${UNREAL_MEETING_ID}`)
             .send(updateData)
             .expect(StatusCodes.NOT_FOUND);
     });
@@ -311,7 +304,7 @@ describe("PUT /meetings/:meetingId", () => {
         );
         expect(response.body.meetingId).toBe(TEST_MEETING_2.meetingId);
         expect(new Date(response.body.startTime).toISOString()).toBe(
-            new Date(TEST_MEETING_2.startTime).toISOString()
+            TEST_MEETING_2.startTime
         );
     });
 });
@@ -353,7 +346,7 @@ describe("DELETE /meetings/:meetingId", () => {
     );
 
     it("should return 404 Not Found if meeting does not exist", async () => {
-        await delAsAdmin(`/meetings/nonexistent-id`).expect(
+        await delAsAdmin(`/meetings/${UNREAL_MEETING_ID}`).expect(
             StatusCodes.NOT_FOUND
         );
     });

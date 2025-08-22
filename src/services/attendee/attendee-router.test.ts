@@ -1,41 +1,15 @@
-import { beforeEach, describe, expect, it, afterAll } from "@jest/globals";
+import { beforeEach, describe, expect, it } from "@jest/globals";
 import { post, del, get } from "../../../testing/testingTools";
 import { TESTER } from "../../../testing/testingTools";
 import { Role } from "../auth/auth-models";
 import { StatusCodes } from "http-status-codes";
-import { SupabaseDB } from "../../supabase";
+import { SupabaseDB } from "../../database";
 import { v4 as uuidv4 } from "uuid";
 import { getCurrentDay } from "../checkin/checkin-utils";
 
 const otherEvent = uuidv4();
 const dummyUUID = "00000000-0000-0000-0000-000000000000";
-
-afterAll(async () => {
-    console.log("Cleaning up test environment...");
-
-    try {
-        await SupabaseDB.EVENT_ATTENDANCE.delete()
-            .neq("attendee", "NONEXISTENT_VALUE_THAT_WILL_NEVER_EXIST")
-            .throwOnError();
-        await SupabaseDB.ATTENDEE_ATTENDANCE.delete()
-            .neq("userId", dummyUUID)
-            .throwOnError();
-        await SupabaseDB.EVENTS.delete()
-            .neq("eventId", dummyUUID)
-            .throwOnError();
-        await SupabaseDB.ATTENDEES.delete()
-            .neq("userId", dummyUUID)
-            .throwOnError();
-        await SupabaseDB.REGISTRATIONS.delete()
-            .neq("userId", dummyUUID)
-            .throwOnError();
-        await SupabaseDB.ROLES.delete().neq("userId", dummyUUID).throwOnError();
-    } catch (error) {
-        console.log("Cleanup error (expected):", error);
-    }
-
-    await new Promise((resolve) => setTimeout(resolve, 100));
-});
+const TEST_AUTH_ID = "test-auth-id";
 
 async function createTestEvent() {
     const testEventId = uuidv4();
@@ -58,11 +32,10 @@ async function createTestEvent() {
 
 type RegistrationOverride = {
     userId?: string;
-    displayName?: string;
     email?: string;
     name?: string;
-    university?: string;
-    degree?: string;
+    school?: string;
+    educationLevel?: string;
     isInterestedMechMania?: boolean;
     isInterestedPuzzleBang?: boolean;
     dietaryRestrictions?: string[];
@@ -102,24 +75,36 @@ export async function insertTestAttendee(
     const email = TESTER.email;
 
     // Insert role
-    await SupabaseDB.ROLES.insert({
-        userId,
-        displayName: "Test User",
-        email,
-        roles: [Role.enum.USER],
-    }).throwOnError();
+    await SupabaseDB.AUTH_INFO.insert([
+        {
+            userId: userId,
+            displayName: "Test User",
+            email,
+            authId: TEST_AUTH_ID,
+        },
+    ]).throwOnError();
+
+    await SupabaseDB.AUTH_ROLES.insert([
+        {
+            userId: userId,
+            role: Role.enum.USER,
+        },
+    ]).throwOnError();
 
     // Insert registration
     await SupabaseDB.REGISTRATIONS.insert({
         userId,
         email,
         name: "Test User",
-        university: "UIUC", // default test value
-        degree: "BS", // default test value
+        school: "UIUC", // default test value
+        educationLevel: "BS", // default test value
         isInterestedMechMania: true,
         isInterestedPuzzleBang: false,
         dietaryRestrictions: [],
         allergies: [],
+        gender: "Prefer not to say",
+        ethnicity: [],
+        graduationYear: "2027",
         ...overrides.registration,
     }).throwOnError();
 
@@ -155,12 +140,11 @@ const BASE_TEST_ATTENDEE = {
 };
 
 beforeEach(async () => {
-    // Clear all test data - delete ALL records from all tables
     try {
-        await SupabaseDB.EVENT_ATTENDANCE.delete()
+        await SupabaseDB.EVENT_ATTENDANCES.delete()
             .neq("attendee", "NONEXISTENT_VALUE_THAT_WILL_NEVER_EXIST")
             .throwOnError();
-        await SupabaseDB.ATTENDEE_ATTENDANCE.delete()
+        await SupabaseDB.ATTENDEE_ATTENDANCES.delete()
             .neq("userId", dummyUUID)
             .throwOnError();
         await SupabaseDB.EVENTS.delete()
@@ -172,9 +156,17 @@ beforeEach(async () => {
         await SupabaseDB.REGISTRATIONS.delete()
             .neq("userId", dummyUUID)
             .throwOnError();
-        await SupabaseDB.ROLES.delete().neq("userId", dummyUUID).throwOnError();
+        await SupabaseDB.AUTH_ROLES.delete()
+            .eq("userId", dummyUUID)
+            .throwOnError();
+        await SupabaseDB.AUTH_INFO.delete()
+            .eq("userId", dummyUUID)
+            .throwOnError();
 
-        await SupabaseDB.ROLES.delete()
+        await SupabaseDB.AUTH_ROLES.delete()
+            .eq("userId", TESTER.userId)
+            .throwOnError();
+        await SupabaseDB.AUTH_INFO.delete()
             .eq("userId", TESTER.userId)
             .throwOnError();
         await SupabaseDB.REGISTRATIONS.delete()
@@ -184,11 +176,9 @@ beforeEach(async () => {
             .eq("userId", TESTER.userId)
             .throwOnError();
     } catch (error) {
-        // Ignore cleanup errors - they're expected if tables are empty
         console.log("Cleanup in beforeEach (expected):", error);
     }
 
-    // Add a small delay to ensure cleanup completes
     await new Promise((resolve) => setTimeout(resolve, 50));
 });
 
@@ -402,15 +392,25 @@ describe("GET /attendee/favorites", () => {
 describe("POST /attendee/", () => {
     const VALID_ATTENDEE_PAYLOAD = {
         userId: "testuser123",
+        tags: ["testtag1", "testtag2"],
     };
 
     beforeEach(async () => {
-        await SupabaseDB.ROLES.insert({
-            userId: VALID_ATTENDEE_PAYLOAD.userId,
-            email: "test@test.com",
-            displayName: "Test",
-            roles: [Role.Enum.USER],
-        });
+        await SupabaseDB.AUTH_INFO.insert([
+            {
+                userId: VALID_ATTENDEE_PAYLOAD.userId,
+                displayName: "Test",
+                email: "test@test.com",
+                authId: TEST_AUTH_ID,
+            },
+        ]).throwOnError();
+
+        await SupabaseDB.AUTH_ROLES.insert([
+            {
+                userId: VALID_ATTENDEE_PAYLOAD.userId,
+                role: Role.enum.USER,
+            },
+        ]).throwOnError();
     });
 
     it("should create a new attendee with valid data", async () => {
@@ -482,7 +482,6 @@ describe("GET /attendee/points", () => {
 
 describe("GET /attendee/foodwave", () => {
     const currentDay = getCurrentDay();
-    console.log(currentDay);
 
     it("should return foodwave 1 if attendee has priority today", async () => {
         await insertTestAttendee({
@@ -586,14 +585,24 @@ describe("GET /attendee/", () => {
 
 describe("GET /attendee/id/:userId", () => {
     const targetId = "some-user-id";
+    const targetAuthId = "some-auth-id";
 
     beforeEach(async () => {
-        await SupabaseDB.ROLES.insert({
-            userId: targetId,
-            email: "some-user@test.com",
-            displayName: "Some User",
-            roles: [Role.Enum.USER],
-        });
+        await SupabaseDB.AUTH_INFO.insert([
+            {
+                userId: targetId,
+                displayName: "Some User",
+                email: "some-user@test.com",
+                authId: targetAuthId,
+            },
+        ]).throwOnError();
+
+        await SupabaseDB.AUTH_ROLES.insert([
+            {
+                userId: targetId,
+                role: Role.enum.USER,
+            },
+        ]).throwOnError();
     });
 
     it.each([
@@ -629,24 +638,38 @@ describe("GET /attendee/id/:userId", () => {
 });
 
 describe("GET /attendee/emails", () => {
+    const targetAuthId = "some-auth-id";
+    const targetAuthId2 = "some-auth-id-2";
+
     it.each([
         { role: Role.enum.STAFF, label: "STAFF" },
         { role: Role.enum.ADMIN, label: "ADMIN" },
     ])(
         "should return all attendee emails and userIds for %s role",
         async ({ role }) => {
-            await SupabaseDB.ROLES.insert([
+            await SupabaseDB.AUTH_INFO.insert([
                 {
                     userId: "u1",
                     email: "u1@example.com",
                     displayName: "User One",
-                    roles: [],
+                    authId: targetAuthId,
                 },
                 {
                     userId: "u2",
                     email: "u2@example.com",
                     displayName: "User Two",
-                    roles: [],
+                    authId: targetAuthId2,
+                },
+            ]).throwOnError();
+
+            await SupabaseDB.AUTH_ROLES.insert([
+                {
+                    userId: "u1",
+                    role: Role.enum.USER,
+                },
+                {
+                    userId: "u2",
+                    role: Role.enum.USER,
                 },
             ]).throwOnError();
 
@@ -655,23 +678,29 @@ describe("GET /attendee/emails", () => {
                     userId: "u1",
                     name: "User One",
                     email: "u1@example.com",
-                    university: "N/A",
-                    degree: "N/A",
+                    school: "N/A",
+                    educationLevel: "N/A",
                     isInterestedMechMania: false,
                     isInterestedPuzzleBang: false,
                     dietaryRestrictions: [],
                     allergies: [],
+                    gender: "Prefer not to say",
+                    ethnicity: [],
+                    graduationYear: "2027",
                 },
                 {
                     userId: "u2",
                     name: "User Two",
                     email: "u2@example.com",
-                    university: "N/A",
-                    degree: "N/A",
+                    school: "N/A",
+                    educationLevel: "N/A",
                     isInterestedMechMania: false,
                     isInterestedPuzzleBang: false,
                     dietaryRestrictions: [],
                     allergies: [],
+                    gender: "Prefer not to say",
+                    ethnicity: [],
+                    graduationYear: "2027",
                 },
             ]).throwOnError();
 

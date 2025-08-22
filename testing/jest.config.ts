@@ -7,11 +7,11 @@ const config: Config = {
 
     rootDir: "../src",
 
-    testTimeout: 10_000,
+    testTimeout: 30_000,
 
+    // Setup files
     setupFiles: ["../testing/jest.env-setup.ts"],
-    // setupFilesAfterEnv: ["../testing/jest.db-setup.ts"],
-    // setupFilesAfterEnv: ["../testing/jest.supabase-db.setup.ts"],
+    setupFilesAfterEnv: ["../testing/jest.db-setup.ts"],
 
     testPathIgnorePatterns: [
         "/app.ts", // Ignore app.ts
@@ -19,6 +19,23 @@ const config: Config = {
 
     verbose: true,
     detectOpenHandles: true,
+
+    // Enable parallel test execution
+    maxWorkers: "50%",
+
+    // Coverage settings
+    collectCoverageFrom: [
+        "**/*.ts",
+        "!**/*.d.ts",
+        "!**/*.test.ts",
+        "!**/*.spec.ts",
+    ],
 };
+
+/* GitHub CI specific config */
+const githubActions = process.env.GITHUB_ACTIONS;
+if (githubActions != undefined && githubActions != "0" && githubActions != "") {
+    config.reporters = [["github-actions", { silent: false }], "summary"];
+}
 
 export default config;

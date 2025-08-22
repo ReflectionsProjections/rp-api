@@ -11,28 +11,46 @@ import {
     putAsStaff,
     TESTER,
 } from "../../../testing/testingTools";
-import { Roles } from "./auth-schema";
+import { AuthInfo, AuthRole } from "./auth-schema";
 import { Platform, Role } from "./auth-models";
-import { Database } from "../../database";
 import { StatusCodes } from "http-status-codes";
 import * as googleAuthLibrary from "google-auth-library";
 import Config from "../../config";
 import jsonwebtoken, { JwtPayload } from "jsonwebtoken";
 import { Corporate } from "./corporate-schema";
+import { SupabaseDB } from "../../database";
 
 const TESTER_USER = {
+    authId: "1234-5678",
     userId: TESTER.userId,
     displayName: TESTER.displayName,
     email: TESTER.email,
-    roles: [Role.Enum.USER],
-} satisfies Roles;
+} satisfies AuthInfo;
+
+const TESTER_USER_ROLES = [
+    {
+        userId: TESTER.userId,
+        role: Role.Enum.USER,
+    },
+] satisfies AuthRole[];
 
 const OTHER_USER = {
+    authId: "abcd-efgh",
     userId: "other-user-123",
     displayName: "Other User",
     email: "other@user.com",
-    roles: [Role.Enum.USER, Role.Enum.STAFF],
-} satisfies Roles;
+} satisfies AuthInfo;
+
+const OTHER_USER_ROLES = [
+    {
+        userId: OTHER_USER.userId,
+        role: Role.Enum.USER,
+    },
+    {
+        userId: OTHER_USER.userId,
+        role: Role.Enum.STAFF,
+    },
+] satisfies AuthRole[];
 
 const CORPORATE_USER = {
     email: "sponsor@big.corp",
@@ -43,35 +61,47 @@ const CORPORATE_OTHER_USER = {
     name: "Ronit Smith",
 } satisfies Corporate;
 
+const RANDOM_UUID = "totally-random-but-set-for-tests";
+jest.mock("crypto", () => {
+    const realCrypto = jest.requireActual("crypto");
+    return {
+        ...realCrypto,
+        randomUUID: () => RANDOM_UUID,
+    };
+});
+
 beforeEach(async () => {
-    await Database.ROLES.create(TESTER_USER, OTHER_USER);
-    await Database.CORPORATE.create(CORPORATE_USER, CORPORATE_OTHER_USER);
+    await SupabaseDB.AUTH_INFO.insert([TESTER_USER, OTHER_USER]);
+    await SupabaseDB.AUTH_ROLES.insert(TESTER_USER_ROLES);
+    await SupabaseDB.AUTH_ROLES.insert(OTHER_USER_ROLES);
+    await SupabaseDB.CORPORATE.insert([CORPORATE_USER, CORPORATE_OTHER_USER]);
 });
 
 describe("DELETE /auth/", () => {
     it("should remove the requested role", async () => {
         const res = await delAsAdmin("/auth/")
             .send({
-                email: OTHER_USER.email,
+                userId: OTHER_USER.userId,
                 role: Role.Enum.STAFF,
             })
             .expect(StatusCodes.OK);
 
-        const expected = {
-            ...OTHER_USER,
-            roles: [Role.Enum.USER],
-        };
-        expect(res.body).toMatchObject(expected);
-        const stored = await Database.ROLES.findOne({
+        expect(res.body).toMatchObject({
             userId: OTHER_USER.userId,
+            role: Role.Enum.STAFF,
         });
-        expect(stored?.toObject()).toMatchObject(expected);
+        const { data: roleRows } = await SupabaseDB.AUTH_ROLES.select()
+            .eq("userId", OTHER_USER.userId)
+            .throwOnError();
+        expect(roleRows.map((row: { role: Role }) => row.role)).toMatchObject([
+            Role.Enum.USER,
+        ]);
     });
 
     it("should give the not found error when the user doesn't exist", async () => {
         const res = await delAsAdmin("/auth/")
             .send({
-                email: "nonexistent@fake.com",
+                userId: "nonexistent",
                 role: Role.Enum.STAFF,
             })
             .expect(StatusCodes.NOT_FOUND);
@@ -82,7 +112,7 @@ describe("DELETE /auth/", () => {
     it("should require admin permissions", async () => {
         const res = await delAsStaff("/auth/")
             .send({
-                email: "nonexistent@fake.com",
+                userId: OTHER_USER.userId,
                 role: Role.Enum.STAFF,
             })
             .expect(StatusCodes.FORBIDDEN);
@@ -95,44 +125,39 @@ describe("PUT /auth/", () => {
     it("should add the requested role", async () => {
         const res = await putAsAdmin("/auth/")
             .send({
-                email: OTHER_USER.email,
+                userId: OTHER_USER.userId,
                 role: Role.Enum.PUZZLEBANG,
             })
             .expect(StatusCodes.OK);
 
-        const expected = {
-            ...OTHER_USER,
-            roles: [...OTHER_USER.roles, Role.Enum.PUZZLEBANG],
-        };
-        expect(res.body).toMatchObject(expected);
-        const stored = await Database.ROLES.findOne({
+        expect(res.body).toMatchObject({
             userId: OTHER_USER.userId,
+            role: Role.Enum.PUZZLEBANG,
         });
-        expect(stored?.toObject()).toMatchObject(expected);
+        const { data: roleRows } = await SupabaseDB.AUTH_ROLES.select()
+            .eq("userId", OTHER_USER.userId)
+            .throwOnError();
+        expect(roleRows.map((row: { role: Role }) => row.role)).toMatchObject([
+            ...OTHER_USER_ROLES.map((row) => row.role),
+            Role.Enum.PUZZLEBANG,
+        ]);
     });
 
-    it("should create the new roles entry if the user doesn't exist", async () => {
-        const newEmail = "nonexistent@fake.com";
+    it("should give the not found error if the user doesn't exist", async () => {
         const res = await putAsAdmin("/auth/")
             .send({
-                email: newEmail,
+                userId: "nonexistent",
                 role: Role.Enum.PUZZLEBANG,
             })
-            .expect(StatusCodes.OK);
+            .expect(StatusCodes.NOT_FOUND);
 
-        const expected = {
-            email: newEmail,
-            roles: [Role.Enum.PUZZLEBANG],
-        };
-        expect(res.body).toMatchObject(expected);
-        const stored = await Database.ROLES.findOne({ email: newEmail });
-        expect(stored?.toObject()).toMatchObject(expected);
+        expect(res.body).toHaveProperty("error", "UserNotFound");
     });
 
     it("should require admin permissions", async () => {
         const res = await putAsStaff("/auth/")
             .send({
-                email: "nonexistent@fake.com",
+                userId: OTHER_USER.userId,
                 role: Role.Enum.STAFF,
             })
             .expect(StatusCodes.FORBIDDEN);
@@ -147,9 +172,9 @@ describe("POST /auth/login/:PLATFORM", () => {
     const CODE_VERIFIER = "codeVerifier123";
     const ID_TOKEN = "IdToken";
     const AUTH_PAYLOAD = {
-        email: TESTER.email,
-        sub: TESTER.userId.replace("user", ""),
-        name: TESTER.displayName,
+        email: TESTER_USER.email,
+        sub: TESTER_USER.authId,
+        name: "newerDisplayName",
     } satisfies Partial<googleAuthLibrary.TokenPayload>;
 
     const mockGetToken: jest.SpiedFunction<
@@ -170,7 +195,6 @@ describe("POST /auth/login/:PLATFORM", () => {
         );
 
     beforeEach(async () => {
-        await Database.ROLES.deleteOne({ userId: TESTER.userId });
         mockGetToken.mockClear().mockImplementation(() => {
             return {
                 tokens: {
@@ -245,7 +269,13 @@ describe("POST /auth/login/:PLATFORM", () => {
                   }
                 : { code: CODE, redirect_uri: REDIRECT_URI };
 
-            it("should login with a valid code", async () => {
+            it("should login as a new user with a valid code", async () => {
+                await SupabaseDB.AUTH_INFO.delete()
+                    .eq("userId", TESTER_USER.userId)
+                    .throwOnError();
+                await SupabaseDB.AUTH_ROLES.delete()
+                    .eq("userId", TESTER_USER.userId)
+                    .throwOnError();
                 const start = Math.floor(Date.now() / 1000);
                 const res = await post(`/auth/login/${platform}`)
                     .send(loginRequest)
@@ -268,21 +298,89 @@ describe("POST /auth/login/:PLATFORM", () => {
                 ) as JwtPayload;
 
                 const expected = {
-                    email: TESTER.email,
-                    displayName: TESTER.displayName,
+                    email: AUTH_PAYLOAD.email,
+                    displayName: AUTH_PAYLOAD.name,
                     roles: [],
+                    userId: RANDOM_UUID,
+                };
+                expect(jwtPayload).toMatchObject(expected);
+                expect(jwtPayload.iat).toBeGreaterThanOrEqual(start);
+
+                const { data: info } = await SupabaseDB.AUTH_INFO.select()
+                    .eq("userId", expected.userId)
+                    .single();
+                expect(info).toMatchObject({
+                    userId: expected.userId,
+                    displayName: expected.displayName,
+                    email: expected.email,
+                });
+                const { data: roleRows } =
+                    await SupabaseDB.AUTH_ROLES.select().eq(
+                        "userId",
+                        expected.userId
+                    );
+                expect(
+                    roleRows?.map((row: { role: Role }) => row.role)
+                ).toEqual(expected.roles);
+            });
+
+            it("should login as an existing user with a valid code", async () => {
+                const start = Math.floor(Date.now() / 1000);
+                const res = await post(`/auth/login/${platform}`)
+                    .send(loginRequest)
+                    .expect(StatusCodes.OK);
+
+                expect(mockOAuth2Client).toHaveBeenCalledWith(
+                    expectedOAuthConfig
+                );
+                expect(mockGetToken).toHaveBeenCalledWith(
+                    expectedGetTokenParams
+                );
+                expect(mockVerifyIdToken).toHaveBeenCalledWith({
+                    idToken: ID_TOKEN,
+                });
+
+                expect(res.body).toHaveProperty("token");
+                const jwtPayload = jsonwebtoken.verify(
+                    res.body.token,
+                    Config.JWT_SIGNING_SECRET
+                ) as JwtPayload;
+
+                const expected = {
+                    email: AUTH_PAYLOAD.email,
+                    displayName: AUTH_PAYLOAD.name,
+                    roles: [Role.Enum.USER],
                     userId: TESTER.userId,
                 };
                 expect(jwtPayload).toMatchObject(expected);
                 expect(jwtPayload.iat).toBeGreaterThanOrEqual(start);
 
-                const stored = await Database.ROLES.findOne({
-                    userId: TESTER.userId,
+                const { data: info } = await SupabaseDB.AUTH_INFO.select()
+                    .eq("userId", TESTER.userId)
+                    .single();
+                expect(info).toMatchObject({
+                    userId: expected.userId,
+                    displayName: expected.displayName,
+                    email: expected.email,
                 });
-                expect(stored?.toObject()).toMatchObject(expected);
+                const { data: roleRows } =
+                    await SupabaseDB.AUTH_ROLES.select().eq(
+                        "userId",
+                        TESTER_USER.userId
+                    );
+                expect(
+                    roleRows?.map((row: { role: Role }) => row.role)
+                ).toEqual(expected.roles);
             });
 
             it("fails to login with an invalid code", async () => {
+                await SupabaseDB.AUTH_INFO.delete()
+                    .eq("userId", TESTER.userId)
+                    .throwOnError();
+                await SupabaseDB.AUTH_ROLES.delete()
+                    .eq("userId", TESTER.userId)
+                    .throwOnError();
+
                 mockGetToken.mockImplementation(() => {
                     throw new Error("Test invalid code");
                 });
@@ -300,13 +398,20 @@ describe("POST /auth/login/:PLATFORM", () => {
 
                 expect(res.body).toHaveProperty("error", "InvalidToken");
 
-                const stored = await Database.ROLES.findOne({
-                    userId: TESTER.userId,
-                });
-                expect(stored).toBeNull();
+                const { data } = await SupabaseDB.AUTH_INFO.select()
+                    .eq("userId", TESTER.userId)
+                    .throwOnError();
+                expect(data.length).toBe(0);
             });
 
             it("fails to login with no id token", async () => {
+                await SupabaseDB.AUTH_INFO.delete()
+                    .eq("userId", TESTER.userId)
+                    .throwOnError();
+                await SupabaseDB.AUTH_ROLES.delete()
+                    .eq("userId", TESTER.userId)
+                    .throwOnError();
+
                 mockGetToken.mockImplementation(() => ({ tokens: {} }));
                 const res = await post(`/auth/login/${platform}`)
                     .send(loginRequest)
@@ -322,13 +427,20 @@ describe("POST /auth/login/:PLATFORM", () => {
 
                 expect(res.body).toHaveProperty("error", "InvalidToken");
 
-                const stored = await Database.ROLES.findOne({
-                    userId: TESTER.userId,
-                });
-                expect(stored).toBeNull();
+                const { data } = await SupabaseDB.AUTH_INFO.select()
+                    .eq("userId", TESTER.userId)
+                    .throwOnError();
+                expect(data.length).toBe(0);
             });
 
             it("fails to login when ticket has no payload", async () => {
+                await SupabaseDB.AUTH_INFO.delete()
+                    .eq("userId", TESTER.userId)
+                    .throwOnError();
+                await SupabaseDB.AUTH_ROLES.delete()
+                    .eq("userId", TESTER.userId)
+                    .throwOnError();
+
                 mockVerifyIdToken.mockImplementation(() => ({
                     getPayload: () => undefined,
                 }));
@@ -348,15 +460,22 @@ describe("POST /auth/login/:PLATFORM", () => {
 
                 expect(res.body).toHaveProperty("error", "InvalidToken");
 
-                const stored = await Database.ROLES.findOne({
-                    userId: TESTER.userId,
-                });
-                expect(stored).toBeNull();
+                const { data } = await SupabaseDB.AUTH_INFO.select()
+                    .eq("userId", TESTER.userId)
+                    .throwOnError();
+                expect(data.length).toBe(0);
             });
 
             it.each(["email", "sub", "name"])(
                 "fails to login when missing scopes (missing payload.%s)",
                 async (payloadProp) => {
+                    await SupabaseDB.AUTH_INFO.delete()
+                        .eq("userId", TESTER.userId)
+                        .throwOnError();
+                    await SupabaseDB.AUTH_ROLES.delete()
+                        .eq("userId", TESTER.userId)
+                        .throwOnError();
+
                     mockVerifyIdToken.mockImplementation(() => ({
                         getPayload: () => {
                             const payload = {
@@ -382,10 +501,10 @@ describe("POST /auth/login/:PLATFORM", () => {
 
                     expect(res.body).toHaveProperty("error", "InvalidScopes");
 
-                    const stored = await Database.ROLES.findOne({
-                        userId: TESTER.userId,
-                    });
-                    expect(stored).toBeNull();
+                    const { data } = await SupabaseDB.AUTH_INFO.select()
+                        .eq("userId", TESTER.userId)
+                        .throwOnError();
+                    expect(data.length).toBe(0);
                 }
             );
         }
@@ -438,10 +557,11 @@ describe("POST /auth/corporate", () => {
             .send(NEW_CORPORATE)
             .expect(StatusCodes.CREATED);
         expect(res.body).toMatchObject(NEW_CORPORATE);
-        const stored = await Database.CORPORATE.findOne({
-            email: NEW_CORPORATE.email,
-        });
-        expect(stored?.toObject()).toMatchObject(NEW_CORPORATE);
+        const { data } = await SupabaseDB.CORPORATE.select()
+            .eq("email", NEW_CORPORATE.email)
+            .single()
+            .throwOnError();
+        expect(data).toMatchObject(NEW_CORPORATE);
     });
 
     it("should not overwrite existing", async () => {
@@ -453,10 +573,11 @@ describe("POST /auth/corporate", () => {
             .expect(StatusCodes.BAD_REQUEST);
         expect(res.body).toHaveProperty("error", "AlreadyExists");
 
-        const stored = await Database.CORPORATE.findOne({
-            email: CORPORATE_USER.email,
-        });
-        expect(stored?.toObject()).toMatchObject(CORPORATE_USER);
+        const { data } = await SupabaseDB.CORPORATE.select()
+            .eq("email", CORPORATE_USER.email)
+            .single()
+            .throwOnError();
+        expect(data).toMatchObject(CORPORATE_USER);
     });
 
     it("should require admin permissions", async () => {
@@ -464,10 +585,10 @@ describe("POST /auth/corporate", () => {
             .send(NEW_CORPORATE)
             .expect(StatusCodes.FORBIDDEN);
         expect(res.body).toHaveProperty("error", "Forbidden");
-        const stored = await Database.CORPORATE.findOne({
-            email: NEW_CORPORATE.email,
-        });
-        expect(stored?.toObject()).toBeUndefined();
+        const { data } = await SupabaseDB.CORPORATE.select()
+            .eq("email", NEW_CORPORATE.email)
+            .throwOnError();
+        expect(data.length).toBe(0);
     });
 });
 
@@ -476,10 +597,10 @@ describe("DELETE /auth/corporate", () => {
         await delAsAdmin("/auth/corporate")
             .send({ email: CORPORATE_USER.email })
             .expect(StatusCodes.NO_CONTENT);
-        const stored = await Database.CORPORATE.findOne({
-            email: CORPORATE_USER.email,
-        });
-        expect(stored?.toObject()).toBeUndefined();
+        const { data } = await SupabaseDB.CORPORATE.select()
+            .eq("email", CORPORATE_USER.email)
+            .throwOnError();
+        expect(data.length).toBe(0);
     });
 
     it("fails to delete a nonexistent user", async () => {
@@ -494,17 +615,76 @@ describe("DELETE /auth/corporate", () => {
             .send({ email: CORPORATE_USER.email })
             .expect(StatusCodes.FORBIDDEN);
         expect(res.body).toHaveProperty("error", "Forbidden");
-        const stored = await Database.CORPORATE.findOne({
-            email: CORPORATE_USER.email,
-        });
-        expect(stored?.toObject()).toMatchObject(CORPORATE_USER);
+        const { data } = await SupabaseDB.CORPORATE.select()
+            .eq("email", CORPORATE_USER.email)
+            .single()
+            .throwOnError();
+        expect(data).toMatchObject(CORPORATE_USER);
     });
 });
 
 describe("GET /auth/info", () => {
     it("should get user info", async () => {
         const res = await getAsUser("/auth/info").expect(StatusCodes.OK);
-        expect(res.body).toEqual(TESTER_USER);
+        expect(res.body).toEqual({
+            ...TESTER_USER,
+            roles: TESTER_USER_ROLES.map((row) => row.role),
+        });
+    });
+});
+
+describe("GET /auth/team", () => {
+    it("should get team members (users with STAFF or ADMIN roles)", async () => {
+        const res = await getAsAdmin("/auth/team").expect(StatusCodes.OK);
+
+        // Should return users with STAFF or ADMIN roles
+        expect(res.body).toEqual(
+            expect.arrayContaining([
+                expect.objectContaining({
+                    userId: OTHER_USER.userId,
+                    email: OTHER_USER.email,
+                    displayName: OTHER_USER.displayName,
+                    roles: expect.arrayContaining([Role.Enum.STAFF]),
+                }),
+            ])
+        );
+
+        // Should not include users with only USER role
+        const userOnlyEmails = res.body.map((user: AuthInfo) => user.email);
+        expect(userOnlyEmails).not.toContain(TESTER_USER.email);
+    });
+
+    it("should require admin permissions", async () => {
+        const res = await getAsStaff("/auth/team").expect(
+            StatusCodes.FORBIDDEN
+        );
+        expect(res.body).toHaveProperty("error", "Forbidden");
+    });
+
+    it("should return empty array when no team members exist", async () => {
+        // Remove all roles to test empty case
+        await SupabaseDB.AUTH_ROLES.delete().neq("userId", "nonexistent");
+
+        const res = await getAsAdmin("/auth/team").expect(StatusCodes.OK);
+        expect(res.body).toEqual([]);
+    });
+
+    it("should handle users with multiple roles correctly", async () => {
+        // Add ADMIN role to OTHER_USER to test multiple roles
+        await SupabaseDB.AUTH_ROLES.insert({
+            userId: OTHER_USER.userId,
+            role: Role.Enum.ADMIN,
+        });
+
+        const res = await getAsAdmin("/auth/team").expect(StatusCodes.OK);
+
+        const otherUser = res.body.find(
+            (user: AuthInfo) => user.userId === OTHER_USER.userId
+        );
+        expect(otherUser).toBeDefined();
+        expect(otherUser.roles).toEqual(
+            expect.arrayContaining([Role.Enum.STAFF, Role.Enum.ADMIN])
+        );
     });
 });
 
@@ -512,18 +692,13 @@ describe("GET /auth/:ROLE", () => {
     it("should get users with user role", async () => {
         const res = await getAsStaff("/auth/USER").expect(StatusCodes.OK);
         expect(res.body).toEqual(
-            expect.arrayContaining([
-                expect.objectContaining(TESTER_USER),
-                expect.objectContaining(OTHER_USER),
-            ])
+            expect.arrayContaining([TESTER_USER.userId, OTHER_USER.userId])
         );
     });
 
     it("should get users with staff role", async () => {
         const res = await getAsStaff("/auth/USER").expect(StatusCodes.OK);
-        expect(res.body).toEqual(
-            expect.arrayContaining([expect.objectContaining(OTHER_USER)])
-        );
+        expect(res.body).toEqual(expect.arrayContaining([OTHER_USER.userId]));
     });
 
     it("should require staff permissions", async () => {

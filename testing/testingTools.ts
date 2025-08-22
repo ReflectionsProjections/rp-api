@@ -3,12 +3,13 @@ import { z } from "zod";
 import jsonwebtoken from "jsonwebtoken";
 import { Config } from "../src/config";
 import { JwtPayloadType, Role } from "../src/services/auth/auth-models";
+import { SupabaseClient } from "@supabase/supabase-js";
 
 type RoleType = z.infer<typeof Role>;
 
 export const TESTER = {
-    userId: "user123",
-    roles: [],
+    userId: "test-er-user-id",
+    authId: "test-er-auth-id",
     displayName: "Loid Forger",
     email: "loid.forger@testing.com",
 };
@@ -28,6 +29,7 @@ function setRole(request: request.Test, role?: RoleType) {
         userId: TESTER.userId,
         roles: [role],
         displayName: TESTER.displayName,
+        email: TESTER.email,
     } satisfies JwtPayloadType;
 
     const jwt = jsonwebtoken.sign(payload, Config.JWT_SIGNING_SECRET, {
@@ -115,4 +117,71 @@ export function delAsStaff(url: string): request.Test {
 
 export function delAsAdmin(url: string): request.Test {
     return del(url, Role.enum.ADMIN);
+}
+
+export async function clearSupabaseTables(supabase: SupabaseClient) {
+    const tables: Record<string, Record<string, string>> = {
+        eventAttendances: {
+            column: "eventId",
+            value: "00000000-0000-0000-0000-000000000000",
+        },
+        attendeeAttendances: {
+            column: "userId",
+            value: "00000000-0000-0000-0000-000000000000",
+        },
+        attendees: {
+            column: "userId",
+            value: "00000000-0000-0000-0000-000000000000",
+        },
+        notifications: {
+            column: "userId",
+            value: "00000000-0000-0000-0000-000000000000",
+        },
+        draftRegistrations: {
+            column: "userId",
+            value: "00000000-0000-0000-0000-000000000000",
+        },
+        registrations: {
+            column: "userId",
+            value: "00000000-0000-0000-0000-000000000000",
+        },
+        authInfo: {
+            column: "userId",
+            value: "00000000-0000-0000-0000-000000000000",
+        },
+        authRoles: {
+            column: "userId",
+            value: "00000000-0000-0000-0000-000000000000",
+        },
+        authCodes: {
+            column: "email",
+            value: "NON_EXISTENT_EMAIL",
+        },
+        events: {
+            column: "eventId",
+            value: "00000000-0000-0000-0000-000000000000",
+        },
+        corporate: {
+            column: "email",
+            value: "NON_EXISTENT_EMAIL",
+        },
+        staff: {
+            column: "email",
+            value: "NON_EXISTENT_EMAIL",
+        },
+        subscriptions: {
+            column: "mailingList",
+            value: "NON_EXISTENT_MAILING_LIST",
+        },
+    }; // TODO: Get this from the database
+
+    for (const table of Object.keys(tables)) {
+        const { error } = await supabase
+            .from(table)
+            .delete()
+            .neq(tables[table].column, tables[table].value);
+        if (error) {
+            console.warn(`⚠️ Could not clear ${table}:`, error.message);
+        }
+    }
 }

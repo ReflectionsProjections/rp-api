@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "@jest/globals";
+import { afterAll, beforeEach, describe, expect, it } from "@jest/globals";
 import {
     get,
     post,
@@ -12,9 +12,9 @@ import {
     delAsAdmin,
 } from "../../../testing/testingTools";
 import { StatusCodes } from "http-status-codes";
-import { Database } from "../../database";
 import { v4 as uuidv4 } from "uuid";
 import { SpeakerType, UpdateSpeakerType } from "./speakers-schema";
+import { SupabaseDB } from "../../database";
 
 const SPEAKER_1_ID = uuidv4();
 const SPEAKER_2_ID = uuidv4();
@@ -64,8 +64,19 @@ const UPDATE_SPEAKER_PAYLOAD = {
 } satisfies UpdateSpeakerType;
 
 beforeEach(async () => {
-    await Database.SPEAKERS.create(SPEAKER_1);
-    await Database.SPEAKERS.create(SPEAKER_2);
+    await SupabaseDB.SPEAKERS.delete().neq(
+        "speakerId",
+        "00000000-0000-0000-0000-000000000000"
+    );
+
+    await SupabaseDB.SPEAKERS.insert([SPEAKER_1, SPEAKER_2]);
+});
+
+afterAll(async () => {
+    await SupabaseDB.SPEAKERS.delete().in("speakerId", [
+        SPEAKER_1_ID,
+        SPEAKER_2_ID,
+    ]);
 });
 
 describe("GET /speakers/", () => {
@@ -80,7 +91,10 @@ describe("GET /speakers/", () => {
     });
 
     it("should return an empty array when no speakers exist", async () => {
-        await Database.SPEAKERS.deleteMany({});
+        await SupabaseDB.SPEAKERS.delete().neq(
+            "speakerId",
+            "00000000-0000-0000-0000-000000000000"
+        );
         const response = await get("/speakers/").expect(StatusCodes.OK);
         expect(response.body).toEqual([]);
     });
@@ -123,10 +137,11 @@ describe("POST /speakers/", () => {
             /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/
         );
 
-        const createdSpeaker = await Database.SPEAKERS.findOne({
-            speakerId: response.body.speakerId,
-        });
-        expect(createdSpeaker?.toObject()).toMatchObject({
+        const createdSpeakerResponse = await get(
+            `/speakers/${response.body.speakerId}`
+        ).expect(StatusCodes.OK);
+
+        expect(createdSpeakerResponse.body).toMatchObject({
             ...NEW_SPEAKER_PAYLOAD_NO_ID,
             speakerId: response.body.speakerId,
         });
@@ -139,10 +154,11 @@ describe("POST /speakers/", () => {
 
         expect(response.body).toMatchObject(NEW_SPEAKER_PAYLOAD_WITH_ID);
 
-        const createdSpeaker = await Database.SPEAKERS.findOne({
-            speakerId: NEW_SPEAKER_PAYLOAD_WITH_ID.speakerId,
-        });
-        expect(createdSpeaker?.toObject()).toMatchObject(
+        const createdSpeakerResponse = await get(
+            `/speakers/${response.body.speakerId}`
+        ).expect(StatusCodes.OK);
+
+        expect(createdSpeakerResponse.body).toMatchObject(
             NEW_SPEAKER_PAYLOAD_WITH_ID
         );
     });
@@ -196,15 +212,15 @@ describe("PUT /speakers/:SPEAKERID", () => {
             speakerId: SPEAKER_1_ID,
         });
 
-        // ensure speakerId was not overwritten
         expect(response.body.speakerId).toBe(SPEAKER_1_ID);
 
-        const speakerAfterUpdate = await Database.SPEAKERS.findOne({
-            speakerId: response.body.speakerId,
-        });
-        expect(speakerAfterUpdate).toMatchObject({
+        const speakerAfterUpdateResponse = await get(
+            `/speakers/${response.body.speakerId}`
+        ).expect(StatusCodes.OK);
+
+        expect(speakerAfterUpdateResponse.body).toMatchObject({
             ...UPDATE_SPEAKER_PAYLOAD,
-            speakerId: SPEAKER_1.speakerId,
+            speakerId: SPEAKER_1_ID,
         });
     });
 
@@ -260,10 +276,10 @@ describe("DELETE /speakers/:SPEAKERID", () => {
             StatusCodes.NO_CONTENT
         );
 
-        const deletedSpeaker = await Database.SPEAKERS.findOne({
-            speakerId: SPEAKER_1.speakerId,
-        });
-        expect(deletedSpeaker).toBeNull();
+        const deletedSpeakerResponse = await get(
+            `/speakers/${SPEAKER_1.speakerId}`
+        ).expect(StatusCodes.NOT_FOUND);
+        expect(deletedSpeakerResponse.body).toEqual({ error: "DoesNotExist" });
     });
 
     it("should delete an existing speaker and return 204 NO_CONTENT for a STAFF user", async () => {
@@ -271,10 +287,10 @@ describe("DELETE /speakers/:SPEAKERID", () => {
             StatusCodes.NO_CONTENT
         );
 
-        const deletedSpeaker = await Database.SPEAKERS.findOne({
-            speakerId: SPEAKER_1.speakerId,
-        });
-        expect(deletedSpeaker).toBeNull();
+        const deletedSpeakerResponse = await get(
+            `/speakers/${SPEAKER_1.speakerId}`
+        ).expect(StatusCodes.NOT_FOUND);
+        expect(deletedSpeakerResponse.body).toEqual({ error: "DoesNotExist" });
     });
 
     it("should return NOT_FOUND when trying to delete a speaker that doesn't exist", async () => {
