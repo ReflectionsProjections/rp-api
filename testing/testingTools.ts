@@ -59,6 +59,17 @@ export function post(url: string, role?: RoleType): request.Test {
     return setRole(request(app()).post(url), role);
 }
 
+export function postWithAuthorization(
+    url: string,
+    authorization?: string
+): request.Test {
+    const req = request(app()).post(url);
+    if (authorization) {
+        req.set("Authorization", authorization);
+    }
+    return req;
+}
+
 export function postAsUser(url: string): request.Test {
     return post(url, Role.enum.USER);
 }

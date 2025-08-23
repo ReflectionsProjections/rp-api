@@ -568,7 +568,7 @@ export type Database = {
                 | "PARTNERS"
                 | "MEALS"
                 | "CHECKIN";
-            roleType: "USER" | "STAFF" | "ADMIN" | "CORPORATE" | "PUZZLEBANG";
+            roleType: "USER" | "STAFF" | "ADMIN" | "CORPORATE";
             staffAttendanceType: "PRESENT" | "EXCUSED" | "ABSENT";
         };
         CompositeTypes: {
@@ -720,7 +720,7 @@ export const Constants = {
                 "MEALS",
                 "CHECKIN",
             ],
-            roleType: ["USER", "STAFF", "ADMIN", "CORPORATE", "PUZZLEBANG"],
+            roleType: ["USER", "STAFF", "ADMIN", "CORPORATE"],
             staffAttendanceType: ["PRESENT", "EXCUSED", "ABSENT"],
         },
     },
