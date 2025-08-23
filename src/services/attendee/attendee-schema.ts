@@ -1,7 +1,31 @@
 import { Schema } from "mongoose";
 import { Database } from "../../database.types";
+import { z } from "zod";
 
 export type DayKey = "Mon" | "Tue" | "Wed" | "Thu" | "Fri" | "Sat" | "Sun";
+
+// Zod enums for runtime validation and .Enum access
+export const Tiers = z.enum([
+    "TIER1",
+    "TIER2", 
+    "TIER3",
+]);
+
+export const IconColors = z.enum([
+    "BLUE",
+    "RED",
+    "GREEN",
+    "YELLOW",
+    "PINK",
+    "BLACK",
+    "PURPLE",
+    "ORANGE",
+]);
+
+// Database types for consistency with other schema patterns
+export type TierType = Database["public"]["Enums"]["tierType"];
+export type IconColorType = Database["public"]["Enums"]["iconColorType"];
+export type AttendeeType = Database["public"]["Tables"]["attendees"]["Row"];
 
 // Mongoose schema for attendee
 export const AttendeeSchema = new Schema({
@@ -82,7 +106,3 @@ export const AttendeeAttendanceSchema = new Schema({
     },
     eventsAttended: [{ type: String, ref: "Event", required: true }],
 });
-
-export type AttendeeType = Database["public"]["Tables"]["attendees"]["Row"];
-export type TierType = Database["public"]["Enums"]["tierType"];
-export type IconColorType = Database["public"]["Enums"]["iconColorType"];

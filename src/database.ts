@@ -74,3 +74,26 @@ export const CommitteeTypes: Record<
     MARKETING: "MARKETING",
     OPERATIONS: "OPERATIONS",
 };
+
+export const TierTypes: Record<
+    string,
+    Database["public"]["Enums"]["tierType"]
+> = {
+    TIER1: "TIER1",
+    TIER2: "TIER2",
+    TIER3: "TIER3",
+};
+
+export const IconColorTypes: Record<
+    string,
+    Database["public"]["Enums"]["iconColorType"]
+> = {
+    BLUE: "BLUE",
+    RED: "RED",
+    GREEN: "GREEN",
+    YELLOW: "YELLOW",
+    PINK: "PINK",
+    BLACK: "BLACK",
+    PURPLE: "PURPLE",
+    ORANGE: "ORANGE",
+};
