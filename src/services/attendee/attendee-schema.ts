@@ -5,11 +5,7 @@ import { z } from "zod";
 export type DayKey = "Mon" | "Tue" | "Wed" | "Thu" | "Fri" | "Sat" | "Sun";
 
 // Zod enums for runtime validation and .Enum access
-export const Tiers = z.enum([
-    "TIER1",
-    "TIER2", 
-    "TIER3",
-]);
+export const Tiers = z.enum(["TIER1", "TIER2", "TIER3"]);
 
 export const IconColors = z.enum([
     "BLUE",
