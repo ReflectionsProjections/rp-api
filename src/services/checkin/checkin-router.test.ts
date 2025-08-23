@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from "@jest/globals";
 import { post, postAsStaff, postAsAdmin } from "../../../testing/testingTools";
 import { StatusCodes } from "http-status-codes";
 import { SupabaseDB } from "../../database";
-import { TierType, IconColorType } from "../attendee/attendee-schema";
+import { Tiers, IconColors } from "../attendee/attendee-schema";
 import {
     CheckinEventPayload,
     ScanPayload,
@@ -133,8 +133,8 @@ async function insertTestAttendee(overrides: InsertTestAttendeeOverrides = {}) {
             tags: ["testtag1", "testtag2"],
             points: 0,
             puzzlesCompleted: [],
-            currentTier: "TIER1" as TierType,
-            icon: "RED" as IconColorType,
+            currentTier: Tiers.Enum.TIER1,
+            icon: IconColors.Enum.RED,
             hasPriorityFri: false,
             hasPriorityMon: false,
             hasPrioritySat: false,
