@@ -5,7 +5,7 @@ import {
     EventIdValidator,
 } from "./attendee-validators";
 import { SupabaseDB } from "../../database";
-import { TierType, IconColorType } from "./attendee-schema";
+import { Tiers, IconColors } from "./attendee-schema";
 import RoleChecker from "../../middleware/role-checker";
 import { Role } from "../auth/auth-models";
 import { generateQrHash, getCurrentDay } from "../checkin/checkin-utils";
@@ -119,8 +119,8 @@ attendeeRouter.post("/", async (req, res) => {
         favoriteEvents: [],
         puzzlesCompleted: [],
         tags: tags,
-        currentTier: "TIER1" as TierType,
-        icon: "RED" as IconColorType,
+        currentTier: Tiers.Enum.TIER1,
+        icon: IconColors.Enum.RED,
         hasPriorityMon: false,
         hasPriorityTue: false,
         hasPriorityWed: false,
