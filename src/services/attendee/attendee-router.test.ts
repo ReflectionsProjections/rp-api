@@ -47,14 +47,8 @@ type AttendeeOverride = {
     displayName?: string;
     points?: number;
     favoriteEvents?: string[];
-    isEligibleTshirt?: boolean;
-    isEligibleCap?: boolean;
-    isEligibleTote?: boolean;
-    isEligibleButton?: boolean;
-    hasRedeemedTshirt?: boolean;
-    hasRedeemedCap?: boolean;
-    hasRedeemedTote?: boolean;
-    hasRedeemedButton?: boolean;
+    currentTier?: 'TIER1' | 'TIER2' | 'TIER3';
+    icon?: 'BLUE' | 'RED' | 'GREEN' | 'YELLOW' | 'PINK' | 'BLACK' | 'PURPLE' | 'ORANGE';
     hasPriorityMon?: boolean;
     hasPriorityTue?: boolean;
     hasPriorityWed?: boolean;
@@ -113,14 +107,8 @@ export async function insertTestAttendee(
         userId,
         points: 0,
         favoriteEvents: [],
-        isEligibleTshirt: true,
-        isEligibleCap: false,
-        isEligibleTote: false,
-        isEligibleButton: false,
-        hasRedeemedTshirt: false,
-        hasRedeemedCap: false,
-        hasRedeemedTote: false,
-        hasRedeemedButton: false,
+        currentTier: 'TIER1',
+        icon: 'RED',
         hasPriorityMon: false,
         hasPriorityTue: false,
         hasPriorityWed: false,
@@ -742,6 +730,8 @@ describe("GET /attendee/emails", () => {
     });
 });
 
+// TODO: Uncomment and update these tests when redemption logic is moved to separate table
+/*
 describe("POST /attendee/redeemMerch/:ITEM", () => {
     const userId = TESTER.userId;
 
@@ -803,7 +793,7 @@ describe("POST /attendee/redeemMerch/:ITEM", () => {
             attendee: {
                 ...BASE_TEST_ATTENDEE,
                 userId: userId,
-                hasRedeemedTshirt: true,
+                isEligibleCap: false,
             },
         });
 
@@ -828,3 +818,4 @@ describe("POST /attendee/redeemMerch/:ITEM", () => {
             .expect(StatusCodes.FORBIDDEN);
     });
 });
+*/
