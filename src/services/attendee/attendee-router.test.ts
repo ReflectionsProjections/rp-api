@@ -47,8 +47,16 @@ type AttendeeOverride = {
     displayName?: string;
     points?: number;
     favoriteEvents?: string[];
-    currentTier?: 'TIER1' | 'TIER2' | 'TIER3';
-    icon?: 'BLUE' | 'RED' | 'GREEN' | 'YELLOW' | 'PINK' | 'BLACK' | 'PURPLE' | 'ORANGE';
+    currentTier?: "TIER1" | "TIER2" | "TIER3";
+    icon?:
+        | "BLUE"
+        | "RED"
+        | "GREEN"
+        | "YELLOW"
+        | "PINK"
+        | "BLACK"
+        | "PURPLE"
+        | "ORANGE";
     hasPriorityMon?: boolean;
     hasPriorityTue?: boolean;
     hasPriorityWed?: boolean;
@@ -107,8 +115,8 @@ export async function insertTestAttendee(
         userId,
         points: 0,
         favoriteEvents: [],
-        currentTier: 'TIER1',
-        icon: 'RED',
+        currentTier: "TIER1",
+        icon: "RED",
         hasPriorityMon: false,
         hasPriorityTue: false,
         hasPriorityWed: false,
