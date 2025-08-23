@@ -77,7 +77,6 @@ CREATE TABLE public."attendees" (
     "hasPrioritySat" boolean DEFAULT false NOT NULL,
     "hasPrioritySun" boolean DEFAULT false NOT NULL,
     "currentTier" public."tierType" DEFAULT 'TIER1' NOT NULL,
-    "redeemedTiers" public."tierType"[] DEFAULT '{}'::public."tierType"[] NOT NULL,
     "icon" public."iconColorType" DEFAULT 'RED' NOT NULL,
     "tags" text[] DEFAULT '{}'::text[] NOT NULL,
     "favoriteEvents" uuid[] DEFAULT '{}'::uuid[] NOT NULL,
