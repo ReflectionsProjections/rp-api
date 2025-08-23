@@ -84,3 +84,5 @@ export const AttendeeAttendanceSchema = new Schema({
 });
 
 export type AttendeeType = Database["public"]["Tables"]["attendees"]["Row"];
+export type TierType = Database["public"]["Enums"]["tierType"];
+export type IconColorType = Database["public"]["Enums"]["iconColorType"];
