@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, afterAll } from "@jest/globals";
 import { StatusCodes } from "http-status-codes";
 import { SupabaseDB } from "../../database";
+import { TierType, IconColorType } from "../attendee/attendee-schema";
 import { Role } from "../auth/auth-models";
 import { getAsStaff, get } from "../../../testing/testingTools";
 import { getCurrentDay } from "../checkin/checkin-utils";
@@ -13,8 +14,8 @@ const ATTENDEE_RITAM = {
     userId: "a1",
     tags: ["testtag1", "testtag2"],
     points: 10,
-    currentTier: "TIER1",
-    icon: "RED",
+    currentTier: "TIER1" as TierType,
+    icon: "RED" as IconColorType,
     hasPriorityMon: currentDay === "Mon",
     hasPriorityTue: currentDay === "Tue",
     hasPriorityWed: currentDay === "Wed",
@@ -30,8 +31,8 @@ const ATTENDEE_NATHAN = {
     userId: "a2",
     tags: ["testtag1", "testtag2"],
     points: 25,
-    currentTier: "TIER1",
-    icon: "BLUE",
+    currentTier: "TIER1" as TierType,
+    icon: "BLUE" as IconColorType,
     hasPriorityMon: false,
     hasPriorityTue: false,
     hasPriorityWed: false,
@@ -47,8 +48,8 @@ const ATTENDEE_TIMOTHY = {
     userId: "a3",
     tags: ["testtag1", "testtag2"],
     points: 20,
-    currentTier: "TIER1",
-    icon: "GREEN",
+    currentTier: "TIER1" as TierType,
+    icon: "GREEN" as IconColorType,
     hasPriorityMon: false,
     hasPriorityTue: false,
     hasPriorityWed: false,
