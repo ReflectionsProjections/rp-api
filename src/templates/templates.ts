@@ -1,7 +1,7 @@
 import Config from "../config";
 
 const templates = {
-    REGISTRATION_CONFIRMATION: `<!doctype html>
+    REGISTRATION_CONFIRMATION: `<!DOCTYPE html>
 <html>
     <head>
         <meta charset="UTF-8" />
@@ -653,12 +653,11 @@ const templates = {
                                                     <td class="update-box">
                                                         Need to update your
                                                         registration?
-                                                        
+                                                        <a
                                                             href="${Config.WEB_REGISTER_ROUTE}"
                                                             class="update-link"
                                                             >Return to the
-                                                            registration form</a
-                                                        >
+                                                            registration form</a>
                                                         to edit your responses!
                                                     </td>
                                                 </tr>
@@ -930,7 +929,7 @@ const templates = {
                                                                    >
                                                                        <tr>
                                                                            <td>
-                                                                               
+                                                                               <a
                                                                                    href="${Config.WEB_RESUME_ROUTE}"
                                                                                    class="resume-button"
                                                                                    >View
