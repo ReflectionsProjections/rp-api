@@ -4,6 +4,7 @@ import { TESTER } from "../../../testing/testingTools";
 import { Role } from "../auth/auth-models";
 import { StatusCodes } from "http-status-codes";
 import { SupabaseDB } from "../../database";
+import { TierType, IconColorType } from "./attendee-schema";
 import { v4 as uuidv4 } from "uuid";
 import { getCurrentDay } from "../checkin/checkin-utils";
 
@@ -47,16 +48,8 @@ type AttendeeOverride = {
     displayName?: string;
     points?: number;
     favoriteEvents?: string[];
-    currentTier?: "TIER1" | "TIER2" | "TIER3";
-    icon?:
-        | "BLUE"
-        | "RED"
-        | "GREEN"
-        | "YELLOW"
-        | "PINK"
-        | "BLACK"
-        | "PURPLE"
-        | "ORANGE";
+    currentTier?: TierType;
+    icon?: IconColorType;
     hasPriorityMon?: boolean;
     hasPriorityTue?: boolean;
     hasPriorityWed?: boolean;
@@ -115,8 +108,8 @@ export async function insertTestAttendee(
         userId,
         points: 0,
         favoriteEvents: [],
-        currentTier: "TIER1",
-        icon: "RED",
+        currentTier: "TIER1" as TierType,
+        icon: "RED" as IconColorType,
         hasPriorityMon: false,
         hasPriorityTue: false,
         hasPriorityWed: false,
