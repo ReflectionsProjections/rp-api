@@ -4,6 +4,8 @@ process.env.DATABASE_USERNAME = "urmom";
 process.env.DATABASE_PASSWORD = "alsourmom";
 process.env.DATABASE_HOST = "urmomisthebomb.com";
 
+process.env.PUZZLEBANG_API_KEY = "iampuzzlebangtrust";
+
 process.env.IOS_OAUTH_GOOGLE_CLIENT_ID =
     "himynameistimothygonzalezandiliketoeatcoldtoastforbreakfastbecauseblahblahblahyouhavetoreadthiswholethingbecauseimyourbosshahahahahah";
 process.env.ANDROID_OAUTH_GOOGLE_CLIENT_ID =

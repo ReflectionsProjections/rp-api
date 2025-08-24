@@ -126,20 +126,20 @@ describe("PUT /auth/", () => {
         const res = await putAsAdmin("/auth/")
             .send({
                 userId: OTHER_USER.userId,
-                role: Role.Enum.PUZZLEBANG,
+                role: Role.Enum.ADMIN,
             })
             .expect(StatusCodes.OK);
 
         expect(res.body).toMatchObject({
             userId: OTHER_USER.userId,
-            role: Role.Enum.PUZZLEBANG,
+            role: Role.Enum.ADMIN,
         });
         const { data: roleRows } = await SupabaseDB.AUTH_ROLES.select()
             .eq("userId", OTHER_USER.userId)
             .throwOnError();
         expect(roleRows.map((row: { role: Role }) => row.role)).toMatchObject([
             ...OTHER_USER_ROLES.map((row) => row.role),
-            Role.Enum.PUZZLEBANG,
+            Role.Enum.ADMIN,
         ]);
     });
 
@@ -147,7 +147,7 @@ describe("PUT /auth/", () => {
         const res = await putAsAdmin("/auth/")
             .send({
                 userId: "nonexistent",
-                role: Role.Enum.PUZZLEBANG,
+                role: Role.Enum.ADMIN,
             })
             .expect(StatusCodes.NOT_FOUND);
 

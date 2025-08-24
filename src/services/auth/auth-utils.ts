@@ -114,14 +114,8 @@ export async function getJwtPayloadFromDatabase(
 
 export async function generateJWT(userId: string) {
     const jwtPayload = await getJwtPayloadFromDatabase(userId);
-
-    // Check if user has PuzzleBang role
-    const isPB = isPuzzleBang(jwtPayload);
-
     return jsonwebtoken.sign(jwtPayload, Config.JWT_SIGNING_SECRET, {
-        expiresIn: isPB
-            ? Config.PB_JWT_EXPIRATION_TIME
-            : Config.JWT_EXPIRATION_TIME,
+        expiresIn: Config.JWT_EXPIRATION_TIME,
     });
 }
 
@@ -135,8 +129,4 @@ export function isStaff(payload?: JwtPayloadType) {
 
 export function isAdmin(payload?: JwtPayloadType) {
     return payload?.roles.includes(Role.Enum.ADMIN);
-}
-
-export function isPuzzleBang(payload?: JwtPayloadType) {
-    return payload?.roles.includes(Role.Enum.PUZZLEBANG);
 }

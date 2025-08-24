@@ -32,8 +32,7 @@ CREATE TYPE public."roleType" AS ENUM (
     'USER',
     'STAFF',
     'ADMIN',
-    'CORPORATE',
-    'PUZZLEBANG'
+    'CORPORATE'
 );
 
 CREATE TYPE public."staffAttendanceType" AS ENUM (

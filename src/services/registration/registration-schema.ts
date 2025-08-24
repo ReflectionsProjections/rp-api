@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { Database } from "../../database.types";
 
 // Zod schema for registration drafts
 const RegistrationDraftValidator = z.object({
@@ -48,5 +49,7 @@ const RegistrationValidator = z.object({
     isInterestedPuzzleBang: z.boolean(),
     tags: z.array(z.string()),
 });
+
+export type Registration = Database["public"]["Tables"]["registrations"]["Row"];
 
 export { RegistrationDraftValidator, RegistrationValidator };
