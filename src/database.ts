@@ -51,9 +51,17 @@ export const SupabaseDB = {
     },
 };
 
+// Common type exports for consistency across the application
+export type TierType = Database["public"]["Enums"]["tierType"];
+export type IconColorType = Database["public"]["Enums"]["iconColorType"];
+export type RoleType = Database["public"]["Enums"]["roleType"];
+export type CommitteeType = Database["public"]["Enums"]["committeeNames"];
+export type EventType = Database["public"]["Enums"]["eventType"];
+export type StaffAttendanceType = Database["public"]["Enums"]["staffAttendanceType"];
+
 export const RoleTypes: Record<
     string,
-    Database["public"]["Enums"]["roleType"]
+    RoleType
 > = {
     USER: "USER",
     STAFF: "STAFF",
@@ -64,7 +72,7 @@ export const RoleTypes: Record<
 
 export const CommitteeTypes: Record<
     string,
-    Database["public"]["Enums"]["committeeNames"]
+    CommitteeType
 > = {
     CONTENT: "CONTENT",
     CORPORATE: "CORPORATE",
@@ -77,7 +85,7 @@ export const CommitteeTypes: Record<
 
 export const TierTypes: Record<
     string,
-    Database["public"]["Enums"]["tierType"]
+    TierType
 > = {
     TIER1: "TIER1",
     TIER2: "TIER2",
@@ -86,7 +94,7 @@ export const TierTypes: Record<
 
 export const IconColorTypes: Record<
     string,
-    Database["public"]["Enums"]["iconColorType"]
+    IconColorType
 > = {
     BLUE: "BLUE",
     RED: "RED",
