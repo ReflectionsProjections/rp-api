@@ -4,7 +4,7 @@ import {
     postWithAuthorization,
 } from "../../../testing/testingTools";
 import { StatusCodes } from "http-status-codes";
-import { SupabaseDB } from "../../database";
+import { IconColorTypes, SupabaseDB, TierTypes } from "../../database";
 import { Registration } from "../registration/registration-schema";
 import { AttendeeType } from "../attendee/attendee-schema";
 import Config from "../../config";
@@ -50,14 +50,8 @@ const TEST_ATTENDEE = {
     hasPriorityThu: false,
     hasPriorityTue: false,
     hasPriorityWed: false,
-    hasRedeemedButton: false,
-    hasRedeemedCap: false,
-    hasRedeemedTote: false,
-    hasRedeemedTshirt: false,
-    isEligibleButton: false,
-    isEligibleCap: false,
-    isEligibleTote: false,
-    isEligibleTshirt: false,
+    currentTier: TierTypes.TIER1,
+    icon: IconColorTypes.RED,
     points: 0,
     tags: [],
 } satisfies AttendeeType;
