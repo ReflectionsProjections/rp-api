@@ -42,6 +42,23 @@ CREATE TYPE public."staffAttendanceType" AS ENUM (
     'ABSENT'
 );
 
+CREATE TYPE public."tierType" AS ENUM (
+    'TIER1',
+    'TIER2',
+    'TIER3'
+);
+
+CREATE TYPE public."iconColorType" AS ENUM (
+    'BLUE',
+    'RED',
+    'GREEN',
+    'YELLOW',
+    'PINK',
+    'BLACK',
+    'PURPLE',
+    'ORANGE'
+);
+
 -- Create tables
 CREATE TABLE public."attendeeAttendances" (
     "userId" character varying NOT NULL,
@@ -59,14 +76,8 @@ CREATE TABLE public."attendees" (
     "hasPriorityFri" boolean DEFAULT false NOT NULL,
     "hasPrioritySat" boolean DEFAULT false NOT NULL,
     "hasPrioritySun" boolean DEFAULT false NOT NULL,
-    "hasRedeemedTshirt" boolean DEFAULT false NOT NULL,
-    "hasRedeemedButton" boolean DEFAULT false NOT NULL,
-    "hasRedeemedTote" boolean DEFAULT false NOT NULL,
-    "hasRedeemedCap" boolean DEFAULT false NOT NULL,
-    "isEligibleTshirt" boolean DEFAULT true NOT NULL,
-    "isEligibleButton" boolean DEFAULT false NOT NULL,
-    "isEligibleTote" boolean DEFAULT false NOT NULL,
-    "isEligibleCap" boolean DEFAULT false NOT NULL,
+    "currentTier" public."tierType" DEFAULT 'TIER1' NOT NULL,
+    "icon" public."iconColorType" DEFAULT 'RED' NOT NULL,
     "tags" text[] DEFAULT '{}'::text[] NOT NULL,
     "favoriteEvents" uuid[] DEFAULT '{}'::uuid[] NOT NULL,
     "puzzlesCompleted" text[] DEFAULT '{}'::text[] NOT NULL,

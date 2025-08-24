@@ -102,10 +102,6 @@ async function assignPixelsToUser(userId: string, pixels: number) {
 
     const updatedFields = {
         points: newPoints,
-        isEligibleCap: newPoints >= 50,
-        isEligibleTote: newPoints >= 35,
-        isEligibleButton: newPoints >= 20,
-        isEligibleTshirt: newPoints >= 0,
     };
 
     await SupabaseDB.ATTENDEES.update(updatedFields)
