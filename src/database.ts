@@ -68,12 +68,12 @@ export const RoleTypes: Record<RoleType, RoleType> = {
     PUZZLEBANG: "PUZZLEBANG",
 };
 
-export const CommitteeTypes: Record<CommitteeType, CommitteeType> = {
+export const CommitteeTypes: Record<string, CommitteeType> = {
     CONTENT: "CONTENT",
     CORPORATE: "CORPORATE",
     DESIGN: "DESIGN",
     DEV: "DEV",
-    FULLTEAM: "FULL TEAM",
+    ["FULL TEAM"]: "FULL TEAM",
     MARKETING: "MARKETING",
     OPERATIONS: "OPERATIONS",
 };
