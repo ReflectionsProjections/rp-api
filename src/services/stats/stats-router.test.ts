@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, afterAll } from "@jest/globals";
 import { StatusCodes } from "http-status-codes";
 import { SupabaseDB } from "../../database";
+import { Tiers, IconColors } from "../attendee/attendee-schema";
 import { Role } from "../auth/auth-models";
 import { getAsStaff, get } from "../../../testing/testingTools";
 import { getCurrentDay } from "../checkin/checkin-utils";
@@ -13,6 +14,8 @@ const ATTENDEE_RITAM = {
     userId: "a1",
     tags: ["testtag1", "testtag2"],
     points: 10,
+    currentTier: Tiers.Enum.TIER1,
+    icon: IconColors.Enum.RED,
     hasPriorityMon: currentDay === "Mon",
     hasPriorityTue: currentDay === "Tue",
     hasPriorityWed: currentDay === "Wed",
@@ -20,14 +23,6 @@ const ATTENDEE_RITAM = {
     hasPriorityFri: currentDay === "Fri",
     hasPrioritySat: currentDay === "Sat",
     hasPrioritySun: currentDay === "Sun",
-    hasRedeemedTshirt: false,
-    hasRedeemedButton: false,
-    hasRedeemedTote: false,
-    hasRedeemedCap: false,
-    isEligibleTshirt: true,
-    isEligibleButton: false,
-    isEligibleTote: false,
-    isEligibleCap: false,
     favoriteEvents: [],
     puzzlesCompleted: [],
 };
@@ -36,6 +31,8 @@ const ATTENDEE_NATHAN = {
     userId: "a2",
     tags: ["testtag1", "testtag2"],
     points: 25,
+    currentTier: Tiers.Enum.TIER1,
+    icon: IconColors.Enum.BLUE,
     hasPriorityMon: false,
     hasPriorityTue: false,
     hasPriorityWed: false,
@@ -43,14 +40,6 @@ const ATTENDEE_NATHAN = {
     hasPriorityFri: false,
     hasPrioritySat: false,
     hasPrioritySun: false,
-    hasRedeemedTshirt: false,
-    hasRedeemedButton: false,
-    hasRedeemedTote: false,
-    hasRedeemedCap: false,
-    isEligibleTshirt: true,
-    isEligibleButton: false,
-    isEligibleTote: false,
-    isEligibleCap: false,
     favoriteEvents: [],
     puzzlesCompleted: [],
 };
@@ -59,6 +48,8 @@ const ATTENDEE_TIMOTHY = {
     userId: "a3",
     tags: ["testtag1", "testtag2"],
     points: 20,
+    currentTier: Tiers.Enum.TIER1,
+    icon: IconColors.Enum.GREEN,
     hasPriorityMon: false,
     hasPriorityTue: false,
     hasPriorityWed: false,
@@ -66,14 +57,6 @@ const ATTENDEE_TIMOTHY = {
     hasPriorityFri: false,
     hasPrioritySat: false,
     hasPrioritySun: false,
-    hasRedeemedTshirt: false,
-    hasRedeemedButton: false,
-    hasRedeemedTote: false,
-    hasRedeemedCap: false,
-    isEligibleTshirt: true,
-    isEligibleButton: false,
-    isEligibleTote: false,
-    isEligibleCap: false,
     favoriteEvents: [],
     puzzlesCompleted: [],
 };

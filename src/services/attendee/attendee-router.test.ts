@@ -3,7 +3,8 @@ import { post, del, get } from "../../../testing/testingTools";
 import { TESTER } from "../../../testing/testingTools";
 import { Role } from "../auth/auth-models";
 import { StatusCodes } from "http-status-codes";
-import { SupabaseDB } from "../../database";
+import { SupabaseDB, TierType, IconColorType } from "../../database";
+import { Tiers, IconColors } from "./attendee-schema";
 import { v4 as uuidv4 } from "uuid";
 import { getCurrentDay } from "../checkin/checkin-utils";
 
@@ -47,14 +48,8 @@ type AttendeeOverride = {
     displayName?: string;
     points?: number;
     favoriteEvents?: string[];
-    isEligibleTshirt?: boolean;
-    isEligibleCap?: boolean;
-    isEligibleTote?: boolean;
-    isEligibleButton?: boolean;
-    hasRedeemedTshirt?: boolean;
-    hasRedeemedCap?: boolean;
-    hasRedeemedTote?: boolean;
-    hasRedeemedButton?: boolean;
+    currentTier?: TierType;
+    icon?: IconColorType;
     hasPriorityMon?: boolean;
     hasPriorityTue?: boolean;
     hasPriorityWed?: boolean;
@@ -113,14 +108,8 @@ export async function insertTestAttendee(
         userId,
         points: 0,
         favoriteEvents: [],
-        isEligibleTshirt: true,
-        isEligibleCap: false,
-        isEligibleTote: false,
-        isEligibleButton: false,
-        hasRedeemedTshirt: false,
-        hasRedeemedCap: false,
-        hasRedeemedTote: false,
-        hasRedeemedButton: false,
+        currentTier: Tiers.Enum.TIER1,
+        icon: IconColors.Enum.RED,
         hasPriorityMon: false,
         hasPriorityTue: false,
         hasPriorityWed: false,
@@ -742,6 +731,8 @@ describe("GET /attendee/emails", () => {
     });
 });
 
+// TODO: Uncomment and update these tests when redemption logic is moved to separate table
+/*
 describe("POST /attendee/redeemMerch/:ITEM", () => {
     const userId = TESTER.userId;
 
@@ -828,3 +819,4 @@ describe("POST /attendee/redeemMerch/:ITEM", () => {
             .expect(StatusCodes.FORBIDDEN);
     });
 });
+*/

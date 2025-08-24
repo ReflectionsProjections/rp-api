@@ -78,7 +78,7 @@ export const Config = {
     RESUME_URL_EXPIRY_SECONDS: 60,
 
     HASH_SALT_ROUNDS: 10,
-    VERIFY_EXP_TIME_MS: 300,
+    VERIFY_EXP_TIME_MS: 10 * 60 * 1000,
     SPONSOR_ENTIRES_PER_PAGE: 60,
 
     // QR Scanning

@@ -633,6 +633,61 @@ describe("GET /auth/info", () => {
     });
 });
 
+describe("GET /auth/team", () => {
+    it("should get team members (users with STAFF or ADMIN roles)", async () => {
+        const res = await getAsAdmin("/auth/team").expect(StatusCodes.OK);
+
+        // Should return users with STAFF or ADMIN roles
+        expect(res.body).toEqual(
+            expect.arrayContaining([
+                expect.objectContaining({
+                    userId: OTHER_USER.userId,
+                    email: OTHER_USER.email,
+                    displayName: OTHER_USER.displayName,
+                    roles: expect.arrayContaining([Role.Enum.STAFF]),
+                }),
+            ])
+        );
+
+        // Should not include users with only USER role
+        const userOnlyEmails = res.body.map((user: AuthInfo) => user.email);
+        expect(userOnlyEmails).not.toContain(TESTER_USER.email);
+    });
+
+    it("should require admin permissions", async () => {
+        const res = await getAsStaff("/auth/team").expect(
+            StatusCodes.FORBIDDEN
+        );
+        expect(res.body).toHaveProperty("error", "Forbidden");
+    });
+
+    it("should return empty array when no team members exist", async () => {
+        // Remove all roles to test empty case
+        await SupabaseDB.AUTH_ROLES.delete().neq("userId", "nonexistent");
+
+        const res = await getAsAdmin("/auth/team").expect(StatusCodes.OK);
+        expect(res.body).toEqual([]);
+    });
+
+    it("should handle users with multiple roles correctly", async () => {
+        // Add ADMIN role to OTHER_USER to test multiple roles
+        await SupabaseDB.AUTH_ROLES.insert({
+            userId: OTHER_USER.userId,
+            role: Role.Enum.ADMIN,
+        });
+
+        const res = await getAsAdmin("/auth/team").expect(StatusCodes.OK);
+
+        const otherUser = res.body.find(
+            (user: AuthInfo) => user.userId === OTHER_USER.userId
+        );
+        expect(otherUser).toBeDefined();
+        expect(otherUser.roles).toEqual(
+            expect.arrayContaining([Role.Enum.STAFF, Role.Enum.ADMIN])
+        );
+    });
+});
+
 describe("GET /auth/:ROLE", () => {
     it("should get users with user role", async () => {
         const res = await getAsStaff("/auth/USER").expect(StatusCodes.OK);
