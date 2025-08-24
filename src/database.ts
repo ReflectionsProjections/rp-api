@@ -57,12 +57,10 @@ export type IconColorType = Database["public"]["Enums"]["iconColorType"];
 export type RoleType = Database["public"]["Enums"]["roleType"];
 export type CommitteeType = Database["public"]["Enums"]["committeeNames"];
 export type EventType = Database["public"]["Enums"]["eventType"];
-export type StaffAttendanceType = Database["public"]["Enums"]["staffAttendanceType"];
+export type StaffAttendanceType =
+    Database["public"]["Enums"]["staffAttendanceType"];
 
-export const RoleTypes: Record<
-    string,
-    RoleType
-> = {
+export const RoleTypes: Record<string, RoleType> = {
     USER: "USER",
     STAFF: "STAFF",
     ADMIN: "ADMIN",
@@ -70,10 +68,7 @@ export const RoleTypes: Record<
     PUZZLEBANG: "PUZZLEBANG",
 };
 
-export const CommitteeTypes: Record<
-    string,
-    CommitteeType
-> = {
+export const CommitteeTypes: Record<string, CommitteeType> = {
     CONTENT: "CONTENT",
     CORPORATE: "CORPORATE",
     DESIGN: "DESIGN",
@@ -83,19 +78,13 @@ export const CommitteeTypes: Record<
     OPERATIONS: "OPERATIONS",
 };
 
-export const TierTypes: Record<
-    string,
-    TierType
-> = {
+export const TierTypes: Record<string, TierType> = {
     TIER1: "TIER1",
     TIER2: "TIER2",
     TIER3: "TIER3",
 };
 
-export const IconColorTypes: Record<
-    string,
-    IconColorType
-> = {
+export const IconColorTypes: Record<string, IconColorType> = {
     BLUE: "BLUE",
     RED: "RED",
     GREEN: "GREEN",

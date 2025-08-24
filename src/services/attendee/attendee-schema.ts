@@ -9,7 +9,9 @@ export type DayKey = "Mon" | "Tue" | "Wed" | "Thu" | "Fri" | "Sat" | "Sun";
 export type AttendeeType = Database["public"]["Tables"]["attendees"]["Row"];
 
 // Zod enums for runtime validation and .Enum access
-export const Tiers = z.enum(["TIER1", "TIER2", "TIER3"]) satisfies z.ZodEnum<[TierType, ...TierType[]]>;
+export const Tiers = z.enum(["TIER1", "TIER2", "TIER3"]) satisfies z.ZodEnum<
+    [TierType, ...TierType[]]
+>;
 
 export const IconColors = z.enum([
     "BLUE",
