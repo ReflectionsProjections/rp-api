@@ -838,10 +838,8 @@ const templates = {
                                                                     class="info-value"
                                                                 >
                                                                     {{#personalLinks}}
-                                                                        href="{{.}}"
-                                                                        class="nested-link"
-                                                                        >{{.}}</a
-                                                                    ><br />{{/personalLinks}}
+                                                                        <a href="{{.}}" class="nested-link">{{.}}</a><br />
+                                                                    {{/personalLinks}}
                                                                 </td>
                                                             </tr>
                                                             {{/personalLinks.length}}
