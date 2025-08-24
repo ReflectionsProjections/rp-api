@@ -794,7 +794,7 @@ describe("POST /attendee/redeemMerch/:ITEM", () => {
             attendee: {
                 ...BASE_TEST_ATTENDEE,
                 userId: userId,
-                isEligibleCap: false,
+                hasRedeemedTshirt: true,
             },
         });
 
