@@ -3,8 +3,8 @@ import { post, del, get } from "../../../testing/testingTools";
 import { TESTER } from "../../../testing/testingTools";
 import { Role } from "../auth/auth-models";
 import { StatusCodes } from "http-status-codes";
-import { SupabaseDB } from "../../database";
-import { Tiers, IconColors, TierType, IconColorType } from "./attendee-schema";
+import { SupabaseDB, TierType, IconColorType } from "../../database";
+import { Tiers, IconColors } from "./attendee-schema";
 import { v4 as uuidv4 } from "uuid";
 import { getCurrentDay } from "../checkin/checkin-utils";
 
