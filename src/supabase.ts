@@ -98,3 +98,4 @@ export interface User {
     hasRedeemedTier2: boolean;
     hasRedeemedTier3: boolean;
 }
+

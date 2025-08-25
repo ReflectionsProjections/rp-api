@@ -10,7 +10,7 @@ import {
     delAsAdmin,
 } from "../../../testing/testingTools";
 import { StatusCodes } from "http-status-codes";
-import { SupabaseDB } from "../../supabase";
+import { SupabaseDB } from "../../database";
 import {
     EventType,
     InternalEvent,

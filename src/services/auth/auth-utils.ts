@@ -1,7 +1,7 @@
 // Create a function to generate GoogleStrategy instances
 import { TokenPayload } from "google-auth-library";
-import { Config } from "../../config";
-import { SupabaseDB } from "../../supabase";
+import { Config, EnvironmentEnum } from "../../config";
+import { SupabaseDB } from "../../database";
 import { JwtPayloadType, Role } from "./auth-models";
 import jsonwebtoken from "jsonwebtoken";
 import { randomUUID } from "crypto";
@@ -57,6 +57,23 @@ export async function updateDatabaseWithAuthPayload(
         });
     }
 
+    // In development, allow a specific email to be admin for local testing
+    if (
+        Config.ENV === EnvironmentEnum.DEVELOPMENT &&
+        Config.DEV_ADMIN_EMAIL &&
+        email === Config.DEV_ADMIN_EMAIL
+    ) {
+        await SupabaseDB.AUTH_ROLES.upsert({
+            userId,
+            role: Role.Enum.ADMIN,
+        });
+
+        await SupabaseDB.AUTH_ROLES.upsert({
+            userId,
+            role: Role.Enum.STAFF,
+        });
+    }
+
     // If the user is ADMIN, add the admin role to them
     if (Config.AUTH_ADMIN_WHITELIST.has(email)) {
         await SupabaseDB.AUTH_ROLES.upsert({
@@ -85,7 +102,7 @@ export async function getJwtPayloadFromDatabase(
     const { data: rolesRows } = await SupabaseDB.AUTH_ROLES.select()
         .eq("userId", userId)
         .throwOnError();
-    const roles = rolesRows.map((row) => row.role);
+    const roles = rolesRows.map((row: { role: Role }) => row.role);
 
     return {
         userId,

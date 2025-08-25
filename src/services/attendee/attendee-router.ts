@@ -4,7 +4,8 @@ import {
     AttendeeCreateValidator,
     EventIdValidator,
 } from "./attendee-validators";
-import { SupabaseDB } from "../../supabase";
+import { SupabaseDB } from "../../database";
+import { Tiers, IconColors } from "./attendee-schema";
 import RoleChecker from "../../middleware/role-checker";
 import { Role } from "../auth/auth-models";
 import { generateQrHash, getCurrentDay } from "../checkin/checkin-utils";
@@ -69,7 +70,7 @@ attendeeRouter.delete(
         }
 
         const updatedFavorites = (attendee?.favoriteEvents || []).filter(
-            (id) => id !== eventId
+            (id: string) => id !== eventId
         );
         await SupabaseDB.ATTENDEES.update({
             favoriteEvents: updatedFavorites,
@@ -110,21 +111,16 @@ attendeeRouter.get(
 
 // Create a new attendee
 attendeeRouter.post("/", async (req, res) => {
-    const { userId } = AttendeeCreateValidator.parse(req.body);
+    const { userId, tags } = AttendeeCreateValidator.parse(req.body);
 
     const newAttendee = {
         userId: userId,
         points: 0,
         favoriteEvents: [],
         puzzlesCompleted: [],
-        isEligibleTshirt: false,
-        isEligibleCap: false,
-        isEligibleTote: false,
-        isEligibleButton: false,
-        hasRedeemedTshirt: false,
-        hasRedeemedCap: false,
-        hasRedeemedTote: false,
-        hasRedeemedButton: false,
+        tags: tags,
+        currentTier: Tiers.Enum.TIER1,
+        icon: IconColors.Enum.RED,
         hasPriorityMon: false,
         hasPriorityTue: false,
         hasPriorityWed: false,
@@ -132,11 +128,14 @@ attendeeRouter.post("/", async (req, res) => {
         hasPriorityFri: false,
         hasPrioritySat: false,
         hasPrioritySun: false,
-    };
+    }; // TODO: add a validator????
 
     await SupabaseDB.ATTENDEES.insert(newAttendee).throwOnError();
 
-    return res.status(StatusCodes.CREATED).json({ userId: userId });
+    return res.status(StatusCodes.CREATED).json({
+        userId: userId,
+        tags: tags,
+    });
 });
 
 // generates a unique QR code for each attendee

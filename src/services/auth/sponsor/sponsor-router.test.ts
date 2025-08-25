@@ -8,7 +8,7 @@ import { compareSync } from "bcrypt";
 import jsonwebtoken, { JwtPayload } from "jsonwebtoken";
 import Config from "../../../config";
 import { Role } from "../auth-models";
-import { SupabaseDB } from "../../../supabase";
+import { SupabaseDB } from "../../../database";
 
 const CORPORATE_USER = {
     email: "sponsor@big-man.corp",

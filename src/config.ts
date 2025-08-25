@@ -61,6 +61,9 @@ export const Config = {
         "abahl3@illinois.edu",    // Aryan Bahl
     ]),
 
+    // Development admin email - allows developer email to be admin in development
+    DEV_ADMIN_EMAIL: process.env.DEV_ADMIN_EMAIL,
+
     JWT_SIGNING_SECRET: getEnv("JWT_SIGNING_SECRET"),
     JWT_EXPIRATION_TIME: "1 day" as const,
     MOBILE_JWT_EXPIRATION_TIME: "10 days" as const,
@@ -75,7 +78,7 @@ export const Config = {
     RESUME_URL_EXPIRY_SECONDS: 60,
 
     HASH_SALT_ROUNDS: 10,
-    VERIFY_EXP_TIME_MS: 300,
+    VERIFY_EXP_TIME_MS: 10 * 60 * 1000,
     SPONSOR_ENTIRES_PER_PAGE: 60,
 
     // QR Scanning
@@ -83,6 +86,7 @@ export const Config = {
     QR_HASH_SECRET: getEnv("QR_HASH_SECRET"),
     WEB_REGISTER_ROUTE: `${WEB_BASE}/register`,
     WEB_RESUME_ROUTE: `${WEB_BASE}/resume`,
+    EMAIL_HEADER_HREF: `${WEB_BASE}/email_header.png`,
     OUTGOING_EMAIL_ADDRESSES: z.enum(["no-reply@reflectionsprojections.org"]),
     LOG_DIR:
         env === EnvironmentEnum.PRODUCTION ? "/home/ubuntu/logs" : "./logs",

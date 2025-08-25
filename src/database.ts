@@ -1,114 +1,96 @@
-import mongoose, { Schema, Document, InferSchemaType } from "mongoose";
-import {
-    AttendeeAttendanceSchema,
-    AttendeeSchema,
-} from "./services/attendee/attendee-schema";
-import {
-    EventSchema,
-    internalEventView,
-} from "./services/events/events-schema";
-import {
-    EventAttendanceSchema,
-    EventAttendanceValidator,
-} from "./services/events/events-schema";
-import { RoleValidator, RoleSchema } from "./services/auth/auth-schema";
-// import {
-//     RegistrationSchema,
-//     RegistrationValidator,
-// } from "./services/registration/registration-schema";
-import {
-    SubscriptionSchemaValidator,
-    SubscriptionSchema,
-} from "./services/subscription/subscription-schema";
-import {
-    NotificationsSchema,
-    NotificationsValidator,
-} from "./services/notifications/notifications-schema";
-import {
-    SpeakerSchema,
-    SpeakerValidator,
-} from "./services/speakers/speakers-schema";
-import {
-    SponsorAuthSchema,
-    SponsorAuthValidator,
-} from "./services/auth/sponsor/sponsor-schema";
-import {
-    CorporateSchema,
-    CorporateValidator,
-} from "./services/auth/corporate-schema";
-import {
-    MeetingSchema,
-    meetingView,
-} from "./services/meetings/meetings-schema";
-import { AnyZodObject } from "zod";
+import { createClient } from "@supabase/supabase-js";
+import { Database } from "./database.types";
 
-mongoose.set("toObject", { versionKey: false });
+export const supabase = createClient<Database>(
+    process.env.SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_KEY!
+);
 
-function initializeModel<T extends Schema>(
-    modelName: string,
-    schema: T,
-    object: AnyZodObject
-) {
-    schema.pre("validate", function (next) {
-        const data = this.toObject();
-        try {
-            // Validate the data against the Zod schema
-            object.parse(data);
-            next();
-        } catch (error) {
-            next(new Error(error as string));
-        }
-    });
+export const SupabaseDB = {
+    get AUTH_INFO() {
+        return supabase.from("authInfo");
+    },
+    get AUTH_ROLES() {
+        return supabase.from("authRoles");
+    },
+    get AUTH_CODES() {
+        return supabase.from("authCodes");
+    },
+    get CORPORATE() {
+        return supabase.from("corporate");
+    },
+    get STAFF() {
+        return supabase.from("staff");
+    },
+    get MEETINGS() {
+        return supabase.from("meetings");
+    },
+    get DRAFT_REGISTRATIONS() {
+        return supabase.from("draftRegistrations");
+    },
+    get SPEAKERS() {
+        return supabase.from("speakers");
+    },
+    get ATTENDEES() {
+        return supabase.from("attendees");
+    },
+    get EVENTS() {
+        return supabase.from("events");
+    },
+    get EVENT_ATTENDANCES() {
+        return supabase.from("eventAttendances");
+    },
+    get ATTENDEE_ATTENDANCES() {
+        return supabase.from("attendeeAttendances");
+    },
+    get REGISTRATIONS() {
+        return supabase.from("registrations");
+    },
+    get SUBSCRIPTIONS() {
+        return supabase.from("subscriptions");
+    },
+};
 
-    schema.set("toObject", {
-        transform(doc, ret) {
-            delete ret._id;
-            delete ret.__v;
-        },
-    });
+// Common type exports for consistency across the application
+export type TierType = Database["public"]["Enums"]["tierType"];
+export type IconColorType = Database["public"]["Enums"]["iconColorType"];
+export type RoleType = Database["public"]["Enums"]["roleType"];
+export type CommitteeType = Database["public"]["Enums"]["committeeNames"];
+export type EventType = Database["public"]["Enums"]["eventType"];
+export type StaffAttendanceType =
+    Database["public"]["Enums"]["staffAttendanceType"];
 
-    return mongoose.model<Document & InferSchemaType<T>>(modelName, schema);
-}
+export const RoleTypes: Record<RoleType, RoleType> = {
+    USER: "USER",
+    STAFF: "STAFF",
+    ADMIN: "ADMIN",
+    CORPORATE: "CORPORATE",
+    PUZZLEBANG: "PUZZLEBANG",
+};
 
-// Example usage
-export const Database = {
-    ROLES: initializeModel("roles", RoleSchema, RoleValidator),
-    EVENTS: initializeModel("events", EventSchema, internalEventView),
-    EVENTS_ATTENDANCE: initializeModel(
-        "events_attendance",
-        EventAttendanceSchema,
-        EventAttendanceValidator
-    ),
-    ATTENDEE: mongoose.model("attendee", AttendeeSchema),
-    ATTENDEE_ATTENDANCE: mongoose.model(
-        "attendee_attendance",
-        AttendeeAttendanceSchema
-    ),
-    SUBSCRIPTIONS: initializeModel(
-        "subscriptions",
-        SubscriptionSchema,
-        SubscriptionSchemaValidator
-    ),
-    // REGISTRATION: initializeModel(
-    //     "registration",
-    //     RegistrationSchema,
-    //     RegistrationValidator
-    // ),
-    NOTIFICATIONS: initializeModel(
-        "notifications",
-        NotificationsSchema,
-        NotificationsValidator
-    ),
-    AUTH_CODES: initializeModel(
-        "auth_codes",
-        SponsorAuthSchema,
-        SponsorAuthValidator
-    ),
-    SPEAKERS: initializeModel("speakers", SpeakerSchema, SpeakerValidator),
-    CORPORATE: initializeModel(
-        "corporate",
-        CorporateSchema,
-        CorporateValidator
-    ),
-    MEETINGS: initializeModel("meetings", MeetingSchema, meetingView),
+export const CommitteeTypes: Record<string, CommitteeType> = {
+    CONTENT: "CONTENT",
+    CORPORATE: "CORPORATE",
+    DESIGN: "DESIGN",
+    DEV: "DEV",
+    ["FULL TEAM"]: "FULL TEAM",
+    MARKETING: "MARKETING",
+    OPERATIONS: "OPERATIONS",
+};
+
+export const TierTypes: Record<TierType, TierType> = {
+    TIER1: "TIER1",
+    TIER2: "TIER2",
+    TIER3: "TIER3",
+};
+
+export const IconColorTypes: Record<IconColorType, IconColorType> = {
+    BLUE: "BLUE",
+    RED: "RED",
+    GREEN: "GREEN",
+    YELLOW: "YELLOW",
+    PINK: "PINK",
+    BLACK: "BLACK",
+    PURPLE: "PURPLE",
+    ORANGE: "ORANGE",
 };

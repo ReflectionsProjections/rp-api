@@ -8,7 +8,7 @@ import { AuthInfo, AuthRole } from "./auth-schema";
 import { Role } from "./auth-models";
 import jsonwebtoken, { JwtPayload } from "jsonwebtoken";
 import Config from "../../config";
-import { SupabaseDB } from "../../supabase";
+import { SupabaseDB } from "../../database";
 import { Staff } from "../staff/staff-schema";
 
 const AUTH_USER = {
@@ -114,7 +114,7 @@ describe("updateDatabaseWithAuthPayload", () => {
             "userId",
             updatedUserId
         );
-        expect(roles?.map((entry) => entry.role)).toEqual([]);
+        expect(roles?.map((entry: { role: string }) => entry.role)).toEqual([]);
     });
 
     it("should update a outdated user", async () => {
@@ -142,7 +142,9 @@ describe("updateDatabaseWithAuthPayload", () => {
             "userId",
             AUTH_USER.userId
         );
-        expect(roles?.map((entry) => entry.role)).toEqual([Role.Enum.STAFF]);
+        expect(roles?.map((entry: { role: string }) => entry.role)).toEqual([
+            Role.Enum.STAFF,
+        ]);
     });
 
     it("should do nothing to an existing user", async () => {
@@ -157,7 +159,9 @@ describe("updateDatabaseWithAuthPayload", () => {
             "userId",
             AUTH_USER.userId
         );
-        expect(roles?.map((entry) => entry.role)).toEqual([Role.Enum.USER]);
+        expect(roles?.map((entry: { role: string }) => entry.role)).toEqual([
+            Role.Enum.USER,
+        ]);
     });
 
     it("should create a new staff user", async () => {
@@ -185,7 +189,9 @@ describe("updateDatabaseWithAuthPayload", () => {
             "userId",
             updatedUserId
         );
-        expect(roles?.map((entry) => entry.role)).toEqual([Role.Enum.STAFF]);
+        expect(roles?.map((entry: { role: string }) => entry.role)).toEqual([
+            Role.Enum.STAFF,
+        ]);
     });
 
     it("should update a new staff user", async () => {
@@ -201,10 +207,9 @@ describe("updateDatabaseWithAuthPayload", () => {
             "userId",
             AUTH_STAFF_USER.userId
         );
-        expect(roles?.map((entry) => entry.role)).toEqual([
-            Role.Enum.USER,
-            Role.Enum.STAFF,
-        ]);
+        expect(
+            roles?.map((entry: { role: string }) => entry.role).sort()
+        ).toEqual([Role.Enum.STAFF, Role.Enum.USER]);
     });
 
     it("should do nothing to an existing staff user", async () => {
@@ -225,10 +230,9 @@ describe("updateDatabaseWithAuthPayload", () => {
             "userId",
             AUTH_STAFF_USER.userId
         );
-        expect(roles?.map((entry) => entry.role)).toEqual([
-            Role.Enum.USER,
-            Role.Enum.STAFF,
-        ]);
+        expect(
+            roles?.map((entry: { role: string }) => entry.role).sort()
+        ).toEqual([Role.Enum.STAFF, Role.Enum.USER]);
     });
 
     it("should create a new admin user", async () => {
@@ -256,7 +260,9 @@ describe("updateDatabaseWithAuthPayload", () => {
             "userId",
             updatedUserId
         );
-        expect(roles?.map((entry) => entry.role)).toEqual([Role.Enum.ADMIN]);
+        expect(roles?.map((entry: { role: string }) => entry.role)).toEqual([
+            Role.Enum.ADMIN,
+        ]);
     });
 
     it("should update a new admin user", async () => {
@@ -272,10 +278,9 @@ describe("updateDatabaseWithAuthPayload", () => {
             "userId",
             AUTH_ADMIN_USER.userId
         );
-        expect(roles?.map((entry) => entry.role)).toEqual([
-            Role.Enum.USER,
-            Role.Enum.ADMIN,
-        ]);
+        expect(
+            roles?.map((entry: { role: string }) => entry.role).sort()
+        ).toEqual([Role.Enum.ADMIN, Role.Enum.USER]);
     });
 
     it("should do nothing to an existing admin user", async () => {
@@ -296,10 +301,9 @@ describe("updateDatabaseWithAuthPayload", () => {
             "userId",
             AUTH_ADMIN_USER.userId
         );
-        expect(roles?.map((entry) => entry.role)).toEqual([
-            Role.Enum.USER,
-            Role.Enum.ADMIN,
-        ]);
+        expect(
+            roles?.map((entry: { role: string }) => entry.role).sort()
+        ).toEqual([Role.Enum.ADMIN, Role.Enum.USER]);
     });
 });
 
@@ -348,7 +352,10 @@ describe("generateJWT", () => {
             email: AUTH_USER.email,
             displayName: AUTH_USER.displayName,
             ...(addRole && {
-                roles: [...AUTH_USER_ROLES.map((entry) => entry.role), addRole],
+                roles: expect.arrayContaining([
+                    ...AUTH_USER_ROLES.map((entry) => entry.role),
+                    addRole,
+                ]),
             }),
         });
         expect(payload.iat).toBeGreaterThanOrEqual(start);

@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, afterAll } from "@jest/globals";
 import { StatusCodes } from "http-status-codes";
-import { SupabaseDB } from "../../supabase";
+import { SupabaseDB } from "../../database";
+import { Tiers, IconColors } from "../attendee/attendee-schema";
 import { Role } from "../auth/auth-models";
 import { getAsStaff, get } from "../../../testing/testingTools";
 import { getCurrentDay } from "../checkin/checkin-utils";
@@ -11,7 +12,10 @@ const now = new Date();
 
 const ATTENDEE_RITAM = {
     userId: "a1",
+    tags: ["testtag1", "testtag2"],
     points: 10,
+    currentTier: Tiers.Enum.TIER1,
+    icon: IconColors.Enum.RED,
     hasPriorityMon: currentDay === "Mon",
     hasPriorityTue: currentDay === "Tue",
     hasPriorityWed: currentDay === "Wed",
@@ -19,21 +23,16 @@ const ATTENDEE_RITAM = {
     hasPriorityFri: currentDay === "Fri",
     hasPrioritySat: currentDay === "Sat",
     hasPrioritySun: currentDay === "Sun",
-    hasRedeemedTshirt: false,
-    hasRedeemedButton: false,
-    hasRedeemedTote: false,
-    hasRedeemedCap: false,
-    isEligibleTshirt: true,
-    isEligibleButton: false,
-    isEligibleTote: false,
-    isEligibleCap: false,
     favoriteEvents: [],
     puzzlesCompleted: [],
 };
 
 const ATTENDEE_NATHAN = {
     userId: "a2",
+    tags: ["testtag1", "testtag2"],
     points: 25,
+    currentTier: Tiers.Enum.TIER1,
+    icon: IconColors.Enum.BLUE,
     hasPriorityMon: false,
     hasPriorityTue: false,
     hasPriorityWed: false,
@@ -41,21 +40,16 @@ const ATTENDEE_NATHAN = {
     hasPriorityFri: false,
     hasPrioritySat: false,
     hasPrioritySun: false,
-    hasRedeemedTshirt: false,
-    hasRedeemedButton: false,
-    hasRedeemedTote: false,
-    hasRedeemedCap: false,
-    isEligibleTshirt: true,
-    isEligibleButton: false,
-    isEligibleTote: false,
-    isEligibleCap: false,
     favoriteEvents: [],
     puzzlesCompleted: [],
 };
 
 const ATTENDEE_TIMOTHY = {
     userId: "a3",
+    tags: ["testtag1", "testtag2"],
     points: 20,
+    currentTier: Tiers.Enum.TIER1,
+    icon: IconColors.Enum.GREEN,
     hasPriorityMon: false,
     hasPriorityTue: false,
     hasPriorityWed: false,
@@ -63,14 +57,6 @@ const ATTENDEE_TIMOTHY = {
     hasPriorityFri: false,
     hasPrioritySat: false,
     hasPrioritySun: false,
-    hasRedeemedTshirt: false,
-    hasRedeemedButton: false,
-    hasRedeemedTote: false,
-    hasRedeemedCap: false,
-    isEligibleTshirt: true,
-    isEligibleButton: false,
-    isEligibleTote: false,
-    isEligibleCap: false,
     favoriteEvents: [],
     puzzlesCompleted: [],
 };
@@ -80,21 +66,21 @@ const AUTH_INFO_RITAM = {
     userId: "a1",
     displayName: "Ritam Test",
     email: "ritam@test.com",
-    authId: null,
+    authId: "auth_ritam",
 };
 
 const AUTH_INFO_NATHAN = {
     userId: "a2",
     displayName: "Nathan Test",
     email: "nathan@test.com",
-    authId: null,
+    authId: "auth_nathan",
 };
 
 const AUTH_INFO_TIMOTHY = {
     userId: "a3",
     displayName: "Timothy Test",
     email: "timothy@test.com",
-    authId: null,
+    authId: "auth_timothy",
 };
 
 const AUTH_ROLES_RITAM = {
@@ -247,6 +233,7 @@ const ATTENDEES_DIETARY = [
     {
         userId: "a1",
         name: "Test User 1",
+        tags: ["testtag1", "testtag2"],
         email: "a1@test.com",
         school: "University of Illinois",
         educationLevel: "Computer Science",
@@ -261,11 +248,11 @@ const ATTENDEES_DIETARY = [
         opportunities: [],
         isInterestedMechMania: false,
         isInterestedPuzzleBang: false,
-        resume: "resume.pdf",
     },
     {
         userId: "a2",
         name: "Test User 2",
+        tags: ["testtag1", "testtag2"],
         email: "a2@test.com",
         school: "University of Illinois",
         educationLevel: "Computer Science",
@@ -280,11 +267,11 @@ const ATTENDEES_DIETARY = [
         opportunities: [],
         isInterestedMechMania: false,
         isInterestedPuzzleBang: false,
-        resume: "resume.pdf",
     },
     {
         userId: "a3",
         name: "Test User 3",
+        tags: ["testtag1", "testtag2"],
         email: "a3@test.com",
         school: "University of Illinois",
         educationLevel: "Computer Science",
@@ -299,11 +286,11 @@ const ATTENDEES_DIETARY = [
         opportunities: [],
         isInterestedMechMania: false,
         isInterestedPuzzleBang: false,
-        resume: "resume.pdf",
     },
     {
         userId: "a4",
         name: "Test User 4",
+        tags: ["testtag1", "testtag2"],
         email: "a4@test.com",
         school: "University of Illinois",
         educationLevel: "Computer Science",
@@ -318,11 +305,11 @@ const ATTENDEES_DIETARY = [
         opportunities: [],
         isInterestedMechMania: false,
         isInterestedPuzzleBang: false,
-        resume: "resume.pdf",
     },
     {
         userId: "a5",
         name: "Test User 5",
+        tags: ["testtag1", "testtag2"],
         email: "a5@test.com",
         school: "University of Illinois",
         educationLevel: "Computer Science",
@@ -337,7 +324,6 @@ const ATTENDEES_DIETARY = [
         opportunities: [],
         isInterestedMechMania: false,
         isInterestedPuzzleBang: false,
-        resume: "resume.pdf",
     },
 ];
 
@@ -787,11 +773,11 @@ describe("GET /stats/dietary-restrictions", () => {
             "00000000-0000-0000-0000-000000000000"
         );
 
-        const requiredAuthInfo = ATTENDEES_DIETARY.map((attendee) => ({
+        const requiredAuthInfo = ATTENDEES_DIETARY.map((attendee, index) => ({
             userId: attendee.userId,
             displayName: attendee.name,
             email: attendee.email,
-            authId: null,
+            authId: `auth_attendee_${index}`,
         }));
 
         const requiredAuthRoles = ATTENDEES_DIETARY.map((attendee) => ({

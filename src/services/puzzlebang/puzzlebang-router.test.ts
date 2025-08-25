@@ -1,11 +1,12 @@
 import { post } from "../../../testing/testingTools";
 import { Role } from "../auth/auth-models";
 import { StatusCodes } from "http-status-codes";
-import { SupabaseDB } from "../../supabase";
+import { SupabaseDB } from "../../database";
 
 const TEST_USER_ID = "ritam123";
 const TEST_EMAIL = "ritam@test.com";
 const PUZZLE_ID = "P1";
+const TEST_AUTH_ID = "auth_test_id";
 
 jest.setTimeout(100000);
 
@@ -32,7 +33,6 @@ function makeTestRegistration(overrides = {}) {
         ethnicity: [],
         gender: "Prefer not to say",
         graduationYear: "2027",
-        resume: "resume.pdf",
         ...overrides,
     };
 }
@@ -54,7 +54,7 @@ async function insertTestAttendee(overrides: InsertTestAttendeeOverrides = {}) {
             userId: userId,
             displayName: "Ritam",
             email,
-            authId: null,
+            authId: TEST_AUTH_ID,
         },
     ]).throwOnError();
     await SupabaseDB.AUTH_ROLES.insert([
@@ -151,7 +151,7 @@ describe("POST /puzzlebang", () => {
                 userId: "nonexistent",
                 displayName: "Fake User",
                 email: "fake@example.com",
-                authId: null,
+                authId: TEST_AUTH_ID,
             },
         ]).throwOnError();
         await SupabaseDB.AUTH_ROLES.insert([
@@ -180,7 +180,7 @@ describe("POST /puzzlebang", () => {
                 userId: TEST_USER_ID,
                 displayName: "Ritam",
                 email: TEST_EMAIL,
-                authId: null,
+                authId: TEST_AUTH_ID,
             },
         ]).throwOnError();
         await SupabaseDB.AUTH_ROLES.insert([

@@ -1,4 +1,4 @@
-import { SupabaseDB } from "../../supabase";
+import { SupabaseDB } from "../../database";
 import crypto from "crypto";
 import { Config } from "../../config";
 import { EventType } from "../events/events-schema";
@@ -19,8 +19,12 @@ async function checkEventAndAttendeeExist(eventId: string, userId: string) {
         SupabaseDB.ATTENDEES.select("userId").eq("userId", userId).single(),
     ]);
 
-    if (!eventRes.data || !attendeeRes.data) {
-        throw new Error("Event or Attendee not found");
+    if (!eventRes.data) {
+        throw new Error("Event not found");
+    }
+
+    if (!attendeeRes.data) {
+        throw new Error(`Attendee ${userId} not found`);
     }
 }
 
@@ -98,10 +102,6 @@ async function assignPixelsToUser(userId: string, pixels: number) {
 
     const updatedFields = {
         points: newPoints,
-        isEligibleCap: newPoints >= 50,
-        isEligibleTote: newPoints >= 35,
-        isEligibleButton: newPoints >= 20,
-        isEligibleTshirt: newPoints >= 0,
     };
 
     await SupabaseDB.ATTENDEES.update(updatedFields)

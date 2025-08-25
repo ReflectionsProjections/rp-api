@@ -4,7 +4,7 @@ import {
     RegistrationDraftValidator,
     RegistrationValidator,
 } from "./registration-schema";
-import { SupabaseDB } from "../../supabase";
+import { SupabaseDB } from "../../database";
 import RoleChecker from "../../middleware/role-checker";
 import { AttendeeCreateValidator } from "../attendee/attendee-validators";
 import cors from "cors";
@@ -120,6 +120,7 @@ registrationRouter.post("/submit", RoleChecker([]), async (req, res) => {
                     ? registration.minors.join(", ")
                     : "N/A",
             name: registration.name,
+            hasResume: registration.hasResume,
             school: registration.school,
             isInterestedMechMania: registration.isInterestedMechMania,
             isInterestedPuzzleBang: registration.isInterestedPuzzleBang,
@@ -136,7 +137,7 @@ registrationRouter.post("/submit", RoleChecker([]), async (req, res) => {
 
         await sendHTMLEmail(
             payload.email,
-            "Reflections Projections 2025 Confirmation!",
+            "Reflections | Projections 2025 Confirmation!",
             Mustache.render(templates.REGISTRATION_CONFIRMATION, substitution)
         );
     }
@@ -150,7 +151,9 @@ registrationRouter.get(
     async (req, res) => {
         const { data } = await SupabaseDB.REGISTRATIONS.select(
             "userId, name, majors, minors, school, educationLevel, graduationYear, opportunities, personalLinks"
-        ).throwOnError();
+        )
+            .eq("hasResume", true)
+            .throwOnError();
 
         return res.status(StatusCodes.OK).json(data);
     }

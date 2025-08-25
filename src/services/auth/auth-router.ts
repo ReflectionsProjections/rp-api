@@ -3,7 +3,11 @@ import { StatusCodes } from "http-status-codes";
 import Config from "../../config";
 import RoleChecker from "../../middleware/role-checker";
 import { Platform, Role } from "../auth/auth-models";
-import { AuthLoginValidator, AuthRoleChangeRequest } from "./auth-schema";
+import {
+    AuthInfo,
+    AuthLoginValidator,
+    AuthRoleChangeRequest,
+} from "./auth-schema";
 import authSponsorRouter from "./sponsor/sponsor-router";
 import { CorporateDeleteRequest, CorporateValidator } from "./corporate-schema";
 import {
@@ -12,7 +16,7 @@ import {
     updateDatabaseWithAuthPayload,
 } from "./auth-utils";
 import { OAuth2Client } from "google-auth-library";
-import { SupabaseDB } from "../../supabase";
+import { SupabaseDB } from "../../database";
 
 const authRouter = Router();
 
@@ -225,9 +229,53 @@ authRouter.get("/info", RoleChecker([]), async (req, res) => {
         .throwOnError();
     const user = {
         ...info,
-        roles: roleRows.map((row) => row.role),
+        roles: roleRows.map((row: { role: Role }) => row.role),
     };
     return res.status(StatusCodes.OK).json(user);
+});
+
+// Get team members (users with STAFF or ADMIN roles)
+authRouter.get("/team", RoleChecker([Role.Enum.ADMIN]), async (req, res) => {
+    try {
+        // Get all users first
+        const { data: users } =
+            await SupabaseDB.AUTH_INFO.select("*").throwOnError();
+
+        // Get all roles
+        const { data: roles } =
+            await SupabaseDB.AUTH_ROLES.select("*").throwOnError();
+
+        // Create a map of userId to roles
+        const userRolesMap = new Map<string, Role[]>();
+        roles?.forEach((roleRow: { userId: string; role: Role }) => {
+            if (!userRolesMap.has(roleRow.userId)) {
+                userRolesMap.set(roleRow.userId, []);
+            }
+            userRolesMap.get(roleRow.userId)!.push(roleRow.role);
+        });
+
+        // Filter to only users with STAFF or ADMIN roles
+        const teamMembers =
+            users
+                ?.filter((user: AuthInfo) => {
+                    const userRoles = userRolesMap.get(user.userId) || [];
+                    return userRoles.some(
+                        (role: Role) =>
+                            role === Role.Enum.STAFF || role === Role.Enum.ADMIN
+                    );
+                })
+                .map((user: AuthInfo) => ({
+                    ...user,
+                    roles: userRolesMap.get(user.userId) || [],
+                })) || [];
+
+        return res.status(StatusCodes.OK).json(teamMembers);
+    } catch (error) {
+        console.error("Error fetching team members:", error);
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+            error: "Failed to fetch team members",
+        });
+    }
 });
 
 // Get a list of user ids by role (staff only endpoint)
@@ -238,7 +286,7 @@ authRouter.get("/:ROLE", RoleChecker([Role.Enum.STAFF]), async (req, res) => {
     const { data } = await SupabaseDB.AUTH_ROLES.select("userId")
         .eq("role", role)
         .throwOnError();
-    const userIds = data.map((row) => row.userId);
+    const userIds = data.map((row: { userId: string }) => row.userId);
     return res.status(StatusCodes.OK).json(userIds);
 });
 

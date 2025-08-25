@@ -7,7 +7,8 @@ import {
 } from "./meetings-schema";
 import RoleChecker from "../../middleware/role-checker";
 import { Role } from "../auth/auth-models";
-import { SupabaseDB } from "../../supabase";
+import { SupabaseDB } from "../../database";
+import { MeetingType } from "./meetings-schema";
 
 const meetingsRouter = Router();
 
@@ -18,7 +19,7 @@ meetingsRouter.get(
         const { data: meetings } =
             await SupabaseDB.MEETINGS.select("*").throwOnError();
 
-        const responseMeetings = meetings.map((meeting) =>
+        const responseMeetings = meetings.map((meeting: MeetingType) =>
             meetingView.parse(meeting)
         );
 

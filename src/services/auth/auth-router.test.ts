@@ -18,7 +18,7 @@ import * as googleAuthLibrary from "google-auth-library";
 import Config from "../../config";
 import jsonwebtoken, { JwtPayload } from "jsonwebtoken";
 import { Corporate } from "./corporate-schema";
-import { SupabaseDB } from "../../supabase";
+import { SupabaseDB } from "../../database";
 
 const TESTER_USER = {
     authId: "1234-5678",
@@ -93,7 +93,9 @@ describe("DELETE /auth/", () => {
         const { data: roleRows } = await SupabaseDB.AUTH_ROLES.select()
             .eq("userId", OTHER_USER.userId)
             .throwOnError();
-        expect(roleRows.map((row) => row.role)).toMatchObject([Role.Enum.USER]);
+        expect(roleRows.map((row: { role: Role }) => row.role)).toMatchObject([
+            Role.Enum.USER,
+        ]);
     });
 
     it("should give the not found error when the user doesn't exist", async () => {
@@ -135,7 +137,7 @@ describe("PUT /auth/", () => {
         const { data: roleRows } = await SupabaseDB.AUTH_ROLES.select()
             .eq("userId", OTHER_USER.userId)
             .throwOnError();
-        expect(roleRows.map((row) => row.role)).toMatchObject([
+        expect(roleRows.map((row: { role: Role }) => row.role)).toMatchObject([
             ...OTHER_USER_ROLES.map((row) => row.role),
             Role.Enum.PUZZLEBANG,
         ]);
@@ -317,9 +319,9 @@ describe("POST /auth/login/:PLATFORM", () => {
                         "userId",
                         expected.userId
                     );
-                expect(roleRows?.map((row) => row.role)).toEqual(
-                    expected.roles
-                );
+                expect(
+                    roleRows?.map((row: { role: Role }) => row.role)
+                ).toEqual(expected.roles);
             });
 
             it("should login as an existing user with a valid code", async () => {
@@ -366,9 +368,9 @@ describe("POST /auth/login/:PLATFORM", () => {
                         "userId",
                         TESTER_USER.userId
                     );
-                expect(roleRows?.map((row) => row.role)).toEqual(
-                    expected.roles
-                );
+                expect(
+                    roleRows?.map((row: { role: Role }) => row.role)
+                ).toEqual(expected.roles);
             });
 
             it("fails to login with an invalid code", async () => {
@@ -628,6 +630,61 @@ describe("GET /auth/info", () => {
             ...TESTER_USER,
             roles: TESTER_USER_ROLES.map((row) => row.role),
         });
+    });
+});
+
+describe("GET /auth/team", () => {
+    it("should get team members (users with STAFF or ADMIN roles)", async () => {
+        const res = await getAsAdmin("/auth/team").expect(StatusCodes.OK);
+
+        // Should return users with STAFF or ADMIN roles
+        expect(res.body).toEqual(
+            expect.arrayContaining([
+                expect.objectContaining({
+                    userId: OTHER_USER.userId,
+                    email: OTHER_USER.email,
+                    displayName: OTHER_USER.displayName,
+                    roles: expect.arrayContaining([Role.Enum.STAFF]),
+                }),
+            ])
+        );
+
+        // Should not include users with only USER role
+        const userOnlyEmails = res.body.map((user: AuthInfo) => user.email);
+        expect(userOnlyEmails).not.toContain(TESTER_USER.email);
+    });
+
+    it("should require admin permissions", async () => {
+        const res = await getAsStaff("/auth/team").expect(
+            StatusCodes.FORBIDDEN
+        );
+        expect(res.body).toHaveProperty("error", "Forbidden");
+    });
+
+    it("should return empty array when no team members exist", async () => {
+        // Remove all roles to test empty case
+        await SupabaseDB.AUTH_ROLES.delete().neq("userId", "nonexistent");
+
+        const res = await getAsAdmin("/auth/team").expect(StatusCodes.OK);
+        expect(res.body).toEqual([]);
+    });
+
+    it("should handle users with multiple roles correctly", async () => {
+        // Add ADMIN role to OTHER_USER to test multiple roles
+        await SupabaseDB.AUTH_ROLES.insert({
+            userId: OTHER_USER.userId,
+            role: Role.Enum.ADMIN,
+        });
+
+        const res = await getAsAdmin("/auth/team").expect(StatusCodes.OK);
+
+        const otherUser = res.body.find(
+            (user: AuthInfo) => user.userId === OTHER_USER.userId
+        );
+        expect(otherUser).toBeDefined();
+        expect(otherUser.roles).toEqual(
+            expect.arrayContaining([Role.Enum.STAFF, Role.Enum.ADMIN])
+        );
     });
 });
 

@@ -6,6 +6,8 @@ CREATE SCHEMA public;
 ALTER SCHEMA public OWNER TO postgres;
 COMMENT ON SCHEMA public IS 'standard public schema';
 
+ALTER DATABASE postgres SET TIMEZONE TO 'UTC';
+
 -- Create types
 CREATE TYPE public."committeeNames" AS ENUM (
     'CONTENT',
@@ -40,6 +42,23 @@ CREATE TYPE public."staffAttendanceType" AS ENUM (
     'ABSENT'
 );
 
+CREATE TYPE public."tierType" AS ENUM (
+    'TIER1',
+    'TIER2',
+    'TIER3'
+);
+
+CREATE TYPE public."iconColorType" AS ENUM (
+    'BLUE',
+    'RED',
+    'GREEN',
+    'YELLOW',
+    'PINK',
+    'BLACK',
+    'PURPLE',
+    'ORANGE'
+);
+
 -- Create tables
 CREATE TABLE public."attendeeAttendances" (
     "userId" character varying NOT NULL,
@@ -57,12 +76,8 @@ CREATE TABLE public."attendees" (
     "hasPriorityFri" boolean DEFAULT false NOT NULL,
     "hasPrioritySat" boolean DEFAULT false NOT NULL,
     "hasPrioritySun" boolean DEFAULT false NOT NULL,
-    "isEligibleTier1" boolean DEFAULT false NOT NULL,
-    "hasRedeemedTier1" boolean DEFAULT false NOT NULL,
-    "isEligibleTier2" boolean DEFAULT false NOT NULL,
-    "hasRedeemedTier2" boolean DEFAULT false NOT NULL,
-    "isEligibleTier3" boolean DEFAULT false NOT NULL,
-    "hasRedeemedTier3" boolean DEFAULT false NOT NULL,
+    "currentTier" public."tierType" DEFAULT 'TIER1' NOT NULL,
+    "icon" public."iconColorType" DEFAULT 'RED' NOT NULL,
     "tags" text[] DEFAULT '{}'::text[] NOT NULL,
     "favoriteEvents" uuid[] DEFAULT '{}'::uuid[] NOT NULL,
     "puzzlesCompleted" text[] DEFAULT '{}'::text[] NOT NULL,
@@ -84,8 +99,8 @@ CREATE TABLE public."eventAttendances" (
 CREATE TABLE public."events" (
     "eventId" uuid DEFAULT gen_random_uuid() NOT NULL,
     "name" text NOT NULL,
-    "startTime" timestamp without time zone NOT NULL,
-    "endTime" timestamp without time zone NOT NULL,
+    "startTime" timestamp with time zone NOT NULL,
+    "endTime" timestamp with time zone NOT NULL,
     "points" integer NOT NULL,
     "description" text NOT NULL,
     "isVirtual" boolean NOT NULL,
@@ -166,6 +181,7 @@ CREATE TABLE public."registrations" (
     "isInterestedMechMania" boolean NOT NULL,
     "isInterestedPuzzleBang" boolean NOT NULL,
     "tags" text[] DEFAULT '{}'::text[] NOT NULL,
+    "hasResume" boolean DEFAULT false NOT NULL,
     "userId" character varying NOT NULL,
     CONSTRAINT "registrations_pkey" PRIMARY KEY ("userId"),
     CONSTRAINT "registrations_email_key" UNIQUE ("email")
