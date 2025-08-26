@@ -1,5 +1,5 @@
 // pm2 configuration
-export default {
+module.exports = {
     apps: [
         {
             name: "RP_API",
