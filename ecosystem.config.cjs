@@ -10,7 +10,7 @@ module.exports = {
             out_file: "/home/ubuntu/.pm2/logs/api_out.log",
             err_file: "/home/ubuntu/.pm2/logs/api_err.log",
             combine_logs: true,
-            log_date_format: "YYYY-MM-DD-HH:mm:ss.SSS Z",
+            log_date_format: "YYYY-MM-DD HH:mm:ss.SSS",
         },
     ],
 };
