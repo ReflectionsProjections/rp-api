@@ -1,65 +1,55 @@
 {
-	"agent": {
-		"metrics_collection_interval": 30,
-		"run_as_user": "root"
-	},
-	"logs": {
-		"logs_collected": {
-			"files": {
-				"collect_list": [
-					{
-						"file_path": "/home/ubuntu/.pm2/logs/api-out.log",
-						"log_group_class": "STANDARD",
-						"log_group_name": "rp-api",
-						"log_stream_name": "api-out",
-						"retention_in_days": -1,
-						"timestamp_format": "%Y-%m-%d %H:%M:%f"
-					},
-					{
-						"file_path": "/home/ubuntu/.pm2/logs/api-err.log",
-						"log_group_class": "STANDARD",
-						"log_group_name": "rp-api",
-						"log_stream_name": "api-err",
-						"retention_in_days": -1,
-						"timestamp_format": "%Y-%m-%d %H:%M:%f"
-					}
-				]
-			}
-		}
-	},
-	"metrics": {
-		"aggregation_dimensions": [
-			[
-				"InstanceId"
-			]
-		],
-		"append_dimensions": {
-			"AutoScalingGroupName": "${aws:AutoScalingGroupName}",
-			"ImageId": "${aws:ImageId}",
-			"InstanceId": "${aws:InstanceId}",
-			"InstanceType": "${aws:InstanceType}"
-		},
-		"metrics_collected": {
-			"disk": {
-				"measurement": [
-					"used_percent"
-				],
-				"metrics_collection_interval": 30,
-				"resources": [
-					"*"
-				]
-			},
-			"mem": {
-				"measurement": [
-					"mem_used_percent"
-				],
-				"metrics_collection_interval": 30
-			},
-			"statsd": {
-				"metrics_aggregation_interval": 60,
-				"metrics_collection_interval": 10,
-				"service_address": ":8125"
-			}
-		}
-	}
+    "agent": {
+        "metrics_collection_interval": 30,
+        "run_as_user": "root"
+    },
+    "logs": {
+        "logs_collected": {
+            "files": {
+                "collect_list": [
+                    {
+                        "file_path": "/home/ubuntu/.pm2/logs/api_out.log",
+                        "log_group_class": "STANDARD",
+                        "log_group_name": "rp-api",
+                        "log_stream_name": "api-out",
+                        "retention_in_days": -1,
+                        "timestamp_format": "%Y-%m-%d %H:%M:%S.%f"
+                    },
+                    {
+                        "file_path": "/home/ubuntu/.pm2/logs/api_err.log",
+                        "log_group_class": "STANDARD",
+                        "log_group_name": "rp-api",
+                        "log_stream_name": "api-err",
+                        "retention_in_days": -1,
+                        "timestamp_format": "%Y-%m-%d %H:%M:%S.%f"
+                    }
+                ]
+            }
+        }
+    },
+    "metrics": {
+        "aggregation_dimensions": [["InstanceId"]],
+        "append_dimensions": {
+            "AutoScalingGroupName": "${aws:AutoScalingGroupName}",
+            "ImageId": "${aws:ImageId}",
+            "InstanceId": "${aws:InstanceId}",
+            "InstanceType": "${aws:InstanceType}"
+        },
+        "metrics_collected": {
+            "disk": {
+                "measurement": ["used_percent"],
+                "metrics_collection_interval": 30,
+                "resources": ["*"]
+            },
+            "mem": {
+                "measurement": ["mem_used_percent"],
+                "metrics_collection_interval": 30
+            },
+            "statsd": {
+                "metrics_aggregation_interval": 60,
+                "metrics_collection_interval": 10,
+                "service_address": ":8125"
+            }
+        }
+    }
 }
