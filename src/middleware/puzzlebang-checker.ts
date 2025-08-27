@@ -3,6 +3,11 @@ import { Request, Response, NextFunction } from "express";
 import { StatusCodes } from "http-status-codes";
 import Config from "../config";
 
+const EXPECTED_HASH = crypto
+    .createHash("sha256")
+    .update(Config.PUZZLEBANG_API_KEY, "utf8")
+    .digest("hex");
+
 export default function PuzzlebangChecker(
     req: Request,
     res: Response,
@@ -18,12 +23,8 @@ export default function PuzzlebangChecker(
         .createHash("sha256")
         .update(apiKey, "utf8")
         .digest("hex");
-    const expectedHash = crypto
-        .createHash("sha256")
-        .update(Config.PUZZLEBANG_API_KEY, "utf8")
-        .digest("hex");
 
-    if (hashedApiKey != expectedHash) {
+    if (hashedApiKey != EXPECTED_HASH) {
         return res
             .status(StatusCodes.UNAUTHORIZED)
             .json({ error: "InvalidKey" });
