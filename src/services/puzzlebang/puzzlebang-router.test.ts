@@ -56,7 +56,8 @@ const TEST_ATTENDEE = {
     tags: [],
 } satisfies AttendeeType;
 
-const PUZZLE_ID = "12345";
+const PUZZLE_ID = "P13";
+const META_PUZZLE_ID = "M5";
 
 beforeEach(async () => {
     await SupabaseDB.AUTH_INFO.insert(TEST_AUTH_INFO).throwOnError();
@@ -121,6 +122,32 @@ describe("POST /puzzlebang", () => {
         expect(updated).toEqual({
             points: PREVIOUS_POINTS + 2,
             puzzlesCompleted: [...ALREADY_COMPLETED, PUZZLE_ID],
+        });
+    });
+
+    it("should complete puzzle and award more points for meta puzzle", async () => {
+        const res = await postWithAuthorization(
+            "/puzzlebang",
+            Config.PUZZLEBANG_API_KEY
+        )
+            .send({ email: TEST_REGISTRATION.email, puzzleId: META_PUZZLE_ID })
+            .expect(StatusCodes.OK);
+
+        expect(res.body).toEqual({
+            email: TEST_REGISTRATION.email,
+            puzzlesCompleted: [META_PUZZLE_ID],
+        });
+
+        const { data: updated } = await SupabaseDB.ATTENDEES.select(
+            "points, puzzlesCompleted"
+        )
+            .eq("userId", TEST_ATTENDEE.userId)
+            .single()
+            .throwOnError();
+
+        expect(updated).toEqual({
+            points: 4,
+            puzzlesCompleted: [META_PUZZLE_ID],
         });
     });
 

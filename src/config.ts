@@ -55,6 +55,16 @@ export const Config = {
     AUTH_CALLBACK_URI_BASE: `${API_BASE}/auth/callback/`,
 
     PUZZLEBANG_API_KEY: getEnv("PUZZLEBANG_API_KEY"),
+    PUZZLEBANG_POINTS: [
+        {
+            idRegex: /.*/,
+            points: 2,
+        },
+        {
+            idRegex: /^M.*/,
+            points: 4,
+        },
+    ],
 
     // prettier-ignore
     AUTH_ADMIN_WHITELIST: new Set([

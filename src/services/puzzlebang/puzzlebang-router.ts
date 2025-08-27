@@ -3,6 +3,7 @@ import { StatusCodes } from "http-status-codes";
 import { SupabaseDB } from "../../database";
 import { PuzzlebangCompleteRequestValidator } from "./puzzlebang-validators";
 import PuzzlebangChecker from "../../middleware/puzzlebang-checker";
+import Config from "../../config";
 
 const puzzlebangRouter = Router();
 
@@ -52,11 +53,16 @@ puzzlebangRouter.post("/", async (req, res) => {
         });
     }
 
+    const puzzlePoints = Config.PUZZLEBANG_POINTS.filter(({ idRegex }) =>
+        idRegex.test(puzzleId)
+    ).reduce((prev, curr) => Math.max(prev, curr.points), 0);
+
     const updatedPuzzles = [...puzzlesCompleted, puzzleId];
+    const updatedPoints = currentPoints + puzzlePoints;
 
     const { data: updated } = await SupabaseDB.ATTENDEES.update({
         puzzlesCompleted: updatedPuzzles,
-        points: currentPoints + 2,
+        points: updatedPoints,
     })
         .eq("userId", userId)
         .select("puzzlesCompleted")
