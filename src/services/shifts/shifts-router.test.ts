@@ -47,10 +47,10 @@ beforeEach(async () => {
     await SupabaseDB.STAFF.insert(OTHER_STAFF);
 });
 
-describe("Shift Management (/shifts/shifts)", () => {
-    describe("POST /shifts/shifts", () => {
+describe("Shift Management (/shifts)", () => {
+    describe("POST /shifts", () => {
         it("should allow an admin to create a new shift", async () => {
-            const response = await postAsAdmin("/shifts/shifts")
+            const response = await postAsAdmin("/shifts")
                 .send(TEST_SHIFT)
                 .expect(StatusCodes.CREATED);
 
@@ -66,18 +66,16 @@ describe("Shift Management (/shifts/shifts)", () => {
         });
 
         it("should forbid a non-admin from creating a shift", async () => {
-            await postAsStaff("/shifts/shifts")
+            await postAsStaff("/shifts")
                 .send(TEST_SHIFT)
                 .expect(StatusCodes.FORBIDDEN);
         });
     });
 
-    describe("GET /shifts/shifts", () => {
+    describe("GET /shifts", () => {
         it("should return a list of all shifts to an admin", async () => {
             await SupabaseDB.SHIFTS.insert(TEST_SHIFT);
-            const response = await getAsAdmin("/shifts/shifts").expect(
-                StatusCodes.OK
-            );
+            const response = await getAsAdmin("/shifts").expect(StatusCodes.OK);
             expect(response.body).toEqual(
                 expect.arrayContaining([
                     expect.objectContaining({ name: TEST_SHIFT.name }),
@@ -86,14 +84,12 @@ describe("Shift Management (/shifts/shifts)", () => {
         });
     });
 
-    describe("PATCH /shifts/shifts/:shiftId", () => {
+    describe("PATCH /shifts/:shiftId", () => {
         it("should allow an admin to update a shift", async () => {
             await SupabaseDB.SHIFTS.insert(TEST_SHIFT);
             const updatePayload = { location: "Second Floor" };
 
-            const response = await patchAsAdmin(
-                `/shifts/shifts/${TEST_SHIFT.shiftId}`
-            )
+            const response = await patchAsAdmin(`/shifts/${TEST_SHIFT.shiftId}`)
                 .send(updatePayload)
                 .expect(StatusCodes.OK);
 
@@ -101,10 +97,10 @@ describe("Shift Management (/shifts/shifts)", () => {
         });
     });
 
-    describe("DELETE /shifts/shifts/:shiftId", () => {
+    describe("DELETE /shifts/:shiftId", () => {
         it("should allow an admin to delete a shift", async () => {
             await SupabaseDB.SHIFTS.insert(TEST_SHIFT);
-            await delAsAdmin(`/shifts/shifts/${TEST_SHIFT.shiftId}`).expect(
+            await delAsAdmin(`/shifts/${TEST_SHIFT.shiftId}`).expect(
                 StatusCodes.NO_CONTENT
             );
 
@@ -118,7 +114,6 @@ describe("Shift Management (/shifts/shifts)", () => {
 
 describe("Shift Assignment Management", () => {
     let testShiftId: string;
-    let testAssignmentId: string;
 
     beforeEach(async () => {
         // Create a shift and an assignment for these tests
@@ -128,20 +123,19 @@ describe("Shift Assignment Management", () => {
             .throwOnError();
         testShiftId = shift!.shiftId;
 
-        const { data: assignment } = await SupabaseDB.SHIFT_ASSIGNMENTS.insert({
+        await SupabaseDB.SHIFT_ASSIGNMENTS.insert({
             shiftId: testShiftId,
             staffEmail: OTHER_STAFF.email,
         })
             .select()
             .single()
             .throwOnError();
-        testAssignmentId = assignment!.assignmentId;
     });
 
-    describe("POST /shifts/shifts/:shiftId/assignments", () => {
+    describe("POST /shifts/:shiftId/assignments", () => {
         it("should allow an admin to assign a staff member to a shift", async () => {
             const response = await postAsAdmin(
-                `/shifts/shifts/${testShiftId}/assignments`
+                `/shifts/${testShiftId}/assignments`
             )
                 .send({ staffEmail: TESTER_STAFF.email })
                 .expect(StatusCodes.CREATED);
@@ -151,15 +145,19 @@ describe("Shift Assignment Management", () => {
         });
     });
 
-    describe("DELETE /shifts/assignments/:assignmentId", () => {
+    describe("DELETE /shifts/:shiftId/assignments", () => {
         it("should allow an admin to remove a staff assignment", async () => {
-            await delAsAdmin(`/shifts/assignments/${testAssignmentId}`).expect(
-                StatusCodes.NO_CONTENT
-            );
+            await delAsAdmin(`/shifts/${testShiftId}/assignments`)
+                .send({ staffEmail: OTHER_STAFF.email })
+                .expect(StatusCodes.NO_CONTENT);
 
             const { data } = await SupabaseDB.SHIFT_ASSIGNMENTS.select()
-                .eq("assignmentId", testAssignmentId)
-                .single();
+                .match({
+                    shiftId: testShiftId,
+                    staffEmail: OTHER_STAFF.email,
+                })
+                .maybeSingle();
+
             expect(data).toBeNull();
         });
     });
@@ -191,10 +189,10 @@ describe("Staff-Facing Shift Routes", () => {
         });
     });
 
-    describe("GET /shifts/shifts/:shiftId/assignments", () => {
+    describe("GET /shifts/:shiftId/assignments", () => {
         it("should return the roster for a given shift", async () => {
             const response = await getAsStaff(
-                `/shifts/shifts/${testShiftId}/assignments`
+                `/shifts/${testShiftId}/assignments`
             ).expect(StatusCodes.OK);
             expect(response.body.length).toBe(1);
             expect(response.body[0].staff.email).toBe(TESTER_STAFF.email);

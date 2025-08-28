@@ -541,17 +541,14 @@ export type Database = {
             };
             shiftAssignments: {
                 Row: {
-                    assignmentId: string;
                     shiftId: string;
                     staffEmail: string;
                 };
                 Insert: {
-                    assignmentId?: string;
                     shiftId: string;
                     staffEmail: string;
                 };
                 Update: {
-                    assignmentId?: string;
                     shiftId?: string;
                     staffEmail?: string;
                 };

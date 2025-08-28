@@ -166,7 +166,7 @@ export async function clearSupabaseTables(supabase: SupabaseClient) {
             value: "NON_EXISTENT_EMAIL",
         },
         shiftAssignments: {
-            column: "assignmentId",
+            column: "shiftId",
             value: "00000000-0000-0000-0000-000000000000",
         },
         shifts: {

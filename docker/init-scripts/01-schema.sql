@@ -243,10 +243,9 @@ CREATE TABLE public."shifts" (
 );
 
 CREATE TABLE public."shiftAssignments" (
-    "assignmentId" uuid DEFAULT gen_random_uuid() NOT NULL,
     "shiftId" uuid NOT NULL,
     "staffEmail" text NOT NULL,
-    CONSTRAINT "shiftAssignments_pkey" PRIMARY KEY ("assignmentId"),
+    CONSTRAINT "shiftAssignments_pkey" PRIMARY KEY ("shiftId", "staffEmail"),
     CONSTRAINT "shiftAssignments_shiftId_fkey" FOREIGN KEY ("shiftId") REFERENCES public."shifts"("shiftId"),
     CONSTRAINT "shiftAssignments_staffEmail_fkey" FOREIGN KEY ("staffEmail") REFERENCES public."staff"("email")
 );

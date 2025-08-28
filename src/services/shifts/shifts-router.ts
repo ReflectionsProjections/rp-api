@@ -8,7 +8,7 @@ const shiftsRouter = Router();
 
 // Get a list of all defined shifts
 shiftsRouter.get(
-    "/shifts",
+    "/",
     RoleChecker([Role.Enum.STAFF, Role.Enum.ADMIN]),
     async (req, res) => {
         const { data: shifts } = await SupabaseDB.SHIFTS.select()
@@ -38,26 +38,22 @@ shiftsRouter.get(
 
 // Create a new shift
 // API body: {String} role, {String} startTime {String} endTime, {String} location
-shiftsRouter.post(
-    "/shifts",
-    RoleChecker([Role.Enum.ADMIN]),
-    async (req, res) => {
-        const shiftData = req.body;
+shiftsRouter.post("/", RoleChecker([Role.Enum.ADMIN]), async (req, res) => {
+    const shiftData = req.body;
 
-        const { data: newShift } = await SupabaseDB.SHIFTS.insert(shiftData)
-            .select()
-            .single()
-            .throwOnError();
+    const { data: newShift } = await SupabaseDB.SHIFTS.insert(shiftData)
+        .select()
+        .single()
+        .throwOnError();
 
-        return res.status(StatusCodes.CREATED).json(newShift);
-    }
-);
+    return res.status(StatusCodes.CREATED).json(newShift);
+});
 
 // Update a shift's details
 // URL params: shiftId
 // API body: { role?, startTime?, endTime?, location? }
 shiftsRouter.patch(
-    "/shifts/:shiftId",
+    "/:shiftId",
     RoleChecker([Role.Enum.ADMIN]),
     async (req, res) => {
         const { shiftId } = req.params;
@@ -76,7 +72,7 @@ shiftsRouter.patch(
 // Delete a shift
 // URL params: shiftId
 shiftsRouter.delete(
-    "/shifts/:shiftId",
+    "/:shiftId",
     RoleChecker([Role.Enum.ADMIN]),
     async (req, res) => {
         const { shiftId } = req.params;
@@ -96,7 +92,7 @@ shiftsRouter.delete(
 // URL params: shiftId
 // API body: { staffEmail }
 shiftsRouter.post(
-    "/shifts/:shiftId/assignments",
+    "/:shiftId/assignments",
     RoleChecker([Role.Enum.ADMIN]),
     async (req, res) => {
         const { shiftId } = req.params;
@@ -115,16 +111,21 @@ shiftsRouter.post(
     }
 );
 
-// Remove a staff member off of a shift
-// URL params: assignmentId
+// Remove a staff member from a shift
+// URL params: shiftId
+// API body: { staffEmail }
 shiftsRouter.delete(
-    "/assignments/:assignmentId",
+    "/:shiftId/assignments",
     RoleChecker([Role.Enum.ADMIN]),
     async (req, res) => {
-        const { assignmentId } = req.params;
+        const { shiftId } = req.params;
+        const { staffEmail } = req.body;
 
         await SupabaseDB.SHIFT_ASSIGNMENTS.delete()
-            .eq("assignmentId", assignmentId)
+            .match({
+                shiftId: shiftId,
+                staffEmail: staffEmail,
+            })
             .throwOnError();
 
         return res.sendStatus(StatusCodes.NO_CONTENT);
@@ -134,7 +135,7 @@ shiftsRouter.delete(
 // Get a list of all staff assigned to a specific shift
 // URL params: shiftId
 shiftsRouter.get(
-    "/shifts/:shiftId/assignments",
+    "/:shiftId/assignments",
     RoleChecker([Role.Enum.STAFF, Role.Enum.ADMIN]),
     async (req, res) => {
         const { shiftId } = req.params;
