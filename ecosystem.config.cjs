@@ -4,6 +4,7 @@ module.exports = {
         {
             name: "RP_API",
             script: "build/src/app.js",
+            node_args: "--enable-source-maps",
             wait_ready: true,
             instances: 2,
             listen_timeout: 10 * 1000,
