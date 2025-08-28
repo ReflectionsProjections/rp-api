@@ -401,19 +401,78 @@ const templates = {
                 border-right: 2px solid #ff0000 !important;
             }
 
+            .nested-link {
+                color: #ff0000 !important;
+                text-decoration: none !important;
+                border-bottom: 1px solid #ff0000 !important;
+                font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif !important;
+                word-break: break-all !important;
+                overflow-wrap: break-word !important;
+                max-width: 100% !important;
+                display: inline-block !important;
+            }
+            
             .info-value {
                 color: #e0e0e0 !important;
                 padding: 12px 15px !important;
                 font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif !important;
                 font-size: 14px !important;
                 background-color: #1a1a1a !important;
+                word-break: break-word !important;
+                overflow-wrap: break-word !important;
+                max-width: 0 !important;
             }
-
-            .nested-link {
-                color: #ff0000 !important;
-                text-decoration: none !important;
-                border-bottom: 1px solid #ff0000 !important;
-                font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif !important;
+            
+            a {
+                word-break: break-all !important;
+                overflow-wrap: break-word !important;
+                max-width: 100% !important;
+            }
+            
+            @media only screen and (max-width: 600px) {
+                .content-area {
+                    padding: 20px 15px !important;
+                }
+            
+                .info-label,
+                .info-value {
+                    display: block !important;
+                    width: 100% !important;
+                    padding: 8px 15px !important;
+                    border-right: none !important;
+                    font-size: 12px !important;
+                }
+            
+                .info-label {
+                    padding-bottom: 4px !important;
+                    border-bottom: 1px solid #ff0000 !important;
+                }
+            
+                .header-title {
+                    font-size: 22px !important;
+                    letter-spacing: 2px !important;
+                }
+            
+                .header-image-container {
+                    min-height: 100px !important;
+                }
+            
+                .header-fallback-outlook {
+                    padding: 25px 15px !important;
+                }
+            
+                .year-badge {
+                    font-size: 11px !important;
+                }
+            
+                .title-separator {
+                    margin: 0 5px !important;
+                }
+            
+                .nested-link {
+                    font-size: 12px !important;
+                    word-break: break-all !important;
+                }
             }
 
             .resume-table {
@@ -479,47 +538,6 @@ const templates = {
             .fallback-no-transform {
                 padding: 40px 20px !important;
                 text-align: center !important;
-            }
-
-            /* Mobile responsive */
-            @media only screen and (max-width: 600px) {
-                .content-area {
-                    padding: 20px 15px !important;
-                }
-
-                .info-label,
-                .info-value {
-                    display: block !important;
-                    width: 100% !important;
-                    padding: 8px 15px !important;
-                    border-right: none !important;
-                }
-
-                .info-label {
-                    padding-bottom: 4px !important;
-                    border-bottom: 1px solid #ff0000 !important;
-                }
-
-                .header-title {
-                    font-size: 22px !important;
-                    letter-spacing: 2px !important;
-                }
-
-                .header-image-container {
-                    min-height: 100px !important;
-                }
-
-                .header-fallback-outlook {
-                    padding: 25px 15px !important;
-                }
-
-                .year-badge {
-                    font-size: 11px !important;
-                }
-
-                .title-separator {
-                    margin: 0 5px !important;
-                }
             }
         </style>
     </head>
@@ -837,11 +855,9 @@ const templates = {
                                                                 <td
                                                                     class="info-value"
                                                                 >
-                                                                    {{#personalLinks}}
-                                                                        href="{{.}}"
-                                                                        class="nested-link"
-                                                                        >{{.}}</a
-                                                                    ><br />{{/personalLinks}}
+                                                                {{#personalLinks}}
+                                                                    <a href="{{.}}" class="nested-link">{{.}}</a><br />
+                                                                {{/personalLinks}}
                                                                 </td>
                                                             </tr>
                                                             {{/personalLinks.length}}
