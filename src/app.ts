@@ -27,12 +27,6 @@ import meetingsRouter from "./services/meetings/meetings-router";
 
 import cors from "cors";
 
-AWS.config.update({
-    region: Config.S3_REGION,
-    accessKeyId: Config.S3_ACCESS_KEY,
-    secretAccessKey: Config.S3_SECRET_KEY,
-});
-
 const app = express();
 app.enable("trust proxy");
 
