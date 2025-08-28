@@ -10,10 +10,6 @@ import RoleChecker from "../../middleware/role-checker";
 import { Role } from "../auth/auth-models";
 import { generateQrHash, getCurrentDay } from "../checkin/checkin-utils";
 
-import { decryptId } from "./attendee-utils";
-
-import { generateJWT } from "../auth/auth-utils";
-import Config from "../../config";
 import { admin } from "../../firebase";
 
 const attendeeRouter = Router();
