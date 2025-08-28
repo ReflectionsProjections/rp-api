@@ -17,6 +17,8 @@ GRANT ALL ON TABLE public."authInfo"            TO anon, authenticated, service_
 GRANT ALL ON TABLE public."authRoles"           TO anon, authenticated, service_role;
 GRANT ALL ON TABLE public."speakers"            TO anon, authenticated, service_role;
 GRANT ALL ON TABLE public."staff"               TO anon, authenticated, service_role;
+GRANT ALL ON TABLE public."shifts"              TO anon, authenticated, service_role;
+GRANT ALL ON TABLE public."shiftAssignments"    TO anon, authenticated, service_role;
 GRANT ALL ON TABLE public."subscriptions"       TO anon, authenticated, service_role;
 GRANT ALL ON TABLE public."authCodes"			TO anon, authenticated, service_role; 
 
