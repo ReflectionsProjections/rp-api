@@ -6,6 +6,7 @@
     "compilerOptions": {
         "target": "ESNext",
         "useDefineForClassFields": true,
+        "sourceMap": true,
         "module": "CommonJS",
         "lib": ["ESNext", "DOM"],
         "moduleResolution": "node",
