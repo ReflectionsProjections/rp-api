@@ -1,6 +1,6 @@
 import { Router } from "express";
-// import RoleChecker from "../../middleware/role-checker";
-// import { Role } from "../auth/auth-models";
+import RoleChecker from "../../middleware/role-checker";
+import { Role } from "../auth/auth-models";
 import { StatusCodes } from "http-status-codes";
 import {
     registerDeviceSchema,
@@ -16,27 +16,24 @@ const notificationsRouter = Router();
 // Request body: deviceId: The FCM device token from the client app.
 notificationsRouter.post(
     "/register",
-    // RoleChecker([Role.enum.USER]),
+    RoleChecker([Role.enum.USER]),
     async (req, res) => {
-        // const payload = res.locals.payload;
-        // const userId = payload.userId;
-        const userId = "123";
-        const deviceId =
-            "cQBYOfCAZ0JkulTJWi31rS:APA91bHe6jXBkmtNOkI_V4HgL9vg9jfi3_jTJCIXkTuHks02VJ6ctTzmIB0csPL4FxLpLhZwOSXncu-xGhBg2K8ZCVaY1U0wnv5a1GOiKGTVpruRZ7CNKbE";
-        // const notificationEnrollmentData = registerDeviceSchema.parse(req.body);
+        const payload = res.locals.payload;
+        const userId = payload.userId;
+        const notificationEnrollmentData = registerDeviceSchema.parse(req.body);
         await SupabaseDB.NOTIFICATIONS.upsert({
             userId: userId,
-            // deviceId: notificationEnrollmentData.deviceId,
-            deviceId: deviceId,
+            deviceId: notificationEnrollmentData.deviceId,
         })
             .single()
             .throwOnError();
 
         // sign them up for the default topic: all users (notify everyone who has the app)
-        await admin.messaging().subscribeToTopic(deviceId, "allUsers");
+        await admin
+            .messaging()
+            .subscribeToTopic(notificationEnrollmentData.deviceId, "allUsers");
 
-        // return res.status(StatusCodes.CREATED).json(notificationEnrollmentData);
-        return res.status(StatusCodes.CREATED);
+        return res.status(StatusCodes.CREATED).json(notificationEnrollmentData);
     }
 );
 
