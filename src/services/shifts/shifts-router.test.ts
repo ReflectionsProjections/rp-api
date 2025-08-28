@@ -17,7 +17,7 @@ import { v4 as uuidv4 } from "uuid";
 const TEST_SHIFT = {
     shiftId: uuidv4(),
     name: "Test Shift",
-    role: "CHECK_IN" as "CHECK_IN",
+    role: "CHECK_IN" as const,
     startTime: new Date().toISOString(),
     endTime: new Date(Date.now() + 1000 * 60 * 60).toISOString(), // 1 hour later
     location: "Main Atrium",
