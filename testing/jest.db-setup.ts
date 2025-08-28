@@ -59,6 +59,12 @@ function mockSupabase(supabaseUrl: string, supabaseServiceKey: string) {
                 get SUBSCRIPTIONS() {
                     return supabase.from("subscriptions");
                 },
+                get SHIFTS() {
+                    return supabase.from("shifts");
+                },
+                get SHIFT_ASSIGNMENTS() {
+                    return supabase.from("shiftAssignments");
+                },
             },
             __esModule: true,
         };

@@ -234,6 +234,7 @@ CREATE TABLE public."staff" (
 
 CREATE TABLE public."shifts" (
     "shiftId" uuid DEFAULT gen_random_uuid() NOT NULL,
+    "name" text NOT NULL,
     "role" public."shiftRoleType" NOT NULL,
     "startTime" timestamp with time zone NOT NULL,
     "endTime" timestamp with time zone NOT NULL,

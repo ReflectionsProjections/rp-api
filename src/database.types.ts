@@ -512,6 +512,66 @@ export type Database = {
                 };
                 Relationships: [];
             };
+            shifts: {
+                Row: {
+                    shiftId: string;
+                    name: string;
+                    role: Database["public"]["Enums"]["shiftRoleType"];
+                    startTime: string;
+                    endTime: string;
+                    location: string;
+                };
+                Insert: {
+                    shiftId?: string;
+                    name: string;
+                    role: Database["public"]["Enums"]["shiftRoleType"];
+                    startTime: string;
+                    endTime: string;
+                    location: string;
+                };
+                Update: {
+                    shiftId?: string;
+                    name?: string;
+                    role?: Database["public"]["Enums"]["shiftRoleType"];
+                    startTime?: string;
+                    endTime?: string;
+                    location?: string;
+                };
+                Relationships: [];
+            };
+            shiftAssignments: {
+                Row: {
+                    assignmentId: string;
+                    shiftId: string;
+                    staffEmail: string;
+                };
+                Insert: {
+                    assignmentId?: string;
+                    shiftId: string;
+                    staffEmail: string;
+                };
+                Update: {
+                    assignmentId?: string;
+                    shiftId?: string;
+                    staffEmail?: string;
+                };
+                Relationships: [
+                    {
+                        foreignKeyName: "shiftAssignments_shiftId_fkey";
+                        columns: ["shiftId"];
+                        isOneToOne: false;
+                        referencedRelation: "shifts";
+                        referencedColumns: ["shiftId"];
+                    },
+                    {
+                        foreignKeyName: "shiftAssignments_staffEmail_fkey";
+                        columns: ["staffEmail"];
+                        isOneToOne: false;
+                        referencedRelation: "staff";
+                        referencedColumns: ["email"];
+                    },
+                ];
+            };
             subscriptions: {
                 Row: {
                     mailingList: string;
@@ -535,6 +595,13 @@ export type Database = {
             [_ in never]: never;
         };
         Enums: {
+            shiftRoleType:
+                | "CLEAN_UP"
+                | "DINNER"
+                | "CHECK_IN"
+                | "SPEAKER_BUDDY"
+                | "DEV_ON_CALL"
+                | "CHAIR_ON_CALL";
             committeeNames:
                 | "CONTENT"
                 | "CORPORATE"
