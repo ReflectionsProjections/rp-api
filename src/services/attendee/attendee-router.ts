@@ -5,6 +5,7 @@ import {
     EventIdValidator,
 } from "./attendee-validators";
 import { SupabaseDB } from "../../database";
+import { Tiers, IconColors } from "./attendee-schema";
 import RoleChecker from "../../middleware/role-checker";
 import { Role } from "../auth/auth-models";
 import { generateQrHash, getCurrentDay } from "../checkin/checkin-utils";
@@ -155,14 +156,8 @@ attendeeRouter.post("/", async (req, res) => {
         favoriteEvents: [],
         puzzlesCompleted: [],
         tags: tags,
-        isEligibleTshirt: false,
-        isEligibleCap: false,
-        isEligibleTote: false,
-        isEligibleButton: false,
-        hasRedeemedTshirt: false,
-        hasRedeemedCap: false,
-        hasRedeemedTote: false,
-        hasRedeemedButton: false,
+        currentTier: Tiers.Enum.TIER1,
+        icon: IconColors.Enum.RED,
         hasPriorityMon: false,
         hasPriorityTue: false,
         hasPriorityWed: false,

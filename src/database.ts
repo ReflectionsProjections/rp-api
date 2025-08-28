@@ -57,10 +57,16 @@ export const SupabaseDB = {
     },
 };
 
-export const RoleTypes: Record<
-    string,
-    Database["public"]["Enums"]["roleType"]
-> = {
+// Common type exports for consistency across the application
+export type TierType = Database["public"]["Enums"]["tierType"];
+export type IconColorType = Database["public"]["Enums"]["iconColorType"];
+export type RoleType = Database["public"]["Enums"]["roleType"];
+export type CommitteeType = Database["public"]["Enums"]["committeeNames"];
+export type EventType = Database["public"]["Enums"]["eventType"];
+export type StaffAttendanceType =
+    Database["public"]["Enums"]["staffAttendanceType"];
+
+export const RoleTypes: Record<RoleType, RoleType> = {
     USER: "USER",
     STAFF: "STAFF",
     ADMIN: "ADMIN",
@@ -68,15 +74,29 @@ export const RoleTypes: Record<
     PUZZLEBANG: "PUZZLEBANG",
 };
 
-export const CommitteeTypes: Record<
-    string,
-    Database["public"]["Enums"]["committeeNames"]
-> = {
+export const CommitteeTypes: Record<string, CommitteeType> = {
     CONTENT: "CONTENT",
     CORPORATE: "CORPORATE",
     DESIGN: "DESIGN",
     DEV: "DEV",
-    FULLTEAM: "FULL TEAM",
+    ["FULL TEAM"]: "FULL TEAM",
     MARKETING: "MARKETING",
     OPERATIONS: "OPERATIONS",
+};
+
+export const TierTypes: Record<TierType, TierType> = {
+    TIER1: "TIER1",
+    TIER2: "TIER2",
+    TIER3: "TIER3",
+};
+
+export const IconColorTypes: Record<IconColorType, IconColorType> = {
+    BLUE: "BLUE",
+    RED: "RED",
+    GREEN: "GREEN",
+    YELLOW: "YELLOW",
+    PINK: "PINK",
+    BLACK: "BLACK",
+    PURPLE: "PURPLE",
+    ORANGE: "ORANGE",
 };

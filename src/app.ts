@@ -1,5 +1,4 @@
 import express from "express";
-import fs from "fs";
 import { StatusCodes } from "http-status-codes";
 import { Config, EnvironmentEnum } from "./config";
 import { isTest } from "./utilities";
@@ -47,13 +46,6 @@ app.disable("etag");
 app.use(cors());
 
 // Logs
-const date = new Date();
-const logDir = `${Config.LOG_DIR}/${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}`;
-fs.mkdirSync(logDir, { recursive: true });
-const accessLogStream = fs.createWriteStream(`${logDir}/${process.pid}.log`, {
-    flags: "a",
-});
-
 switch (Config.ENV) {
     case EnvironmentEnum.TESTING:
         break;
@@ -61,7 +53,11 @@ switch (Config.ENV) {
         app.use(morgan("dev"));
         break;
     case EnvironmentEnum.PRODUCTION:
-        app.use(morgan("combined", { stream: accessLogStream }));
+        app.use(
+            morgan(
+                ':remote-addr - :remote-user ":method :url HTTP/:http-version" :status :res[content-length] ":referrer" ":user-agent"'
+            )
+        );
         break;
 }
 

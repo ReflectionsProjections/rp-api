@@ -64,6 +64,7 @@ export type Database = {
             };
             attendees: {
                 Row: {
+                    currentTier: Database["public"]["Enums"]["tierType"];
                     favoriteEvents: string[];
                     hasPriorityFri: boolean;
                     hasPriorityMon: boolean;
@@ -72,20 +73,14 @@ export type Database = {
                     hasPriorityThu: boolean;
                     hasPriorityTue: boolean;
                     hasPriorityWed: boolean;
-                    hasRedeemedButton: boolean;
-                    hasRedeemedCap: boolean;
-                    hasRedeemedTote: boolean;
-                    hasRedeemedTshirt: boolean;
-                    isEligibleButton: boolean;
-                    isEligibleCap: boolean;
-                    isEligibleTote: boolean;
-                    isEligibleTshirt: boolean;
+                    icon: Database["public"]["Enums"]["iconColorType"];
                     points: number;
                     puzzlesCompleted: string[];
                     tags: string[];
                     userId: string;
                 };
                 Insert: {
+                    currentTier?: Database["public"]["Enums"]["tierType"];
                     favoriteEvents?: string[];
                     hasPriorityFri?: boolean;
                     hasPriorityMon?: boolean;
@@ -94,20 +89,14 @@ export type Database = {
                     hasPriorityThu?: boolean;
                     hasPriorityTue?: boolean;
                     hasPriorityWed?: boolean;
-                    hasRedeemedButton?: boolean;
-                    hasRedeemedCap?: boolean;
-                    hasRedeemedTote?: boolean;
-                    hasRedeemedTshirt?: boolean;
-                    isEligibleButton?: boolean;
-                    isEligibleCap?: boolean;
-                    isEligibleTote?: boolean;
-                    isEligibleTshirt?: boolean;
+                    icon?: Database["public"]["Enums"]["iconColorType"];
                     points?: number;
                     puzzlesCompleted?: string[];
                     tags?: string[];
                     userId: string;
                 };
                 Update: {
+                    currentTier?: Database["public"]["Enums"]["tierType"];
                     favoriteEvents?: string[];
                     hasPriorityFri?: boolean;
                     hasPriorityMon?: boolean;
@@ -116,14 +105,7 @@ export type Database = {
                     hasPriorityThu?: boolean;
                     hasPriorityTue?: boolean;
                     hasPriorityWed?: boolean;
-                    hasRedeemedButton?: boolean;
-                    hasRedeemedCap?: boolean;
-                    hasRedeemedTote?: boolean;
-                    hasRedeemedTshirt?: boolean;
-                    isEligibleButton?: boolean;
-                    isEligibleCap?: boolean;
-                    isEligibleTote?: boolean;
-                    isEligibleTshirt?: boolean;
+                    icon?: Database["public"]["Enums"]["iconColorType"];
                     points?: number;
                     puzzlesCompleted?: string[];
                     tags?: string[];
@@ -583,8 +565,18 @@ export type Database = {
                 | "PARTNERS"
                 | "MEALS"
                 | "CHECKIN";
+            iconColorType:
+                | "BLUE"
+                | "RED"
+                | "GREEN"
+                | "YELLOW"
+                | "PINK"
+                | "BLACK"
+                | "PURPLE"
+                | "ORANGE";
             roleType: "USER" | "STAFF" | "ADMIN" | "CORPORATE" | "PUZZLEBANG";
             staffAttendanceType: "PRESENT" | "EXCUSED" | "ABSENT";
+            tierType: "TIER1" | "TIER2" | "TIER3";
         };
         CompositeTypes: {
             [_ in never]: never;
@@ -735,8 +727,19 @@ export const Constants = {
                 "MEALS",
                 "CHECKIN",
             ],
+            iconColorType: [
+                "BLUE",
+                "RED",
+                "GREEN",
+                "YELLOW",
+                "PINK",
+                "BLACK",
+                "PURPLE",
+                "ORANGE",
+            ],
             roleType: ["USER", "STAFF", "ADMIN", "CORPORATE", "PUZZLEBANG"],
             staffAttendanceType: ["PRESENT", "EXCUSED", "ABSENT"],
+            tierType: ["TIER1", "TIER2", "TIER3"],
         },
     },
 } as const;

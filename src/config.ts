@@ -86,6 +86,7 @@ export const Config = {
     QR_HASH_SECRET: getEnv("QR_HASH_SECRET"),
     WEB_REGISTER_ROUTE: `${WEB_BASE}/register`,
     WEB_RESUME_ROUTE: `${WEB_BASE}/resume`,
+    EMAIL_HEADER_HREF: `${WEB_BASE}/email_header.png`,
     OUTGOING_EMAIL_ADDRESSES: z.enum(["no-reply@reflectionsprojections.org"]),
     LOG_DIR:
         env === EnvironmentEnum.PRODUCTION ? "/home/ubuntu/logs" : "./logs",
