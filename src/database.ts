@@ -49,6 +49,9 @@ export const SupabaseDB = {
     get SUBSCRIPTIONS() {
         return supabase.from("subscriptions");
     },
+    get LEADERBOARD_SUBMISSIONS() {
+        return supabase.from("leaderboardSubmissions");
+    },
 };
 
 // Common type exports for consistency across the application
