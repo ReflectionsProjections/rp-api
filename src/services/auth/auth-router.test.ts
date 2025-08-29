@@ -1,9 +1,11 @@
 import {
     delAsAdmin,
     delAsStaff,
+    get,
     getAsAdmin,
     getAsStaff,
     getAsUser,
+    getAsCorporate,
     post,
     postAsAdmin,
     postAsStaff,
@@ -706,5 +708,59 @@ describe("GET /auth/:ROLE", () => {
             StatusCodes.FORBIDDEN
         );
         expect(res.body).toHaveProperty("error", "Forbidden");
+    });
+});
+
+describe("GET /auth/staff", () => {
+    it("should get all staff userIds for CORPORATE role", async () => {
+        const res = await getAsCorporate("/auth/staff").expect(StatusCodes.OK);
+        expect(res.body).toEqual([OTHER_USER.userId]);
+    });
+
+    it("should get all staff userIds for STAFF role", async () => {
+        const res = await getAsStaff("/auth/staff").expect(StatusCodes.OK);
+        expect(res.body).toEqual([OTHER_USER.userId]);
+    });
+
+    it("should return empty array when no staff users exist", async () => {
+        await SupabaseDB.AUTH_ROLES.delete()
+            .eq("role", Role.Enum.STAFF)
+            .throwOnError();
+
+        const res = await getAsCorporate("/auth/staff").expect(StatusCodes.OK);
+        expect(res.body).toEqual([]);
+    });
+
+    it("should return multiple staff userIds when multiple staff exist", async () => {
+        const anotherStaffUser = {
+            authId: "ijkl-mnop",
+            userId: "another-staff-123",
+            displayName: "Another Staff",
+            email: "another@staff.com",
+        } satisfies AuthInfo;
+
+        await SupabaseDB.AUTH_INFO.insert(anotherStaffUser);
+        await SupabaseDB.AUTH_ROLES.insert({
+            userId: anotherStaffUser.userId,
+            role: Role.Enum.STAFF,
+        });
+
+        const res = await getAsCorporate("/auth/staff").expect(StatusCodes.OK);
+        expect(res.body).toEqual(
+            expect.arrayContaining([OTHER_USER.userId, anotherStaffUser.userId])
+        );
+        expect(res.body).toHaveLength(2);
+    });
+
+    it("should require CORPORATE role", async () => {
+        const res = await getAsUser("/auth/staff").expect(
+            StatusCodes.FORBIDDEN
+        );
+        expect(res.body).toHaveProperty("error", "Forbidden");
+    });
+
+    it("should require user to be authenticated", async () => {
+        const res = await get("/auth/staff").expect(StatusCodes.UNAUTHORIZED);
+        expect(res.body).toHaveProperty("error", "NoJWT");
     });
 });

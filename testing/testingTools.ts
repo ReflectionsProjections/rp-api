@@ -55,6 +55,10 @@ export function getAsAdmin(url: string): request.Test {
     return get(url, Role.enum.ADMIN);
 }
 
+export function getAsCorporate(url: string): request.Test {
+    return get(url, Role.enum.CORPORATE);
+}
+
 export function post(url: string, role?: RoleType): request.Test {
     return setRole(request(app()).post(url), role);
 }
@@ -82,6 +86,10 @@ export function postAsAdmin(url: string): request.Test {
     return post(url, Role.enum.ADMIN);
 }
 
+export function postAsCorporate(url: string): request.Test {
+    return post(url, Role.enum.CORPORATE);
+}
+
 export function put(url: string, role?: RoleType): request.Test {
     return setRole(request(app()).put(url), role);
 }
@@ -96,6 +104,10 @@ export function putAsStaff(url: string): request.Test {
 
 export function putAsAdmin(url: string): request.Test {
     return put(url, Role.enum.ADMIN);
+}
+
+export function putAsCorporate(url: string): request.Test {
+    return put(url, Role.enum.CORPORATE);
 }
 
 export function patch(url: string, role?: RoleType): request.Test {
@@ -114,6 +126,10 @@ export function patchAsAdmin(url: string): request.Test {
     return patch(url, Role.enum.ADMIN);
 }
 
+export function patchAsCorporate(url: string): request.Test {
+    return patch(url, Role.enum.CORPORATE);
+}
+
 export function del(url: string, role?: RoleType): request.Test {
     return setRole(request(app()).delete(url), role);
 }
@@ -128,6 +144,10 @@ export function delAsStaff(url: string): request.Test {
 
 export function delAsAdmin(url: string): request.Test {
     return del(url, Role.enum.ADMIN);
+}
+
+export function delAsCorporate(url: string): request.Test {
+    return del(url, Role.enum.CORPORATE);
 }
 
 export async function clearSupabaseTables(supabase: SupabaseClient) {
