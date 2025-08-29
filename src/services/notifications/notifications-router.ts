@@ -14,6 +14,7 @@ const notificationsRouter = Router();
 
 // Register user’s device identifier under their userId
 // Request body: deviceId: The FCM device token from the client app.
+
 notificationsRouter.post(
     "/register",
     RoleChecker([Role.enum.USER]),
