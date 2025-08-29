@@ -130,40 +130,13 @@ const BASE_TEST_ATTENDEE = {
 
 beforeEach(async () => {
     try {
-        await SupabaseDB.EVENT_ATTENDANCES.delete()
-            .neq("attendee", "NONEXISTENT_VALUE_THAT_WILL_NEVER_EXIST")
-            .throwOnError();
-        await SupabaseDB.ATTENDEE_ATTENDANCES.delete()
-            .neq("userId", dummyUUID)
-            .throwOnError();
-        await SupabaseDB.EVENTS.delete()
-            .neq("eventId", dummyUUID)
-            .throwOnError();
-        await SupabaseDB.ATTENDEES.delete()
-            .neq("userId", dummyUUID)
-            .throwOnError();
-        await SupabaseDB.REGISTRATIONS.delete()
-            .neq("userId", dummyUUID)
-            .throwOnError();
-        await SupabaseDB.AUTH_ROLES.delete()
-            .eq("userId", dummyUUID)
-            .throwOnError();
-        await SupabaseDB.AUTH_INFO.delete()
-            .eq("userId", dummyUUID)
-            .throwOnError();
-
-        await SupabaseDB.AUTH_ROLES.delete()
-            .eq("userId", TESTER.userId)
-            .throwOnError();
-        await SupabaseDB.AUTH_INFO.delete()
-            .eq("userId", TESTER.userId)
-            .throwOnError();
-        await SupabaseDB.REGISTRATIONS.delete()
-            .eq("userId", TESTER.userId)
-            .throwOnError();
-        await SupabaseDB.ATTENDEES.delete()
-            .eq("userId", TESTER.userId)
-            .throwOnError();
+        await SupabaseDB.EVENT_ATTENDANCES.delete().throwOnError();
+        await SupabaseDB.ATTENDEE_ATTENDANCES.delete().throwOnError();
+        await SupabaseDB.EVENTS.delete().throwOnError();
+        await SupabaseDB.ATTENDEES.delete().throwOnError();
+        await SupabaseDB.REGISTRATIONS.delete().throwOnError();
+        await SupabaseDB.AUTH_ROLES.delete().throwOnError();
+        await SupabaseDB.AUTH_INFO.delete().throwOnError();
     } catch (error) {
         console.log("Cleanup in beforeEach (expected):", error);
     }

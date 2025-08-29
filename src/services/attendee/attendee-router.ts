@@ -50,7 +50,7 @@ attendeeRouter.post(
             "deviceId"
         )
             .eq("userId", userId)
-            .single()
+            .maybeSingle()
             .throwOnError();
 
         if (device?.deviceId) {
@@ -100,7 +100,7 @@ attendeeRouter.delete(
             "deviceId"
         )
             .eq("userId", userId)
-            .single()
+            .maybeSingle()
             .throwOnError();
 
         if (device?.deviceId) {
