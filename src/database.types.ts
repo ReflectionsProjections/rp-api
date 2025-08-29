@@ -574,7 +574,7 @@ export type Database = {
                 | "BLACK"
                 | "PURPLE"
                 | "ORANGE";
-            roleType: "USER" | "STAFF" | "ADMIN" | "CORPORATE" | "PUZZLEBANG";
+            roleType: "USER" | "STAFF" | "ADMIN" | "CORPORATE";
             staffAttendanceType: "PRESENT" | "EXCUSED" | "ABSENT";
             tierType: "TIER1" | "TIER2" | "TIER3";
         };
@@ -737,7 +737,7 @@ export const Constants = {
                 "PURPLE",
                 "ORANGE",
             ],
-            roleType: ["USER", "STAFF", "ADMIN", "CORPORATE", "PUZZLEBANG"],
+            roleType: ["USER", "STAFF", "ADMIN", "CORPORATE"],
             staffAttendanceType: ["PRESENT", "EXCUSED", "ABSENT"],
             tierType: ["TIER1", "TIER2", "TIER3"],
         },

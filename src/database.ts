@@ -71,7 +71,6 @@ export const RoleTypes: Record<RoleType, RoleType> = {
     STAFF: "STAFF",
     ADMIN: "ADMIN",
     CORPORATE: "CORPORATE",
-    PUZZLEBANG: "PUZZLEBANG",
 };
 
 export const CommitteeTypes: Record<string, CommitteeType> = {
