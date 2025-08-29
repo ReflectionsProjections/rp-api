@@ -9,7 +9,6 @@ import { v4 as uuidv4 } from "uuid";
 import { getCurrentDay } from "../checkin/checkin-utils";
 
 const otherEvent = uuidv4();
-const dummyUUID = "00000000-0000-0000-0000-000000000000";
 const TEST_AUTH_ID = "test-auth-id";
 
 async function createTestEvent() {
