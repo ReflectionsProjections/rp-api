@@ -71,7 +71,7 @@ notificationsRouter.post(
 // Request body: topicName
 notificationsRouter.post(
     "/custom-topic",
-    // RoleChecker([Role.enum.ADMIN]),
+    RoleChecker([Role.enum.ADMIN]),
     async (req, res) => {
         const { topicName } = req.body;
         await SupabaseDB.CUSTOM_TOPICS.insert({
@@ -89,7 +89,7 @@ notificationsRouter.post(
 // Request body: userId, topicName
 notificationsRouter.post(
     "/manual-users-topic", // open to suggestions for a better name
-    // RoleChecker([Role.enum.ADMIN]),
+    RoleChecker([Role.enum.ADMIN]),
     async (req, res) => {
         const { userId, topicName } = manualTopicSchema.parse(req.body);
         // get the user's deviceId
@@ -116,7 +116,7 @@ notificationsRouter.post(
 // Request body: userId, topicName
 notificationsRouter.delete(
     "/manual-users-topic", // also open to suggestions for a better name here
-    // RoleChecker([Role.enum.ADMIN]),
+    RoleChecker([Role.enum.ADMIN]),
     async (req, res) => {
         const { userId, topicName } = manualTopicSchema.parse(req.body);
         // get the user's deviceId
@@ -146,7 +146,7 @@ notificationsRouter.delete(
 // any custom topics are in the customTopics table
 notificationsRouter.get(
     "/topics",
-    // RoleChecker([Role.enum.ADMIN]),
+    RoleChecker([Role.enum.ADMIN]),
     async (req, res) => {
         const staticTopics = ["allUsers"]; // add any other static topics to this array in future
 

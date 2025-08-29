@@ -64,6 +64,7 @@ jobs:
       - name: Create .env file
         run: |
           cat <<EOF > .env
+          ENV=GITHUB_CI
           ANON_KEY="${{ secrets.ANON_KEY }}"
           SERVICE_ROLE_KEY="${{ secrets.SERVICE_ROLE_KEY }}"
           JWT_SECRET="${{ secrets.JWT_SECRET }}"
@@ -75,14 +76,14 @@ jobs:
           POSTGRES_PORT="${{ vars.POSTGRES_PORT }}"
           TYPE=service_account
           PROJECT_ID=reflections-projections
-          PRIVATE_KEY_ID={{secrets.PRIVATE_KEY_ID}}
-          PRIVATE_KEY={{ secrets.PRIVATE_KEY }}
-          CLIENT_EMAIL={{ secrets.CLIENT_EMAIL }}
-          CLIENT_ID={{ secrets.CLIENT_ID }}
-          AUTH_URI={{ secrets.AUTH_URI }}
-          TOKEN_URI={{ secrets.TOKEN_URI }}
-          AUTH_PROVIDER_X509_CERT_URL={{ secrets.AUTH_PROVIDER_X509_CERT_URL }}
-          CLIENT_X509_CERT_URL={{ secrets.CLIENT_X509_CERT_URL }}
+          PRIVATE_KEY_ID=${{secrets.PRIVATE_KEY_ID}}
+          PRIVATE_KEY=${{ secrets.PRIVATE_KEY }}
+          CLIENT_EMAIL=${{ secrets.CLIENT_EMAIL }}
+          CLIENT_ID=${{ secrets.CLIENT_ID }}
+          AUTH_URI=${{ secrets.AUTH_URI }}
+          TOKEN_URI=${{ secrets.TOKEN_URI }}
+          AUTH_PROVIDER_X509_CERT_URL=${{ secrets.AUTH_PROVIDER_X509_CERT_URL }}
+          CLIENT_X509_CERT_URL=${{ secrets.CLIENT_X509_CERT_URL }}
           UNIVERSE_DOMAIN=googleapis.com
           PGRST_DB_SCHEMAS="public"
           JWT_EXPIRY="3600"
