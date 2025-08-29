@@ -711,18 +711,14 @@ describe("GET /auth/:ROLE", () => {
     });
 });
 
-describe("GET /auth/staff/users", () => {
+describe("GET /auth/staff", () => {
     it("should get all staff userIds for CORPORATE role", async () => {
-        const res = await getAsCorporate("/auth/staff/users").expect(
-            StatusCodes.OK
-        );
+        const res = await getAsCorporate("/auth/staff").expect(StatusCodes.OK);
         expect(res.body).toEqual([OTHER_USER.userId]);
     });
 
     it("should get all staff userIds for STAFF role", async () => {
-        const res = await getAsStaff("/auth/staff/users").expect(
-            StatusCodes.OK
-        );
+        const res = await getAsStaff("/auth/staff").expect(StatusCodes.OK);
         expect(res.body).toEqual([OTHER_USER.userId]);
     });
 
@@ -731,9 +727,7 @@ describe("GET /auth/staff/users", () => {
             .eq("role", Role.Enum.STAFF)
             .throwOnError();
 
-        const res = await getAsCorporate("/auth/staff/users").expect(
-            StatusCodes.OK
-        );
+        const res = await getAsCorporate("/auth/staff").expect(StatusCodes.OK);
         expect(res.body).toEqual([]);
     });
 
@@ -751,9 +745,7 @@ describe("GET /auth/staff/users", () => {
             role: Role.Enum.STAFF,
         });
 
-        const res = await getAsCorporate("/auth/staff/users").expect(
-            StatusCodes.OK
-        );
+        const res = await getAsCorporate("/auth/staff").expect(StatusCodes.OK);
         expect(res.body).toEqual(
             expect.arrayContaining([OTHER_USER.userId, anotherStaffUser.userId])
         );
@@ -761,16 +753,14 @@ describe("GET /auth/staff/users", () => {
     });
 
     it("should require CORPORATE role", async () => {
-        const res = await getAsUser("/auth/staff/users").expect(
+        const res = await getAsUser("/auth/staff").expect(
             StatusCodes.FORBIDDEN
         );
         expect(res.body).toHaveProperty("error", "Forbidden");
     });
 
     it("should require user to be authenticated", async () => {
-        const res = await get("/auth/staff/users").expect(
-            StatusCodes.UNAUTHORIZED
-        );
+        const res = await get("/auth/staff").expect(StatusCodes.UNAUTHORIZED);
         expect(res.body).toHaveProperty("error", "NoJWT");
     });
 });
