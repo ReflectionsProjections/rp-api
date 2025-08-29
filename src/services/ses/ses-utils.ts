@@ -1,11 +1,12 @@
 import { ses, Config } from "../../config";
+import { SendEmailCommand, SendEmailCommandOutput } from "@aws-sdk/client-ses";
 
 export function sendManyEmails(
     emailIds: string[],
     subject: string,
     emailBody: string
-): Promise<AWS.SES.SendEmailResponse>[] {
-    const emailPromises: Promise<AWS.SES.SendEmailResponse>[] = [];
+): Promise<SendEmailCommandOutput>[] {
+    const emailPromises: Promise<SendEmailCommandOutput>[] = [];
     for (let i = 0; i < emailIds.length; i++) {
         emailPromises.push(sendEmail(emailIds[i], subject, emailBody));
     }
@@ -16,9 +17,9 @@ export function sendEmail(
     emailId: string,
     subject: string,
     emailBody: string
-): Promise<AWS.SES.SendEmailResponse> {
-    return ses
-        .sendEmail({
+): Promise<SendEmailCommandOutput> {
+    return ses.send(
+        new SendEmailCommand({
             Destination: {
                 ToAddresses: [emailId],
             },
@@ -36,16 +37,16 @@ export function sendEmail(
                 "no-reply@reflectionsprojections.org"
             ],
         })
-        .promise();
+    );
 }
 
 export function sendHTMLEmail(
     emailId: string,
     subject: string,
     emailHtml: string
-): Promise<AWS.SES.SendEmailResponse> {
-    return ses
-        .sendEmail({
+): Promise<SendEmailCommandOutput> {
+    return ses.send(
+        new SendEmailCommand({
             Destination: {
                 ToAddresses: [emailId],
             },
@@ -63,5 +64,5 @@ export function sendHTMLEmail(
                 "no-reply@reflectionsprojections.org"
             ],
         })
-        .promise();
+    );
 }

@@ -2,7 +2,7 @@ import dotenv from "dotenv";
 
 import { z } from "zod";
 
-import AWS from "aws-sdk";
+import { SES } from "@aws-sdk/client-ses";
 
 dotenv.config();
 
@@ -103,10 +103,13 @@ export const Config = {
         env === EnvironmentEnum.PRODUCTION ? "/home/ubuntu/logs" : "./logs",
 };
 
-export const ses = new AWS.SES({
+export const ses = new SES({
     region: Config.S3_REGION,
-    accessKeyId: Config.S3_ACCESS_KEY,
-    secretAccessKey: Config.S3_SECRET_KEY,
+
+    credentials: {
+        accessKeyId: Config.S3_ACCESS_KEY,
+        secretAccessKey: Config.S3_SECRET_KEY,
+    },
 });
 
 export default Config;

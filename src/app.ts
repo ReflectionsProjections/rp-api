@@ -2,7 +2,6 @@ import express from "express";
 import { StatusCodes } from "http-status-codes";
 import { Config, EnvironmentEnum } from "./config";
 import { isTest } from "./utilities";
-import AWS from "aws-sdk";
 
 // import databaseMiddleware from "./middleware/database-middleware";
 // import customCors from "./middleware/cors-middleware";
@@ -25,12 +24,6 @@ import puzzlebangRouter from "./services/puzzlebang/puzzlebang-router";
 import meetingsRouter from "./services/meetings/meetings-router";
 
 import cors from "cors";
-
-AWS.config.update({
-    region: Config.S3_REGION,
-    accessKeyId: Config.S3_ACCESS_KEY,
-    secretAccessKey: Config.S3_SECRET_KEY,
-});
 
 const app = express();
 app.enable("trust proxy");
