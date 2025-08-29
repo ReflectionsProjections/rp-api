@@ -76,16 +76,17 @@ jobs:
           PGRST_DB_SCHEMAS="public"
           JWT_EXPIRY="3600"
           FORCE_COLOR="true"
-          TYPE=${{ secrets.TYPE }}
+          TYPE="${{ secrets.TYPE }}"
           PROJECT_ID="${{ secrets.PROJECT_ID }}"
-          PRIVATE_KEY_ID=${{ secrets.PRIVATE_KEY_ID }}
-          PRIVATE_KEY=${{ secrets.PRIVATE_KEY }}
-          CLIENT_ID=${{ secrets.CLIENT_ID }}
-          AUTH_URI=${ secrets.AUTH_URI }
-          TOKEN_URI=${ secrets.TOKEN_URI }
-          AUTH_PROVIDER_X509_CERT_URL=${ secrets.AUTH_PROVIDER_X509_CERT_URL }
-          CLIENT_X509_CERT_URL=${ secrets.CLIENT_X509_CERT_URL }
-          UNIVERSE_DOMAIN=${ secrets.UNIVERSE_DOMAIN }
+          PRIVATE_KEY_ID="${{ secrets.PRIVATE_KEY_ID }}"
+          PRIVATE_KEY="${{ secrets.PRIVATE_KEY }}"
+          CLIENT_ID="${{ secrets.CLIENT_ID }}"
+          AUTH_URI="${{ secrets.AUTH_URI }}"
+          TOKEN_URI="${{ secrets.TOKEN_URI }}"
+          AUTH_PROVIDER_X509_CERT_URL="${{ secrets.AUTH_PROVIDER_X509_CERT_URL }}"
+          CLIENT_X509_CERT_URL="${{ secrets.CLIENT_X509_CERT_URL }}"
+          UNIVERSE_DOMAIN="${{ secrets.UNIVERSE_DOMAIN }}"
+          CLIENT_EMAIL="${{ secrets.CLIENT_EMAIL }}"
           EOF
       - name: Pull
         run: docker compose -f docker-compose.test.yml pull
