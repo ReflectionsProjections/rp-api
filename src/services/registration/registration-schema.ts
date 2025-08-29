@@ -49,4 +49,6 @@ const RegistrationValidator = z.object({
     tags: z.array(z.string()),
 });
 
+export type Registration = z.infer<typeof RegistrationValidator>;
+
 export { RegistrationDraftValidator, RegistrationValidator };
