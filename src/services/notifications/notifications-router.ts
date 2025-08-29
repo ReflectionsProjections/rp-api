@@ -43,7 +43,7 @@ notificationsRouter.post(
 // Request body: title, body. (title and body of the notification)
 notificationsRouter.post(
     "/topics/:topicName",
-    // RoleChecker([Role.enum.ADMIN]), // for now thinking that only admins get to use this
+    RoleChecker([Role.enum.ADMIN]), // for now thinking that only admins get to use this
     async (req, res) => {
         sendToTopicSchema.parse(req.body); // make sure it fits the validator
 
