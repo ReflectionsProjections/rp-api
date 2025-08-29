@@ -26,27 +26,23 @@ const leaderboardRouter = Router();
  * Authorization: All authenticated users
  */
 
-leaderboardRouter.get(
-    "/daily",
-    RoleChecker([]),
-    async (req, res) => {
-        const { day, n } = LeaderboardRequestValidator.parse({
-            day: req.query.day,
-            n: req.query.n
-        });
+leaderboardRouter.get("/daily", RoleChecker([]), async (req, res) => {
+    const { day, n } = LeaderboardRequestValidator.parse({
+        day: req.query.day,
+        n: req.query.n,
+    });
 
-        // Get daily leaderboard data
-        const leaderboard = await getDailyLeaderboard(day, n);
+    // Get daily leaderboard data
+    const leaderboard = await getDailyLeaderboard(day, n);
 
-        const response = PreviewLeaderboardResponseValidator.parse({
-            leaderboard,
-            day,
-            count: n
-        });
+    const response = PreviewLeaderboardResponseValidator.parse({
+        leaderboard,
+        day,
+        count: n,
+    });
 
-        return res.status(StatusCodes.OK).json(response);
-    }
-);
+    return res.status(StatusCodes.OK).json(response);
+});
 
 /**
  * GET /leaderboard/global
@@ -54,25 +50,21 @@ leaderboardRouter.get(
  * Query params: n (number of winners)
  * Authorization: All authenticated users
  */
-leaderboardRouter.get(
-    "/global",
-    RoleChecker([]),
-    async (req, res) => {
-        const { n } = GlobalLeaderboardRequestValidator.parse({
-            n: req.query.n
-        });
+leaderboardRouter.get("/global", RoleChecker([]), async (req, res) => {
+    const { n } = GlobalLeaderboardRequestValidator.parse({
+        n: req.query.n,
+    });
 
-        // Get global leaderboard data
-        const leaderboard = await getGlobalLeaderboard(n);
+    // Get global leaderboard data
+    const leaderboard = await getGlobalLeaderboard(n);
 
-        const response = GlobalLeaderboardResponseValidator.parse({
-            leaderboard,
-            count: n
-        });
+    const response = GlobalLeaderboardResponseValidator.parse({
+        leaderboard,
+        count: n,
+    });
 
-        return res.status(StatusCodes.OK).json(response);
-    }
-);
+    return res.status(StatusCodes.OK).json(response);
+});
 
 /**
  * POST /leaderboard/submit
@@ -95,10 +87,14 @@ leaderboardRouter.post(
 
         // Promote winners to next tier
         const entriesProcessed = await promoteUsersToNextTier(
-            leaderboard.map(entry => entry.userId)
+            leaderboard.map((entry) => entry.userId)
         );
 
-        const { submissionId, submittedAt } = await recordLeaderboardSubmission(day, n, submittedBy);
+        const { submissionId, submittedAt } = await recordLeaderboardSubmission(
+            day,
+            n,
+            submittedBy
+        );
 
         // Structure response according to schema
         const response = SubmitLeaderboardResponseValidator.parse({
@@ -108,7 +104,7 @@ leaderboardRouter.post(
             entriesProcessed,
             submissionId,
             submittedAt,
-            submittedBy
+            submittedBy,
         });
 
         return res.status(StatusCodes.OK).json(response);
