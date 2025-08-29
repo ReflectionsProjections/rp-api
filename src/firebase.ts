@@ -5,7 +5,9 @@ import Config from "./config";
 dotenv.config();
 
 // Only initialize and configure in non-CI environments
-if (Config.ENV !== "GITHUB_CI") {
+import { EnvironmentEnum } from "./config";
+
+if (Config.ENV !== EnvironmentEnum.GITHUB_CI) {
     const serviceAccount = {
         type: process.env.TYPE,
         project_id: process.env.PROJECT_ID,
