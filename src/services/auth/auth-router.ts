@@ -290,4 +290,17 @@ authRouter.get("/:ROLE", RoleChecker([Role.Enum.STAFF]), async (req, res) => {
     return res.status(StatusCodes.OK).json(userIds);
 });
 
+// Get staff user ids for resume book
+authRouter.get(
+    "/staff/users",
+    RoleChecker([Role.Enum.CORPORATE, Role.Enum.STAFF]),
+    async (req, res) => {
+        const { data } = await SupabaseDB.AUTH_ROLES.select("userId")
+            .eq("role", Role.Enum.STAFF)
+            .throwOnError();
+        const userIds = data.map((row: { userId: string }) => row.userId);
+        return res.status(StatusCodes.OK).json(userIds);
+    }
+);
+
 export default authRouter;
