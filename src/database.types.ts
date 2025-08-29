@@ -527,12 +527,49 @@ export type Database = {
                 };
                 Relationships: [];
             };
+            leaderboardSubmissions: {
+                Row: {
+                    submissionId: string;
+                    day: string;
+                    count: number;
+                    submittedAt: string;
+                    submittedBy: string;
+                };
+                Insert: {
+                    submissionId?: string;
+                    day: string;
+                    count: number;
+                    submittedAt?: string;
+                    submittedBy: string;
+                };
+                Update: {
+                    submissionId?: string;
+                    day?: string;
+                    count?: number;
+                    submittedAt?: string;
+                    submittedBy?: string;
+                };
+                Relationships: [
+                    {
+                        foreignKeyName: "leaderboard_submissions_submitted_by_fkey";
+                        columns: ["submittedBy"];
+                        isOneToOne: false;
+                        referencedRelation: "authInfo";
+                        referencedColumns: ["userId"];
+                    },
+                ];
+            };
         };
         Views: {
             [_ in never]: never;
         };
         Functions: {
-            [_ in never]: never;
+            promote_users_batch: {
+                Args: {
+                    user_ids: string[];
+                };
+                Returns: number;
+            };
         };
         Enums: {
             committeeNames:

@@ -111,6 +111,16 @@ CREATE TABLE public."events" (
     CONSTRAINT "events_pkey" PRIMARY KEY ("eventId")
 );
 
+CREATE TABLE public."leaderboardSubmissions" (
+    "submissionId" uuid DEFAULT gen_random_uuid() NOT NULL,
+    "day" date NOT NULL,
+    "count" integer NOT NULL,
+    "submittedAt" timestamp with time zone DEFAULT now() NOT NULL,
+    "submittedBy" character varying NOT NULL,
+    CONSTRAINT "leaderboardSubmissions_pkey" PRIMARY KEY ("submissionId"),
+    CONSTRAINT "leaderboardSubmissions_day_unique" UNIQUE ("day")
+);
+
 CREATE TABLE public."meetings" (
     "meetingId" uuid DEFAULT gen_random_uuid() NOT NULL,
     "committeeType" public."committeeNames" NOT NULL,
@@ -246,3 +256,37 @@ ALTER TABLE ONLY public."notifications"
 
 ALTER TABLE ONLY public."registrations"
     ADD CONSTRAINT "registrations_user_id_fkey" FOREIGN KEY ("userId") REFERENCES public."authInfo"("userId");
+
+ALTER TABLE ONLY public."leaderboardSubmissions"
+    ADD CONSTRAINT "leaderboard_submissions_submitted_by_fkey" FOREIGN KEY ("submittedBy") REFERENCES public."authInfo"("userId");
+
+-- PostgreSQL function for atomic tier promotions
+CREATE OR REPLACE FUNCTION public.promote_users_batch(user_ids text[])
+RETURNS int AS $$
+DECLARE
+    promoted_count int := 0;
+    tier1_count int := 0;
+    tier2_count int := 0;
+BEGIN
+    -- Promote TIER1 -> TIER2
+    UPDATE public."attendees" 
+    SET "currentTier" = 'TIER2'
+    WHERE "userId" = ANY(user_ids) 
+    AND "currentTier" = 'TIER1';
+    
+    GET DIAGNOSTICS tier1_count = ROW_COUNT;
+    
+    -- Promote TIER2 -> TIER3  
+    UPDATE public."attendees"
+    SET "currentTier" = 'TIER3' 
+    WHERE "userId" = ANY(user_ids)
+    AND "currentTier" = 'TIER2';
+    
+    GET DIAGNOSTICS tier2_count = ROW_COUNT;
+    
+    -- Return total promoted users
+    promoted_count := tier1_count + tier2_count;
+    
+    RETURN promoted_count;
+END;
+$$ LANGUAGE plpgsql;
