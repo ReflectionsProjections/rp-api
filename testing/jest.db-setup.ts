@@ -59,6 +59,12 @@ function mockSupabase(supabaseUrl: string, supabaseServiceKey: string) {
                 get SUBSCRIPTIONS() {
                     return supabase.from("subscriptions");
                 },
+                get CUSTOM_TOPICS() {
+                    return supabase.from("customTopics");
+                },
+                get NOTIFICATIONS() {
+                    return supabase.from("notifications");
+                },
             },
             __esModule: true,
         };

@@ -49,6 +49,12 @@ export const SupabaseDB = {
     get SUBSCRIPTIONS() {
         return supabase.from("subscriptions");
     },
+    get NOTIFICATIONS() {
+        return supabase.from("notifications");
+    },
+    get CUSTOM_TOPICS() {
+        return supabase.from("customTopics");
+    },
 };
 
 // Common type exports for consistency across the application

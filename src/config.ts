@@ -10,6 +10,7 @@ export enum EnvironmentEnum {
     PRODUCTION = "PRODUCTION",
     DEVELOPMENT = "DEVELOPMENT",
     TESTING = "TESTING",
+    GITHUB_CI = "GITHUB_CI",
 }
 
 export const Environment = z.nativeEnum(EnvironmentEnum);
