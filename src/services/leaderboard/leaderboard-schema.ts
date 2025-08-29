@@ -1,41 +1,47 @@
 import { z } from "zod";
+import { Tiers, IconColors } from "../attendee/attendee-schema";
 
 export const DayStringValidator = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, {
     message: "Day must be in YYYY-MM-DD format"
 });
 
+// Request validator for daily leaderboard endpoints
 export const LeaderboardRequestValidator = z.object({
     day: DayStringValidator,
     n: z.coerce.number().int().min(1)
 });
 
-export enum TierType {
-    TIER1 = "tier1",
-    TIER2 = "tier2", 
-    TIER3 = "tier3",
-    NONE = "none"
-}
+// Request validator for global leaderboard endpoint
+export const GlobalLeaderboardRequestValidator = z.object({
+    n: z.coerce.number().int().min(1)
+});
 
-export const TierTypeValidator = z.nativeEnum(TierType);
-
-// reuse for global and daily
+// Leaderboard entry - represents a single user in the leaderboard; reuse for global and daily
 export const LeaderboardEntryValidator = z.object({
     rank: z.number().int().min(1),
     userId: z.string(),
     displayName: z.string(),
     points: z.number().int().min(0),
-    icon: z.string(),
-    tier: z.string(),
+    currentTier: Tiers,
+    icon: IconColors,
 });
 
+// GET /daily response (preview)
 export const PreviewLeaderboardResponseValidator = z.object({
     leaderboard: z.array(LeaderboardEntryValidator),
     day: z.string(),
     count: z.number().int().min(1)
 });
 
+// GET /global response
+export const GlobalLeaderboardResponseValidator = z.object({
+    leaderboard: z.array(LeaderboardEntryValidator),
+    count: z.number().int().min(1)
+});
+
+// POST /submit response
 export const SubmitLeaderboardResponseValidator = z.object({
-    // adding leaderboard in the response here if possible
+    leaderboard: z.array(LeaderboardEntryValidator),
     day: z.string(),
     count: z.number().int().min(1),
     entriesProcessed: z.number().int().min(0),
@@ -44,8 +50,11 @@ export const SubmitLeaderboardResponseValidator = z.object({
     submittedBy: z.string(),
 });
 
+// Type exports
 export type LeaderboardRequest = z.infer<typeof LeaderboardRequestValidator>;
+export type GlobalLeaderboardRequest = z.infer<typeof GlobalLeaderboardRequestValidator>;
 export type LeaderboardEntry = z.infer<typeof LeaderboardEntryValidator>;
 export type PreviewLeaderboardResponse = z.infer<typeof PreviewLeaderboardResponseValidator>;
+export type GlobalLeaderboardResponse = z.infer<typeof GlobalLeaderboardResponseValidator>;
 export type SubmitLeaderboardResponse = z.infer<typeof SubmitLeaderboardResponseValidator>;
 
