@@ -713,12 +713,16 @@ describe("GET /auth/:ROLE", () => {
 
 describe("GET /auth/staff/users", () => {
     it("should get all staff userIds for CORPORATE role", async () => {
-        const res = await getAsCorporate("/auth/staff/users").expect(StatusCodes.OK);
+        const res = await getAsCorporate("/auth/staff/users").expect(
+            StatusCodes.OK
+        );
         expect(res.body).toEqual([OTHER_USER.userId]);
     });
 
     it("should get all staff userIds for STAFF role", async () => {
-        const res = await getAsStaff("/auth/staff/users").expect(StatusCodes.OK);
+        const res = await getAsStaff("/auth/staff/users").expect(
+            StatusCodes.OK
+        );
         expect(res.body).toEqual([OTHER_USER.userId]);
     });
 
@@ -727,7 +731,9 @@ describe("GET /auth/staff/users", () => {
             .eq("role", Role.Enum.STAFF)
             .throwOnError();
 
-        const res = await getAsCorporate("/auth/staff/users").expect(StatusCodes.OK);
+        const res = await getAsCorporate("/auth/staff/users").expect(
+            StatusCodes.OK
+        );
         expect(res.body).toEqual([]);
     });
 
@@ -745,7 +751,9 @@ describe("GET /auth/staff/users", () => {
             role: Role.Enum.STAFF,
         });
 
-        const res = await getAsCorporate("/auth/staff/users").expect(StatusCodes.OK);
+        const res = await getAsCorporate("/auth/staff/users").expect(
+            StatusCodes.OK
+        );
         expect(res.body).toEqual(
             expect.arrayContaining([OTHER_USER.userId, anotherStaffUser.userId])
         );
