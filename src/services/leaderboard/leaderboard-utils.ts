@@ -79,30 +79,28 @@ export async function getDailyLeaderboard(
     }
 
     // Step 5: Create leaderboard entries and sort
-    const leaderboardEntries: Array<LeaderboardEntry & { tempPoints: number }> =
-        attendees.map((attendee) => ({
-            rank: 0,
-            userId: attendee.userId,
-            displayName: attendee.authInfo.displayName,
-            points: userDailyPoints.get(attendee.userId) || 0,
-            currentTier: attendee.currentTier as TierType,
-            icon: attendee.icon as IconColorType,
-            tempPoints: userDailyPoints.get(attendee.userId) || 0,
-        }));
+    const leaderboardEntries: Array<LeaderboardEntry> = attendees.map((attendee) => ({
+        rank: 0, // Will be set after sorting
+        userId: attendee.userId,
+        displayName: attendee.authInfo.displayName,
+        points: userDailyPoints.get(attendee.userId) || 0,
+        currentTier: attendee.currentTier as TierType,
+        icon: attendee.icon as IconColorType,
+    }));
 
     // Sort by points descending
-    leaderboardEntries.sort((a, b) => b.tempPoints - a.tempPoints);
+    leaderboardEntries.sort((a, b) => b.points - a.points);
 
     // Step 6: Assign ranks (handle ties)
     let currentRank = 1;
     let previousPoints = -1;
 
     const rankedEntries = leaderboardEntries.map((entry, index) => {
-        if (entry.tempPoints !== previousPoints) {
+        if (entry.points !== previousPoints) {
             currentRank = index + 1;
         }
 
-        previousPoints = entry.tempPoints;
+        previousPoints = entry.points;
 
         return {
             rank: currentRank,
