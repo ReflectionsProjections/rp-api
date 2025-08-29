@@ -278,6 +278,19 @@ authRouter.get("/team", RoleChecker([Role.Enum.ADMIN]), async (req, res) => {
     }
 });
 
+// Get staff user ids for resume book
+authRouter.get(
+    "/staff",
+    RoleChecker([Role.Enum.CORPORATE, Role.Enum.STAFF]),
+    async (req, res) => {
+        const { data } = await SupabaseDB.AUTH_ROLES.select("userId")
+            .eq("role", Role.Enum.STAFF)
+            .throwOnError();
+        const userIds = data.map((row: { userId: string }) => row.userId);
+        return res.status(StatusCodes.OK).json(userIds);
+    }
+);
+
 // Get a list of user ids by role (staff only endpoint)
 authRouter.get("/:ROLE", RoleChecker([Role.Enum.STAFF]), async (req, res) => {
     // Validate the role using Zod schema
@@ -289,18 +302,5 @@ authRouter.get("/:ROLE", RoleChecker([Role.Enum.STAFF]), async (req, res) => {
     const userIds = data.map((row: { userId: string }) => row.userId);
     return res.status(StatusCodes.OK).json(userIds);
 });
-
-// Get staff user ids for resume book
-authRouter.get(
-    "/staff/users",
-    RoleChecker([Role.Enum.CORPORATE, Role.Enum.STAFF]),
-    async (req, res) => {
-        const { data } = await SupabaseDB.AUTH_ROLES.select("userId")
-            .eq("role", Role.Enum.STAFF)
-            .throwOnError();
-        const userIds = data.map((row: { userId: string }) => row.userId);
-        return res.status(StatusCodes.OK).json(userIds);
-    }
-);
 
 export default authRouter;
