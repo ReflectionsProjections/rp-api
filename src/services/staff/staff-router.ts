@@ -145,6 +145,27 @@ staffRouter.post(
     }
 );
 
+// Get all staff userIds
+staffRouter.get(
+    "/sponsor",
+    RoleChecker([Role.Enum.CORPORATE, Role.Enum.STAFF]),
+    async (req, res) => {
+        const { data: staffRecords } =
+            await SupabaseDB.STAFF.select("email").throwOnError();
+
+        const staffEmails = staffRecords.map((staff) => staff.email);
+
+        const { data: authRecords } = await SupabaseDB.AUTH_INFO.select(
+            "userId"
+        )
+            .in("email", staffEmails)
+            .throwOnError();
+
+        const userIds = authRecords.map((auth) => auth.userId);
+        return res.status(StatusCodes.OK).json(userIds);
+    }
+);
+
 // Get all staff
 staffRouter.get(
     "/",

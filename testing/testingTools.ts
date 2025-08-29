@@ -55,6 +55,10 @@ export function getAsAdmin(url: string): request.Test {
     return get(url, Role.enum.ADMIN);
 }
 
+export function getAsCorporate(url: string): request.Test {
+    return get(url, Role.enum.CORPORATE);
+}
+
 export function post(url: string, role?: RoleType): request.Test {
     return setRole(request(app()).post(url), role);
 }

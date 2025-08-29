@@ -10,6 +10,8 @@ import {
     delAsStaff,
     delAsAdmin,
     TESTER,
+    getAsCorporate,
+    getAsUser,
 } from "../../../testing/testingTools";
 import { StatusCodes } from "http-status-codes";
 import { SupabaseDB } from "../../database";
@@ -38,6 +40,13 @@ const OTHER_STAFF = {
     attendances: {},
 } satisfies Staff;
 
+const THIRD_STAFF = {
+    email: "third_staff@test.com",
+    name: "third-staff",
+    team: CommitteeNames.Enum.MARKETING,
+    attendances: {},
+} satisfies Staff;
+
 const NEW_STAFF_VALID = {
     email: "new_staff@test.com",
     name: "New Staff User 789",
@@ -46,6 +55,27 @@ const NEW_STAFF_VALID = {
 } satisfies Staff;
 
 const NON_EXISTENT_EMAIL = "nonExistentEmail@test.com";
+
+const TESTER_AUTH_INFO = {
+    userId: TESTER.userId,
+    authId: TESTER.authId,
+    displayName: TESTER.displayName,
+    email: TESTER.email,
+};
+
+const OTHER_STAFF_AUTH_INFO = {
+    userId: "other-staff-user-id",
+    authId: "other-staff-auth-id",
+    displayName: "Other Staff",
+    email: OTHER_STAFF.email,
+};
+
+const THIRD_STAFF_AUTH_INFO = {
+    userId: "third-staff-user-id",
+    authId: "third-staff-auth-id",
+    displayName: "Third Staff",
+    email: THIRD_STAFF.email,
+};
 
 beforeEach(async () => {
     await SupabaseDB.STAFF.delete().neq(
@@ -56,9 +86,22 @@ beforeEach(async () => {
         "meetingId",
         "a_non_existent_id_to_delete_all"
     );
+    await SupabaseDB.AUTH_INFO.delete().neq(
+        "userId",
+        "a_non_existent_user_id_to_delete_all"
+    );
+
     await SupabaseDB.MEETINGS.insert(MEETING);
-    await SupabaseDB.STAFF.insert(StaffValidator.parse(TESTER_STAFF));
-    await SupabaseDB.STAFF.insert(StaffValidator.parse(OTHER_STAFF));
+    await SupabaseDB.STAFF.insert([
+        StaffValidator.parse(TESTER_STAFF),
+        StaffValidator.parse(OTHER_STAFF),
+        StaffValidator.parse(THIRD_STAFF),
+    ]);
+    await SupabaseDB.AUTH_INFO.insert([
+        TESTER_AUTH_INFO,
+        OTHER_STAFF_AUTH_INFO,
+        THIRD_STAFF_AUTH_INFO,
+    ]);
 });
 
 afterAll(async () => {
@@ -67,6 +110,10 @@ afterAll(async () => {
         "a_non_existent_email_to_delete_all"
     );
     await SupabaseDB.MEETINGS.delete().eq("meetingId", MEETING.meetingId);
+    await SupabaseDB.AUTH_INFO.delete().neq(
+        "userId",
+        "a_non_existent_user_id_to_delete_all"
+    );
 });
 
 describe("GET /staff/", () => {
@@ -83,6 +130,7 @@ describe("GET /staff/", () => {
                 expect.arrayContaining([
                     expect.objectContaining(TESTER_STAFF),
                     expect.objectContaining(OTHER_STAFF),
+                    expect.objectContaining(THIRD_STAFF),
                 ])
             );
         },
@@ -97,6 +145,76 @@ describe("GET /staff/", () => {
         await SupabaseDB.STAFF.delete().neq("email", "");
         const response = await getAsAdmin("/staff/").expect(StatusCodes.OK);
         expect(response.body).toEqual([]);
+    });
+});
+
+describe("GET /staff/sponsor", () => {
+    it("should return all staff userIds for CORPORATE role", async () => {
+        const response = await getAsCorporate("/staff/sponsor").expect(
+            StatusCodes.OK
+        );
+
+        expect(response.body).toHaveLength(3);
+        expect(response.body).toEqual(
+            expect.arrayContaining([
+                TESTER_AUTH_INFO.userId,
+                OTHER_STAFF_AUTH_INFO.userId,
+                THIRD_STAFF_AUTH_INFO.userId,
+            ])
+        );
+    });
+
+    it("should return all staff userIds for STAFF role", async () => {
+        const response = await getAsStaff("/staff/sponsor").expect(
+            StatusCodes.OK
+        );
+
+        expect(response.body).toHaveLength(3);
+        expect(response.body).toEqual(
+            expect.arrayContaining([
+                TESTER_AUTH_INFO.userId,
+                OTHER_STAFF_AUTH_INFO.userId,
+                THIRD_STAFF_AUTH_INFO.userId,
+            ])
+        );
+    });
+
+    it("should return empty array when no staff exist", async () => {
+        await SupabaseDB.STAFF.delete().neq("email", "").throwOnError();
+        await SupabaseDB.AUTH_INFO.delete().neq("userId", "").throwOnError();
+
+        const response = await getAsCorporate("/staff/sponsor").expect(
+            StatusCodes.OK
+        );
+
+        expect(response.body).toEqual([]);
+    });
+
+    it("should only return userIds for staff that exist in auth_info", async () => {
+        await SupabaseDB.AUTH_INFO.delete().eq(
+            "userId",
+            THIRD_STAFF_AUTH_INFO.userId
+        );
+
+        const response = await getAsCorporate("/staff/sponsor").expect(
+            StatusCodes.OK
+        );
+
+        expect(response.body).toHaveLength(2);
+        expect(response.body).toEqual(
+            expect.arrayContaining([
+                TESTER_AUTH_INFO.userId,
+                OTHER_STAFF_AUTH_INFO.userId,
+            ])
+        );
+    });
+
+    it("should return UNAUTHORIZED for unauthenticated users", async () => {
+        await get("/staff/sponsor").expect(StatusCodes.UNAUTHORIZED);
+    });
+
+    it("should return FORBIDDEN for non-authorized roles", async () => {
+        await getAsUser("/staff/sponsor").expect(StatusCodes.FORBIDDEN);
     });
 });
 
