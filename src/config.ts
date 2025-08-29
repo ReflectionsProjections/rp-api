@@ -2,7 +2,7 @@ import dotenv from "dotenv";
 
 import { z } from "zod";
 
-import AWS from "aws-sdk";
+import { SES } from "@aws-sdk/client-ses";
 
 dotenv.config();
 
@@ -54,6 +54,18 @@ export const Config = {
     ANDROID_CLIENT_ID: getEnv("ANDROID_OAUTH_GOOGLE_CLIENT_ID"),
     AUTH_CALLBACK_URI_BASE: `${API_BASE}/auth/callback/`,
 
+    PUZZLEBANG_API_KEY: getEnv("PUZZLEBANG_API_KEY"),
+    PUZZLEBANG_POINTS: [
+        {
+            idRegex: /.*/,
+            points: 2,
+        },
+        {
+            idRegex: /^M.*/,
+            points: 4,
+        },
+    ],
+
     // prettier-ignore
     AUTH_ADMIN_WHITELIST: new Set([
         // Dev Chairs/Code-Owners (reach out to these people for questions)
@@ -67,7 +79,6 @@ export const Config = {
     JWT_SIGNING_SECRET: getEnv("JWT_SIGNING_SECRET"),
     JWT_EXPIRATION_TIME: "1 day" as const,
     MOBILE_JWT_EXPIRATION_TIME: "10 days" as const,
-    PB_JWT_EXPIRATION_TIME: "1 week" as const,
     STAFF_MEETING_CHECK_IN_WINDOW_SECONDS: 6 * 60 * 60,
 
     S3_ACCESS_KEY: getEnv("S3_ACCESS_KEY"),
@@ -86,15 +97,19 @@ export const Config = {
     QR_HASH_SECRET: getEnv("QR_HASH_SECRET"),
     WEB_REGISTER_ROUTE: `${WEB_BASE}/register`,
     WEB_RESUME_ROUTE: `${WEB_BASE}/resume`,
+    EMAIL_HEADER_HREF: `${WEB_BASE}/email_header.png`,
     OUTGOING_EMAIL_ADDRESSES: z.enum(["no-reply@reflectionsprojections.org"]),
     LOG_DIR:
         env === EnvironmentEnum.PRODUCTION ? "/home/ubuntu/logs" : "./logs",
 };
 
-export const ses = new AWS.SES({
+export const ses = new SES({
     region: Config.S3_REGION,
-    accessKeyId: Config.S3_ACCESS_KEY,
-    secretAccessKey: Config.S3_SECRET_KEY,
+
+    credentials: {
+        accessKeyId: Config.S3_ACCESS_KEY,
+        secretAccessKey: Config.S3_SECRET_KEY,
+    },
 });
 
 export default Config;

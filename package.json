@@ -29,7 +29,6 @@
         "@supabase/supabase-js": "^2.49.4",
         "@types/cors": "^2.8.17",
         "@types/mustache": "^4.2.5",
-        "aws-sdk": "^2.1604.0",
         "axios": "^1.6.8",
         "bcrypt": "*",
         "body-parser": "^1.20.2",

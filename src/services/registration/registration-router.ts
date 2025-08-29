@@ -137,7 +137,7 @@ registrationRouter.post("/submit", RoleChecker([]), async (req, res) => {
 
         await sendHTMLEmail(
             payload.email,
-            "Reflections Projections 2025 Confirmation!",
+            "Reflections | Projections 2025 Confirmation!",
             Mustache.render(templates.REGISTRATION_CONFIRMATION, substitution)
         );
     }
