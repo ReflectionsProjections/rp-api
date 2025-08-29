@@ -62,55 +62,32 @@ jobs:
       - name: Install dependencies
         run: yarn
       - name: Create .env file
-        env:
-          ANON_KEY: ${{ secrets.ANON_KEY }}
-          SERVICE_ROLE_KEY: ${{ secrets.SERVICE_ROLE_KEY }}
-          JWT_SECRET: ${{ secrets.JWT_SECRET }}
-          DASHBOARD_USERNAME: ${{ vars.DASHBOARD_USERNAME }}
-          DASHBOARD_PASSWORD: ${{ vars.DASHBOARD_PASSWORD }}
-          POSTGRES_HOST: ${{ vars.POSTGRES_HOST }}
-          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-          POSTGRES_DB: ${{ vars.POSTGRES_DB }}
-          POSTGRES_PORT: ${{ vars.POSTGRES_PORT }}
-          TYPE: ${{ secrets.TYPE }}
-          PROJECT_ID: ${{ secrets.PROJECT_ID }}
-          PRIVATE_KEY_ID: ${{ secrets.PRIVATE_KEY_ID }}
-          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
-          CLIENT_ID: ${{ secrets.CLIENT_ID }}
-          AUTH_URI: ${{ secrets.AUTH_URI }}
-          TOKEN_URI: ${{ secrets.TOKEN_URI }}
-          AUTH_PROVIDER_X509_CERT_URL: ${{ secrets.AUTH_PROVIDER_X509_CERT_URL }}
-          CLIENT_X509_CERT_URL: ${{ secrets.CLIENT_X509_CERT_URL }}
-          UNIVERSE_DOMAIN: ${{ secrets.UNIVERSE_DOMAIN }}
-          CLIENT_EMAIL: ${{ secrets.CLIENT_EMAIL }}
         run: |
           cat <<EOF > .env
-          ANON_KEY="$ANON_KEY"
-          SERVICE_ROLE_KEY="$SERVICE_ROLE_KEY"
-          JWT_SECRET="$JWT_SECRET"
-          DASHBOARD_USERNAME="$DASHBOARD_USERNAME"
-          DASHBOARD_PASSWORD="$DASHBOARD_PASSWORD"
-          POSTGRES_HOST="$POSTGRES_HOST"
-          POSTGRES_PASSWORD="$POSTGRES_PASSWORD"
-          POSTGRES_DB="$POSTGRES_DB"
-          POSTGRES_PORT="$POSTGRES_PORT"
+          ANON_KEY="${{ secrets.ANON_KEY }}"
+          SERVICE_ROLE_KEY="${{ secrets.SERVICE_ROLE_KEY }}"
+          JWT_SECRET="${{ secrets.JWT_SECRET }}"
+          DASHBOARD_USERNAME="${{ vars.DASHBOARD_USERNAME }}"
+          DASHBOARD_PASSWORD="${{ vars.DASHBOARD_PASSWORD }}"
+          POSTGRES_HOST="${{ vars.POSTGRES_HOST }}"
+          POSTGRES_PASSWORD="${{ secrets.POSTGRES_PASSWORD }}"
+          POSTGRES_DB="${{ vars.POSTGRES_DB }}"
+          POSTGRES_PORT="${{ vars.POSTGRES_PORT }}"
+          TYPE=service_account
+          PROJECT_ID=reflections-projections
+          PRIVATE_KEY_ID={{secrets.PRIVATE_KEY_ID}}
+          PRIVATE_KEY={{ secrets.PRIVATE_KEY }}
+          CLIENT_EMAIL={{ secrets.CLIENT_EMAIL }}
+          CLIENT_ID={{ secrets.CLIENT_ID }}
+          AUTH_URI={{ secrets.AUTH_URI }}
+          TOKEN_URI={{ secrets.TOKEN_URI }}
+          AUTH_PROVIDER_X509_CERT_URL={{ secrets.AUTH_PROVIDER_X509_CERT_URL }}
+          CLIENT_X509_CERT_URL={{ secrets.CLIENT_X509_CERT_URL }}
+          UNIVERSE_DOMAIN=googleapis.com
           PGRST_DB_SCHEMAS="public"
           JWT_EXPIRY="3600"
           FORCE_COLOR="true"
-          TYPE="$TYPE"
-          PROJECT_ID="$PROJECT_ID"
-          PRIVATE_KEY_ID="$PRIVATE_KEY_ID"
-          PRIVATE_KEY="$PRIVATE_KEY"
-          CLIENT_ID="$CLIENT_ID"
-          AUTH_URI="$AUTH_URI"
-          TOKEN_URI="$TOKEN_URI"
-          AUTH_PROVIDER_X509_CERT_URL="$AUTH_PROVIDER_X509_CERT_URL"
-          CLIENT_X509_CERT_URL="$CLIENT_X509_CERT_URL"
-          UNIVERSE_DOMAIN="$UNIVERSE_DOMAIN"
-          CLIENT_EMAIL="$CLIENT_EMAIL"
           EOF
-      - name: Display .env file
-        run: cat .env
       - name: Pull
         run: docker compose -f docker-compose.test.yml pull
       - name: Bake
