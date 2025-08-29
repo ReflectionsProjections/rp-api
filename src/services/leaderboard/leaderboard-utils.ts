@@ -79,14 +79,16 @@ export async function getDailyLeaderboard(
     }
 
     // Step 5: Create leaderboard entries and sort
-    const leaderboardEntries: Array<LeaderboardEntry> = attendees.map((attendee) => ({
-        rank: 0, // Will be set after sorting
-        userId: attendee.userId,
-        displayName: attendee.authInfo.displayName,
-        points: userDailyPoints.get(attendee.userId) || 0,
-        currentTier: attendee.currentTier as TierType,
-        icon: attendee.icon as IconColorType,
-    }));
+    const leaderboardEntries: Array<LeaderboardEntry> = attendees.map(
+        (attendee) => ({
+            rank: 0, // Will be set after sorting
+            userId: attendee.userId,
+            displayName: attendee.authInfo.displayName,
+            points: userDailyPoints.get(attendee.userId) || 0,
+            currentTier: attendee.currentTier as TierType,
+            icon: attendee.icon as IconColorType,
+        })
+    );
 
     // Sort by points descending
     leaderboardEntries.sort((a, b) => b.points - a.points);
