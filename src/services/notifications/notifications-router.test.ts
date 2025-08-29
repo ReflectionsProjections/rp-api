@@ -3,12 +3,13 @@ import { Role } from "../auth/auth-models";
 import { StatusCodes } from "http-status-codes";
 import { SupabaseDB } from "../../database";
 import { v4 as uuidv4 } from "uuid";
+import { TESTER } from "../../../testing/testingTools";
 
 const mockSubscribe = jest.fn();
 const mockUnsubscribe = jest.fn();
 const mockSend = jest.fn();
 
-jest.mock("../../database", () => ({})); // Add this line
+const TEST_DEVICE_ID = "test-device-abc";
 
 jest.mock("../../firebase", () => ({
     admin: {
@@ -20,15 +21,11 @@ jest.mock("../../firebase", () => ({
     },
 }));
 
-const TEST_USER_ID = "user123";
-const TEST_DEVICE_ID = "test-device-abc";
-const TEST_EMAIL = "loid.forger@testing.com";
-
 jest.setTimeout(100000);
 
 function makeTestAttendee(overrides = {}) {
     return {
-        userId: TEST_USER_ID,
+        userId: TESTER.userId,
         points: 0,
         puzzlesCompleted: [],
         ...overrides,
@@ -37,26 +34,18 @@ function makeTestAttendee(overrides = {}) {
 
 function makeTestRegistration(overrides = {}) {
     return {
-        userId: TEST_USER_ID,
+        userId: TESTER.userId,
         name: "Ritam",
-        email: TEST_EMAIL,
-        degree: "Bachelors",
-        university: "UIUC",
+        email: TESTER.email,
+        school: "UIUC",
+        educationLevel: "BS",
         isInterestedMechMania: false,
         isInterestedPuzzleBang: true,
         allergies: [],
         dietaryRestrictions: [],
         ethnicity: [],
-        gender: "",
-        educationLevel: "Undergraduate",
-        graduationYear: "2025",
-        school: "UIUC",
-        phone: "1234567890",
-        shirtSize: "M",
-        discord: "testdiscord",
-        github: "testgithub",
-        linkedin: "testlinkedin",
-        resume: null,
+        gender: "prefer not say",
+        graduationYear: "2027",
         ...overrides,
     };
 }
@@ -70,15 +59,15 @@ type InsertTestAttendeeOverrides = {
 };
 
 async function insertTestUser(overrides: InsertTestAttendeeOverrides = {}) {
-    const userId = overrides.userId || TEST_USER_ID;
-    const email = overrides.email || TEST_EMAIL;
+    const userId = overrides.userId || TESTER.userId;
+    const email = overrides.email || TESTER.email;
 
     await SupabaseDB.AUTH_INFO.insert([
         {
             userId: userId,
             displayName: "Ritam",
-            email,
-            authId: "null",
+            email: email,
+            authId: "123",
         },
     ]).throwOnError();
 
@@ -108,56 +97,41 @@ async function insertTestUser(overrides: InsertTestAttendeeOverrides = {}) {
 }
 
 describe("/notifications", () => {
-    beforeEach(async () => {
-        jest.clearAllMocks(); // Clear mocks
-    });
-
-    afterEach(async () => {
-        await SupabaseDB.ATTENDEES.delete().eq("userId", TEST_USER_ID);
-        await SupabaseDB.NOTIFICATIONS.delete().eq("userId", TEST_USER_ID);
-        await SupabaseDB.REGISTRATIONS.delete().eq("userId", TEST_USER_ID);
-        await SupabaseDB.AUTH_ROLES.delete()
-            .eq("userId", TEST_USER_ID)
-            .throwOnError();
-        await SupabaseDB.AUTH_INFO.delete()
-            .eq("userId", TEST_USER_ID)
-            .throwOnError();
-    });
-
     describe("POST /notifications/register", () => {
         it("should create a notification entry and subscribe to the allUsers topic", async () => {
-            // Setup: Insert a user without a notification entry
             await SupabaseDB.AUTH_INFO.insert([
                 {
-                    userId: TEST_USER_ID,
+                    userId: TESTER.userId,
                     displayName: "Ritam",
-                    email: TEST_EMAIL,
+                    email: TESTER.email,
                     authId: "null",
                 },
             ]).throwOnError();
 
             await SupabaseDB.AUTH_ROLES.insert([
                 {
-                    userId: TEST_USER_ID,
+                    userId: TESTER.userId,
                     role: Role.enum.USER,
                 },
             ]).throwOnError();
+
             await SupabaseDB.REGISTRATIONS.insert([
-                makeTestRegistration({ userId: TEST_USER_ID }),
+                makeTestRegistration({ userId: TESTER.userId }),
+            ]).throwOnError();
+
+            await SupabaseDB.ATTENDEES.insert([
+                makeTestAttendee({ userId: TESTER.userId }),
             ]).throwOnError();
 
             await post("/notifications/register", Role.enum.USER)
                 .send({ deviceId: "new-device-id" })
                 .expect(StatusCodes.CREATED);
 
-            // Verify database state
             const { data } = await SupabaseDB.NOTIFICATIONS.select()
-                .eq("userId", TEST_USER_ID)
+                .eq("userId", TESTER.userId)
                 .single()
                 .throwOnError();
             expect(data?.deviceId).toBe("new-device-id");
-
-            // Verify Firebase mock was called
             expect(mockSubscribe).toHaveBeenCalledWith(
                 "new-device-id",
                 "allUsers"
@@ -190,7 +164,7 @@ describe("/notifications", () => {
 
         it("POST should allow an admin to manually subscribe a user", async () => {
             await post("/notifications/manual-users-topic", Role.enum.ADMIN)
-                .send({ userId: TEST_USER_ID, topicName: "food-priority-1" })
+                .send({ userId: TESTER.userId, topicName: "food-priority-1" })
                 .expect(StatusCodes.OK);
 
             expect(mockSubscribe).toHaveBeenCalledWith(
@@ -201,7 +175,7 @@ describe("/notifications", () => {
 
         it("DELETE should allow an admin to manually unsubscribe a user", async () => {
             await del("/notifications/manual-users-topic", Role.enum.ADMIN)
-                .send({ userId: TEST_USER_ID, topicName: "food-priority-1" })
+                .send({ userId: TESTER.userId, topicName: "food-priority-1" })
                 .expect(StatusCodes.OK);
 
             expect(mockUnsubscribe).toHaveBeenCalledWith(
@@ -233,15 +207,6 @@ describe("/notifications", () => {
             });
         });
 
-        // Cleanup: Remove test data after the test runs
-        afterEach(async () => {
-            await SupabaseDB.EVENTS.delete().eq("id", TEST_EVENT_ID);
-            await SupabaseDB.CUSTOM_TOPICS.delete().eq(
-                "topicName",
-                TEST_TOPIC_NAME
-            );
-        });
-
         it("should return a sorted list of all static, event, and custom topics", async () => {
             const response = await get(
                 "/notifications/topics",
@@ -260,13 +225,6 @@ describe("/notifications", () => {
 
     describe("POST /notifications/custom-topic", () => {
         const NEW_TOPIC_NAME = "new_test_topic";
-
-        afterEach(async () => {
-            await SupabaseDB.CUSTOM_TOPICS.delete().eq(
-                "topicName",
-                NEW_TOPIC_NAME
-            );
-        });
 
         it("should allow an admin to create a new custom topic", async () => {
             await post("/notifications/custom-topic", Role.enum.ADMIN)
