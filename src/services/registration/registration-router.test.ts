@@ -214,7 +214,7 @@ describe("POST /registration/draft", () => {
 
         const tooLongGradYear = {
             ...VALID_DRAFT,
-            graduationYear: "a".repeat(11),
+            graduationYear: "a".repeat(51),
         };
         await postAsUser("/registration/draft")
             .send(tooLongGradYear)
@@ -463,7 +463,7 @@ describe("POST /registration/submit", () => {
 
         const tooLongGradYear = {
             ...VALID_REGISTRATION,
-            graduationYear: "a".repeat(11),
+            graduationYear: "a".repeat(51),
         };
         await postAsUser("/registration/submit")
             .send(tooLongGradYear)
