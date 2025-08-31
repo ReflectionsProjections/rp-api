@@ -206,7 +206,7 @@ describe("POST /registration/draft", () => {
 
         const tooLongEmail = {
             ...VALID_DRAFT,
-            email: "a".repeat(45) + "@test.com",
+            email: "a".repeat(250) + "@test.com",
         };
         await postAsUser("/registration/draft")
             .send(tooLongEmail)
@@ -455,7 +455,7 @@ describe("POST /registration/submit", () => {
 
         const tooLongEmail = {
             ...VALID_REGISTRATION,
-            email: "a".repeat(45) + "@test.com",
+            email: "a".repeat(250) + "@test.com",
         };
         await postAsUser("/registration/submit")
             .send(tooLongEmail)
