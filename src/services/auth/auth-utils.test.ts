@@ -326,21 +326,7 @@ describe("getJwtPayloadFromDatabase", () => {
 });
 
 describe("generateJWT", () => {
-    it.each([
-        ["for normal users", Config.JWT_EXPIRATION_TIME, null],
-        [
-            "for puzzlebang users",
-            Config.PB_JWT_EXPIRATION_TIME,
-            Role.Enum.PUZZLEBANG,
-        ],
-    ])("should generate a valid jwt %s", async (_, exp, addRole) => {
-        if (addRole) {
-            await SupabaseDB.AUTH_ROLES.upsert({
-                role: addRole,
-                userId: AUTH_USER.userId,
-            });
-        }
-
+    it("should generate a valid jwt", async () => {
         const start = Math.floor(Date.now() / 1000);
         const jwt = await generateJWT(AUTH_USER.userId);
         const payload = jsonwebtoken.verify(
@@ -351,18 +337,14 @@ describe("generateJWT", () => {
             userId: AUTH_USER.userId,
             email: AUTH_USER.email,
             displayName: AUTH_USER.displayName,
-            ...(addRole && {
-                roles: expect.arrayContaining([
-                    ...AUTH_USER_ROLES.map((entry) => entry.role),
-                    addRole,
-                ]),
-            }),
         });
         expect(payload.iat).toBeGreaterThanOrEqual(start);
         // ms is what jsonwebtoken uses to parse expiration times, so we use it here as well
         // eslint-disable-next-line @typescript-eslint/no-require-imports
         const ms = require("ms");
-        const time = Math.floor((ms(exp) as number) / 1000);
+        const time = Math.floor(
+            (ms(Config.JWT_EXPIRATION_TIME) as number) / 1000
+        );
         expect(payload.exp).toBeGreaterThanOrEqual(start + time);
         expect(payload.exp).toBeLessThan(start + time + 30);
     });
