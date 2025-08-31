@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { StatusCodes } from "http-status-codes";
-import { get, post, TESTER } from "../../../testing/testingTools";
+import { get, post, postAsUser, TESTER } from "../../../testing/testingTools";
 import { Role } from "../auth/auth-models";
 import { sendHTMLEmail } from "../ses/ses-utils";
 import { SupabaseDB } from "../../database";
@@ -160,6 +160,74 @@ describe("POST /registration/draft", () => {
             .send(invalidRegistration)
             .expect(StatusCodes.BAD_REQUEST);
     });
+
+    it("should return 400 when array limits are exceeded", async () => {
+        const tooManyAllergies = {
+            ...VALID_DRAFT,
+            allergies: Array(11).fill("Allergy"),
+        };
+        await postAsUser("/registration/draft")
+            .send(tooManyAllergies)
+            .expect(StatusCodes.BAD_REQUEST);
+
+        const tooManyMajors = {
+            ...VALID_DRAFT,
+            majors: Array(6).fill("Major"),
+        };
+        await postAsUser("/registration/draft")
+            .send(tooManyMajors)
+            .expect(StatusCodes.BAD_REQUEST);
+
+        const tooManyLinks = {
+            ...VALID_DRAFT,
+            personalLinks: Array(4).fill("https://example.com"),
+        };
+        await postAsUser("/registration/draft")
+            .send(tooManyLinks)
+            .expect(StatusCodes.BAD_REQUEST);
+
+        const tooManyTags = {
+            ...VALID_DRAFT,
+            tags: Array(16).fill("tag"),
+        };
+        await postAsUser("/registration/draft")
+            .send(tooManyTags)
+            .expect(StatusCodes.BAD_REQUEST);
+    });
+
+    it("should return 400 when string length limits are exceeded", async () => {
+        const tooLongName = {
+            ...VALID_DRAFT,
+            name: "a".repeat(51),
+        };
+        await postAsUser("/registration/draft")
+            .send(tooLongName)
+            .expect(StatusCodes.BAD_REQUEST);
+
+        const tooLongEmail = {
+            ...VALID_DRAFT,
+            email: "a".repeat(45) + "@test.com",
+        };
+        await postAsUser("/registration/draft")
+            .send(tooLongEmail)
+            .expect(StatusCodes.BAD_REQUEST);
+
+        const tooLongGradYear = {
+            ...VALID_DRAFT,
+            graduationYear: "a".repeat(11),
+        };
+        await postAsUser("/registration/draft")
+            .send(tooLongGradYear)
+            .expect(StatusCodes.BAD_REQUEST);
+
+        const tooLongArrayElement = {
+            ...VALID_DRAFT,
+            allergies: ["a".repeat(51)],
+        };
+        await postAsUser("/registration/draft")
+            .send(tooLongArrayElement)
+            .expect(StatusCodes.BAD_REQUEST);
+    });
 });
 
 describe("GET /registration/draft", () => {
@@ -299,6 +367,154 @@ describe("POST /registration/submit", () => {
 
         await post("/registration/submit", Role.enum.USER)
             .send(invalidData)
+            .expect(StatusCodes.BAD_REQUEST);
+    });
+
+    it("should return 400 when array limits are exceeded", async () => {
+        const tooManyAllergies = {
+            ...VALID_REGISTRATION,
+            allergies: Array(11).fill("Allergy"),
+        };
+        await postAsUser("/registration/submit")
+            .send(tooManyAllergies)
+            .expect(StatusCodes.BAD_REQUEST);
+
+        const tooManyMajors = {
+            ...VALID_REGISTRATION,
+            majors: Array(6).fill("Major"),
+        };
+        await postAsUser("/registration/submit")
+            .send(tooManyMajors)
+            .expect(StatusCodes.BAD_REQUEST);
+
+        const tooManyMinors = {
+            ...VALID_REGISTRATION,
+            minors: Array(6).fill("Minor"),
+        };
+        await postAsUser("/registration/submit")
+            .send(tooManyMinors)
+            .expect(StatusCodes.BAD_REQUEST);
+
+        const tooManyLinks = {
+            ...VALID_REGISTRATION,
+            personalLinks: Array(4).fill("https://example.com"),
+        };
+        await postAsUser("/registration/submit")
+            .send(tooManyLinks)
+            .expect(StatusCodes.BAD_REQUEST);
+
+        const tooManyTags = {
+            ...VALID_REGISTRATION,
+            tags: Array(16).fill("tag"),
+        };
+        await postAsUser("/registration/submit")
+            .send(tooManyTags)
+            .expect(StatusCodes.BAD_REQUEST);
+
+        const tooManyEthnicities = {
+            ...VALID_REGISTRATION,
+            ethnicity: Array(11).fill("Ethnicity"),
+        };
+        await postAsUser("/registration/submit")
+            .send(tooManyEthnicities)
+            .expect(StatusCodes.BAD_REQUEST);
+
+        const tooManyHowDidYouHear = {
+            ...VALID_REGISTRATION,
+            howDidYouHear: Array(11).fill("Source"),
+        };
+        await postAsUser("/registration/submit")
+            .send(tooManyHowDidYouHear)
+            .expect(StatusCodes.BAD_REQUEST);
+
+        const tooManyOpportunities = {
+            ...VALID_REGISTRATION,
+            opportunities: Array(11).fill("Opportunity"),
+        };
+        await postAsUser("/registration/submit")
+            .send(tooManyOpportunities)
+            .expect(StatusCodes.BAD_REQUEST);
+
+        const tooManyDietaryRestrictions = {
+            ...VALID_REGISTRATION,
+            dietaryRestrictions: Array(11).fill("Restriction"),
+        };
+        await postAsUser("/registration/submit")
+            .send(tooManyDietaryRestrictions)
+            .expect(StatusCodes.BAD_REQUEST);
+    });
+
+    it("should return 400 when string length limits are exceeded", async () => {
+        const tooLongName = {
+            ...VALID_REGISTRATION,
+            name: "a".repeat(51),
+        };
+        await postAsUser("/registration/submit")
+            .send(tooLongName)
+            .expect(StatusCodes.BAD_REQUEST);
+
+        const tooLongEmail = {
+            ...VALID_REGISTRATION,
+            email: "a".repeat(45) + "@test.com",
+        };
+        await postAsUser("/registration/submit")
+            .send(tooLongEmail)
+            .expect(StatusCodes.BAD_REQUEST);
+
+        const tooLongGradYear = {
+            ...VALID_REGISTRATION,
+            graduationYear: "a".repeat(11),
+        };
+        await postAsUser("/registration/submit")
+            .send(tooLongGradYear)
+            .expect(StatusCodes.BAD_REQUEST);
+
+        const tooLongSchool = {
+            ...VALID_REGISTRATION,
+            school: "a".repeat(51),
+        };
+        await postAsUser("/registration/submit")
+            .send(tooLongSchool)
+            .expect(StatusCodes.BAD_REQUEST);
+
+        const tooLongEducationLevel = {
+            ...VALID_REGISTRATION,
+            educationLevel: "a".repeat(51),
+        };
+        await postAsUser("/registration/submit")
+            .send(tooLongEducationLevel)
+            .expect(StatusCodes.BAD_REQUEST);
+
+        const tooLongGender = {
+            ...VALID_REGISTRATION,
+            gender: "a".repeat(51),
+        };
+        await postAsUser("/registration/submit")
+            .send(tooLongGender)
+            .expect(StatusCodes.BAD_REQUEST);
+
+        const tooLongArrayElement = {
+            ...VALID_REGISTRATION,
+            allergies: ["a".repeat(51)],
+        };
+        await postAsUser("/registration/submit")
+            .send(tooLongArrayElement)
+            .expect(StatusCodes.BAD_REQUEST);
+
+        const tooLongMajorElement = {
+            ...VALID_REGISTRATION,
+            majors: ["a".repeat(51)],
+        };
+        await postAsUser("/registration/submit")
+            .send(tooLongMajorElement)
+            .expect(StatusCodes.BAD_REQUEST);
+
+        const tooLongTagElement = {
+            ...VALID_REGISTRATION,
+            tags: ["a".repeat(51)],
+        };
+        await postAsUser("/registration/submit")
+            .send(tooLongTagElement)
             .expect(StatusCodes.BAD_REQUEST);
     });
 });
