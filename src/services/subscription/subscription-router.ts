@@ -7,7 +7,6 @@ import RoleChecker from "../../middleware/role-checker";
 import { Role } from "../auth/auth-models";
 import { SESv2Client, SendEmailCommand } from "@aws-sdk/client-sesv2";
 
-
 const subscriptionRouter = Router();
 
 // Create a new subscription
