@@ -94,51 +94,62 @@ registrationRouter.post("/submit", RoleChecker([]), async (req, res) => {
         }).throwOnError(),
     ]);
 
-    if (!existing) {
-        const substitution = {
-            allergies:
-                registration.allergies.length > 0
-                    ? registration.allergies.join(", ")
-                    : "N/A",
-            dietaryRestrictions:
-                registration.dietaryRestrictions.length > 0
-                    ? registration.dietaryRestrictions.join(", ")
-                    : "N/A",
-            educationLevel: registration.educationLevel,
-            ethnicity:
-                registration.ethnicity.length > 0
-                    ? registration.ethnicity.join(", ")
-                    : "N/A",
-            gender: registration.gender,
-            graduationYear: registration.graduationYear,
-            majors:
-                registration.majors.length > 0
-                    ? registration.majors.join(", ")
-                    : "N/A",
-            minors:
-                registration.minors.length > 0
-                    ? registration.minors.join(", ")
-                    : "N/A",
-            name: registration.name,
-            hasResume: registration.hasResume,
-            school: registration.school,
-            isInterestedMechMania: registration.isInterestedMechMania,
-            isInterestedPuzzleBang: registration.isInterestedPuzzleBang,
-            opportunities:
-                registration.opportunities.length > 0
-                    ? registration.opportunities.join(", ")
-                    : "N/A",
-            personalLinks: registration.personalLinks,
-            tags:
-                registration.tags.length > 0
-                    ? registration.tags.join(", ")
-                    : "N/A",
-        };
+    const substitution = {
+        allergies:
+            registration.allergies.length > 0
+                ? registration.allergies.join(", ")
+                : "N/A",
+        dietaryRestrictions:
+            registration.dietaryRestrictions.length > 0
+                ? registration.dietaryRestrictions.join(", ")
+                : "N/A",
+        educationLevel: registration.educationLevel,
+        ethnicity:
+            registration.ethnicity.length > 0
+                ? registration.ethnicity.join(", ")
+                : "N/A",
+        gender: registration.gender,
+        graduationYear: registration.graduationYear,
+        majors:
+            registration.majors.length > 0
+                ? registration.majors.join(", ")
+                : "N/A",
+        minors:
+            registration.minors.length > 0
+                ? registration.minors.join(", ")
+                : "N/A",
+        name: registration.name,
+        hasResume: registration.hasResume,
+        school: registration.school,
+        isInterestedMechMania: registration.isInterestedMechMania,
+        isInterestedPuzzleBang: registration.isInterestedPuzzleBang,
+        howDidYouHear:
+            registration.howDidYouHear.length > 0
+                ? registration.howDidYouHear.join(", ")
+                : "N/A",
+        opportunities:
+            registration.opportunities.length > 0
+                ? registration.opportunities.join(", ")
+                : "N/A",
+        personalLinks: registration.personalLinks,
+        tags:
+            registration.tags.length > 0 ? registration.tags.join(", ") : "N/A",
+    };
 
+    if (!existing) {
         await sendHTMLEmail(
             payload.email,
             "Reflections | Projections 2025 Confirmation!",
             Mustache.render(templates.REGISTRATION_CONFIRMATION, substitution)
+        );
+    } else {
+        await sendHTMLEmail(
+            payload.email,
+            "Reflections | Projections 2025 Registration Updated",
+            Mustache.render(
+                templates.REGISTRATION_UPDATE_CONFIRMATION,
+                substitution
+            )
         );
     }
 
