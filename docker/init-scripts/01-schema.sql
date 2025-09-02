@@ -32,8 +32,7 @@ CREATE TYPE public."roleType" AS ENUM (
     'USER',
     'STAFF',
     'ADMIN',
-    'CORPORATE',
-    'PUZZLEBANG'
+    'CORPORATE'
 );
 
 CREATE TYPE public."staffAttendanceType" AS ENUM (
@@ -73,6 +72,13 @@ CREATE TABLE public."attendeeAttendances" (
     "userId" character varying NOT NULL,
     "eventsAttended" uuid[] DEFAULT '{}'::uuid[] NOT NULL,
     CONSTRAINT "attendeeAttendance_pkey" PRIMARY KEY ("userId")
+);
+
+CREATE TABLE public."customTopics" (
+    "topicId" uuid DEFAULT gen_random_uuid() NOT NULL,
+    "topicName" text NOT NULL,
+    CONSTRAINT "customTopicsPkey" PRIMARY KEY ("topicId"),
+    CONSTRAINT "customTopicsTopicNameKey" UNIQUE ("topicName")
 );
 
 CREATE TABLE public."attendees" (

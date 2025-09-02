@@ -21,6 +21,7 @@ GRANT ALL ON TABLE public."shifts"              TO anon, authenticated, service_
 GRANT ALL ON TABLE public."shiftAssignments"    TO anon, authenticated, service_role;
 GRANT ALL ON TABLE public."subscriptions"       TO anon, authenticated, service_role;
 GRANT ALL ON TABLE public."authCodes"			TO anon, authenticated, service_role; 
+GRANT ALL ON TABLE public."customTopics"        TO anon, authenticated, service_role;
 
 -- Default privileges
 ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON SEQUENCES TO postgres, anon, authenticated, service_role;

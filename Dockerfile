@@ -16,8 +16,8 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
-# Install Node.js 18.x (LTS) and Yarn
-RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
+# Install Node.js 24.x (LTS) and Yarn
+RUN curl -fsSL https://deb.nodesource.com/setup_24.x | bash - \
     && apt-get install -y nodejs \
     && npm install -g yarn \
     && npm cache clean --force

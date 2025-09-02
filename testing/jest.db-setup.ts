@@ -64,6 +64,11 @@ function mockSupabase(supabaseUrl: string, supabaseServiceKey: string) {
                 },
                 get SHIFT_ASSIGNMENTS() {
                     return supabase.from("shiftAssignments");
+                get CUSTOM_TOPICS() {
+                    return supabase.from("customTopics");
+                },
+                get NOTIFICATIONS() {
+                    return supabase.from("notifications");
                 },
             },
             __esModule: true,
