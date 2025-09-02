@@ -184,6 +184,10 @@ export async function clearSupabaseTables(supabase: SupabaseClient) {
             column: "mailingList",
             value: "NON_EXISTENT_MAILING_LIST",
         },
+        customTopics: {
+            column: "topicId",
+            value: "00000000-0000-0000-0000-000000000000",
+        },
     }; // TODO: Get this from the database
 
     for (const table of Object.keys(tables)) {

@@ -387,6 +387,21 @@ export type Database = {
                     },
                 ];
             };
+            customTopics: {
+                Row: {
+                    topicId: string;
+                    topicName: string;
+                };
+                Insert: {
+                    topicId?: string;
+                    topicName: string;
+                };
+                Update: {
+                    topicId?: string;
+                    topicName: string;
+                };
+                Relationships: [];
+            };
             registrations: {
                 Row: {
                     allergies: string[];
