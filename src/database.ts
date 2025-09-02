@@ -54,6 +54,7 @@ export const SupabaseDB = {
     },
     get SHIFT_ASSIGNMENTS() {
         return supabase.from("shiftAssignments");
+    },
     get NOTIFICATIONS() {
         return supabase.from("notifications");
     },
