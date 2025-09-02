@@ -4,9 +4,16 @@ import { get, post, TESTER } from "../../../testing/testingTools";
 import { Role } from "../auth/auth-models";
 import { sendHTMLEmail } from "../ses/ses-utils";
 import { SupabaseDB } from "../../database";
+import { render } from "mustache";
+import templates from "../../templates/templates";
 
 jest.mock("../ses/ses-utils", () => ({
     sendHTMLEmail: jest.fn(),
+}));
+
+const MUSTACHE_RENDER_RESULT = "<html>cool</html>";
+jest.mock("mustache", () => ({
+    render: jest.fn().mockImplementation(() => MUSTACHE_RENDER_RESULT),
 }));
 
 const VALID_DRAFT = {
@@ -44,7 +51,7 @@ const VALID_REGISTRATION = {
     graduationYear: "2025",
     howDidYouHear: ["Social Media"],
     majors: ["Computer Science"],
-    minors: ["Mathematics"],
+    minors: [],
     name: "Test User",
     opportunities: ["Internship"],
     personalLinks: ["https://github.com/testuser"],
@@ -208,7 +215,31 @@ describe("POST /registration/submit", () => {
             .single()
             .throwOnError();
 
-        expect(sendHTMLEmail).toHaveBeenCalled();
+        const expectedSubs = {
+            ...Object.fromEntries(
+                Object.entries(VALID_REGISTRATION)
+                    .filter(([key, _value]) => !["email"].includes(key))
+                    .map(([key, value]) => [
+                        key,
+                        Array.isArray(value)
+                            ? value.length == 0
+                                ? "N/A"
+                                : value.join(", ")
+                            : value,
+                    ])
+            ),
+            personalLinks: VALID_REGISTRATION.personalLinks,
+        };
+        expect(render).toHaveBeenCalledWith(
+            templates.REGISTRATION_CONFIRMATION,
+            expectedSubs
+        );
+
+        expect(sendHTMLEmail).toHaveBeenCalledWith(
+            TESTER.email,
+            expect.stringMatching(/confirmation/i),
+            MUSTACHE_RENDER_RESULT
+        );
     });
 
     it("updates existing registration", async () => {
@@ -216,8 +247,9 @@ describe("POST /registration/submit", () => {
             ...VALID_REGISTRATION,
             userId: TESTER.userId,
         }).throwOnError();
+        const updated = { ...VALID_REGISTRATION, name: "Updated Name" };
         await post("/registration/submit", Role.Enum.USER)
-            .send({ ...VALID_REGISTRATION, name: "Updated Name" })
+            .send(updated)
             .expect(StatusCodes.OK);
 
         const { data: reg } = await SupabaseDB.REGISTRATIONS.select("*")
@@ -226,7 +258,31 @@ describe("POST /registration/submit", () => {
             .throwOnError();
         expect(reg?.name).toBe("Updated Name");
 
-        expect(sendHTMLEmail).not.toHaveBeenCalled();
+        const expectedSubs = {
+            ...Object.fromEntries(
+                Object.entries(updated)
+                    .filter(([key, _value]) => !["email"].includes(key))
+                    .map(([key, value]) => [
+                        key,
+                        Array.isArray(value)
+                            ? value.length == 0
+                                ? "N/A"
+                                : value.join(", ")
+                            : value,
+                    ])
+            ),
+            personalLinks: VALID_REGISTRATION.personalLinks,
+        };
+        expect(render).toHaveBeenCalledWith(
+            templates.REGISTRATION_UPDATE_CONFIRMATION,
+            expectedSubs
+        );
+
+        expect(sendHTMLEmail).toHaveBeenCalledWith(
+            TESTER.email,
+            expect.stringMatching(/updated/i),
+            MUSTACHE_RENDER_RESULT
+        );
     });
 
     it("should not allow unauthenticated users to submit", async () => {
