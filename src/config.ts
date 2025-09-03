@@ -20,6 +20,13 @@ export const MailingListName = z.enum(["rp_interest"]);
 function getEnv(key: string): string {
     const val = process.env[key];
     if (val === undefined) {
+        if (Config.ENV == EnvironmentEnum.PRODUCTION) {
+            console.warn(
+                `env value ${key} not found, defaulting to empty string`
+            );
+            return "";
+        }
+
         throw new Error(`env value ${key} not found, exiting...`);
     }
     return val;
