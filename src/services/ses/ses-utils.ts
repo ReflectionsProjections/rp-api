@@ -58,6 +58,7 @@ export function sendHTMLEmail(
                 },
                 Subject: {
                     Data: subject,
+                    Charset: "utf-8",
                 },
             },
             Source: Config.OUTGOING_EMAIL_ADDRESSES.Enum[
