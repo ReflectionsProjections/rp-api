@@ -85,6 +85,10 @@ jobs:
           AUTH_PROVIDER_X509_CERT_URL=${{ secrets.AUTH_PROVIDER_X509_CERT_URL }}
           CLIENT_X509_CERT_URL=${{ secrets.CLIENT_X509_CERT_URL }}
           UNIVERSE_DOMAIN=googleapis.com
+          AWS_REGION=us-east-2
+          AWS_ACCESS_KEY_ID=${{ vars.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY=${{ vars.AWS_SECRET_ACCESS_KEY }}
+          FROM_EMAIL_ADDRESS=no-reply@reflectionsprojections.org
           PGRST_DB_SCHEMAS="public"
           JWT_EXPIRY="3600"
           FORCE_COLOR="true"
