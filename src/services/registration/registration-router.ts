@@ -136,10 +136,12 @@ registrationRouter.post("/submit", RoleChecker([]), async (req, res) => {
             registration.tags.length > 0 ? registration.tags.join(", ") : "N/A",
     };
 
+    // NOTE: The school's email filters block emails with an exclamation mark (!) in the subject
+    // Not sure why, but do not put exclamation marks in the subject line
     if (!existing) {
         await sendHTMLEmail(
             payload.email,
-            "Reflections | Projections 2025 Confirmation!",
+            "Reflections | Projections 2025 Registration Confirmation",
             Mustache.render(templates.REGISTRATION_CONFIRMATION, substitution)
         );
     } else {
