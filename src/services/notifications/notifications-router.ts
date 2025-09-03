@@ -8,7 +8,7 @@ import {
     manualTopicSchema,
 } from "./notifications-schema";
 import { SupabaseDB } from "../../database";
-import { admin } from "../../firebase";
+import { getFirebaseAdmin } from "../../firebase";
 
 const notificationsRouter = Router();
 
@@ -29,7 +29,7 @@ notificationsRouter.post(
             .throwOnError();
 
         // sign them up for the default topic: all users (notify everyone who has the app)
-        await admin
+        await getFirebaseAdmin()
             .messaging()
             .subscribeToTopic(notificationEnrollmentData.deviceId, "allUsers");
 
@@ -58,7 +58,7 @@ notificationsRouter.post(
             },
         };
 
-        await admin.messaging().send(message);
+        await getFirebaseAdmin().messaging().send(message);
 
         return res.status(StatusCodes.OK).send({
             status: "success",
@@ -101,7 +101,7 @@ notificationsRouter.post(
             .throwOnError();
 
         // Subscribe the user to the specified topic
-        await admin
+        await getFirebaseAdmin()
             .messaging()
             .subscribeToTopic(userDevice.deviceId, topicName);
 
@@ -128,7 +128,7 @@ notificationsRouter.delete(
             .throwOnError();
 
         // Subscribe the user to the specified topic
-        await admin
+        await getFirebaseAdmin()
             .messaging()
             .unsubscribeFromTopic(userDevice.deviceId, topicName);
 
