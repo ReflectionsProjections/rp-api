@@ -4,6 +4,7 @@ import { SupabaseDB } from "../../database";
 import RoleChecker from "../../middleware/role-checker";
 import { Role } from "../auth/auth-models";
 import { PuzzlebangCompleteRequestValidator } from "./puzzlebang-validators";
+import { addPoints } from "../attendee/attendee-utils";
 
 const puzzlebangRouter = Router();
 
@@ -31,7 +32,7 @@ puzzlebangRouter.post(
         const userId = registrationData.userId;
 
         const { data: attendeeData } = await SupabaseDB.ATTENDEES.select(
-            "puzzlesCompleted, points"
+            "puzzlesCompleted"
         )
             .eq("userId", userId)
             .maybeSingle()
@@ -45,8 +46,6 @@ puzzlebangRouter.post(
 
         const puzzlesCompleted = attendeeData.puzzlesCompleted ?? [];
 
-        const currentPoints = attendeeData.points ?? 0;
-
         if (puzzlesCompleted.includes(puzzleId)) {
             return res
                 .status(StatusCodes.CONFLICT)
@@ -55,12 +54,15 @@ puzzlebangRouter.post(
 
         const updatedPuzzles = [...puzzlesCompleted, puzzleId];
 
-        await SupabaseDB.ATTENDEES.update({
-            puzzlesCompleted: updatedPuzzles,
-            points: currentPoints + 2,
-        })
-            .eq("userId", userId)
-            .throwOnError();
+        // Update puzzles completed and add points (2 points per puzzle)
+        await Promise.all([
+            SupabaseDB.ATTENDEES.update({
+                puzzlesCompleted: updatedPuzzles,
+            })
+                .eq("userId", userId)
+                .throwOnError(),
+            addPoints(userId, 2),
+        ]);
 
         return res.sendStatus(StatusCodes.OK);
     }
