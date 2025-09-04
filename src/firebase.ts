@@ -1,31 +1,18 @@
 import * as admin from "firebase-admin";
-import * as dotenv from "dotenv";
 import Config from "./config";
 
-dotenv.config();
+// We only want to initialize the firebase admin once
+let initialized = false;
+export function getFirebaseAdmin() {
+    if (!initialized) {
+        // Ref: https://firebase.google.com/docs/admin/setup#initialize_the_sdk_in_non-google_environments
+        // We prefer to use a json file since the cert is downloaded as such & can be directly placed into any environment
+        // Separate env variables would be harder to manage
+        admin.initializeApp({
+            credential: admin.credential.cert(Config.FIREBASE_ADMIN_CERT_PATH),
+        });
+        initialized = true;
+    }
 
-// Only initialize and configure in non-CI environments
-import { EnvironmentEnum } from "./config";
-
-if (Config.ENV !== EnvironmentEnum.GITHUB_CI) {
-    const serviceAccount = {
-        type: process.env.TYPE,
-        project_id: process.env.PROJECT_ID,
-        private_key_id: process.env.PRIVATE_KEY_ID,
-        private_key: process.env.PRIVATE_KEY?.replace(/\\n/g, "\n"),
-        client_email: process.env.CLIENT_EMAIL,
-        client_id: process.env.CLIENT_ID,
-        auth_uri: process.env.AUTH_URI,
-        token_uri: process.env.TOKEN_URI,
-        auth_provider_x509_cert_url: process.env.AUTH_PROVIDER_X509_CERT_URL,
-        client_x509_cert_url: process.env.CLIENT_X509_CERT_URL,
-    };
-
-    admin.initializeApp({
-        credential: admin.credential.cert(
-            serviceAccount as admin.ServiceAccount
-        ),
-    });
+    return admin;
 }
-
-export { admin };
