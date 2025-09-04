@@ -20,6 +20,13 @@ export const MailingListName = z.enum(["rp_interest"]);
 function getEnv(key: string): string {
     const val = process.env[key];
     if (val === undefined) {
+        if (Config.ENV == EnvironmentEnum.PRODUCTION) {
+            console.warn(
+                `env value ${key} not found, defaulting to empty string`
+            );
+            return "";
+        }
+
         throw new Error(`env value ${key} not found, exiting...`);
     }
     return val;
@@ -54,6 +61,8 @@ export const Config = {
     IOS_CLIENT_ID: getEnv("IOS_OAUTH_GOOGLE_CLIENT_ID"),
     ANDROID_CLIENT_ID: getEnv("ANDROID_OAUTH_GOOGLE_CLIENT_ID"),
     AUTH_CALLBACK_URI_BASE: `${API_BASE}/auth/callback/`,
+
+    FIREBASE_ADMIN_CERT_PATH: getEnv("FIREBASE_ADMIN_CERT_PATH"),
 
     PUZZLEBANG_API_KEY: getEnv("PUZZLEBANG_API_KEY"),
     PUZZLEBANG_POINTS: [
