@@ -1,20 +1,54 @@
 import { SupabaseDB, TierType, IconColorType, supabase } from "../../database";
 import { LeaderboardEntry } from "./leaderboard-schema";
+import { getEventDayForDate } from "../attendee/attendee-utils";
+
+function getDailyPointsForEventDay(
+    attendee: {
+        pointsDay1: number;
+        pointsDay2: number;
+        pointsDay3: number;
+        pointsDay4: number;
+        pointsDay5: number;
+    },
+    eventDay: number
+): number {
+    switch (eventDay) {
+        case 1: return attendee.pointsDay1 || 0;
+        case 2: return attendee.pointsDay2 || 0;
+        case 3: return attendee.pointsDay3 || 0;
+        case 4: return attendee.pointsDay4 || 0;
+        case 5: return attendee.pointsDay5 || 0;
+        default: return 0;
+    }
+}
 
 /**
  * Get the daily leaderboard for a specific day, excluding TIER3 users
  * @param day - The day in YYYY-MM-DD format (Central Time)
- * @param n - Number of top attendees to include
+ * @param n - Number of top attendees to include (optional - returns all if not specified)
  * @returns Promise<LeaderboardEntry[]> - Ranked list of attendees with ties handled
  */
 export async function getDailyLeaderboard(
     day: string,
-    n: number
+    n?: number
 ): Promise<LeaderboardEntry[]> {
-    // Step 1: Get all eligible attendees (not TIER3) with their info
+    // Step 1: Map day string to event day number (Central Time)
+    const dayDate = new Date(day + 'T00:00:00-05:00');
+    const eventDay = getEventDayForDate(dayDate);
+    
+    if (eventDay === null) {
+        return [];
+    }
+
+    // Step 2: Get all eligible attendees with their daily points for this day
     const { data: attendees } = await SupabaseDB.ATTENDEES.select(
         `
             userId,
+            pointsDay1,
+            pointsDay2,
+            pointsDay3,
+            pointsDay4,
+            pointsDay5,
             currentTier,
             icon,
             authInfo!inner(displayName)
@@ -27,73 +61,22 @@ export async function getDailyLeaderboard(
         return [];
     }
 
-    // Step 2: Get events for the specified day in Central Time
-    // Since September is in CDT (UTC-5), use that offset
-    const startOfDay = `${day}T00:00:00-05:00`;
-    const endOfDay = `${day}T23:59:59.999-05:00`;
-
-    const { data: dayEvents } = await SupabaseDB.EVENTS.select(
-        "eventId, points"
-    )
-        .gte("startTime", startOfDay)
-        .lte("startTime", endOfDay)
-        .throwOnError();
-
-    if (!dayEvents || dayEvents.length === 0) {
-        // No events on this day - no leaderboard possible
-        return [];
-    }
-
-    const eventIds = dayEvents.map((e) => e.eventId);
-
-    // Step 3: Get all attendances for these events
-    const { data: attendances } = await SupabaseDB.EVENT_ATTENDANCES.select(
-        "attendee, eventId"
-    )
-        .in("eventId", eventIds)
-        .throwOnError();
-
-    // Step 4: Calculate daily points for each attendee
-    const userDailyPoints = new Map<string, number>();
-
-    // Initialize all eligible attendees with 0 points
-    attendees.forEach((attendee) => {
-        userDailyPoints.set(attendee.userId, 0);
-    });
-
-    // Calculate points from attendances
-    if (attendances) {
-        attendances.forEach((attendance) => {
-            const event = dayEvents.find(
-                (e) => e.eventId === attendance.eventId
-            );
-            if (event && userDailyPoints.has(attendance.attendee)) {
-                const currentPoints =
-                    userDailyPoints.get(attendance.attendee) || 0;
-                userDailyPoints.set(
-                    attendance.attendee,
-                    currentPoints + event.points
-                );
-            }
-        });
-    }
-
-    // Step 5: Create leaderboard entries and sort
+    // Step 3: Create leaderboard entries with daily points
     const leaderboardEntries: Array<LeaderboardEntry> = attendees.map(
         (attendee) => ({
             rank: 0, // Will be set after sorting
             userId: attendee.userId,
             displayName: attendee.authInfo.displayName,
-            points: userDailyPoints.get(attendee.userId) || 0,
+            points: getDailyPointsForEventDay(attendee, eventDay),
             currentTier: attendee.currentTier as TierType,
             icon: attendee.icon as IconColorType,
         })
     );
 
-    // Sort by points descending
+    // Step 4: Sort by daily points descending
     leaderboardEntries.sort((a, b) => b.points - a.points);
 
-    // Step 6: Assign ranks (handle ties)
+    // Step 5: Assign ranks (handle ties)
     let currentRank = 1;
     let previousPoints = -1;
 
@@ -114,7 +97,11 @@ export async function getDailyLeaderboard(
         };
     });
 
-    // Step 7: Filter to top n (including ties)
+    // Step 6: Filter to top n (including ties) or return all if n is not specified
+    if (n === undefined) {
+        return rankedEntries;
+    }
+    
     const topRank =
         rankedEntries[Math.min(n - 1, rankedEntries.length - 1)]?.rank || 1;
     return rankedEntries.filter((entry) => entry.rank <= topRank);
@@ -122,11 +109,11 @@ export async function getDailyLeaderboard(
 
 /**
  * Get the global leaderboard based on total accumulated points
- * @param n - Number of top attendees to include
+ * @param n - Number of top attendees to include (optional - returns all if not specified)
  * @returns Promise<LeaderboardEntry[]> - Ranked list of attendees with ties handled
  */
 export async function getGlobalLeaderboard(
-    n: number
+    n?: number
 ): Promise<LeaderboardEntry[]> {
     // Get all attendees with their total points, including all tiers
     const { data: attendees } = await SupabaseDB.ATTENDEES.select(
@@ -166,7 +153,11 @@ export async function getGlobalLeaderboard(
         };
     });
 
-    // Filter to top n (including ties)
+    // Filter to top n (including ties) or return all if n is not specified
+    if (n === undefined) {
+        return rankedEntries;
+    }
+    
     const topRank =
         rankedEntries[Math.min(n - 1, rankedEntries.length - 1)]?.rank || 1;
     return rankedEntries.filter((entry) => entry.rank <= topRank);
