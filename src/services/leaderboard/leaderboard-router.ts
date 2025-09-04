@@ -1,13 +1,13 @@
 import { Router } from "express";
 import { StatusCodes } from "http-status-codes";
 import {
-    LeaderboardRequestValidator,
+    DailyLeaderboardRequestValidator,
+    SubmitLeaderboardRequestValidator,
     GlobalLeaderboardRequestValidator,
     PreviewLeaderboardResponseValidator,
     GlobalLeaderboardResponseValidator,
     SubmitLeaderboardResponseValidator,
 } from "./leaderboard-schema";
-// import { SupabaseDB } from "../../database";
 import RoleChecker from "../../middleware/role-checker";
 import { Role } from "../auth/auth-models";
 import {
@@ -22,23 +22,22 @@ const leaderboardRouter = Router();
 /**
  * GET /leaderboard/daily
  * Get daily leaderboard for display in mobile app and admin preview
- * Query params: day (YYYY-MM-DD), n (number of winners)
+ * Query params: day (YYYY-MM-DD), n (optional - number of winners, returns all if omitted)
  * Authorization: All authenticated users
  */
 
 leaderboardRouter.get("/daily", RoleChecker([]), async (req, res) => {
-    const { day, n } = LeaderboardRequestValidator.parse({
+    const { day, n } = DailyLeaderboardRequestValidator.parse({
         day: req.query.day,
         n: req.query.n,
     });
 
-    // Get daily leaderboard data
     const leaderboard = await getDailyLeaderboard(day, n);
 
     const response = PreviewLeaderboardResponseValidator.parse({
         leaderboard,
         day,
-        count: n,
+        count: n ?? leaderboard.length,
     });
 
     return res.status(StatusCodes.OK).json(response);
@@ -47,7 +46,7 @@ leaderboardRouter.get("/daily", RoleChecker([]), async (req, res) => {
 /**
  * GET /leaderboard/global
  * Get global leaderboard showing total accumulated points for all attendees
- * Query params: n (number of winners)
+ * Query params: n (optional - number of winners, returns all if omitted)
  * Authorization: All authenticated users
  */
 leaderboardRouter.get("/global", RoleChecker([]), async (req, res) => {
@@ -55,12 +54,11 @@ leaderboardRouter.get("/global", RoleChecker([]), async (req, res) => {
         n: req.query.n,
     });
 
-    // Get global leaderboard data
     const leaderboard = await getGlobalLeaderboard(n);
 
     const response = GlobalLeaderboardResponseValidator.parse({
         leaderboard,
-        count: n,
+        count: n ?? leaderboard.length,
     });
 
     return res.status(StatusCodes.OK).json(response);
@@ -76,16 +74,13 @@ leaderboardRouter.post(
     "/submit",
     RoleChecker([Role.Enum.ADMIN]),
     async (req, res) => {
-        // Get current admin user
         const payload = res.locals.payload;
         const submittedBy = payload.userId;
 
-        const { day, n } = LeaderboardRequestValidator.parse(req.body);
+        const { day, n } = SubmitLeaderboardRequestValidator.parse(req.body);
 
-        // Get leaderboard winners
         const leaderboard = await getDailyLeaderboard(day, n);
 
-        // Promote winners to next tier
         const entriesProcessed = await promoteUsersToNextTier(
             leaderboard.map((entry) => entry.userId)
         );
@@ -96,7 +91,6 @@ leaderboardRouter.post(
             submittedBy
         );
 
-        // Structure response according to schema
         const response = SubmitLeaderboardResponseValidator.parse({
             leaderboard,
             day,
