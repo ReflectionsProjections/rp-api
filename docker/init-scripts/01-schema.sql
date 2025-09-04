@@ -69,6 +69,12 @@ CREATE TABLE public."attendeeAttendances" (
 CREATE TABLE public."attendees" (
     "userId" character varying NOT NULL,
     "points" integer DEFAULT 0 NOT NULL,
+    -- Daily points tracking for event days (Day 1 = Sept 16, 2025, etc.)
+    "pointsDay1" integer DEFAULT 0 NOT NULL,
+    "pointsDay2" integer DEFAULT 0 NOT NULL,
+    "pointsDay3" integer DEFAULT 0 NOT NULL,
+    "pointsDay4" integer DEFAULT 0 NOT NULL,
+    "pointsDay5" integer DEFAULT 0 NOT NULL,
     "hasPriorityMon" boolean DEFAULT false NOT NULL,
     "hasPriorityTue" boolean DEFAULT false NOT NULL,
     "hasPriorityWed" boolean DEFAULT false NOT NULL,
