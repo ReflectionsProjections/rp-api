@@ -2,6 +2,8 @@ import { Router } from "express";
 import { StatusCodes } from "http-status-codes";
 import {
     AttendeeCreateValidator,
+    AttendeeIconUpdateValidator,
+    AttendeeTagsUpdateValidator,
     EventIdValidator,
 } from "./attendee-validators";
 import { SupabaseDB } from "../../database";
@@ -345,6 +347,68 @@ attendeeRouter.post(
             .throwOnError();
 
         return res.status(StatusCodes.OK).json({ message: "Item Redeemed!" });
+    }
+);
+
+// Update attendee icon
+attendeeRouter.patch(
+    "/icon",
+    RoleChecker([Role.Enum.USER]),
+    async (req, res) => {
+        const payload = res.locals.payload;
+        const userId = payload.userId;
+
+        const { icon } = AttendeeIconUpdateValidator.parse(req.body);
+
+        // Check if the user exists in the database
+        const { data: user } = await SupabaseDB.ATTENDEES.select("icon")
+            .eq("userId", userId)
+            .maybeSingle()
+            .throwOnError();
+
+        if (!user) {
+            return res
+                .status(StatusCodes.NOT_FOUND)
+                .json({ error: "UserNotFound" });
+        }
+
+        // Update the icon
+        await SupabaseDB.ATTENDEES.update({ icon })
+            .eq("userId", userId)
+            .throwOnError();
+
+        return res.status(StatusCodes.OK).json({ icon });
+    }
+);
+
+// Update attendee tags
+attendeeRouter.patch(
+    "/tags",
+    RoleChecker([Role.Enum.USER]),
+    async (req, res) => {
+        const payload = res.locals.payload;
+        const userId = payload.userId;
+
+        const { tags } = AttendeeTagsUpdateValidator.parse(req.body);
+
+        // Check if the user exists in the database
+        const { data: user } = await SupabaseDB.ATTENDEES.select("tags")
+            .eq("userId", userId)
+            .maybeSingle()
+            .throwOnError();
+
+        if (!user) {
+            return res
+                .status(StatusCodes.NOT_FOUND)
+                .json({ error: "UserNotFound" });
+        }
+
+        // Update the tags
+        await SupabaseDB.ATTENDEES.update({ tags })
+            .eq("userId", userId)
+            .throwOnError();
+
+        return res.status(StatusCodes.OK).json({ tags });
     }
 );
 

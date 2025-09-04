@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import { Database } from "./database.types";
+import { Database, Enums } from "./database.types";
 
 export const supabase = createClient<Database>(
     process.env.SUPABASE_URL!,
@@ -58,13 +58,13 @@ export const SupabaseDB = {
 };
 
 // Common type exports for consistency across the application
-export type TierType = Database["public"]["Enums"]["tierType"];
-export type IconColorType = Database["public"]["Enums"]["iconColorType"];
-export type RoleType = Database["public"]["Enums"]["roleType"];
-export type CommitteeType = Database["public"]["Enums"]["committeeNames"];
-export type EventType = Database["public"]["Enums"]["eventType"];
+export type TierType = Enums<'tierType'>;
+export type IconColorType = Enums<'iconColorType'>;
+export type RoleType = Enums<'roleType'>;
+export type CommitteeType = Enums<'committeeNames'>;
+export type EventType = Enums<'eventType'>;
 export type StaffAttendanceType =
-    Database["public"]["Enums"]["staffAttendanceType"];
+    Enums<'staffAttendanceType'>;
 
 export const RoleTypes: Record<RoleType, RoleType> = {
     USER: "USER",
