@@ -75,6 +75,11 @@ export type Database = {
                     hasPriorityWed: boolean;
                     icon: Database["public"]["Enums"]["iconColorType"];
                     points: number;
+                    pointsDay1: number;
+                    pointsDay2: number;
+                    pointsDay3: number;
+                    pointsDay4: number;
+                    pointsDay5: number;
                     puzzlesCompleted: string[];
                     tags: string[];
                     userId: string;
@@ -91,6 +96,11 @@ export type Database = {
                     hasPriorityWed?: boolean;
                     icon?: Database["public"]["Enums"]["iconColorType"];
                     points?: number;
+                    pointsDay1?: number;
+                    pointsDay2?: number;
+                    pointsDay3?: number;
+                    pointsDay4?: number;
+                    pointsDay5?: number;
                     puzzlesCompleted?: string[];
                     tags?: string[];
                     userId: string;
@@ -107,6 +117,11 @@ export type Database = {
                     hasPriorityWed?: boolean;
                     icon?: Database["public"]["Enums"]["iconColorType"];
                     points?: number;
+                    pointsDay1?: number;
+                    pointsDay2?: number;
+                    pointsDay3?: number;
+                    pointsDay4?: number;
+                    pointsDay5?: number;
                     puzzlesCompleted?: string[];
                     tags?: string[];
                     userId?: string;
