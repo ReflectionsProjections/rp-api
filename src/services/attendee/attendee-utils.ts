@@ -12,11 +12,11 @@ const EVENT_START_DATE = new Date("2025-09-16T00:00:00-05:00");
  * @returns Date object representing the date at midnight in Central Time
  */
 function getCentralDateAtMidnight(date: Date = new Date()): Date {
-    const centralTimeString = date.toLocaleDateString('en-CA', {
-        timeZone: 'America/Chicago'
+    const centralTimeString = date.toLocaleDateString("en-CA", {
+        timeZone: "America/Chicago",
     });
 
-    return new Date(centralTimeString + 'T00:00:00-05:00');
+    return new Date(centralTimeString + "T00:00:00-05:00");
 }
 
 /**
@@ -26,15 +26,15 @@ function getCentralDateAtMidnight(date: Date = new Date()): Date {
  */
 function mapDateToEventDay(date: Date): number | null {
     const centralDate = getCentralDateAtMidnight(date);
-    
+
     const diffTime = centralDate.getTime() - EVENT_START_DATE.getTime();
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    
+
     // Event runs for 5 days (0-4 maps to days 1-5)
     if (diffDays >= 0 && diffDays < 5) {
         return diffDays + 1;
     }
-    
+
     return null; // Outside event range
 }
 
@@ -46,11 +46,10 @@ function mapDateToEventDay(date: Date): number | null {
  * @returns Promise<void>
  */
 export async function addPoints(
-    userId: string, 
-    points: number, 
+    userId: string,
+    points: number,
     date?: Date
 ): Promise<void> {
-
     const targetDate = date || getCentralDateAtMidnight();
     const eventDay = mapDateToEventDay(targetDate);
 

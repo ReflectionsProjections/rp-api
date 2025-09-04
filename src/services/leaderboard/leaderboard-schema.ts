@@ -57,8 +57,12 @@ export const SubmitLeaderboardResponseValidator = z.object({
 });
 
 // Type exports
-export type DailyLeaderboardRequest = z.infer<typeof DailyLeaderboardRequestValidator>;
-export type SubmitLeaderboardRequest = z.infer<typeof SubmitLeaderboardRequestValidator>;
+export type DailyLeaderboardRequest = z.infer<
+    typeof DailyLeaderboardRequestValidator
+>;
+export type SubmitLeaderboardRequest = z.infer<
+    typeof SubmitLeaderboardRequestValidator
+>;
 export type GlobalLeaderboardRequest = z.infer<
     typeof GlobalLeaderboardRequestValidator
 >;

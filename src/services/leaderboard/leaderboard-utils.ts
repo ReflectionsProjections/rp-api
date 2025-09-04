@@ -13,12 +13,18 @@ function getDailyPointsForEventDay(
     eventDay: number
 ): number {
     switch (eventDay) {
-        case 1: return attendee.pointsDay1 || 0;
-        case 2: return attendee.pointsDay2 || 0;
-        case 3: return attendee.pointsDay3 || 0;
-        case 4: return attendee.pointsDay4 || 0;
-        case 5: return attendee.pointsDay5 || 0;
-        default: return 0;
+        case 1:
+            return attendee.pointsDay1 || 0;
+        case 2:
+            return attendee.pointsDay2 || 0;
+        case 3:
+            return attendee.pointsDay3 || 0;
+        case 4:
+            return attendee.pointsDay4 || 0;
+        case 5:
+            return attendee.pointsDay5 || 0;
+        default:
+            return 0;
     }
 }
 
@@ -33,9 +39,9 @@ export async function getDailyLeaderboard(
     n?: number
 ): Promise<LeaderboardEntry[]> {
     // Step 1: Map day string to event day number (Central Time)
-    const dayDate = new Date(day + 'T00:00:00-05:00');
+    const dayDate = new Date(day + "T00:00:00-05:00");
     const eventDay = getEventDayForDate(dayDate);
-    
+
     if (eventDay === null) {
         return [];
     }
@@ -101,7 +107,7 @@ export async function getDailyLeaderboard(
     if (n === undefined) {
         return rankedEntries;
     }
-    
+
     const topRank =
         rankedEntries[Math.min(n - 1, rankedEntries.length - 1)]?.rank || 1;
     return rankedEntries.filter((entry) => entry.rank <= topRank);
@@ -157,7 +163,7 @@ export async function getGlobalLeaderboard(
     if (n === undefined) {
         return rankedEntries;
     }
-    
+
     const topRank =
         rankedEntries[Math.min(n - 1, rankedEntries.length - 1)]?.rank || 1;
     return rankedEntries.filter((entry) => entry.rank <= topRank);
