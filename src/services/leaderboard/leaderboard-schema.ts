@@ -5,15 +5,21 @@ export const DayStringValidator = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, {
     message: "Day must be in YYYY-MM-DD format",
 });
 
-// Request validator for daily leaderboard endpoints
-export const LeaderboardRequestValidator = z.object({
+// Request validator for daily leaderboard GET endpoint (n is optional)
+export const DailyLeaderboardRequestValidator = z.object({
+    day: DayStringValidator,
+    n: z.coerce.number().int().min(1).optional(),
+});
+
+// Request validator for leaderboard submission endpoint (n is required)
+export const SubmitLeaderboardRequestValidator = z.object({
     day: DayStringValidator,
     n: z.coerce.number().int().min(1),
 });
 
-// Request validator for global leaderboard endpoint
+// Request validator for global leaderboard endpoint (n is optional)
 export const GlobalLeaderboardRequestValidator = z.object({
-    n: z.coerce.number().int().min(1),
+    n: z.coerce.number().int().min(1).optional(),
 });
 
 // Leaderboard entry - represents a single user in the leaderboard; reuse for global and daily
@@ -51,7 +57,8 @@ export const SubmitLeaderboardResponseValidator = z.object({
 });
 
 // Type exports
-export type LeaderboardRequest = z.infer<typeof LeaderboardRequestValidator>;
+export type DailyLeaderboardRequest = z.infer<typeof DailyLeaderboardRequestValidator>;
+export type SubmitLeaderboardRequest = z.infer<typeof SubmitLeaderboardRequestValidator>;
 export type GlobalLeaderboardRequest = z.infer<
     typeof GlobalLeaderboardRequestValidator
 >;
