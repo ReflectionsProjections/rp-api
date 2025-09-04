@@ -6,7 +6,7 @@ import {
     AttendeeTagsUpdateValidator,
     EventIdValidator,
 } from "./attendee-validators";
-import { SupabaseDB } from "../../database";
+import { SupabaseDB, IconColorType } from "../../database";
 import { Tiers, IconColors } from "./attendee-schema";
 import RoleChecker from "../../middleware/role-checker";
 import { Role } from "../auth/auth-models";
@@ -373,7 +373,7 @@ attendeeRouter.patch(
         }
 
         // Update the icon
-        await SupabaseDB.ATTENDEES.update({ icon })
+        await SupabaseDB.ATTENDEES.update({ icon: icon as IconColorType })
             .eq("userId", userId)
             .throwOnError();
 

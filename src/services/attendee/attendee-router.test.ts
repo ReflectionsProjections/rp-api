@@ -57,6 +57,7 @@ type AttendeeOverride = {
     hasPrioritySat?: boolean;
     hasPrioritySun?: boolean;
     puzzlesCompleted?: string[];
+    tags?: string[];
 };
 
 export async function insertTestAttendee(
@@ -735,7 +736,14 @@ describe("PATCH /attendee/icon", () => {
             },
         });
 
-        const validIcons: IconColorType[] = ["GREEN", "YELLOW", "PINK", "BLACK", "PURPLE", "ORANGE"];
+        const validIcons: IconColorType[] = [
+            "GREEN",
+            "YELLOW",
+            "PINK",
+            "BLACK",
+            "PURPLE",
+            "ORANGE",
+        ];
 
         for (const icon of validIcons) {
             const response = await patch("/attendee/icon", Role.enum.USER)
@@ -846,7 +854,12 @@ describe("PATCH /attendee/tags", () => {
             },
         });
 
-        const specialTags = ["C++", "React.js", "Machine Learning", "Data Science & Analytics"];
+        const specialTags = [
+            "C++",
+            "React.js",
+            "Machine Learning",
+            "Data Science & Analytics",
+        ];
 
         const response = await patch("/attendee/tags", Role.enum.USER)
             .send({ tags: specialTags })

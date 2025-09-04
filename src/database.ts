@@ -58,13 +58,12 @@ export const SupabaseDB = {
 };
 
 // Common type exports for consistency across the application
-export type TierType = Enums<'tierType'>;
-export type IconColorType = Enums<'iconColorType'>;
-export type RoleType = Enums<'roleType'>;
-export type CommitteeType = Enums<'committeeNames'>;
-export type EventType = Enums<'eventType'>;
-export type StaffAttendanceType =
-    Enums<'staffAttendanceType'>;
+export type TierType = Enums<"tierType">;
+export type IconColorType = Enums<"iconColorType">;
+export type RoleType = Enums<"roleType">;
+export type CommitteeType = Enums<"committeeNames">;
+export type EventType = Enums<"eventType">;
+export type StaffAttendanceType = Enums<"staffAttendanceType">;
 
 export const RoleTypes: Record<RoleType, RoleType> = {
     USER: "USER",
