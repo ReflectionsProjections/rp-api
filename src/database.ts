@@ -52,6 +52,12 @@ export const SupabaseDB = {
     get LEADERBOARD_SUBMISSIONS() {
         return supabase.from("leaderboardSubmissions");
     },
+    get NOTIFICATIONS() {
+        return supabase.from("notifications");
+    },
+    get CUSTOM_TOPICS() {
+        return supabase.from("customTopics");
+    },
 };
 
 // Common type exports for consistency across the application
@@ -68,7 +74,6 @@ export const RoleTypes: Record<RoleType, RoleType> = {
     STAFF: "STAFF",
     ADMIN: "ADMIN",
     CORPORATE: "CORPORATE",
-    PUZZLEBANG: "PUZZLEBANG",
 };
 
 export const CommitteeTypes: Record<string, CommitteeType> = {

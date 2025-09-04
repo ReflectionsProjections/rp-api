@@ -1,9 +1,8 @@
 import express from "express";
-import fs from "fs";
 import { StatusCodes } from "http-status-codes";
 import { Config, EnvironmentEnum } from "./config";
 import { isTest } from "./utilities";
-import AWS from "aws-sdk";
+import "./firebase";
 
 // import databaseMiddleware from "./middleware/database-middleware";
 // import customCors from "./middleware/cors-middleware";
@@ -16,7 +15,7 @@ import staffRouter from "./services/staff/staff-router";
 import checkinRouter from "./services/checkin/checkin-router";
 import authRouter from "./services/auth/auth-router";
 import eventsRouter from "./services/events/events-router";
-// import notificationsRouter from "./services/notifications/notifications-router";
+import notificationsRouter from "./services/notifications/notifications-router";
 import registrationRouter from "./services/registration/registration-router";
 import s3Router from "./services/s3/s3-router";
 import statsRouter from "./services/stats/stats-router";
@@ -27,12 +26,6 @@ import meetingsRouter from "./services/meetings/meetings-router";
 import leaderboardRouter from "./services/leaderboard/leaderboard-router";
 
 import cors from "cors";
-
-AWS.config.update({
-    region: Config.S3_REGION,
-    accessKeyId: Config.S3_ACCESS_KEY,
-    secretAccessKey: Config.S3_SECRET_KEY,
-});
 
 const app = express();
 app.enable("trust proxy");
@@ -47,13 +40,6 @@ app.disable("etag");
 app.use(cors());
 
 // Logs
-const date = new Date();
-const logDir = `${Config.LOG_DIR}/${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}`;
-fs.mkdirSync(logDir, { recursive: true });
-const accessLogStream = fs.createWriteStream(`${logDir}/${process.pid}.log`, {
-    flags: "a",
-});
-
 switch (Config.ENV) {
     case EnvironmentEnum.TESTING:
         break;
@@ -61,7 +47,11 @@ switch (Config.ENV) {
         app.use(morgan("dev"));
         break;
     case EnvironmentEnum.PRODUCTION:
-        app.use(morgan("combined", { stream: accessLogStream }));
+        app.use(
+            morgan(
+                ':remote-addr - :remote-user ":method :url HTTP/:http-version" :status :res[content-length] ":referrer" ":user-agent"'
+            )
+        );
         break;
 }
 
@@ -78,7 +68,7 @@ app.use("/auth", authRouter);
 app.use("/checkin", checkinRouter);
 app.use("/events", eventsRouter);
 app.use("/leaderboard", leaderboardRouter);
-// app.use("/notifications", notificationsRouter);
+app.use("/notifications", notificationsRouter);
 app.use("/puzzlebang", puzzlebangRouter);
 app.use("/registration", registrationRouter);
 app.use("/s3", s3Router);

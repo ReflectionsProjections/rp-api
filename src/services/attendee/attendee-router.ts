@@ -9,6 +9,7 @@ import { Tiers, IconColors } from "./attendee-schema";
 import RoleChecker from "../../middleware/role-checker";
 import { Role } from "../auth/auth-models";
 import { generateQrHash, getCurrentDay } from "../checkin/checkin-utils";
+import { getFirebaseAdmin } from "../../firebase";
 
 const attendeeRouter = Router();
 
@@ -42,6 +43,21 @@ attendeeRouter.post(
         await SupabaseDB.ATTENDEES.update({ favoriteEvents: newFavorites })
             .eq("userId", userId)
             .throwOnError();
+
+        // enroll them into the topic:
+        const { data: device } = await SupabaseDB.NOTIFICATIONS.select(
+            "deviceId"
+        )
+            .eq("userId", userId)
+            .maybeSingle()
+            .throwOnError();
+
+        if (device?.deviceId) {
+            const topicName = `event_${eventId}`;
+            await getFirebaseAdmin()
+                .messaging()
+                .subscribeToTopic(device?.deviceId, topicName);
+        }
 
         return res.status(StatusCodes.OK).json({ favorites: newFavorites });
     }
@@ -77,6 +93,22 @@ attendeeRouter.delete(
         })
             .eq("userId", userId)
             .throwOnError();
+
+        // remove them from the topic:
+        const { data: device } = await SupabaseDB.NOTIFICATIONS.select(
+            "deviceId"
+        )
+            .eq("userId", userId)
+            .maybeSingle()
+            .throwOnError();
+
+        if (device?.deviceId) {
+            const topicName = `event_${eventId}`;
+            await getFirebaseAdmin()
+                .messaging()
+                .unsubscribeFromTopic(device?.deviceId, topicName);
+        }
+
         return res.status(StatusCodes.OK).json({ favorites: updatedFavorites });
     }
 );
