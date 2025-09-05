@@ -11,8 +11,7 @@ import { Tiers, IconColors } from "./attendee-schema";
 import RoleChecker from "../../middleware/role-checker";
 import { Role } from "../auth/auth-models";
 import { generateQrHash, getCurrentDay } from "../checkin/checkin-utils";
-
-import { admin } from "../../firebase";
+import { getFirebaseAdmin } from "../../firebase";
 
 const attendeeRouter = Router();
 
@@ -57,7 +56,7 @@ attendeeRouter.post(
 
         if (device?.deviceId) {
             const topicName = `event_${eventId}`;
-            await admin
+            await getFirebaseAdmin()
                 .messaging()
                 .subscribeToTopic(device?.deviceId, topicName);
         }
@@ -107,7 +106,7 @@ attendeeRouter.delete(
 
         if (device?.deviceId) {
             const topicName = `event_${eventId}`;
-            await admin
+            await getFirebaseAdmin()
                 .messaging()
                 .unsubscribeFromTopic(device?.deviceId, topicName);
         }
@@ -143,35 +142,6 @@ attendeeRouter.get(
         });
     }
 );
-
-// Create a new attendee
-attendeeRouter.post("/", async (req, res) => {
-    const { userId, tags } = AttendeeCreateValidator.parse(req.body);
-
-    const newAttendee = {
-        userId: userId,
-        points: 0,
-        favoriteEvents: [],
-        puzzlesCompleted: [],
-        tags: tags,
-        currentTier: Tiers.Enum.TIER1,
-        icon: IconColors.Enum.RED,
-        hasPriorityMon: false,
-        hasPriorityTue: false,
-        hasPriorityWed: false,
-        hasPriorityThu: false,
-        hasPriorityFri: false,
-        hasPrioritySat: false,
-        hasPrioritySun: false,
-    }; // TODO: add a validator????
-
-    await SupabaseDB.ATTENDEES.insert(newAttendee).throwOnError();
-
-    return res.status(StatusCodes.CREATED).json({
-        userId: userId,
-        tags: tags,
-    });
-});
 
 // generates a unique QR code for each attendee
 attendeeRouter.get("/qr/", RoleChecker([Role.Enum.USER]), async (req, res) => {

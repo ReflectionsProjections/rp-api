@@ -16,11 +16,12 @@ export enum EnvironmentEnum {
 export const Environment = z.nativeEnum(EnvironmentEnum);
 
 export const MailingListName = z.enum(["rp_interest"]);
+const env = Environment.parse(getEnv("ENV"));
 
 function getEnv(key: string): string {
     const val = process.env[key];
     if (val === undefined) {
-        if (Config.ENV == EnvironmentEnum.PRODUCTION) {
+        if (env == EnvironmentEnum.PRODUCTION) {
             console.warn(
                 `env value ${key} not found, defaulting to empty string`
             );
@@ -32,7 +33,6 @@ function getEnv(key: string): string {
     return val;
 }
 
-const env = Environment.parse(getEnv("ENV"));
 const API_BASE =
     env === EnvironmentEnum.PRODUCTION
         ? "https://api.reflectionsprojections.org"
@@ -61,6 +61,8 @@ export const Config = {
     IOS_CLIENT_ID: getEnv("IOS_OAUTH_GOOGLE_CLIENT_ID"),
     ANDROID_CLIENT_ID: getEnv("ANDROID_OAUTH_GOOGLE_CLIENT_ID"),
     AUTH_CALLBACK_URI_BASE: `${API_BASE}/auth/callback/`,
+
+    FIREBASE_ADMIN_CERT_PATH: getEnv("FIREBASE_ADMIN_CERT_PATH"),
 
     PUZZLEBANG_API_KEY: getEnv("PUZZLEBANG_API_KEY"),
     PUZZLEBANG_POINTS: [

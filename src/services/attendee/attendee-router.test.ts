@@ -351,51 +351,6 @@ describe("GET /attendee/favorites", () => {
     });
 });
 
-describe("POST /attendee/", () => {
-    const VALID_ATTENDEE_PAYLOAD = {
-        userId: "testuser123",
-        tags: ["testtag1", "testtag2"],
-    };
-
-    beforeEach(async () => {
-        await SupabaseDB.AUTH_INFO.insert([
-            {
-                userId: VALID_ATTENDEE_PAYLOAD.userId,
-                displayName: "Test",
-                email: "test@test.com",
-                authId: TEST_AUTH_ID,
-            },
-        ]).throwOnError();
-
-        await SupabaseDB.AUTH_ROLES.insert([
-            {
-                userId: VALID_ATTENDEE_PAYLOAD.userId,
-                role: Role.enum.USER,
-            },
-        ]).throwOnError();
-    });
-
-    it("should create a new attendee with valid data", async () => {
-        const response = await post("/attendee/")
-            .send(VALID_ATTENDEE_PAYLOAD)
-            .expect(StatusCodes.CREATED);
-        expect(response.body).toEqual(VALID_ATTENDEE_PAYLOAD);
-        const dbRecord = await SupabaseDB.ATTENDEES.select()
-            .eq("userId", VALID_ATTENDEE_PAYLOAD.userId)
-            .single();
-
-        expect(dbRecord.data?.userId).toBe(VALID_ATTENDEE_PAYLOAD.userId);
-    });
-
-    it("should return 400 if required fields are missing", async () => {
-        const invalidPayload = {}; // Empty object, missing userId
-
-        await post("/attendee/")
-            .send(invalidPayload)
-            .expect(StatusCodes.BAD_REQUEST);
-    });
-});
-
 describe("GET /attendee/points", () => {
     it("should return the user's points", async () => {
         await insertTestAttendee({

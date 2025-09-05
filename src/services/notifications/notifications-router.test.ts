@@ -12,13 +12,13 @@ const mockSend = jest.fn();
 const TEST_DEVICE_ID = "test-device-abc";
 
 jest.mock("../../firebase", () => ({
-    admin: {
+    getFirebaseAdmin: () => ({
         messaging: () => ({
             subscribeToTopic: mockSubscribe,
             unsubscribeFromTopic: mockUnsubscribe,
             send: mockSend,
         }),
-    },
+    }),
 }));
 
 jest.setTimeout(100000);
