@@ -42,6 +42,7 @@ const PAST_EVENT_VISIBLE = {
     eventType: EventType.enum.SPEAKER,
     isVisible: true,
     attendanceCount: 25,
+    tags: ["AI"]
 } satisfies InternalEvent;
 
 const UPCOMING_EVENT_VISIBLE_LATER = {
@@ -57,6 +58,7 @@ const UPCOMING_EVENT_VISIBLE_LATER = {
     eventType: EventType.enum.CORPORATE,
     isVisible: true,
     attendanceCount: 5,
+    tags: ["AI"]
 } satisfies InternalEvent;
 
 const UPCOMING_EVENT_HIDDEN_EARLIER = {
@@ -72,6 +74,7 @@ const UPCOMING_EVENT_HIDDEN_EARLIER = {
     eventType: EventType.enum.SPECIAL,
     isVisible: false,
     attendanceCount: 50,
+    tags: ["AI"]
 } satisfies InternalEvent;
 
 const UPCOMING_EVENT_VISIBLE_SOONEST = {
@@ -87,6 +90,7 @@ const UPCOMING_EVENT_VISIBLE_SOONEST = {
     eventType: EventType.enum.MEALS,
     isVisible: true,
     attendanceCount: 100,
+    tags: ["AI"]
 } satisfies InternalEvent;
 
 const NEW_EVENT_VALID_PAYLOAD = {
@@ -101,6 +105,7 @@ const NEW_EVENT_VALID_PAYLOAD = {
     eventType: EventType.enum.SPEAKER,
     isVisible: false,
     attendanceCount: 0,
+    tags: ["AI"]
 } satisfies EventInputPayload;
 
 const EVENT_UPDATE_FULL_PAYLOAD = {
@@ -115,6 +120,7 @@ const EVENT_UPDATE_FULL_PAYLOAD = {
     eventType: EventType.enum.MEALS,
     isVisible: true,
     attendanceCount: 99,
+    tags: ["AI"]
 } satisfies EventInputPayload;
 
 const EVENT_UPDATE_PARTIAL_PAYLOAD = {
@@ -128,7 +134,7 @@ const EVENT_UPDATE_PARTIAL_PAYLOAD = {
     eventType: EventType.enum.SPECIAL,
     isVisible: false,
     attendanceCount: 50,
-
+    tags: ["AI"],
     // fields we are updating
     name: "Partially Updated Name",
     description: "Only name and description were meant to be updated.",
@@ -166,6 +172,7 @@ function createExternalEventObject(
         imageUrl: eventData.imageUrl,
         location: eventData.location,
         eventType: eventData.eventType,
+        tags: eventData.tags,
     };
 }
 
