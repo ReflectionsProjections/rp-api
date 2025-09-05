@@ -589,6 +589,29 @@ export type Database = {
                 };
                 Relationships: [];
             };
+            redemptions: {
+                Row: {
+                    userId: string;
+                    item: Database["public"]["Enums"]["tierType"];
+                };
+                Insert: {
+                    userId: string;
+                    item: Database["public"]["Enums"]["tierType"];
+                };
+                Update: {
+                    userId?: string;
+                    item?: Database["public"]["Enums"]["tierType"];
+                };
+                Relationships: [
+                    {
+                        foreignKeyName: "redemptions_user_id_fkey";
+                        columns: ["userId"];
+                        isOneToOne: false;
+                        referencedRelation: "authInfo";
+                        referencedColumns: ["userId"];
+                    },
+                ];
+            };
         };
         Views: {
             [_ in never]: never;

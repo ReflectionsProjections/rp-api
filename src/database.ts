@@ -58,6 +58,9 @@ export const SupabaseDB = {
     get CUSTOM_TOPICS() {
         return supabase.from("customTopics");
     },
+    get REDEMPTIONS() {
+        return supabase.from("redemptions");
+    },
 };
 
 // Common type exports for consistency across the application

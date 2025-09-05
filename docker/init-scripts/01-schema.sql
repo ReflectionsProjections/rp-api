@@ -135,6 +135,12 @@ CREATE TABLE public."leaderboardSubmissions" (
     CONSTRAINT "leaderboardSubmissions_day_unique" UNIQUE ("day")
 );
 
+CREATE TABLE public."redemptions" (
+    "userId" character varying NOT NULL,
+    "item" public."tierType" NOT NULL,
+    CONSTRAINT "redemptions_pkey" PRIMARY KEY ("userId", "item")
+);
+
 CREATE TABLE public."meetings" (
     "meetingId" uuid DEFAULT gen_random_uuid() NOT NULL,
     "committeeType" public."committeeNames" NOT NULL,
@@ -273,6 +279,9 @@ ALTER TABLE ONLY public."registrations"
 
 ALTER TABLE ONLY public."leaderboardSubmissions"
     ADD CONSTRAINT "leaderboard_submissions_submitted_by_fkey" FOREIGN KEY ("submittedBy") REFERENCES public."authInfo"("userId");
+
+ALTER TABLE ONLY public."redemptions"
+    ADD CONSTRAINT "redemptions_user_id_fkey" FOREIGN KEY ("userId") REFERENCES public."authInfo"("userId");
 
 -- PostgreSQL function for atomic tier promotions
 CREATE OR REPLACE FUNCTION public.promote_users_batch(user_ids text[])
