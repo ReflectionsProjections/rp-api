@@ -25,6 +25,7 @@ export const externalEventView = z.object({
     imageUrl: z.string().nullable(),
     location: z.string().nullable(),
     eventType: EventType,
+    tags: z.array(z.string()).default([]),
 });
 
 export const internalEventView = externalEventView.extend({

@@ -1,11 +1,11 @@
 import { Router } from "express";
 import { StatusCodes } from "http-status-codes";
 import {
-    AttendeeCreateValidator,
+    AttendeeIconUpdateValidator,
+    AttendeeTagsUpdateValidator,
     EventIdValidator,
 } from "./attendee-validators";
-import { SupabaseDB } from "../../database";
-import { Tiers, IconColors } from "./attendee-schema";
+import { SupabaseDB, IconColorType } from "../../database";
 import RoleChecker from "../../middleware/role-checker";
 import { Role } from "../auth/auth-models";
 import { generateQrHash, getCurrentDay } from "../checkin/checkin-utils";
@@ -140,35 +140,6 @@ attendeeRouter.get(
         });
     }
 );
-
-// Create a new attendee
-attendeeRouter.post("/", async (req, res) => {
-    const { userId, tags } = AttendeeCreateValidator.parse(req.body);
-
-    const newAttendee = {
-        userId: userId,
-        points: 0,
-        favoriteEvents: [],
-        puzzlesCompleted: [],
-        tags: tags,
-        currentTier: Tiers.Enum.TIER1,
-        icon: IconColors.Enum.RED,
-        hasPriorityMon: false,
-        hasPriorityTue: false,
-        hasPriorityWed: false,
-        hasPriorityThu: false,
-        hasPriorityFri: false,
-        hasPrioritySat: false,
-        hasPrioritySun: false,
-    }; // TODO: add a validator????
-
-    await SupabaseDB.ATTENDEES.insert(newAttendee).throwOnError();
-
-    return res.status(StatusCodes.CREATED).json({
-        userId: userId,
-        tags: tags,
-    });
-});
 
 // generates a unique QR code for each attendee
 attendeeRouter.get("/qr/", RoleChecker([Role.Enum.USER]), async (req, res) => {
@@ -344,6 +315,68 @@ attendeeRouter.post(
             .throwOnError();
 
         return res.status(StatusCodes.OK).json({ message: "Item Redeemed!" });
+    }
+);
+
+// Update attendee icon
+attendeeRouter.patch(
+    "/icon",
+    RoleChecker([Role.Enum.USER]),
+    async (req, res) => {
+        const payload = res.locals.payload;
+        const userId = payload.userId;
+
+        const { icon } = AttendeeIconUpdateValidator.parse(req.body);
+
+        // Check if the user exists in the database
+        const { data: user } = await SupabaseDB.ATTENDEES.select("icon")
+            .eq("userId", userId)
+            .maybeSingle()
+            .throwOnError();
+
+        if (!user) {
+            return res
+                .status(StatusCodes.NOT_FOUND)
+                .json({ error: "UserNotFound" });
+        }
+
+        // Update the icon
+        await SupabaseDB.ATTENDEES.update({ icon: icon as IconColorType })
+            .eq("userId", userId)
+            .throwOnError();
+
+        return res.status(StatusCodes.OK).json({ icon });
+    }
+);
+
+// Update attendee tags
+attendeeRouter.patch(
+    "/tags",
+    RoleChecker([Role.Enum.USER]),
+    async (req, res) => {
+        const payload = res.locals.payload;
+        const userId = payload.userId;
+
+        const { tags } = AttendeeTagsUpdateValidator.parse(req.body);
+
+        // Check if the user exists in the database
+        const { data: user } = await SupabaseDB.ATTENDEES.select("tags")
+            .eq("userId", userId)
+            .maybeSingle()
+            .throwOnError();
+
+        if (!user) {
+            return res
+                .status(StatusCodes.NOT_FOUND)
+                .json({ error: "UserNotFound" });
+        }
+
+        // Update the tags
+        await SupabaseDB.ATTENDEES.update({ tags })
+            .eq("userId", userId)
+            .throwOnError();
+
+        return res.status(StatusCodes.OK).json({ tags });
     }
 );
 
