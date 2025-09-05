@@ -1,13 +1,11 @@
 import { Router } from "express";
 import { StatusCodes } from "http-status-codes";
 import {
-    AttendeeCreateValidator,
     AttendeeIconUpdateValidator,
     AttendeeTagsUpdateValidator,
     EventIdValidator,
 } from "./attendee-validators";
 import { SupabaseDB, IconColorType } from "../../database";
-import { Tiers, IconColors } from "./attendee-schema";
 import RoleChecker from "../../middleware/role-checker";
 import { Role } from "../auth/auth-models";
 import { generateQrHash, getCurrentDay } from "../checkin/checkin-utils";
