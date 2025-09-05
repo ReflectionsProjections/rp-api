@@ -6,6 +6,7 @@ import cors from "cors";
 import RoleChecker from "../../middleware/role-checker";
 import { Role } from "../auth/auth-models";
 import { SESv2Client, SendEmailCommand } from "@aws-sdk/client-sesv2";
+import Config from "../../config";
 
 const subscriptionRouter = Router();
 
@@ -78,10 +79,10 @@ subscriptionRouter.post(
             .throwOnError();
 
         const sesClient = new SESv2Client({
-            region: process.env.AWS_REGION!,
+            region: Config.S3_REGION!,
             credentials: {
-                accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-                secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+                accessKeyId: Config.S3_ACCESS_KEY!,
+                secretAccessKey: Config.S3_SECRET_KEY!,
             },
         });
 
