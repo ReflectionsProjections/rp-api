@@ -44,7 +44,8 @@ CREATE TYPE public."staffAttendanceType" AS ENUM (
 CREATE TYPE public."tierType" AS ENUM (
     'TIER1',
     'TIER2',
-    'TIER3'
+    'TIER3',
+    'TIER4'
 );
 
 CREATE TYPE public."iconColorType" AS ENUM (
@@ -280,6 +281,7 @@ DECLARE
     promoted_count int := 0;
     tier1_count int := 0;
     tier2_count int := 0;
+    tier3_count int := 0;
 BEGIN
     -- Promote TIER1 -> TIER2
     UPDATE public."attendees" 
@@ -297,8 +299,16 @@ BEGIN
     
     GET DIAGNOSTICS tier2_count = ROW_COUNT;
     
+    -- Promote TIER3 -> TIER4
+    UPDATE public."attendees"
+    SET "currentTier" = 'TIER4' 
+    WHERE "userId" = ANY(user_ids)
+    AND "currentTier" = 'TIER3';
+    
+    GET DIAGNOSTICS tier3_count = ROW_COUNT;
+    
     -- Return total promoted users
-    promoted_count := tier1_count + tier2_count;
+    promoted_count := tier1_count + tier2_count + tier3_count;
     
     RETURN promoted_count;
 END;

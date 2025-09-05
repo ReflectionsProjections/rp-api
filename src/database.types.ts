@@ -626,7 +626,7 @@ export type Database = {
                 | "ORANGE";
             roleType: "USER" | "STAFF" | "ADMIN" | "CORPORATE";
             staffAttendanceType: "PRESENT" | "EXCUSED" | "ABSENT";
-            tierType: "TIER1" | "TIER2" | "TIER3";
+            tierType: "TIER1" | "TIER2" | "TIER3" | "TIER4";
         };
         CompositeTypes: {
             [_ in never]: never;
@@ -789,7 +789,7 @@ export const Constants = {
             ],
             roleType: ["USER", "STAFF", "ADMIN", "CORPORATE"],
             staffAttendanceType: ["PRESENT", "EXCUSED", "ABSENT"],
-            tierType: ["TIER1", "TIER2", "TIER3"],
+            tierType: ["TIER1", "TIER2", "TIER3", "TIER4"],
         },
     },
 } as const;

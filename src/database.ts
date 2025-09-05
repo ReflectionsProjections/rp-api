@@ -90,6 +90,7 @@ export const TierTypes: Record<TierType, TierType> = {
     TIER1: "TIER1",
     TIER2: "TIER2",
     TIER3: "TIER3",
+    TIER4: "TIER4",
 };
 
 export const IconColorTypes: Record<IconColorType, IconColorType> = {

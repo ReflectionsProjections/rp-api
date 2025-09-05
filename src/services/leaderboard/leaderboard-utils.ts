@@ -60,7 +60,7 @@ export async function getDailyLeaderboard(
             authInfo!inner(displayName)
         `
     )
-        .neq("currentTier", "TIER3")
+        .neq("currentTier", "TIER4")
         .throwOnError();
 
     if (!attendees || attendees.length === 0) {
