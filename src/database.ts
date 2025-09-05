@@ -49,6 +49,9 @@ export const SupabaseDB = {
     get SUBSCRIPTIONS() {
         return supabase.from("subscriptions");
     },
+    get LEADERBOARD_SUBMISSIONS() {
+        return supabase.from("leaderboardSubmissions");
+    },
     get NOTIFICATIONS() {
         return supabase.from("notifications");
     },

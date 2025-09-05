@@ -4,6 +4,7 @@ import { SupabaseDB } from "../../database";
 import { PuzzlebangCompleteRequestValidator } from "./puzzlebang-validators";
 import PuzzlebangChecker from "../../middleware/puzzlebang-checker";
 import Config from "../../config";
+import { addPoints } from "../attendee/attendee-utils";
 
 const puzzlebangRouter = Router();
 
@@ -31,7 +32,7 @@ puzzlebangRouter.post("/", async (req, res) => {
     const userId = registrationData.userId;
 
     const { data: attendeeData } = await SupabaseDB.ATTENDEES.select(
-        "puzzlesCompleted, points"
+        "puzzlesCompleted"
     )
         .eq("userId", userId)
         .maybeSingle()
@@ -45,8 +46,6 @@ puzzlebangRouter.post("/", async (req, res) => {
 
     const puzzlesCompleted = attendeeData.puzzlesCompleted ?? [];
 
-    const currentPoints = attendeeData.points ?? 0;
-
     if (puzzlesCompleted.includes(puzzleId)) {
         return res.status(StatusCodes.CONFLICT).json({
             error: "AlreadyCompleted",
@@ -58,16 +57,17 @@ puzzlebangRouter.post("/", async (req, res) => {
     ).reduce((prev, curr) => Math.max(prev, curr.points), 0);
 
     const updatedPuzzles = [...puzzlesCompleted, puzzleId];
-    const updatedPoints = currentPoints + puzzlePoints;
 
-    const { data: updated } = await SupabaseDB.ATTENDEES.update({
-        puzzlesCompleted: updatedPuzzles,
-        points: updatedPoints,
-    })
-        .eq("userId", userId)
-        .select("puzzlesCompleted")
-        .single()
-        .throwOnError();
+    const [{ data: updated }] = await Promise.all([
+        SupabaseDB.ATTENDEES.update({
+            puzzlesCompleted: updatedPuzzles,
+        })
+            .eq("userId", userId)
+            .select("puzzlesCompleted")
+            .single()
+            .throwOnError(),
+        addPoints(userId, puzzlePoints),
+    ]);
 
     return res.status(StatusCodes.OK).json({
         email,
