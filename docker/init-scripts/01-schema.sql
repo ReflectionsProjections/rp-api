@@ -51,9 +51,7 @@ CREATE TYPE public."iconColorType" AS ENUM (
     'BLUE',
     'RED',
     'GREEN',
-    'YELLOW',
     'PINK',
-    'BLACK',
     'PURPLE',
     'ORANGE'
 );

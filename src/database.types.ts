@@ -569,9 +569,7 @@ export type Database = {
                 | "BLUE"
                 | "RED"
                 | "GREEN"
-                | "YELLOW"
                 | "PINK"
-                | "BLACK"
                 | "PURPLE"
                 | "ORANGE";
             roleType: "USER" | "STAFF" | "ADMIN" | "CORPORATE";
@@ -731,9 +729,7 @@ export const Constants = {
                 "BLUE",
                 "RED",
                 "GREEN",
-                "YELLOW",
                 "PINK",
-                "BLACK",
                 "PURPLE",
                 "ORANGE",
             ],

@@ -92,9 +92,7 @@ export const IconColorTypes: Record<IconColorType, IconColorType> = {
     BLUE: "BLUE",
     RED: "RED",
     GREEN: "GREEN",
-    YELLOW: "YELLOW",
     PINK: "PINK",
-    BLACK: "BLACK",
     PURPLE: "PURPLE",
     ORANGE: "ORANGE",
 };

@@ -737,10 +737,10 @@ describe("PATCH /attendee/icon", () => {
         });
 
         const validIcons: IconColorType[] = [
+            "BLUE",
+            "RED",
             "GREEN",
-            "YELLOW",
             "PINK",
-            "BLACK",
             "PURPLE",
             "ORANGE",
         ];
