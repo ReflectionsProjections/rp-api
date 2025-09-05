@@ -42,7 +42,7 @@ const PAST_EVENT_VISIBLE = {
     eventType: EventType.enum.SPEAKER,
     isVisible: true,
     attendanceCount: 25,
-    tags: ["AI"]
+    tags: ["AI"],
 } satisfies InternalEvent;
 
 const UPCOMING_EVENT_VISIBLE_LATER = {
@@ -58,7 +58,7 @@ const UPCOMING_EVENT_VISIBLE_LATER = {
     eventType: EventType.enum.CORPORATE,
     isVisible: true,
     attendanceCount: 5,
-    tags: ["AI"]
+    tags: ["AI"],
 } satisfies InternalEvent;
 
 const UPCOMING_EVENT_HIDDEN_EARLIER = {
@@ -74,7 +74,7 @@ const UPCOMING_EVENT_HIDDEN_EARLIER = {
     eventType: EventType.enum.SPECIAL,
     isVisible: false,
     attendanceCount: 50,
-    tags: ["AI"]
+    tags: ["AI"],
 } satisfies InternalEvent;
 
 const UPCOMING_EVENT_VISIBLE_SOONEST = {
@@ -90,7 +90,7 @@ const UPCOMING_EVENT_VISIBLE_SOONEST = {
     eventType: EventType.enum.MEALS,
     isVisible: true,
     attendanceCount: 100,
-    tags: ["AI"]
+    tags: ["AI"],
 } satisfies InternalEvent;
 
 const NEW_EVENT_VALID_PAYLOAD = {
@@ -105,7 +105,7 @@ const NEW_EVENT_VALID_PAYLOAD = {
     eventType: EventType.enum.SPEAKER,
     isVisible: false,
     attendanceCount: 0,
-    tags: ["AI"]
+    tags: ["AI"],
 } satisfies EventInputPayload;
 
 const EVENT_UPDATE_FULL_PAYLOAD = {
@@ -120,7 +120,7 @@ const EVENT_UPDATE_FULL_PAYLOAD = {
     eventType: EventType.enum.MEALS,
     isVisible: true,
     attendanceCount: 99,
-    tags: ["AI"]
+    tags: ["AI"],
 } satisfies EventInputPayload;
 
 const EVENT_UPDATE_PARTIAL_PAYLOAD = {
