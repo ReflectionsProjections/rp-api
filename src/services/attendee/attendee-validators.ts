@@ -15,9 +15,7 @@ const IconColorEnumValues: [IconColorType, ...IconColorType[]] = [
     "BLUE",
     "RED",
     "GREEN",
-    "YELLOW",
     "PINK",
-    "BLACK",
     "PURPLE",
     "ORANGE",
 ];
