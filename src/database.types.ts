@@ -612,6 +612,7 @@ export type Database = {
                 | "DINNER"
                 | "CHECK_IN"
                 | "SPEAKER_BUDDY"
+                | "SPONSOR_BUDDY"
                 | "DEV_ON_CALL"
                 | "CHAIR_ON_CALL";
             committeeNames:
@@ -788,6 +789,15 @@ export const Constants = {
                 "PARTNERS",
                 "MEALS",
                 "CHECKIN",
+            ],
+            shiftRoleType: [
+                "CLEAN_UP",
+                "DINNER",
+                "CHECK_IN",
+                "SPEAKER_BUDDY",
+                "SPONSOR_BUDDY",
+                "DEV_ON_CALL",
+                "CHAIR_ON_CALL",
             ],
             iconColorType: ["BLUE", "RED", "GREEN", "PINK", "PURPLE", "ORANGE"],
             roleType: ["USER", "STAFF", "ADMIN", "CORPORATE"],
