@@ -16,11 +16,12 @@ export enum EnvironmentEnum {
 export const Environment = z.nativeEnum(EnvironmentEnum);
 
 export const MailingListName = z.enum(["rp_interest"]);
+const env = Environment.parse(getEnv("ENV"));
 
 function getEnv(key: string): string {
     const val = process.env[key];
     if (val === undefined) {
-        if (Config.ENV == EnvironmentEnum.PRODUCTION) {
+        if (env == EnvironmentEnum.PRODUCTION) {
             console.warn(
                 `env value ${key} not found, defaulting to empty string`
             );
@@ -32,7 +33,6 @@ function getEnv(key: string): string {
     return val;
 }
 
-const env = Environment.parse(getEnv("ENV"));
 const API_BASE =
     env === EnvironmentEnum.PRODUCTION
         ? "https://api.reflectionsprojections.org"
