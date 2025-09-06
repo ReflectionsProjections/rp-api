@@ -49,6 +49,12 @@ export const SupabaseDB = {
     get SUBSCRIPTIONS() {
         return supabase.from("subscriptions");
     },
+    get SHIFTS() {
+        return supabase.from("shifts");
+    },
+    get SHIFT_ASSIGNMENTS() {
+        return supabase.from("shiftAssignments");
+    },
     get NOTIFICATIONS() {
         return supabase.from("notifications");
     },
