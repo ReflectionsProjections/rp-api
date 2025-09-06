@@ -9,6 +9,7 @@ import {
 } from "./notifications-schema";
 import { SupabaseDB } from "../../database";
 import { getFirebaseAdmin } from "../../firebase";
+import { getCurrentDay } from "../checkin/checkin-utils";
 
 const notificationsRouter = Router();
 
@@ -148,7 +149,9 @@ notificationsRouter.get(
     "/topics",
     RoleChecker([Role.enum.ADMIN]),
     async (req, res) => {
-        const staticTopics = ["allUsers"]; // add any other static topics to this array in future
+        const day = getCurrentDay();
+        const currentDayTopic = `food-wave-1-${day.toLowerCase()}`;
+        const staticTopics = ["allUsers", currentDayTopic]; // add any other static topics to this array in future
 
         const { data: events } =
             await SupabaseDB.EVENTS.select("eventId").throwOnError();

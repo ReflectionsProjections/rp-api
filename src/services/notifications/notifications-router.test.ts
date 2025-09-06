@@ -4,6 +4,7 @@ import { StatusCodes } from "http-status-codes";
 import { SupabaseDB } from "../../database";
 import { v4 as uuidv4 } from "uuid";
 import { TESTER } from "../../../testing/testingTools";
+import { getCurrentDay } from "../checkin/checkin-utils";
 
 const mockSubscribe = jest.fn();
 const mockUnsubscribe = jest.fn();
@@ -188,6 +189,8 @@ describe("/notifications", () => {
     describe("GET /notifications/topics", () => {
         const TEST_EVENT_ID = uuidv4();
         const TEST_TOPIC_NAME = "food_wave_1";
+        const day = getCurrentDay();
+        const currentDayTopic = `food-wave-1-${day.toLowerCase()}`;
 
         beforeEach(async () => {
             await SupabaseDB.EVENTS.insert({
@@ -216,6 +219,7 @@ describe("/notifications", () => {
             const expectedTopics = [
                 "allUsers",
                 `event_${TEST_EVENT_ID}`,
+                currentDayTopic,
                 "food_wave_1",
             ].sort();
 

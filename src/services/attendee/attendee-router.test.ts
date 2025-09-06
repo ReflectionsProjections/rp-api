@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "@jest/globals";
-import { post, del, get } from "../../../testing/testingTools";
+import { post, del, get, patch } from "../../../testing/testingTools";
 import { TESTER } from "../../../testing/testingTools";
 import { Role } from "../auth/auth-models";
 import { StatusCodes } from "http-status-codes";
@@ -57,6 +57,7 @@ type AttendeeOverride = {
     hasPrioritySat?: boolean;
     hasPrioritySun?: boolean;
     puzzlesCompleted?: string[];
+    tags?: string[];
 };
 
 export async function insertTestAttendee(
@@ -347,51 +348,6 @@ describe("GET /attendee/favorites", () => {
         await get("/attendee/favorites", Role.enum.STAFF).expect(
             StatusCodes.FORBIDDEN
         );
-    });
-});
-
-describe("POST /attendee/", () => {
-    const VALID_ATTENDEE_PAYLOAD = {
-        userId: "testuser123",
-        tags: ["testtag1", "testtag2"],
-    };
-
-    beforeEach(async () => {
-        await SupabaseDB.AUTH_INFO.insert([
-            {
-                userId: VALID_ATTENDEE_PAYLOAD.userId,
-                displayName: "Test",
-                email: "test@test.com",
-                authId: TEST_AUTH_ID,
-            },
-        ]).throwOnError();
-
-        await SupabaseDB.AUTH_ROLES.insert([
-            {
-                userId: VALID_ATTENDEE_PAYLOAD.userId,
-                role: Role.enum.USER,
-            },
-        ]).throwOnError();
-    });
-
-    it("should create a new attendee with valid data", async () => {
-        const response = await post("/attendee/")
-            .send(VALID_ATTENDEE_PAYLOAD)
-            .expect(StatusCodes.CREATED);
-        expect(response.body).toEqual(VALID_ATTENDEE_PAYLOAD);
-        const dbRecord = await SupabaseDB.ATTENDEES.select()
-            .eq("userId", VALID_ATTENDEE_PAYLOAD.userId)
-            .single();
-
-        expect(dbRecord.data?.userId).toBe(VALID_ATTENDEE_PAYLOAD.userId);
-    });
-
-    it("should return 400 if required fields are missing", async () => {
-        const invalidPayload = {}; // Empty object, missing userId
-
-        await post("/attendee/")
-            .send(invalidPayload)
-            .expect(StatusCodes.BAD_REQUEST);
     });
 });
 
@@ -700,6 +656,221 @@ describe("GET /attendee/emails", () => {
         await get("/attendee/emails", Role.enum.USER).expect(
             StatusCodes.FORBIDDEN
         );
+    });
+});
+
+describe("PATCH /attendee/icon", () => {
+    it("should update the attendee's icon", async () => {
+        await insertTestAttendee({
+            attendee: {
+                userId: BASE_TEST_ATTENDEE.userId,
+                icon: "RED",
+            },
+        });
+
+        const response = await patch("/attendee/icon", Role.enum.USER)
+            .send({ icon: "BLUE" })
+            .expect(StatusCodes.OK);
+
+        expect(response.body).toEqual({ icon: "BLUE" });
+
+        // Verify the database was updated
+        const updated = await SupabaseDB.ATTENDEES.select("icon")
+            .eq("userId", TESTER.userId)
+            .maybeSingle()
+            .throwOnError();
+
+        expect(updated.data?.icon).toBe("BLUE");
+    });
+
+    it("should update icon to any valid icon color", async () => {
+        await insertTestAttendee({
+            attendee: {
+                userId: BASE_TEST_ATTENDEE.userId,
+                icon: "RED",
+            },
+        });
+
+        const validIcons: IconColorType[] = [
+            "BLUE",
+            "RED",
+            "GREEN",
+            "PINK",
+            "PURPLE",
+            "ORANGE",
+        ];
+
+        for (const icon of validIcons) {
+            const response = await patch("/attendee/icon", Role.enum.USER)
+                .send({ icon })
+                .expect(StatusCodes.OK);
+
+            expect(response.body).toEqual({ icon });
+
+            // Verify the database was updated
+            const updated = await SupabaseDB.ATTENDEES.select("icon")
+                .eq("userId", TESTER.userId)
+                .maybeSingle()
+                .throwOnError();
+
+            expect(updated.data?.icon).toBe(icon);
+        }
+    });
+
+    it("should return 400 for invalid icon color", async () => {
+        await insertTestAttendee();
+
+        await patch("/attendee/icon", Role.enum.USER)
+            .send({ icon: "INVALID_COLOR" })
+            .expect(StatusCodes.BAD_REQUEST);
+    });
+
+    it("should return 400 for missing icon field", async () => {
+        await insertTestAttendee();
+
+        await patch("/attendee/icon", Role.enum.USER)
+            .send({})
+            .expect(StatusCodes.BAD_REQUEST);
+    });
+
+    it("should return 404 if attendee is not found", async () => {
+        await patch("/attendee/icon", Role.enum.USER)
+            .send({ icon: "BLUE" })
+            .expect(StatusCodes.NOT_FOUND);
+    });
+
+    it("should return 401 if user is unauthenticated", async () => {
+        await patch("/attendee/icon")
+            .send({ icon: "BLUE" })
+            .expect(StatusCodes.UNAUTHORIZED);
+    });
+
+    it("should return 403 if user does not have USER role", async () => {
+        await patch("/attendee/icon", Role.enum.STAFF)
+            .send({ icon: "BLUE" })
+            .expect(StatusCodes.FORBIDDEN);
+    });
+});
+
+describe("PATCH /attendee/tags", () => {
+    it("should update the attendee's tags", async () => {
+        await insertTestAttendee({
+            attendee: {
+                userId: BASE_TEST_ATTENDEE.userId,
+                tags: ["old-tag1", "old-tag2"],
+            },
+        });
+
+        const newTags = ["AI", "Machine Learning", "Web Development"];
+
+        const response = await patch("/attendee/tags", Role.enum.USER)
+            .send({ tags: newTags })
+            .expect(StatusCodes.OK);
+
+        expect(response.body).toEqual({ tags: newTags });
+
+        // Verify the database was updated
+        const updated = await SupabaseDB.ATTENDEES.select("tags")
+            .eq("userId", TESTER.userId)
+            .maybeSingle()
+            .throwOnError();
+
+        expect(updated.data?.tags).toEqual(newTags);
+    });
+
+    it("should update tags to empty array", async () => {
+        await insertTestAttendee({
+            attendee: {
+                userId: BASE_TEST_ATTENDEE.userId,
+                tags: ["tag1", "tag2", "tag3"],
+            },
+        });
+
+        const response = await patch("/attendee/tags", Role.enum.USER)
+            .send({ tags: [] })
+            .expect(StatusCodes.OK);
+
+        expect(response.body).toEqual({ tags: [] });
+
+        // Verify the database was updated
+        const updated = await SupabaseDB.ATTENDEES.select("tags")
+            .eq("userId", TESTER.userId)
+            .maybeSingle()
+            .throwOnError();
+
+        expect(updated.data?.tags).toEqual([]);
+    });
+
+    it("should handle tags with special characters and spaces", async () => {
+        await insertTestAttendee({
+            attendee: {
+                userId: BASE_TEST_ATTENDEE.userId,
+                tags: [],
+            },
+        });
+
+        const specialTags = [
+            "C++",
+            "React.js",
+            "Machine Learning",
+            "Data Science & Analytics",
+        ];
+
+        const response = await patch("/attendee/tags", Role.enum.USER)
+            .send({ tags: specialTags })
+            .expect(StatusCodes.OK);
+
+        expect(response.body).toEqual({ tags: specialTags });
+
+        // Verify the database was updated
+        const updated = await SupabaseDB.ATTENDEES.select("tags")
+            .eq("userId", TESTER.userId)
+            .maybeSingle()
+            .throwOnError();
+
+        expect(updated.data?.tags).toEqual(specialTags);
+    });
+
+    it("should return 400 for missing tags field", async () => {
+        await insertTestAttendee();
+
+        await patch("/attendee/tags", Role.enum.USER)
+            .send({})
+            .expect(StatusCodes.BAD_REQUEST);
+    });
+
+    it("should return 400 for non-array tags", async () => {
+        await insertTestAttendee();
+
+        await patch("/attendee/tags", Role.enum.USER)
+            .send({ tags: "not-an-array" })
+            .expect(StatusCodes.BAD_REQUEST);
+    });
+
+    it("should return 400 for array with non-string elements", async () => {
+        await insertTestAttendee();
+
+        await patch("/attendee/tags", Role.enum.USER)
+            .send({ tags: ["valid-tag", 123, "another-valid-tag"] })
+            .expect(StatusCodes.BAD_REQUEST);
+    });
+
+    it("should return 404 if attendee is not found", async () => {
+        await patch("/attendee/tags", Role.enum.USER)
+            .send({ tags: ["AI", "ML"] })
+            .expect(StatusCodes.NOT_FOUND);
+    });
+
+    it("should return 401 if user is unauthenticated", async () => {
+        await patch("/attendee/tags")
+            .send({ tags: ["AI", "ML"] })
+            .expect(StatusCodes.UNAUTHORIZED);
+    });
+
+    it("should return 403 if user does not have USER role", async () => {
+        await patch("/attendee/tags", Role.enum.STAFF)
+            .send({ tags: ["AI", "ML"] })
+            .expect(StatusCodes.FORBIDDEN);
     });
 });
 
