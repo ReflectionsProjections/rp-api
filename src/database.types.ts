@@ -558,14 +558,17 @@ export type Database = {
                 Row: {
                     shiftId: string;
                     staffEmail: string;
+                    acknowledged: boolean;
                 };
                 Insert: {
                     shiftId: string;
                     staffEmail: string;
+                    acknowledged?: boolean;
                 };
                 Update: {
                     shiftId?: string;
                     staffEmail?: string;
+                    acknowledged?: boolean;
                 };
                 Relationships: [
                     {

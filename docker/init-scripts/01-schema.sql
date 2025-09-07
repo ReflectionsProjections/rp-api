@@ -251,6 +251,7 @@ CREATE TABLE public."shifts" (
 CREATE TABLE public."shiftAssignments" (
     "shiftId" uuid NOT NULL,
     "staffEmail" text NOT NULL,
+    "acknowledged" boolean DEFAULT false NOT NULL,
     CONSTRAINT "shiftAssignments_pkey" PRIMARY KEY ("shiftId", "staffEmail"),
     CONSTRAINT "shiftAssignments_shiftId_fkey" FOREIGN KEY ("shiftId") REFERENCES public."shifts"("shiftId"),
     CONSTRAINT "shiftAssignments_staffEmail_fkey" FOREIGN KEY ("staffEmail") REFERENCES public."staff"("email")

@@ -198,4 +198,91 @@ describe("Staff-Facing Shift Routes", () => {
             expect(response.body[0].staff.email).toBe(TESTER_STAFF.email);
         });
     });
+
+    describe("POST /shifts/:shiftId/acknowledge", () => {
+        it("should allow a staff member to acknowledge their own shift (toggle from false to true)", async () => {
+            // Initially acknowledged should be false (default)
+            const { data: initialAssignment } = await SupabaseDB.SHIFT_ASSIGNMENTS.select()
+                .match({
+                    shiftId: testShiftId,
+                    staffEmail: TESTER_STAFF.email,
+                })
+                .single();
+            expect(initialAssignment?.acknowledged).toBe(false);
+
+            const response = await postAsStaff(`/shifts/${testShiftId}/acknowledge`)
+                .send({})
+                .expect(StatusCodes.OK);
+
+            expect(response.body.acknowledged).toBe(true);
+            expect(response.body.staffEmail).toBe(TESTER_STAFF.email);
+            expect(response.body.shiftId).toBe(testShiftId);
+
+            // Verify in database
+            const { data } = await SupabaseDB.SHIFT_ASSIGNMENTS.select()
+                .match({
+                    shiftId: testShiftId,
+                    staffEmail: TESTER_STAFF.email,
+                })
+                .single();
+            expect(data?.acknowledged).toBe(true);
+        });
+
+        it("should allow a staff member to unacknowledge their own shift (toggle from true to false)", async () => {
+            // First acknowledge the shift
+            await postAsStaff(`/shifts/${testShiftId}/acknowledge`)
+                .send({})
+                .expect(StatusCodes.OK);
+
+            // Then toggle it back to unacknowledged
+            const response = await postAsStaff(`/shifts/${testShiftId}/acknowledge`)
+                .send({})
+                .expect(StatusCodes.OK);
+
+            expect(response.body.acknowledged).toBe(false);
+            expect(response.body.staffEmail).toBe(TESTER_STAFF.email);
+            expect(response.body.shiftId).toBe(testShiftId);
+
+            // Verify in database
+            const { data } = await SupabaseDB.SHIFT_ASSIGNMENTS.select()
+                .match({
+                    shiftId: testShiftId,
+                    staffEmail: TESTER_STAFF.email,
+                })
+                .single();
+            expect(data?.acknowledged).toBe(false);
+        });
+
+        it("should forbid a staff member from acknowledging a shift they are not assigned to", async () => {
+            // Create another shift and assign OTHER_STAFF to it
+            const otherShift = {
+                ...TEST_SHIFT,
+                shiftId: uuidv4(),
+                name: "Other Shift"
+            };
+            await SupabaseDB.SHIFTS.insert(otherShift);
+            await SupabaseDB.SHIFT_ASSIGNMENTS.insert({
+                shiftId: otherShift.shiftId,
+                staffEmail: OTHER_STAFF.email,
+            });
+
+            // Try to acknowledge a shift that TESTER is not assigned to
+            await postAsStaff(`/shifts/${otherShift.shiftId}/acknowledge`)
+                .send({})
+                .expect(StatusCodes.NOT_FOUND);
+        });
+
+        it("should forbid a non-staff user from acknowledging shifts", async () => {
+            await postAsAdmin(`/shifts/${testShiftId}/acknowledge`)
+                .send({})
+                .expect(StatusCodes.FORBIDDEN);
+        });
+
+        it("should return 404 for non-existent shift", async () => {
+            const nonExistentShiftId = uuidv4();
+            await postAsStaff(`/shifts/${nonExistentShiftId}/acknowledge`)
+                .send({})
+                .expect(StatusCodes.NOT_FOUND);
+        });
+    });
 });

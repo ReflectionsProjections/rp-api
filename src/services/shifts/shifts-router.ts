@@ -3,6 +3,13 @@ import { StatusCodes } from "http-status-codes";
 import { SupabaseDB } from "../../database";
 import RoleChecker from "../../middleware/role-checker";
 import { JwtPayloadType, Role } from "../auth/auth-models";
+import {
+    ShiftCreateValidator,
+    ShiftUpdateValidator,
+    ShiftIdValidator,
+    ShiftAssignmentValidator,
+    ShiftUnassignmentValidator,
+} from "./shifts-validators";
 
 const shiftsRouter = Router();
 
@@ -39,7 +46,7 @@ shiftsRouter.get(
 // Create a new shift
 // API body: {String} role, {String} startTime {String} endTime, {String} location
 shiftsRouter.post("/", RoleChecker([Role.Enum.ADMIN]), async (req, res) => {
-    const shiftData = req.body;
+    const shiftData = ShiftCreateValidator.parse(req.body);
 
     const { data: newShift } = await SupabaseDB.SHIFTS.insert(shiftData)
         .select()
@@ -56,8 +63,8 @@ shiftsRouter.patch(
     "/:shiftId",
     RoleChecker([Role.Enum.ADMIN]),
     async (req, res) => {
-        const { shiftId } = req.params;
-        const shiftData = req.body;
+        const { shiftId } = ShiftIdValidator.parse(req.params);
+        const shiftData = ShiftUpdateValidator.parse(req.body);
 
         const { data: updatedShift } = await SupabaseDB.SHIFTS.update(shiftData)
             .eq("shiftId", shiftId)
@@ -75,7 +82,7 @@ shiftsRouter.delete(
     "/:shiftId",
     RoleChecker([Role.Enum.ADMIN]),
     async (req, res) => {
-        const { shiftId } = req.params;
+        const { shiftId } = ShiftIdValidator.parse(req.params);
 
         // Must delete assignments first due to foreign key constraint
         await SupabaseDB.SHIFT_ASSIGNMENTS.delete()
@@ -95,8 +102,8 @@ shiftsRouter.post(
     "/:shiftId/assignments",
     RoleChecker([Role.Enum.ADMIN]),
     async (req, res) => {
-        const { shiftId } = req.params;
-        const { staffEmail } = req.body;
+        const { shiftId } = ShiftIdValidator.parse(req.params);
+        const { staffEmail } = ShiftAssignmentValidator.parse(req.body);
 
         const { data: newAssignment } =
             await SupabaseDB.SHIFT_ASSIGNMENTS.insert({
@@ -118,8 +125,8 @@ shiftsRouter.delete(
     "/:shiftId/assignments",
     RoleChecker([Role.Enum.ADMIN]),
     async (req, res) => {
-        const { shiftId } = req.params;
-        const { staffEmail } = req.body;
+        const { shiftId } = ShiftIdValidator.parse(req.params);
+        const { staffEmail } = ShiftUnassignmentValidator.parse(req.body);
 
         await SupabaseDB.SHIFT_ASSIGNMENTS.delete()
             .match({
@@ -138,7 +145,7 @@ shiftsRouter.get(
     "/:shiftId/assignments",
     RoleChecker([Role.Enum.STAFF, Role.Enum.ADMIN]),
     async (req, res) => {
-        const { shiftId } = req.params;
+        const { shiftId } = ShiftIdValidator.parse(req.params);
 
         const { data: roster } = await SupabaseDB.SHIFT_ASSIGNMENTS.select(
             "*, staff(name, email)"
@@ -147,6 +154,48 @@ shiftsRouter.get(
             .throwOnError();
 
         return res.status(StatusCodes.OK).json(roster);
+    }
+);
+
+// Toggle shift assignment acknowledgment status
+// URL params: shiftId
+// Requires STAFF role - staff can only toggle their own shifts
+shiftsRouter.post(
+    "/:shiftId/acknowledge",
+    RoleChecker([Role.Enum.STAFF]),
+    async (req, res) => {
+        const { shiftId } = ShiftIdValidator.parse(req.params);
+        const { email } = res.locals.payload as JwtPayloadType;
+
+        // First get the current assignment to check current acknowledgment status
+        const { data: currentAssignment, error } = await SupabaseDB.SHIFT_ASSIGNMENTS.select()
+            .match({
+                shiftId: shiftId,
+                staffEmail: email
+            })
+            .maybeSingle();
+
+        if (error || !currentAssignment) {
+            return res.status(StatusCodes.NOT_FOUND).json({
+                error: "Shift assignment not found"
+            });
+        }
+
+        // Toggle the acknowledgment status
+        const newAcknowledgedStatus = !currentAssignment.acknowledged;
+
+        const { data: updatedAssignment } = await SupabaseDB.SHIFT_ASSIGNMENTS.update({
+            acknowledged: newAcknowledgedStatus
+        })
+            .match({
+                shiftId: shiftId,
+                staffEmail: email
+            })
+            .select()
+            .single()
+            .throwOnError();
+
+        return res.status(StatusCodes.OK).json(updatedAssignment);
     }
 );
 
