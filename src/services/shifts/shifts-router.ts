@@ -168,32 +168,34 @@ shiftsRouter.post(
         const { email } = res.locals.payload as JwtPayloadType;
 
         // First get the current assignment to check current acknowledgment status
-        const { data: currentAssignment, error } = await SupabaseDB.SHIFT_ASSIGNMENTS.select()
-            .match({
-                shiftId: shiftId,
-                staffEmail: email
-            })
-            .maybeSingle();
+        const { data: currentAssignment, error } =
+            await SupabaseDB.SHIFT_ASSIGNMENTS.select()
+                .match({
+                    shiftId: shiftId,
+                    staffEmail: email,
+                })
+                .maybeSingle();
 
         if (error || !currentAssignment) {
             return res.status(StatusCodes.NOT_FOUND).json({
-                error: "Shift assignment not found"
+                error: "Shift assignment not found",
             });
         }
 
         // Toggle the acknowledgment status
         const newAcknowledgedStatus = !currentAssignment.acknowledged;
 
-        const { data: updatedAssignment } = await SupabaseDB.SHIFT_ASSIGNMENTS.update({
-            acknowledged: newAcknowledgedStatus
-        })
-            .match({
-                shiftId: shiftId,
-                staffEmail: email
+        const { data: updatedAssignment } =
+            await SupabaseDB.SHIFT_ASSIGNMENTS.update({
+                acknowledged: newAcknowledgedStatus,
             })
-            .select()
-            .single()
-            .throwOnError();
+                .match({
+                    shiftId: shiftId,
+                    staffEmail: email,
+                })
+                .select()
+                .single()
+                .throwOnError();
 
         return res.status(StatusCodes.OK).json(updatedAssignment);
     }

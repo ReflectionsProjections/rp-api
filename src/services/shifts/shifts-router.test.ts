@@ -202,15 +202,18 @@ describe("Staff-Facing Shift Routes", () => {
     describe("POST /shifts/:shiftId/acknowledge", () => {
         it("should allow a staff member to acknowledge their own shift (toggle from false to true)", async () => {
             // Initially acknowledged should be false (default)
-            const { data: initialAssignment } = await SupabaseDB.SHIFT_ASSIGNMENTS.select()
-                .match({
-                    shiftId: testShiftId,
-                    staffEmail: TESTER_STAFF.email,
-                })
-                .single();
+            const { data: initialAssignment } =
+                await SupabaseDB.SHIFT_ASSIGNMENTS.select()
+                    .match({
+                        shiftId: testShiftId,
+                        staffEmail: TESTER_STAFF.email,
+                    })
+                    .single();
             expect(initialAssignment?.acknowledged).toBe(false);
 
-            const response = await postAsStaff(`/shifts/${testShiftId}/acknowledge`)
+            const response = await postAsStaff(
+                `/shifts/${testShiftId}/acknowledge`
+            )
                 .send({})
                 .expect(StatusCodes.OK);
 
@@ -235,7 +238,9 @@ describe("Staff-Facing Shift Routes", () => {
                 .expect(StatusCodes.OK);
 
             // Then toggle it back to unacknowledged
-            const response = await postAsStaff(`/shifts/${testShiftId}/acknowledge`)
+            const response = await postAsStaff(
+                `/shifts/${testShiftId}/acknowledge`
+            )
                 .send({})
                 .expect(StatusCodes.OK);
 
@@ -258,7 +263,7 @@ describe("Staff-Facing Shift Routes", () => {
             const otherShift = {
                 ...TEST_SHIFT,
                 shiftId: uuidv4(),
-                name: "Other Shift"
+                name: "Other Shift",
             };
             await SupabaseDB.SHIFTS.insert(otherShift);
             await SupabaseDB.SHIFT_ASSIGNMENTS.insert({
