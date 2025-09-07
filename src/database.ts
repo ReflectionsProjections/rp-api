@@ -49,6 +49,12 @@ export const SupabaseDB = {
     get SUBSCRIPTIONS() {
         return supabase.from("subscriptions");
     },
+    get SHIFTS() {
+        return supabase.from("shifts");
+    },
+    get SHIFT_ASSIGNMENTS() {
+        return supabase.from("shiftAssignments");
+    },
     get NOTIFICATIONS() {
         return supabase.from("notifications");
     },
@@ -64,6 +70,7 @@ export type RoleType = Enums<"roleType">;
 export type CommitteeType = Enums<"committeeNames">;
 export type EventType = Enums<"eventType">;
 export type StaffAttendanceType = Enums<"staffAttendanceType">;
+export type ShiftRoleType = Enums<"shiftRoleType">;
 
 export const RoleTypes: Record<RoleType, RoleType> = {
     USER: "USER",

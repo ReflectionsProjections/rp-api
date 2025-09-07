@@ -23,6 +23,7 @@ import subscriptionRouter from "./services/subscription/subscription-router";
 import speakersRouter from "./services/speakers/speakers-router";
 import puzzlebangRouter from "./services/puzzlebang/puzzlebang-router";
 import meetingsRouter from "./services/meetings/meetings-router";
+import shiftsRouter from "./services/shifts/shifts-router";
 
 import cors from "cors";
 
@@ -74,6 +75,7 @@ app.use("/stats", statsRouter);
 app.use("/subscription", subscriptionRouter);
 app.use("/speakers", speakersRouter);
 app.use("/meetings", meetingsRouter);
+app.use("/shifts", shiftsRouter);
 
 app.get("/status", (req, res) => {
     return res.status(StatusCodes.OK).send({
