@@ -57,6 +57,16 @@ CREATE TYPE public."iconColorType" AS ENUM (
     'ORANGE'
 );
 
+CREATE TYPE public."shiftRoleType" AS ENUM (
+    'CLEAN_UP',
+    'DINNER',
+    'CHECK_IN',
+    'SPEAKER_BUDDY',
+    'SPONSOR_BUDDY',
+    'DEV_ON_CALL',
+    'CHAIR_ON_CALL'
+);
+
 -- Create tables
 CREATE TABLE public."attendeeAttendances" (
     "userId" character varying NOT NULL,
@@ -249,6 +259,25 @@ CREATE TABLE public."staff" (
     "team" public."committeeNames" NOT NULL,
     "attendances" jsonb DEFAULT '{}'::jsonb NOT NULL,
     CONSTRAINT "staff_pkey" PRIMARY KEY ("email")
+);
+
+CREATE TABLE public."shifts" (
+    "shiftId" uuid DEFAULT gen_random_uuid() NOT NULL,
+    "name" text NOT NULL,
+    "role" public."shiftRoleType" NOT NULL,
+    "startTime" timestamp with time zone NOT NULL,
+    "endTime" timestamp with time zone NOT NULL,
+    "location" text NOT NULL,
+    CONSTRAINT "shifts_pkey" PRIMARY KEY ("shiftId")
+);
+
+CREATE TABLE public."shiftAssignments" (
+    "shiftId" uuid NOT NULL,
+    "staffEmail" text NOT NULL,
+    "acknowledged" boolean DEFAULT false NOT NULL,
+    CONSTRAINT "shiftAssignments_pkey" PRIMARY KEY ("shiftId", "staffEmail"),
+    CONSTRAINT "shiftAssignments_shiftId_fkey" FOREIGN KEY ("shiftId") REFERENCES public."shifts"("shiftId"),
+    CONSTRAINT "shiftAssignments_staffEmail_fkey" FOREIGN KEY ("staffEmail") REFERENCES public."staff"("email")
 );
 
 CREATE TABLE public."subscriptions" (
