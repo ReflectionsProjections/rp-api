@@ -642,9 +642,7 @@ export type Database = {
                 | "BLUE"
                 | "RED"
                 | "GREEN"
-                | "YELLOW"
                 | "PINK"
-                | "BLACK"
                 | "PURPLE"
                 | "ORANGE";
             roleType: "USER" | "STAFF" | "ADMIN" | "CORPORATE";
@@ -800,16 +798,7 @@ export const Constants = {
                 "MEALS",
                 "CHECKIN",
             ],
-            iconColorType: [
-                "BLUE",
-                "RED",
-                "GREEN",
-                "YELLOW",
-                "PINK",
-                "BLACK",
-                "PURPLE",
-                "ORANGE",
-            ],
+            iconColorType: ["BLUE", "RED", "GREEN", "PINK", "PURPLE", "ORANGE"],
             roleType: ["USER", "STAFF", "ADMIN", "CORPORATE"],
             staffAttendanceType: ["PRESENT", "EXCUSED", "ABSENT"],
             tierType: ["TIER1", "TIER2", "TIER3", "TIER4"],

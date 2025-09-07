@@ -4,6 +4,7 @@ import { Config } from "../../config";
 import { EventType } from "../events/events-schema";
 import { DayKey } from "../attendee/attendee-schema";
 import { addPoints } from "../attendee/attendee-utils";
+import { getFirebaseAdmin } from "../../firebase";
 
 export function getCurrentDay() {
     const currDate = new Date();
@@ -56,6 +57,20 @@ async function updateAttendeePriority(userId: string) {
     })
         .eq("userId", userId)
         .throwOnError();
+    // subscribe them to the food wave 1 topic for today
+    const { data: userDevice } = await SupabaseDB.NOTIFICATIONS.select(
+        "deviceId"
+    )
+        .eq("userId", userId)
+        .maybeSingle()
+        .throwOnError();
+    if (!userDevice?.deviceId) {
+        return; // we can just be done here if they don't have a deviceId
+    }
+    const topicName = `food-wave-1-${day.toLowerCase()}`;
+    await getFirebaseAdmin()
+        .messaging()
+        .subscribeToTopic(userDevice.deviceId, topicName);
 }
 
 async function updateAttendanceRecords(eventId: string, userId: string) {

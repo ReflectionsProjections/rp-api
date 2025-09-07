@@ -52,9 +52,7 @@ CREATE TYPE public."iconColorType" AS ENUM (
     'BLUE',
     'RED',
     'GREEN',
-    'YELLOW',
     'PINK',
-    'BLACK',
     'PURPLE',
     'ORANGE'
 );
@@ -122,6 +120,7 @@ CREATE TABLE public."events" (
     "isVisible" boolean DEFAULT false NOT NULL,
     "attendanceCount" integer DEFAULT 0 NOT NULL,
     "eventType" public."eventType" NOT NULL,
+    "tags" text[] DEFAULT '{}'::text[] NOT NULL,
     CONSTRAINT "events_pkey" PRIMARY KEY ("eventId")
 );
 

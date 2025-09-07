@@ -20,9 +20,7 @@ export const IconColors = z.enum([
     "BLUE",
     "RED",
     "GREEN",
-    "YELLOW",
     "PINK",
-    "BLACK",
     "PURPLE",
     "ORANGE",
 ] as const) satisfies z.ZodEnum<[IconColorType, ...IconColorType[]]>;
