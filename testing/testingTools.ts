@@ -164,6 +164,8 @@ export async function clearSupabaseTables(supabase: SupabaseClient) {
         "events",
         "corporate",
         "staff",
+        "shifts",
+        "shiftAssignments",
         "subscriptions",
         "customTopics",
     ]; // TODO: Get this from the database
