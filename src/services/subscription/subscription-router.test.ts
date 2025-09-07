@@ -1,8 +1,9 @@
 import { beforeEach, describe, expect, it } from "@jest/globals";
-import { post } from "../../../testing/testingTools";
+import { post, getAsAdmin, postAsAdmin } from "../../../testing/testingTools";
 import { StatusCodes } from "http-status-codes";
 import { SupabaseDB } from "../../database";
 import { IncomingSubscription } from "./subscription-schema";
+import { SendEmailCommand } from "@aws-sdk/client-sesv2";
 
 const EMAIL_1 = "testuser@example.com";
 const EMAIL_2 = "otheruser@example.com";
@@ -26,6 +27,16 @@ const SUBSCRIPTION_INVALID_LIST = {
     email: EMAIL_1,
     mailingList: INVALID_mailingList,
 };
+
+const mockSESV2Send = jest.fn();
+jest.mock("@aws-sdk/client-sesv2", () => {
+    return {
+        SESv2Client: jest.fn(() => ({
+            send: mockSESV2Send,
+        })),
+        SendEmailCommand: jest.fn((input) => input), // Mocks the command to return its input
+    };
+});
 
 beforeEach(async () => {
     await SupabaseDB.SUBSCRIPTIONS.delete().neq(
@@ -153,5 +164,72 @@ describe("POST /subscription/", () => {
         const dbEntry = data?.[0];
 
         expect(dbEntry?.subscriptions).toEqual(["test@example.com"]);
+    });
+});
+
+describe("GET /subscription/", () => {
+    it("should return an empty list when no subscriptions exist", async () => {
+        const response = await getAsAdmin("/subscription/").expect(
+            StatusCodes.OK
+        );
+        expect(response.body).toEqual([]);
+    });
+
+    it("should return all subscriptions", async () => {
+        const OTHER_VALID_LIST = "other_list";
+        await SupabaseDB.SUBSCRIPTIONS.insert([
+            { mailingList: VALID_mailingList, subscriptions: [EMAIL_1] },
+            { mailingList: OTHER_VALID_LIST, subscriptions: [EMAIL_2] },
+        ]);
+        const response = await getAsAdmin("/subscription/").expect(
+            StatusCodes.OK
+        );
+
+        expect(response.body.length).toBe(2);
+
+        expect(response.body).toEqual(
+            expect.arrayContaining([
+                { mailingList: VALID_mailingList, subscriptions: [EMAIL_1] },
+                { mailingList: OTHER_VALID_LIST, subscriptions: [EMAIL_2] },
+            ])
+        );
+    });
+});
+
+describe("POST /subscription/send-email", () => {
+    it("should send an email to all subscribers of a list", async () => {
+        const mailingList = "test_list";
+        const subscribers = ["email1@test.com", "email2@test.com"];
+        await SupabaseDB.SUBSCRIPTIONS.insert({
+            mailingList,
+            subscriptions: subscribers,
+        });
+
+        const emailPayload = {
+            mailingList: mailingList,
+            subject: "Test Subject",
+            htmlBody: "<p>Hello World</p>",
+        };
+
+        await postAsAdmin("/subscription/send-email")
+            .send(emailPayload)
+            .expect(StatusCodes.OK);
+
+        expect(SendEmailCommand).toHaveBeenCalledWith({
+            FromEmailAddress: process.env.FROM_EMAIL_ADDRESS,
+            Destination: {
+                ToAddresses: [process.env.FROM_EMAIL_ADDRESS],
+                BccAddresses: subscribers,
+            },
+            Content: {
+                Simple: {
+                    Subject: { Data: "Test Subject" },
+                    Body: { Html: { Data: "<p>Hello World</p>" } },
+                },
+            },
+        });
+
+        // Verify that the send method was actually invoked
+        expect(mockSESV2Send).toHaveBeenCalledTimes(1);
     });
 });
