@@ -7,8 +7,7 @@ import {
     ShiftCreateValidator,
     ShiftUpdateValidator,
     ShiftIdValidator,
-    ShiftAssignmentValidator,
-    ShiftUnassignmentValidator,
+    StaffEmailValidator,
 } from "./shifts-validators";
 
 const shiftsRouter = Router();
@@ -103,7 +102,7 @@ shiftsRouter.post(
     RoleChecker([Role.Enum.ADMIN]),
     async (req, res) => {
         const { shiftId } = ShiftIdValidator.parse(req.params);
-        const { staffEmail } = ShiftAssignmentValidator.parse(req.body);
+        const { staffEmail } = StaffEmailValidator.parse(req.body);
 
         const { data: newAssignment } =
             await SupabaseDB.SHIFT_ASSIGNMENTS.insert({
@@ -126,7 +125,7 @@ shiftsRouter.delete(
     RoleChecker([Role.Enum.ADMIN]),
     async (req, res) => {
         const { shiftId } = ShiftIdValidator.parse(req.params);
-        const { staffEmail } = ShiftUnassignmentValidator.parse(req.body);
+        const { staffEmail } = StaffEmailValidator.parse(req.body);
 
         await SupabaseDB.SHIFT_ASSIGNMENTS.delete()
             .match({

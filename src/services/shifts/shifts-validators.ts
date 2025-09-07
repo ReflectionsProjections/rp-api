@@ -76,19 +76,11 @@ export const ShiftIdValidator = z.object({
 });
 
 // Zod schema for assigning staff to a shift
-export const ShiftAssignmentValidator = z.object({
-    staffEmail: z.string().email("Invalid email format"),
-});
-
-// Zod schema for removing staff from a shift
-export const ShiftUnassignmentValidator = z.object({
+export const StaffEmailValidator = z.object({
     staffEmail: z.string().email("Invalid email format"),
 });
 
 export type ShiftCreateRequest = z.infer<typeof ShiftCreateValidator>;
 export type ShiftUpdateRequest = z.infer<typeof ShiftUpdateValidator>;
 export type ShiftIdParams = z.infer<typeof ShiftIdValidator>;
-export type ShiftAssignmentRequest = z.infer<typeof ShiftAssignmentValidator>;
-export type ShiftUnassignmentRequest = z.infer<
-    typeof ShiftUnassignmentValidator
->;
+export type ShiftAssignmentRequest = z.infer<typeof StaffEmailValidator>;
