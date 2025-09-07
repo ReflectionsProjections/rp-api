@@ -2,9 +2,10 @@ import { Router } from "express";
 import { StatusCodes } from "http-status-codes";
 import {
     AttendeeCreateValidator,
+    AttendeeRedeemMerchValidator,
     EventIdValidator,
 } from "./attendee-validators";
-import { SupabaseDB } from "../../database";
+import { SupabaseDB, TierType } from "../../database";
 import { Tiers, IconColors } from "./attendee-schema";
 import RoleChecker from "../../middleware/role-checker";
 import { Role } from "../auth/auth-models";
@@ -12,6 +13,14 @@ import { generateQrHash, getCurrentDay } from "../checkin/checkin-utils";
 import { getFirebaseAdmin } from "../../firebase";
 
 const attendeeRouter = Router();
+
+// Tier hierarchy for redemption logic
+const TIER_HIERARCHY = {
+    [Tiers.Enum.TIER1]: 1,
+    [Tiers.Enum.TIER2]: 2,
+    [Tiers.Enum.TIER3]: 3,
+    [Tiers.Enum.TIER4]: 4,
+} as const;
 
 // Favorite an event for an attendee
 attendeeRouter.post(
@@ -297,21 +306,13 @@ attendeeRouter.get(
     }
 );
 
-attendeeRouter.post(
-    "/redeemMerch/:ITEM",
+attendeeRouter.get(
+    "/redeemable/:userId",
     RoleChecker([Role.Enum.STAFF, Role.Enum.ADMIN]),
     async (req, res) => {
-        const userId = req.body.userId;
-        const merchItem = req.params.ITEM.toLowerCase();
-        const validItems = ["tshirt", "cap", "tote", "button"];
+        const { userId } = req.params;
 
-        if (!validItems.includes(merchItem)) {
-            return res
-                .status(StatusCodes.BAD_REQUEST)
-                .json({ error: "Not a valid item" });
-        }
-
-        const { data: user } = await SupabaseDB.ATTENDEES.select()
+        const { data: user } = await SupabaseDB.ATTENDEES.select("currentTier")
             .eq("userId", userId)
             .maybeSingle()
             .throwOnError();
@@ -322,28 +323,78 @@ attendeeRouter.post(
                 .json({ error: "UserNotFound" });
         }
 
-        const eligibleKey =
-            `isEligible${merchItem.charAt(0).toUpperCase() + merchItem.slice(1)}` as keyof typeof user;
-        const redeemedKey =
-            `hasRedeemed${merchItem.charAt(0).toUpperCase() + merchItem.slice(1)}` as keyof typeof user;
-
-        if (!user[eligibleKey]) {
-            return res
-                .status(StatusCodes.BAD_REQUEST)
-                .json({ error: "Too few points" });
-        }
-
-        if (user[redeemedKey]) {
-            return res
-                .status(StatusCodes.BAD_REQUEST)
-                .json({ error: "Item already redeemed" });
-        }
-
-        await SupabaseDB.ATTENDEES.update({ [redeemedKey]: true })
+        const { data: redeemed } = await SupabaseDB.REDEMPTIONS.select()
             .eq("userId", userId)
             .throwOnError();
 
-        return res.status(StatusCodes.OK).json({ message: "Item Redeemed!" });
+        const redeemedTiers = redeemed.map((r: { item: TierType }) => r.item);
+
+        const userTierLevel = TIER_HIERARCHY[user.currentTier];
+        const allTiers: TierType[] = Object.values(Tiers.Enum);
+
+        const redeemableTiers = allTiers.filter((tier) => {
+            const tierLevel = TIER_HIERARCHY[tier];
+            return tierLevel <= userTierLevel && !redeemedTiers.includes(tier);
+        });
+
+        return res.status(StatusCodes.OK).json({
+            userId,
+            currentTier: user.currentTier,
+            redeemedTiers,
+            redeemableTiers,
+        });
+    }
+);
+
+attendeeRouter.post(
+    "/redeem",
+    RoleChecker([Role.Enum.STAFF, Role.Enum.ADMIN]),
+    async (req, res) => {
+        const { userId, tier } = AttendeeRedeemMerchValidator.parse(req.body);
+
+        const { data: user } = await SupabaseDB.ATTENDEES.select("currentTier")
+            .eq("userId", userId)
+            .maybeSingle()
+            .throwOnError();
+
+        if (!user) {
+            return res
+                .status(StatusCodes.NOT_FOUND)
+                .json({ error: "UserNotFound" });
+        }
+
+        const { data: existingRedemption } =
+            await SupabaseDB.REDEMPTIONS.select()
+                .eq("userId", userId)
+                .eq("item", tier)
+                .maybeSingle()
+                .throwOnError();
+
+        if (existingRedemption) {
+            return res
+                .status(StatusCodes.BAD_REQUEST)
+                .json({ error: "Tier already redeemed" });
+        }
+
+        // check if user tier is too low for redemption
+        const userTierLevel = TIER_HIERARCHY[user.currentTier];
+        const tierLevel = TIER_HIERARCHY[tier];
+        if (tierLevel > userTierLevel) {
+            return res
+                .status(StatusCodes.BAD_REQUEST)
+                .json({ error: "User tier too low for redemption" });
+        }
+
+        await SupabaseDB.REDEMPTIONS.insert({
+            userId,
+            item: tier,
+        }).throwOnError();
+
+        return res.status(StatusCodes.OK).json({
+            message: "Tier redeemed successfully!",
+            userId,
+            tier,
+        });
     }
 );
 

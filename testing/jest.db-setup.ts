@@ -65,6 +65,12 @@ function mockSupabase(supabaseUrl: string, supabaseServiceKey: string) {
                 get NOTIFICATIONS() {
                     return supabase.from("notifications");
                 },
+                get REDEMPTIONS() {
+                    return supabase.from("redemptions");
+                },
+                get LEADERBOARD_SUBMISSIONS() {
+                    return supabase.from("leaderboardSubmissions");
+                },
             },
             __esModule: true,
         };

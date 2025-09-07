@@ -150,8 +150,13 @@ export function delAsCorporate(url: string): request.Test {
     return del(url, Role.enum.CORPORATE);
 }
 
+type SimpleTableConfig = {
+    column: string;
+    value: string;
+};
+
 export async function clearSupabaseTables(supabase: SupabaseClient) {
-    const tables: Record<string, Record<string, string>> = {
+    const tables: Record<string, SimpleTableConfig> = {
         eventAttendances: {
             column: "eventId",
             value: "00000000-0000-0000-0000-000000000000",
@@ -173,6 +178,10 @@ export async function clearSupabaseTables(supabase: SupabaseClient) {
             value: "00000000-0000-0000-0000-000000000000",
         },
         registrations: {
+            column: "userId",
+            value: "00000000-0000-0000-0000-000000000000",
+        },
+        redemptions: {
             column: "userId",
             value: "00000000-0000-0000-0000-000000000000",
         },
@@ -211,10 +220,11 @@ export async function clearSupabaseTables(supabase: SupabaseClient) {
     }; // TODO: Get this from the database
 
     for (const table of Object.keys(tables)) {
+        const tableConfig = tables[table];
         const { error } = await supabase
             .from(table)
             .delete()
-            .neq(tables[table].column, tables[table].value);
+            .neq(tableConfig.column, tableConfig.value);
         if (error) {
             console.warn(`⚠️ Could not clear ${table}:`, error.message);
         }
