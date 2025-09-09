@@ -150,11 +150,6 @@ export function delAsCorporate(url: string): request.Test {
     return del(url, Role.enum.CORPORATE);
 }
 
-type SimpleTableConfig = {
-    column: string;
-    value: string;
-};
-
 export async function clearSupabaseTables(supabase: SupabaseClient) {
     const tables: string[] = [
         "eventAttendances",
