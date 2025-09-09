@@ -153,23 +153,23 @@ export function delAsCorporate(url: string): request.Test {
 export async function clearSupabaseTables(supabase: SupabaseClient) {
     const tables: string[] = [
         "eventAttendances",
-        "attendeeAttendances", 
-        "leaderboardSubmissions", 
-        "redemptions",            
+        "attendeeAttendances",
+        "leaderboardSubmissions",
+        "redemptions",
         "attendees",
         "notifications",
-        "draftRegistrations", 
+        "draftRegistrations",
         "registrations",
         "authRoles",
         "shiftAssignments",
         "authCodes",
-        "events", 
+        "events",
         "corporate",
         "staff",
         "shifts",
         "subscriptions",
         "customTopics",
-        "authInfo",  
+        "authInfo",
     ]; // TODO: Get this from the database
 
     for (const table of tables) {
