@@ -36,20 +36,20 @@ export const LeaderboardEntryValidator = z.object({
 export const PreviewLeaderboardResponseValidator = z.object({
     leaderboard: z.array(LeaderboardEntryValidator),
     day: z.string(),
-    count: z.number().int().min(1),
+    count: z.number().int().min(0),
 });
 
 // GET /global response
 export const GlobalLeaderboardResponseValidator = z.object({
     leaderboard: z.array(LeaderboardEntryValidator),
-    count: z.number().int().min(1),
+    count: z.number().int().min(0),
 });
 
 // POST /submit response
 export const SubmitLeaderboardResponseValidator = z.object({
     leaderboard: z.array(LeaderboardEntryValidator),
     day: z.string(),
-    count: z.number().int().min(1),
+    count: z.number().int().min(0),
     entriesProcessed: z.number().int().min(0),
     submissionId: z.string().uuid(),
     submittedAt: z.string(),
