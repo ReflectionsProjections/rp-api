@@ -319,30 +319,50 @@ DECLARE
     tier1_count int := 0;
     tier2_count int := 0;
     tier3_count int := 0;
+    tier1_users text[];
+    tier2_users text[];
+    tier3_users text[];
 BEGIN
-    -- Promote TIER1 -> TIER2
-    UPDATE public."attendees" 
-    SET "currentTier" = 'TIER2'
-    WHERE "userId" = ANY(user_ids) 
-    AND "currentTier" = 'TIER1';
+    -- First, identify users by their CURRENT tier (before any promotions)
+    SELECT ARRAY(
+        SELECT "userId" FROM public."attendees" 
+        WHERE "userId" = ANY(user_ids) AND "currentTier" = 'TIER1'
+    ) INTO tier1_users;
     
-    GET DIAGNOSTICS tier1_count = ROW_COUNT;
+    SELECT ARRAY(
+        SELECT "userId" FROM public."attendees" 
+        WHERE "userId" = ANY(user_ids) AND "currentTier" = 'TIER2'
+    ) INTO tier2_users;
+    
+    SELECT ARRAY(
+        SELECT "userId" FROM public."attendees" 
+        WHERE "userId" = ANY(user_ids) AND "currentTier" = 'TIER3'
+    ) INTO tier3_users;
+    
+    -- Now promote each group separately using the captured lists
+    -- Promote TIER1 -> TIER2
+    IF array_length(tier1_users, 1) > 0 THEN
+        UPDATE public."attendees" 
+        SET "currentTier" = 'TIER2'
+        WHERE "userId" = ANY(tier1_users);
+        GET DIAGNOSTICS tier1_count = ROW_COUNT;
+    END IF;
     
     -- Promote TIER2 -> TIER3  
-    UPDATE public."attendees"
-    SET "currentTier" = 'TIER3' 
-    WHERE "userId" = ANY(user_ids)
-    AND "currentTier" = 'TIER2';
-    
-    GET DIAGNOSTICS tier2_count = ROW_COUNT;
+    IF array_length(tier2_users, 1) > 0 THEN
+        UPDATE public."attendees"
+        SET "currentTier" = 'TIER3' 
+        WHERE "userId" = ANY(tier2_users);
+        GET DIAGNOSTICS tier2_count = ROW_COUNT;
+    END IF;
     
     -- Promote TIER3 -> TIER4
-    UPDATE public."attendees"
-    SET "currentTier" = 'TIER4' 
-    WHERE "userId" = ANY(user_ids)
-    AND "currentTier" = 'TIER3';
-    
-    GET DIAGNOSTICS tier3_count = ROW_COUNT;
+    IF array_length(tier3_users, 1) > 0 THEN
+        UPDATE public."attendees"
+        SET "currentTier" = 'TIER4' 
+        WHERE "userId" = ANY(tier3_users);
+        GET DIAGNOSTICS tier3_count = ROW_COUNT;
+    END IF;
     
     -- Return total promoted users
     promoted_count := tier1_count + tier2_count + tier3_count;
