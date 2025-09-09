@@ -158,21 +158,23 @@ type SimpleTableConfig = {
 export async function clearSupabaseTables(supabase: SupabaseClient) {
     const tables: string[] = [
         "eventAttendances",
-        "attendeeAttendances",
+        "attendeeAttendances", 
+        "leaderboardSubmissions", 
+        "redemptions",            
         "attendees",
         "notifications",
-        "draftRegistrations",
+        "draftRegistrations", 
         "registrations",
-        "authInfo",
         "authRoles",
+        "shiftAssignments",
         "authCodes",
-        "events",
+        "events", 
         "corporate",
         "staff",
         "shifts",
-        "shiftAssignments",
         "subscriptions",
         "customTopics",
+        "authInfo",  
     ]; // TODO: Get this from the database
 
     for (const table of tables) {
