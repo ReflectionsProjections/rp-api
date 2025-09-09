@@ -222,4 +222,96 @@ statsRouter.get(
     }
 );
 
+// get the number of registrations
+statsRouter.get(
+    "/registrations",
+    RoleChecker([Role.enum.STAFF], false),
+    async (req, res) => {
+        const { count } = await SupabaseDB.REGISTRATIONS.select("*", {
+            count: "exact",
+            head: true,
+        }).throwOnError();
+
+        return res.status(StatusCodes.OK).json({ count: count || 0 });
+    }
+);
+
+// event attendance at a specific event
+statsRouter.get(
+    "/event/:EVENT_ID/attendance",
+    RoleChecker([Role.enum.STAFF], false),
+    async (req, res) => {
+        const schema = z.object({
+            EVENT_ID: z.string().uuid(),
+        });
+
+        const result = schema.safeParse(req.params);
+        if (!result.success) {
+            return res.status(StatusCodes.BAD_REQUEST).json({
+                error: result.error.errors[0].message,
+            });
+        }
+        const eventId = result.data.EVENT_ID;
+
+        const { data: event } = await SupabaseDB.EVENTS.select(
+            "attendanceCount"
+        )
+            .eq("eventId", eventId)
+            .maybeSingle()
+            .throwOnError();
+
+        if (!event) {
+            return res
+                .status(StatusCodes.NOT_FOUND)
+                .json({ error: "Event not found" });
+        }
+
+        return res
+            .status(StatusCodes.OK)
+            .json({ attendanceCount: event.attendanceCount });
+    }
+);
+
+// Number of people at each tier
+statsRouter.get(
+    "/tier-counts",
+    RoleChecker([Role.enum.STAFF], false),
+    async (req, res) => {
+        const { data } = await SupabaseDB.ATTENDEES.select("currentTier", {
+            count: "exact",
+        }).throwOnError();
+
+        // Aggregate counts for each tier
+        const tierCounts: Record<string, number> = {};
+        data?.forEach((attendee: { currentTier: string }) => {
+            if (attendee.currentTier) {
+                tierCounts[attendee.currentTier] =
+                    (tierCounts[attendee.currentTier] || 0) + 1;
+            }
+        });
+
+        return res.status(StatusCodes.OK).json(tierCounts);
+    }
+);
+
+// Number of people who marked each tag
+statsRouter.get(
+    "/tag-counts",
+    RoleChecker([Role.enum.STAFF], false),
+    async (req, res) => {
+        const { data } =
+            await SupabaseDB.ATTENDEES.select("tags").throwOnError();
+
+        // Aggregate counts for each tag
+        const tagCounts: Record<string, number> = {};
+        data?.forEach((attendee: { tags: string[] }) => {
+            attendee.tags?.forEach((tag: string) => {
+                tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+            });
+        });
+
+        return res.status(StatusCodes.OK).json(tagCounts);
+    }
+);
+
 export default statsRouter;
