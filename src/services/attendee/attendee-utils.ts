@@ -1,10 +1,14 @@
 import { SupabaseDB } from "../../database";
+import { Config } from "../../config";
 
 /**
  * Event start date: September 16, 2025 in Central Time
  * Maps calendar dates to event days (1-5)
+ * Can be overridden via EVENT_START_DATE_OVERRIDE environment variable for testing
  */
-const EVENT_START_DATE = new Date("2025-09-16T00:00:00-05:00");
+const EVENT_START_DATE = new Date(
+    Config.EVENT_START_DATE_OVERRIDE || "2025-09-16T00:00:00-05:00"
+);
 
 /**
  * Convert any date to Central Time at midnight (for day boundary calculations)
