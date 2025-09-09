@@ -27,3 +27,8 @@ export const AttendeeIconUpdateValidator = z.object({
 export const AttendeeTagsUpdateValidator = z.object({
     tags: z.array(z.string()),
 });
+
+export const AttendeePointsUpdateValidator = z.object({
+    userId: z.string(),
+    pointsToAdd: z.number().int().min(1),
+});
