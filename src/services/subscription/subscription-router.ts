@@ -3,6 +3,10 @@ import { StatusCodes } from "http-status-codes";
 import { SubscriptionValidator } from "./subscription-schema";
 import { SupabaseDB } from "../../database";
 import cors from "cors";
+import RoleChecker from "../../middleware/role-checker";
+import { Role } from "../auth/auth-models";
+import { SESv2Client, SendEmailCommand } from "@aws-sdk/client-sesv2";
+import Config from "../../config";
 
 const subscriptionRouter = Router();
 
@@ -47,5 +51,62 @@ subscriptionRouter.post("/", cors(), async (req, res) => {
 
     return res.status(StatusCodes.CREATED).json(subscriptionData);
 });
+
+// Get a list of all subscriptions - envisioning that admins can use this as dropdown to choose who to send emails to
+subscriptionRouter.get(
+    "/",
+    RoleChecker([Role.Enum.ADMIN]),
+    async (req, res) => {
+        const { data: subscriptions } =
+            await SupabaseDB.SUBSCRIPTIONS.select("*").throwOnError();
+
+        return res.status(StatusCodes.OK).json(subscriptions);
+    }
+);
+
+// Send an email to a mailing list
+// API body: {String} mailingList The list to send the email to, {String} subject The subject line of the email, {String} htmlBody The HTML content of the email.
+subscriptionRouter.post(
+    "/send-email",
+    RoleChecker([Role.Enum.ADMIN]),
+    async (req, res) => {
+        const { mailingList, subject, htmlBody } = req.body;
+        const { data: list } = await SupabaseDB.SUBSCRIPTIONS.select(
+            "subscriptions"
+        )
+            .eq("mailingList", mailingList)
+            .single()
+            .throwOnError();
+
+        const sesClient = new SESv2Client({
+            region: Config.S3_REGION!,
+            credentials: {
+                accessKeyId: Config.S3_ACCESS_KEY!,
+                secretAccessKey: Config.S3_SECRET_KEY!,
+            },
+        });
+
+        const sendEmailCommand = new SendEmailCommand({
+            FromEmailAddress: process.env.FROM_EMAIL_ADDRESS ?? "",
+            Destination: {
+                // SES can send to multiple addresses at once
+                // ToAddresses: list.subscriptions,
+                // Let's send to ourselves for now, and bcc everyone else, probably the most pro way to go about it.
+                ToAddresses: [process.env.FROM_EMAIL_ADDRESS ?? ""],
+                BccAddresses: list.subscriptions,
+            },
+            Content: {
+                Simple: {
+                    Subject: { Data: subject },
+                    Body: { Html: { Data: htmlBody } },
+                },
+            },
+        });
+
+        await sesClient.send(sendEmailCommand);
+
+        return res.status(StatusCodes.OK).send({ status: "success" });
+    }
+);
 
 export default subscriptionRouter;

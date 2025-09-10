@@ -113,6 +113,7 @@ eventsRouter.post(
             isVisible: validatedData.isVisible,
             attendanceCount: validatedData.attendanceCount,
             eventType: validatedData.eventType,
+            tags: validatedData.tags,
         };
 
         const { data: newEvent } = await SupabaseDB.EVENTS.insert(dbData)
@@ -146,6 +147,7 @@ eventsRouter.put(
             isVisible: validatedData.isVisible,
             attendanceCount: validatedData.attendanceCount,
             eventType: validatedData.eventType,
+            tags: validatedData.tags,
         };
 
         const { data: updatedEvent } = await SupabaseDB.EVENTS.update(dbData)

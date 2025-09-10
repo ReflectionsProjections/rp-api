@@ -5,9 +5,10 @@ This is the backend API service for Reflections | Projections 2025, built with N
 ## Quick Start
 
 1. **Install dependencies:**
-   ```bash
-   yarn
-   ```
+
+    ```bash
+    yarn
+    ```
 
 2. **Set up environment variables:**
    - Reach out to your Dev Chairs for the `.env` file
@@ -15,15 +16,16 @@ This is the backend API service for Reflections | Projections 2025, built with N
    - **Optional**: Add `DEV_ADMIN_EMAIL=your.email@example.com` to your `.env` file for local admin access
 
 3. **Start the full development environment:**
-   ```bash
-   docker compose up --build
-   ```
+    ```bash
+    docker compose up --build
+    ```
 
 ## Docker Compose Setup
 
 The API includes several Docker Compose configurations for different development scenarios:
 
 ### Full Development Environment
+
 **`docker-compose.yml`** - Spins up ALL services required locally (api, db, kong, studio, rest, meta)
 
 ```bash
@@ -31,6 +33,7 @@ docker compose up --build
 ```
 
 ### API Only
+
 **`docker-compose.api.yml`** - Only spins up the API service (can configure to connect to prod database with env)
 
 ```bash
@@ -38,6 +41,7 @@ docker compose -f docker-compose.api.yml up --build
 ```
 
 ### Database Services Only
+
 **`docker-compose.db.yml`** - Only spins up the db-related services (db, kong, studio, rest, meta)
 
 ```bash
@@ -45,6 +49,7 @@ docker compose -f docker-compose.db.yml up --build
 ```
 
 ### Testing Environment
+
 **`docker-compose.test.yml`** - Only spins up the basic db services required for testing (db, kong, rest)
 
 ```bash
@@ -67,35 +72,36 @@ You can modify the database schema in `docker/init-scripts/01-schema.sql`.
 
 ## Development Scripts
 
-| Task | Command |
-|------|---------|
-| Install dependencies | `yarn` |
-| Start development server | `yarn dev` |
-| Start production server | `yarn start` |
-| Run tests | `yarn test` |
-| Run tests in Docker | `yarn test:docker` |
-| Lint code | `yarn lint` |
-| Format code | `yarn format` |
-| Build project | `yarn build` |
-| Verify (build + lint + format) | `yarn verify` |
-| View API logs | `yarn logs` |
-| Enter API container | `yarn shell` |
-| Restart API service | `yarn restart` |
+| Task                           | Command            |
+| ------------------------------ | ------------------ |
+| Install dependencies           | `yarn`             |
+| Start development server       | `yarn dev`         |
+| Start production server        | `yarn start`       |
+| Run tests                      | `yarn test`        |
+| Run tests in Docker            | `yarn test:docker` |
+| Lint code                      | `yarn lint`        |
+| Format code                    | `yarn format`      |
+| Build project                  | `yarn build`       |
+| Verify (build + lint + format) | `yarn verify`      |
+| View API logs                  | `yarn logs`        |
+| Enter API container            | `yarn shell`       |
+| Restart API service            | `yarn restart`     |
 
 ## Service URLs
 
 When running locally with Docker Compose:
 
-| Service | URL | Description |
-|---------|-----|-------------|
-| API | http://localhost:3000 | Main API endpoints |
+| Service         | URL                   | Description                   |
+| --------------- | --------------------- | ----------------------------- |
+| API             | http://localhost:3000 | Main API endpoints            |
 | Supabase Studio | http://localhost:8000 | Database management interface |
-| Kong Gateway | http://localhost:8000 | API gateway |
-| PostgREST | http://localhost:3001 | REST API for PostgreSQL |
+| Kong Gateway    | http://localhost:8000 | API gateway                   |
+| PostgREST       | http://localhost:3001 | REST API for PostgreSQL       |
 
 ## Development Workflow
 
 ### Local Development (without Docker)
+
 ```bash
 # Install dependencies
 yarn
@@ -105,6 +111,7 @@ yarn dev
 ```
 
 ### Docker Development
+
 ```bash
 # Start full environment
 docker compose up --build
@@ -117,6 +124,7 @@ yarn shell
 ```
 
 ### Testing
+
 ```bash
 # Run tests locally
 yarn test
