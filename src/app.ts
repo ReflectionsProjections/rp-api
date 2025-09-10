@@ -24,6 +24,7 @@ import speakersRouter from "./services/speakers/speakers-router";
 import puzzlebangRouter from "./services/puzzlebang/puzzlebang-router";
 import meetingsRouter from "./services/meetings/meetings-router";
 import shiftsRouter from "./services/shifts/shifts-router";
+import leaderboardRouter from "./services/leaderboard/leaderboard-router";
 
 import cors from "cors";
 
@@ -67,6 +68,7 @@ app.use("/staff", staffRouter);
 app.use("/auth", authRouter);
 app.use("/checkin", checkinRouter);
 app.use("/events", eventsRouter);
+app.use("/leaderboard", leaderboardRouter);
 app.use("/notifications", notificationsRouter);
 app.use("/puzzlebang", puzzlebangRouter);
 app.use("/registration", registrationRouter);

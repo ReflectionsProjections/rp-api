@@ -3,6 +3,7 @@ import crypto from "crypto";
 import { Config } from "../../config";
 import { EventType } from "../events/events-schema";
 import { DayKey } from "../attendee/attendee-schema";
+import { addPoints } from "../attendee/attendee-utils";
 import { getFirebaseAdmin } from "../../firebase";
 
 export function getCurrentDay() {
@@ -108,20 +109,7 @@ async function updateAttendanceRecords(eventId: string, userId: string) {
 }
 
 async function assignPixelsToUser(userId: string, pixels: number) {
-    const { data: attendee } = await SupabaseDB.ATTENDEES.select("points")
-        .eq("userId", userId)
-        .single()
-        .throwOnError();
-
-    const newPoints = (attendee?.points || 0) + pixels;
-
-    const updatedFields = {
-        points: newPoints,
-    };
-
-    await SupabaseDB.ATTENDEES.update(updatedFields)
-        .eq("userId", userId)
-        .throwOnError();
+    await addPoints(userId, pixels);
 }
 
 export async function checkInUserToEvent(eventId: string, userId: string) {

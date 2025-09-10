@@ -154,20 +154,22 @@ export async function clearSupabaseTables(supabase: SupabaseClient) {
     const tables: string[] = [
         "eventAttendances",
         "attendeeAttendances",
+        "leaderboardSubmissions",
+        "redemptions",
         "attendees",
         "notifications",
         "draftRegistrations",
         "registrations",
-        "authInfo",
         "authRoles",
+        "shiftAssignments",
         "authCodes",
         "events",
         "corporate",
         "staff",
         "shifts",
-        "shiftAssignments",
         "subscriptions",
         "customTopics",
+        "authInfo",
     ]; // TODO: Get this from the database
 
     for (const table of tables) {

@@ -10,7 +10,7 @@ export type Database = {
     // Allows to automatically instantiate createClient with right options
     // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
     __InternalSupabase: {
-        PostgrestVersion: "12.2.3 (519615d)";
+        PostgrestVersion: "13.0.4";
     };
     graphql_public: {
         Tables: {
@@ -75,6 +75,11 @@ export type Database = {
                     hasPriorityWed: boolean;
                     icon: Database["public"]["Enums"]["iconColorType"];
                     points: number;
+                    pointsDay1: number;
+                    pointsDay2: number;
+                    pointsDay3: number;
+                    pointsDay4: number;
+                    pointsDay5: number;
                     puzzlesCompleted: string[];
                     tags: string[];
                     userId: string;
@@ -91,6 +96,11 @@ export type Database = {
                     hasPriorityWed?: boolean;
                     icon?: Database["public"]["Enums"]["iconColorType"];
                     points?: number;
+                    pointsDay1?: number;
+                    pointsDay2?: number;
+                    pointsDay3?: number;
+                    pointsDay4?: number;
+                    pointsDay5?: number;
                     puzzlesCompleted?: string[];
                     tags?: string[];
                     userId: string;
@@ -107,6 +117,11 @@ export type Database = {
                     hasPriorityWed?: boolean;
                     icon?: Database["public"]["Enums"]["iconColorType"];
                     points?: number;
+                    pointsDay1?: number;
+                    pointsDay2?: number;
+                    pointsDay3?: number;
+                    pointsDay4?: number;
+                    pointsDay5?: number;
                     puzzlesCompleted?: string[];
                     tags?: string[];
                     userId?: string;
@@ -187,6 +202,21 @@ export type Database = {
                 Update: {
                     email?: string;
                     name?: string;
+                };
+                Relationships: [];
+            };
+            customTopics: {
+                Row: {
+                    topicId: string;
+                    topicName: string;
+                };
+                Insert: {
+                    topicId?: string;
+                    topicName: string;
+                };
+                Update: {
+                    topicId?: string;
+                    topicName?: string;
                 };
                 Relationships: [];
             };
@@ -346,6 +376,38 @@ export type Database = {
                 };
                 Relationships: [];
             };
+            leaderboardSubmissions: {
+                Row: {
+                    count: number;
+                    day: string;
+                    submissionId: string;
+                    submittedAt: string;
+                    submittedBy: string;
+                };
+                Insert: {
+                    count: number;
+                    day: string;
+                    submissionId?: string;
+                    submittedAt?: string;
+                    submittedBy: string;
+                };
+                Update: {
+                    count?: number;
+                    day?: string;
+                    submissionId?: string;
+                    submittedAt?: string;
+                    submittedBy?: string;
+                };
+                Relationships: [
+                    {
+                        foreignKeyName: "leaderboard_submissions_submitted_by_fkey";
+                        columns: ["submittedBy"];
+                        isOneToOne: false;
+                        referencedRelation: "authInfo";
+                        referencedColumns: ["userId"];
+                    },
+                ];
+            };
             meetings: {
                 Row: {
                     committeeType: Database["public"]["Enums"]["committeeNames"];
@@ -387,21 +449,6 @@ export type Database = {
                     },
                 ];
             };
-            customTopics: {
-                Row: {
-                    topicId: string;
-                    topicName: string;
-                };
-                Insert: {
-                    topicId?: string;
-                    topicName: string;
-                };
-                Update: {
-                    topicId?: string;
-                    topicName: string;
-                };
-                Relationships: [];
-            };
             registrations: {
                 Row: {
                     allergies: string[];
@@ -411,6 +458,7 @@ export type Database = {
                     ethnicity: string[];
                     gender: string;
                     graduationYear: string;
+                    hasResume: boolean;
                     howDidYouHear: string[];
                     isInterestedMechMania: boolean;
                     isInterestedPuzzleBang: boolean;
@@ -420,7 +468,6 @@ export type Database = {
                     opportunities: string[];
                     personalLinks: string[];
                     school: string;
-                    hasResume: boolean;
                     tags: string[];
                     userId: string;
                 };
@@ -432,6 +479,7 @@ export type Database = {
                     ethnicity?: string[];
                     gender: string;
                     graduationYear: string;
+                    hasResume?: boolean;
                     howDidYouHear?: string[];
                     isInterestedMechMania: boolean;
                     isInterestedPuzzleBang: boolean;
@@ -442,7 +490,6 @@ export type Database = {
                     personalLinks?: string[];
                     school: string;
                     tags?: string[];
-                    hasResume?: boolean;
                     userId: string;
                 };
                 Update: {
@@ -453,6 +500,7 @@ export type Database = {
                     ethnicity?: string[];
                     gender?: string;
                     graduationYear?: string;
+                    hasResume?: boolean;
                     howDidYouHear?: string[];
                     isInterestedMechMania?: boolean;
                     isInterestedPuzzleBang?: boolean;
@@ -463,7 +511,6 @@ export type Database = {
                     personalLinks?: string[];
                     school?: string;
                     tags?: string[];
-                    hasResume?: boolean;
                     userId?: string;
                 };
                 Relationships: [
@@ -602,12 +649,38 @@ export type Database = {
                 };
                 Relationships: [];
             };
+            redemptions: {
+                Row: {
+                    userId: string;
+                    item: Database["public"]["Enums"]["tierType"];
+                };
+                Insert: {
+                    userId: string;
+                    item: Database["public"]["Enums"]["tierType"];
+                };
+                Update: {
+                    userId?: string;
+                    item?: Database["public"]["Enums"]["tierType"];
+                };
+                Relationships: [
+                    {
+                        foreignKeyName: "redemptions_user_id_fkey";
+                        columns: ["userId"];
+                        isOneToOne: false;
+                        referencedRelation: "authInfo";
+                        referencedColumns: ["userId"];
+                    },
+                ];
+            };
         };
         Views: {
             [_ in never]: never;
         };
         Functions: {
-            [_ in never]: never;
+            promote_users_batch: {
+                Args: { user_ids: string[] };
+                Returns: number;
+            };
         };
         Enums: {
             shiftRoleType:
@@ -642,7 +715,7 @@ export type Database = {
                 | "ORANGE";
             roleType: "USER" | "STAFF" | "ADMIN" | "CORPORATE";
             staffAttendanceType: "PRESENT" | "EXCUSED" | "ABSENT";
-            tierType: "TIER1" | "TIER2" | "TIER3";
+            tierType: "TIER1" | "TIER2" | "TIER3" | "TIER4";
         };
         CompositeTypes: {
             [_ in never]: never;
@@ -805,7 +878,7 @@ export const Constants = {
             iconColorType: ["BLUE", "RED", "GREEN", "PINK", "PURPLE", "ORANGE"],
             roleType: ["USER", "STAFF", "ADMIN", "CORPORATE"],
             staffAttendanceType: ["PRESENT", "EXCUSED", "ABSENT"],
-            tierType: ["TIER1", "TIER2", "TIER3"],
+            tierType: ["TIER1", "TIER2", "TIER3", "TIER4"],
         },
     },
 } as const;
