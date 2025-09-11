@@ -55,11 +55,17 @@ export const SupabaseDB = {
     get SHIFT_ASSIGNMENTS() {
         return supabase.from("shiftAssignments");
     },
+    get LEADERBOARD_SUBMISSIONS() {
+        return supabase.from("leaderboardSubmissions");
+    },
     get NOTIFICATIONS() {
         return supabase.from("notifications");
     },
     get CUSTOM_TOPICS() {
         return supabase.from("customTopics");
+    },
+    get REDEMPTIONS() {
+        return supabase.from("redemptions");
     },
 };
 
@@ -93,6 +99,7 @@ export const TierTypes: Record<TierType, TierType> = {
     TIER1: "TIER1",
     TIER2: "TIER2",
     TIER3: "TIER3",
+    TIER4: "TIER4",
 };
 
 export const IconColorTypes: Record<IconColorType, IconColorType> = {

@@ -875,80 +875,93 @@ describe("PATCH /attendee/tags", () => {
 });
 
 // TODO: Uncomment and update these tests when redemption logic is moved to separate table
-/*
-describe("POST /attendee/redeemMerch/:ITEM", () => {
+
+describe("POST /attendee/redeem", () => {
     const userId = TESTER.userId;
 
     it.each([{ role: Role.enum.STAFF }, { role: Role.enum.ADMIN }])(
-        "should redeem valid item for %s role",
+        "should redeem valid tier for %s role",
         async ({ role }) => {
             await insertTestAttendee({
-                attendee: { ...BASE_TEST_ATTENDEE, userId: userId },
+                attendee: {
+                    ...BASE_TEST_ATTENDEE,
+                    userId: userId,
+                    currentTier: "TIER2",
+                },
             });
 
-            const res = await post("/attendee/redeemMerch/Tshirt", role)
-                .send({ userId })
+            const res = await post("/attendee/redeem", role)
+                .send({ userId, tier: "TIER1" })
                 .expect(StatusCodes.OK);
 
-            expect(res.body).toEqual({ message: "Item Redeemed!" });
+            expect(res.body).toEqual({
+                message: "Tier redeemed successfully!",
+                userId,
+                tier: "TIER1",
+            });
 
-            const updated = await SupabaseDB.ATTENDEES.select(
-                "hasRedeemedTshirt"
-            )
+            const redemption = await SupabaseDB.REDEMPTIONS.select()
                 .eq("userId", userId)
+                .eq("item", "TIER1")
                 .maybeSingle()
                 .throwOnError();
 
-            expect(updated.data?.hasRedeemedTshirt).toBe(true);
+            expect(redemption.data).toBeTruthy(); //check that the specific redemption is actually there
         }
     );
 
     it("should return 404 if user not found", async () => {
-        await post("/attendee/redeemMerch/Tshirt", Role.enum.STAFF)
-            .send({ userId: "notreal" })
+        await post("/attendee/redeem", Role.enum.STAFF)
+            .send({ userId: "notreal", tier: "TIER1" })
             .expect(StatusCodes.NOT_FOUND);
     });
 
-    it("should return 400 for invalid item", async () => {
+    it("should return 400 for invalid tier", async () => {
         await insertTestAttendee({
             attendee: { ...BASE_TEST_ATTENDEE, userId: userId },
         });
-        await post("/attendee/redeemMerch/InvalidItem", Role.enum.ADMIN)
-            .send({ userId })
+        await post("/attendee/redeem", Role.enum.ADMIN)
+            .send({ userId, tier: "INVALID_TIER" })
             .expect(StatusCodes.BAD_REQUEST);
     });
 
-    it("should return 400 if item already redeemed", async () => {
+    it("should return 400 if tier already redeemed", async () => {
         await insertTestAttendee({
             attendee: {
                 ...BASE_TEST_ATTENDEE,
                 userId: userId,
-                hasRedeemedTshirt: true,
+                currentTier: "TIER2",
             },
         });
 
-        await post("/attendee/redeemMerch/Tshirt", Role.enum.ADMIN)
-            .send({ userId })
+        await post("/attendee/redeem", Role.enum.ADMIN)
+            .send({ userId, tier: "TIER1" })
+            .expect(StatusCodes.OK);
+
+        // second attempt should fail
+        await post("/attendee/redeem", Role.enum.ADMIN)
+            .send({ userId, tier: "TIER1" })
             .expect(StatusCodes.BAD_REQUEST);
     });
 
-    it("should return 400 if user not eligible for item", async () => {
+    it("should return 400 if user tier too low for redemption", async () => {
         await insertTestAttendee({
             attendee: {
                 ...BASE_TEST_ATTENDEE,
                 userId: userId,
-                hasRedeemedTshirt: true,
+                currentTier: "TIER1",
             },
         });
 
-        await post("/attendee/redeemMerch/Cap", Role.enum.STAFF)
-            .send({ userId })
+        // User with TIER1 cannot redeem TIER2
+        await post("/attendee/redeem", Role.enum.STAFF)
+            .send({ userId, tier: "TIER2" })
             .expect(StatusCodes.BAD_REQUEST);
     });
 
     it("should return 401 if unauthenticated", async () => {
-        await post("/attendee/redeemMerch/Tshirt")
-            .send({ userId })
+        await post("/attendee/redeem")
+            .send({ userId, tier: "TIER1" })
             .expect(StatusCodes.UNAUTHORIZED);
     });
 
@@ -957,9 +970,113 @@ describe("POST /attendee/redeemMerch/:ITEM", () => {
             attendee: { ...BASE_TEST_ATTENDEE, userId: userId },
         });
 
-        await post("/attendee/redeemMerch/Tshirt", Role.enum.USER)
-            .send({ userId })
+        await post("/attendee/redeem", Role.enum.USER)
+            .send({ userId, tier: "TIER1" })
             .expect(StatusCodes.FORBIDDEN);
     });
 });
-*/
+
+describe("GET /attendee/redeemable/:userId", () => {
+    const userId = TESTER.userId;
+
+    it.each([{ role: Role.enum.STAFF }, { role: Role.enum.ADMIN }])(
+        "should return redeemable tiers for %s role",
+        async ({ role }) => {
+            await insertTestAttendee({
+                attendee: {
+                    ...BASE_TEST_ATTENDEE,
+                    userId: userId,
+                    currentTier: "TIER3",
+                },
+            });
+
+            const res = await get(
+                `/attendee/redeemable/${userId}`,
+                role
+            ).expect(StatusCodes.OK);
+
+            expect(res.body).toEqual({
+                userId,
+                currentTier: "TIER3",
+                redeemedTiers: [],
+                redeemableTiers: ["TIER1", "TIER2", "TIER3"],
+            });
+        }
+    );
+
+    it("should return only unredeemed tiers", async () => {
+        await insertTestAttendee({
+            attendee: {
+                ...BASE_TEST_ATTENDEE,
+                userId: userId,
+                currentTier: "TIER3",
+            },
+        });
+
+        await SupabaseDB.REDEMPTIONS.insert({
+            userId,
+            item: "TIER1",
+        }).throwOnError();
+
+        const res = await get(
+            `/attendee/redeemable/${userId}`,
+            Role.enum.STAFF
+        ).expect(StatusCodes.OK);
+
+        expect(res.body).toEqual({
+            userId,
+            currentTier: "TIER3",
+            redeemedTiers: ["TIER1"],
+            redeemableTiers: ["TIER2", "TIER3"],
+        });
+    });
+
+    it("should return empty redeemableTiers if all tiers possible to redeem are redeemed", async () => {
+        await insertTestAttendee({
+            attendee: {
+                ...BASE_TEST_ATTENDEE,
+                userId: userId,
+                currentTier: "TIER2",
+            },
+        });
+
+        await SupabaseDB.REDEMPTIONS.insert([
+            { userId, item: "TIER1" },
+            { userId, item: "TIER2" },
+        ]).throwOnError();
+
+        const res = await get(
+            `/attendee/redeemable/${userId}`,
+            Role.enum.STAFF
+        ).expect(StatusCodes.OK);
+
+        expect(res.body).toEqual({
+            userId,
+            currentTier: "TIER2",
+            redeemedTiers: ["TIER1", "TIER2"],
+            redeemableTiers: [],
+        });
+    });
+
+    it("should return 404 if user not found", async () => {
+        await get("/attendee/redeemable/notreal", Role.enum.STAFF).expect(
+            StatusCodes.NOT_FOUND
+        );
+    });
+
+    it("should return 401 if unauthenticated", async () => {
+        await get(`/attendee/redeemable/${userId}`).expect(
+            StatusCodes.UNAUTHORIZED
+        );
+    });
+
+    it("should return 403 if user is not STAFF or ADMIN", async () => {
+        await insertTestAttendee({
+            attendee: { ...BASE_TEST_ATTENDEE, userId: userId },
+        });
+
+        await get(`/attendee/redeemable/${userId}`, Role.enum.USER).expect(
+            StatusCodes.FORBIDDEN
+        );
+    });
+});
