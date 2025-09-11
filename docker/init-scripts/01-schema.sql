@@ -44,7 +44,8 @@ CREATE TYPE public."staffAttendanceType" AS ENUM (
 CREATE TYPE public."tierType" AS ENUM (
     'TIER1',
     'TIER2',
-    'TIER3'
+    'TIER3',
+    'TIER4'
 );
 
 CREATE TYPE public."iconColorType" AS ENUM (
@@ -83,6 +84,12 @@ CREATE TABLE public."customTopics" (
 CREATE TABLE public."attendees" (
     "userId" character varying NOT NULL,
     "points" integer DEFAULT 0 NOT NULL,
+    -- Daily points tracking for event days (Day 1 = Sept 16, 2025, etc.)
+    "pointsDay1" integer DEFAULT 0 NOT NULL,
+    "pointsDay2" integer DEFAULT 0 NOT NULL,
+    "pointsDay3" integer DEFAULT 0 NOT NULL,
+    "pointsDay4" integer DEFAULT 0 NOT NULL,
+    "pointsDay5" integer DEFAULT 0 NOT NULL,
     "hasPriorityMon" boolean DEFAULT false NOT NULL,
     "hasPriorityTue" boolean DEFAULT false NOT NULL,
     "hasPriorityWed" boolean DEFAULT false NOT NULL,
@@ -125,6 +132,22 @@ CREATE TABLE public."events" (
     "eventType" public."eventType" NOT NULL,
     "tags" text[] DEFAULT '{}'::text[] NOT NULL,
     CONSTRAINT "events_pkey" PRIMARY KEY ("eventId")
+);
+
+CREATE TABLE public."leaderboardSubmissions" (
+    "submissionId" uuid DEFAULT gen_random_uuid() NOT NULL,
+    "day" date NOT NULL,
+    "count" integer NOT NULL,
+    "submittedAt" timestamp with time zone DEFAULT now() NOT NULL,
+    "submittedBy" character varying NOT NULL,
+    CONSTRAINT "leaderboardSubmissions_pkey" PRIMARY KEY ("submissionId"),
+    CONSTRAINT "leaderboardSubmissions_day_unique" UNIQUE ("day")
+);
+
+CREATE TABLE public."redemptions" (
+    "userId" character varying NOT NULL,
+    "item" public."tierType" NOT NULL,
+    CONSTRAINT "redemptions_pkey" PRIMARY KEY ("userId", "item")
 );
 
 CREATE TABLE public."meetings" (
@@ -281,3 +304,69 @@ ALTER TABLE ONLY public."notifications"
 
 ALTER TABLE ONLY public."registrations"
     ADD CONSTRAINT "registrations_user_id_fkey" FOREIGN KEY ("userId") REFERENCES public."authInfo"("userId");
+
+ALTER TABLE ONLY public."leaderboardSubmissions"
+    ADD CONSTRAINT "leaderboard_submissions_submitted_by_fkey" FOREIGN KEY ("submittedBy") REFERENCES public."authInfo"("userId");
+
+ALTER TABLE ONLY public."redemptions"
+    ADD CONSTRAINT "redemptions_user_id_fkey" FOREIGN KEY ("userId") REFERENCES public."authInfo"("userId");
+
+-- PostgreSQL function for atomic tier promotions
+CREATE OR REPLACE FUNCTION public.promote_users_batch(user_ids text[])
+RETURNS int AS $$
+DECLARE
+    promoted_count int := 0;
+    tier1_count int := 0;
+    tier2_count int := 0;
+    tier3_count int := 0;
+    tier1_users text[];
+    tier2_users text[];
+    tier3_users text[];
+BEGIN
+    -- First, identify users by their CURRENT tier (before any promotions)
+    SELECT ARRAY(
+        SELECT "userId" FROM public."attendees" 
+        WHERE "userId" = ANY(user_ids) AND "currentTier" = 'TIER1'
+    ) INTO tier1_users;
+    
+    SELECT ARRAY(
+        SELECT "userId" FROM public."attendees" 
+        WHERE "userId" = ANY(user_ids) AND "currentTier" = 'TIER2'
+    ) INTO tier2_users;
+    
+    SELECT ARRAY(
+        SELECT "userId" FROM public."attendees" 
+        WHERE "userId" = ANY(user_ids) AND "currentTier" = 'TIER3'
+    ) INTO tier3_users;
+    
+    -- Now promote each group separately using the captured lists
+    -- Promote TIER1 -> TIER2
+    IF array_length(tier1_users, 1) > 0 THEN
+        UPDATE public."attendees" 
+        SET "currentTier" = 'TIER2'
+        WHERE "userId" = ANY(tier1_users);
+        GET DIAGNOSTICS tier1_count = ROW_COUNT;
+    END IF;
+    
+    -- Promote TIER2 -> TIER3  
+    IF array_length(tier2_users, 1) > 0 THEN
+        UPDATE public."attendees"
+        SET "currentTier" = 'TIER3' 
+        WHERE "userId" = ANY(tier2_users);
+        GET DIAGNOSTICS tier2_count = ROW_COUNT;
+    END IF;
+    
+    -- Promote TIER3 -> TIER4
+    IF array_length(tier3_users, 1) > 0 THEN
+        UPDATE public."attendees"
+        SET "currentTier" = 'TIER4' 
+        WHERE "userId" = ANY(tier3_users);
+        GET DIAGNOSTICS tier3_count = ROW_COUNT;
+    END IF;
+    
+    -- Return total promoted users
+    promoted_count := tier1_count + tier2_count + tier3_count;
+    
+    RETURN promoted_count;
+END;
+$$ LANGUAGE plpgsql;

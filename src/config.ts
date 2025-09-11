@@ -86,6 +86,9 @@ export const Config = {
     // Development admin email - allows developer email to be admin in development
     DEV_ADMIN_EMAIL: process.env.DEV_ADMIN_EMAIL,
 
+    // Event date override for testing - allows overriding the hardcoded event start date
+    EVENT_START_DATE_OVERRIDE: process.env.EVENT_START_DATE_OVERRIDE,
+
     JWT_SIGNING_SECRET: getEnv("JWT_SIGNING_SECRET"),
     JWT_EXPIRATION_TIME: "1 day" as const,
     MOBILE_JWT_EXPIRATION_TIME: "10 days" as const,
