@@ -149,73 +149,72 @@ statsRouter.get(
     "/dietary-restrictions",
     RoleChecker([Role.enum.STAFF], false),
     async (req, res) => {
-        const [
-            { count: noneCount },
-            { count: dietaryOnlyCount },
-            { count: allergiesOnlyCount },
-            { count: bothCount },
-            { data: allergiesData },
-            { data: dietaryRestrictionsData },
-        ] = await Promise.all([
-            // None: empty arrays for both allergies and dietaryRestrictions
-            SupabaseDB.REGISTRATIONS.select("*", { count: "exact", head: true })
-                .filter("allergies", "eq", "{}")
-                .filter("dietaryRestrictions", "eq", "{}")
-                .throwOnError(),
+        const { data: allRegistrations } =
+            await SupabaseDB.REGISTRATIONS.select(
+                "allergies, dietaryRestrictions"
+            ).throwOnError();
 
-            // Dietary restrictions only: empty allergies, non-empty dietaryRestrictions
-            SupabaseDB.REGISTRATIONS.select("*", { count: "exact", head: true })
-                .filter("allergies", "eq", "{}")
-                .filter("dietaryRestrictions", "neq", "{}")
-                .throwOnError(),
-
-            // Allergies only: non-empty allergies, empty dietaryRestrictions
-            SupabaseDB.REGISTRATIONS.select("*", { count: "exact", head: true })
-                .filter("allergies", "neq", "{}")
-                .filter("dietaryRestrictions", "eq", "{}")
-                .throwOnError(),
-
-            // Both: non-empty arrays for both
-            SupabaseDB.REGISTRATIONS.select("*", { count: "exact", head: true })
-                .filter("allergies", "neq", "{}")
-                .filter("dietaryRestrictions", "neq", "{}")
-                .throwOnError(),
-
-            // Get all allergies to count individual types
-            SupabaseDB.REGISTRATIONS.select("allergies")
-                .filter("allergies", "neq", "{}")
-                .throwOnError(),
-
-            // Get all dietary restrictions to count individual types
-            SupabaseDB.REGISTRATIONS.select("dietaryRestrictions")
-                .filter("dietaryRestrictions", "neq", "{}")
-                .throwOnError(),
-        ]);
-
-        const allergyCounts: { [key: string]: number } = {};
-        allergiesData?.forEach((registration: { allergies: string[] }) => {
-            registration.allergies?.forEach((allergy: string) => {
-                allergyCounts[allergy] = (allergyCounts[allergy] || 0) + 1;
+        if (!allRegistrations) {
+            return res.status(StatusCodes.OK).json({
+                none: 0,
+                dietaryRestrictions: 0,
+                allergies: 0,
+                both: 0,
+                allergyCounts: {},
+                dietaryRestrictionCounts: {},
             });
-        });
+        }
 
-        const dietaryRestrictionCounts: { [key: string]: number } = {};
-        dietaryRestrictionsData?.forEach(
-            (registration: { dietaryRestrictions: string[] }) => {
-                registration.dietaryRestrictions?.forEach(
-                    (restriction: string) => {
-                        dietaryRestrictionCounts[restriction] =
-                            (dietaryRestrictionCounts[restriction] || 0) + 1;
-                    }
+        const hasAllergies = (reg: { allergies: string[] }) =>
+            reg.allergies && reg.allergies.length > 0;
+        const hasDietaryRestrictions = (reg: {
+            dietaryRestrictions: string[];
+        }) => reg.dietaryRestrictions && reg.dietaryRestrictions.length > 0;
+
+        const noneCount = allRegistrations.filter(
+            (reg) => !hasAllergies(reg) && !hasDietaryRestrictions(reg)
+        ).length;
+
+        const dietaryOnlyCount = allRegistrations.filter(
+            (reg) => !hasAllergies(reg) && hasDietaryRestrictions(reg)
+        ).length;
+
+        const allergiesOnlyCount = allRegistrations.filter(
+            (reg) => hasAllergies(reg) && !hasDietaryRestrictions(reg)
+        ).length;
+
+        const bothCount = allRegistrations.filter(
+            (reg) => hasAllergies(reg) && hasDietaryRestrictions(reg)
+        ).length;
+
+        const allergyCounts: Record<string, number> = allRegistrations
+            .filter(hasAllergies)
+            .flatMap((reg) => reg.allergies)
+            .reduce(
+                (acc, allergy) => {
+                    acc[allergy] = (acc[allergy] || 0) + 1;
+                    return acc;
+                },
+                {} as Record<string, number>
+            );
+
+        const dietaryRestrictionCounts: Record<string, number> =
+            allRegistrations
+                .filter(hasDietaryRestrictions)
+                .flatMap((reg) => reg.dietaryRestrictions)
+                .reduce(
+                    (acc, restriction) => {
+                        acc[restriction] = (acc[restriction] || 0) + 1;
+                        return acc;
+                    },
+                    {} as Record<string, number>
                 );
-            }
-        );
 
         return res.status(StatusCodes.OK).json({
-            none: noneCount || 0,
-            dietaryRestrictions: dietaryOnlyCount || 0,
-            allergies: allergiesOnlyCount || 0,
-            both: bothCount || 0,
+            none: noneCount,
+            dietaryRestrictions: dietaryOnlyCount,
+            allergies: allergiesOnlyCount,
+            both: bothCount,
             allergyCounts,
             dietaryRestrictionCounts,
         });
