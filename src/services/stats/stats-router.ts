@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { StatusCodes } from "http-status-codes";
-import { SupabaseDB } from "../../database";
+import { SupabaseDB, TierType } from "../../database";
 import RoleChecker from "../../middleware/role-checker";
 import { Role } from "../auth/auth-models";
 import { getCurrentDay } from "../checkin/checkin-utils";
@@ -149,76 +149,172 @@ statsRouter.get(
     "/dietary-restrictions",
     RoleChecker([Role.enum.STAFF], false),
     async (req, res) => {
-        const [
-            { count: noneCount },
-            { count: dietaryOnlyCount },
-            { count: allergiesOnlyCount },
-            { count: bothCount },
-            { data: allergiesData },
-            { data: dietaryRestrictionsData },
-        ] = await Promise.all([
-            // None: empty arrays for both allergies and dietaryRestrictions
-            SupabaseDB.REGISTRATIONS.select("*", { count: "exact", head: true })
-                .filter("allergies", "eq", "{}")
-                .filter("dietaryRestrictions", "eq", "{}")
-                .throwOnError(),
+        const { data: allRegistrations } =
+            await SupabaseDB.REGISTRATIONS.select(
+                "allergies, dietaryRestrictions"
+            ).throwOnError();
 
-            // Dietary restrictions only: empty allergies, non-empty dietaryRestrictions
-            SupabaseDB.REGISTRATIONS.select("*", { count: "exact", head: true })
-                .filter("allergies", "eq", "{}")
-                .filter("dietaryRestrictions", "neq", "{}")
-                .throwOnError(),
-
-            // Allergies only: non-empty allergies, empty dietaryRestrictions
-            SupabaseDB.REGISTRATIONS.select("*", { count: "exact", head: true })
-                .filter("allergies", "neq", "{}")
-                .filter("dietaryRestrictions", "eq", "{}")
-                .throwOnError(),
-
-            // Both: non-empty arrays for both
-            SupabaseDB.REGISTRATIONS.select("*", { count: "exact", head: true })
-                .filter("allergies", "neq", "{}")
-                .filter("dietaryRestrictions", "neq", "{}")
-                .throwOnError(),
-
-            // Get all allergies to count individual types
-            SupabaseDB.REGISTRATIONS.select("allergies")
-                .filter("allergies", "neq", "{}")
-                .throwOnError(),
-
-            // Get all dietary restrictions to count individual types
-            SupabaseDB.REGISTRATIONS.select("dietaryRestrictions")
-                .filter("dietaryRestrictions", "neq", "{}")
-                .throwOnError(),
-        ]);
-
-        const allergyCounts: { [key: string]: number } = {};
-        allergiesData?.forEach((registration: { allergies: string[] }) => {
-            registration.allergies?.forEach((allergy: string) => {
-                allergyCounts[allergy] = (allergyCounts[allergy] || 0) + 1;
+        if (!allRegistrations) {
+            return res.status(StatusCodes.OK).json({
+                none: 0,
+                dietaryRestrictions: 0,
+                allergies: 0,
+                both: 0,
+                allergyCounts: {},
+                dietaryRestrictionCounts: {},
             });
-        });
+        }
 
-        const dietaryRestrictionCounts: { [key: string]: number } = {};
-        dietaryRestrictionsData?.forEach(
-            (registration: { dietaryRestrictions: string[] }) => {
-                registration.dietaryRestrictions?.forEach(
-                    (restriction: string) => {
-                        dietaryRestrictionCounts[restriction] =
-                            (dietaryRestrictionCounts[restriction] || 0) + 1;
-                    }
+        const hasAllergies = (reg: { allergies: string[] }) =>
+            reg.allergies && reg.allergies.length > 0;
+        const hasDietaryRestrictions = (reg: {
+            dietaryRestrictions: string[];
+        }) => reg.dietaryRestrictions && reg.dietaryRestrictions.length > 0;
+
+        const noneCount = allRegistrations.filter(
+            (reg) => !hasAllergies(reg) && !hasDietaryRestrictions(reg)
+        ).length;
+
+        const dietaryOnlyCount = allRegistrations.filter(
+            (reg) => !hasAllergies(reg) && hasDietaryRestrictions(reg)
+        ).length;
+
+        const allergiesOnlyCount = allRegistrations.filter(
+            (reg) => hasAllergies(reg) && !hasDietaryRestrictions(reg)
+        ).length;
+
+        const bothCount = allRegistrations.filter(
+            (reg) => hasAllergies(reg) && hasDietaryRestrictions(reg)
+        ).length;
+
+        const allergyCounts: Record<string, number> = allRegistrations
+            .filter(hasAllergies)
+            .flatMap((reg) => reg.allergies)
+            .reduce(
+                (acc, allergy) => {
+                    acc[allergy] = (acc[allergy] || 0) + 1;
+                    return acc;
+                },
+                {} as Record<string, number>
+            );
+
+        const dietaryRestrictionCounts: Record<string, number> =
+            allRegistrations
+                .filter(hasDietaryRestrictions)
+                .flatMap((reg) => reg.dietaryRestrictions)
+                .reduce(
+                    (acc, restriction) => {
+                        acc[restriction] = (acc[restriction] || 0) + 1;
+                        return acc;
+                    },
+                    {} as Record<string, number>
                 );
-            }
-        );
 
         return res.status(StatusCodes.OK).json({
-            none: noneCount || 0,
-            dietaryRestrictions: dietaryOnlyCount || 0,
-            allergies: allergiesOnlyCount || 0,
-            both: bothCount || 0,
+            none: noneCount,
+            dietaryRestrictions: dietaryOnlyCount,
+            allergies: allergiesOnlyCount,
+            both: bothCount,
             allergyCounts,
             dietaryRestrictionCounts,
         });
+    }
+);
+
+// get the number of registrations
+statsRouter.get(
+    "/registrations",
+    RoleChecker([Role.enum.STAFF], false),
+    async (req, res) => {
+        const { count } = await SupabaseDB.REGISTRATIONS.select("*", {
+            count: "exact",
+            head: true,
+        }).throwOnError();
+
+        return res.status(StatusCodes.OK).json({ count: count || 0 });
+    }
+);
+
+// event attendance at a specific event
+statsRouter.get(
+    "/event/:EVENT_ID/attendance",
+    RoleChecker([Role.enum.STAFF], false),
+    async (req, res) => {
+        const schema = z.object({
+            EVENT_ID: z.string().uuid(),
+        });
+
+        const result = schema.safeParse(req.params);
+        if (!result.success) {
+            return res.status(StatusCodes.BAD_REQUEST).json({
+                error: result.error.errors[0].message,
+            });
+        }
+        const eventId = result.data.EVENT_ID;
+
+        const { data: event } = await SupabaseDB.EVENTS.select(
+            "attendanceCount"
+        )
+            .eq("eventId", eventId)
+            .maybeSingle()
+            .throwOnError();
+
+        if (!event) {
+            return res
+                .status(StatusCodes.NOT_FOUND)
+                .json({ error: "Event not found" });
+        }
+
+        return res
+            .status(StatusCodes.OK)
+            .json({ attendanceCount: event.attendanceCount });
+    }
+);
+
+// Number of people at each tier
+statsRouter.get(
+    "/tier-counts",
+    RoleChecker([Role.enum.STAFF], false),
+    async (req, res) => {
+        const { data } = await SupabaseDB.ATTENDEES.select("currentTier", {
+            count: "exact",
+        }).throwOnError();
+
+        // Aggregate counts for each tier
+        const tierCounts: Record<TierType, number> = {
+            TIER1: 0,
+            TIER2: 0,
+            TIER3: 0,
+            TIER4: 0,
+        };
+        data?.forEach((attendee: { currentTier: TierType }) => {
+            if (attendee.currentTier) {
+                tierCounts[attendee.currentTier] =
+                    (tierCounts[attendee.currentTier] || 0) + 1;
+            }
+        });
+
+        return res.status(StatusCodes.OK).json(tierCounts);
+    }
+);
+
+// Number of people who marked each tag
+statsRouter.get(
+    "/tag-counts",
+    RoleChecker([Role.enum.STAFF], false),
+    async (req, res) => {
+        const { data } =
+            await SupabaseDB.ATTENDEES.select("tags").throwOnError();
+
+        // Aggregate counts for each tag
+        const tagCounts: Record<string, number> = {};
+        data?.forEach((attendee: { tags: string[] }) => {
+            attendee.tags?.forEach((tag: string) => {
+                tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+            });
+        });
+
+        return res.status(StatusCodes.OK).json(tagCounts);
     }
 );
 

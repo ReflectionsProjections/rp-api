@@ -845,3 +845,147 @@ describe("GET /stats/dietary-restrictions", () => {
         );
     });
 });
+
+describe("GET /stats/registrations", () => {
+    beforeEach(async () => {
+        await SupabaseDB.REGISTRATIONS.delete().neq("userId", "non-existent");
+        await SupabaseDB.AUTH_INFO.delete().neq("userId", "non-existent");
+
+        await SupabaseDB.AUTH_INFO.insert([AUTH_INFO_RITAM, AUTH_INFO_NATHAN]);
+        await SupabaseDB.REGISTRATIONS.insert([
+            {
+                userId: "a1",
+                name: "Ritam",
+                email: "ritam@test.com",
+                school: "University of Illinois",
+                educationLevel: "Computer Science",
+                graduationYear: "2025",
+                majors: ["Computer Science"],
+                dietaryRestrictions: [],
+                allergies: [],
+                gender: "Prefer not to say",
+                ethnicity: [],
+                howDidYouHear: [],
+                personalLinks: [],
+                opportunities: [],
+                isInterestedMechMania: false,
+                isInterestedPuzzleBang: false,
+            },
+            {
+                userId: "a2",
+                name: "Nathan",
+                email: "nathan@test.com",
+                school: "University of Illinois",
+                educationLevel: "Computer Science",
+                graduationYear: "2024",
+                majors: ["Computer Science"],
+                dietaryRestrictions: [],
+                allergies: [],
+                gender: "Prefer not to say",
+                ethnicity: [],
+                howDidYouHear: [],
+                personalLinks: [],
+                opportunities: [],
+                isInterestedMechMania: false,
+                isInterestedPuzzleBang: false,
+            },
+        ]);
+    });
+
+    it("should return the correct count of total registrations", async () => {
+        const response = await getAsStaff("/stats/registrations").expect(
+            StatusCodes.OK
+        );
+        expect(response.body.count).toBe(2);
+    });
+
+    it("should return 0 when no registrations exist", async () => {
+        await SupabaseDB.REGISTRATIONS.delete().neq("userId", "non-existent");
+        const response = await getAsStaff("/stats/registrations").expect(
+            StatusCodes.OK
+        );
+        expect(response.body.count).toBe(0);
+    });
+});
+
+describe("GET /stats/event/:EVENT_ID/attendance", () => {
+    beforeEach(async () => {
+        await SupabaseDB.EVENTS.delete().neq("eventId", uuidv4());
+        await SupabaseDB.EVENTS.insert(EVENT_1);
+    });
+
+    it("should return the attendance count for a specific event", async () => {
+        const response = await getAsStaff(
+            `/stats/event/${EVENT_1.eventId}/attendance`
+        ).expect(StatusCodes.OK);
+        expect(response.body.attendanceCount).toBe(EVENT_1.attendanceCount);
+    });
+
+    it("should return 404 for a non-existent event", async () => {
+        await getAsStaff(`/stats/event/${uuidv4()}/attendance`).expect(
+            StatusCodes.NOT_FOUND
+        );
+    });
+
+    it("should return 400 for an invalid event ID format", async () => {
+        await getAsStaff("/stats/event/not-a-uuid/attendance").expect(
+            StatusCodes.BAD_REQUEST
+        );
+    });
+});
+
+describe("GET /stats/tier-counts", () => {
+    beforeEach(async () => {
+        await SupabaseDB.ATTENDEES.delete().neq("userId", "non-existent");
+        await SupabaseDB.AUTH_INFO.delete().neq("userId", "non-existent");
+
+        await SupabaseDB.AUTH_INFO.insert([
+            AUTH_INFO_RITAM,
+            AUTH_INFO_NATHAN,
+            AUTH_INFO_TIMOTHY,
+        ]);
+        // Setup attendees with different tiers
+        await SupabaseDB.ATTENDEES.insert([
+            { ...ATTENDEE_RITAM, currentTier: Tiers.Enum.TIER1 },
+            { ...ATTENDEE_NATHAN, currentTier: Tiers.Enum.TIER2 },
+            { ...ATTENDEE_TIMOTHY, currentTier: Tiers.Enum.TIER1 },
+        ]);
+    });
+
+    it("should return the count of attendees in each tier", async () => {
+        const response = await getAsStaff("/stats/tier-counts").expect(
+            StatusCodes.OK
+        );
+        expect(response.body).toEqual({
+            TIER1: 2,
+            TIER2: 1,
+            TIER3: 0,
+            TIER4: 0,
+        });
+    });
+});
+
+describe("GET /stats/tag-counts", () => {
+    beforeEach(async () => {
+        await SupabaseDB.ATTENDEES.delete().neq("userId", "non-existent");
+        await SupabaseDB.AUTH_INFO.delete().neq("userId", "non-existent");
+
+        await SupabaseDB.AUTH_INFO.insert([AUTH_INFO_RITAM, AUTH_INFO_NATHAN]);
+        // Setup attendees with overlapping tags
+        await SupabaseDB.ATTENDEES.insert([
+            { ...ATTENDEE_RITAM, tags: ["AI", "career_readiness"] },
+            { ...ATTENDEE_NATHAN, tags: ["AI", "networking"] },
+        ]);
+    });
+
+    it("should return the count of each tag used by attendees", async () => {
+        const response = await getAsStaff("/stats/tag-counts").expect(
+            StatusCodes.OK
+        );
+        expect(response.body).toEqual({
+            AI: 2,
+            career_readiness: 1,
+            networking: 1,
+        });
+    });
+});
