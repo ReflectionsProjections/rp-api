@@ -148,8 +148,7 @@ statsRouter.get(
 statsRouter.get(
     "/dietary-restrictions",
     RoleChecker([Role.enum.STAFF], false),
-    async (req, res) => {
-        // Fetch all registrations with allergies and dietary restrictions in a single query
+    async (req, res) => {``
         const { data: allRegistrations } =
             await SupabaseDB.REGISTRATIONS.select(
                 "allergies, dietaryRestrictions"
@@ -166,57 +165,42 @@ statsRouter.get(
             });
         }
 
-        // Apply filters in JavaScript
-        let noneCount = 0;
-        let dietaryOnlyCount = 0;
-        let allergiesOnlyCount = 0;
-        let bothCount = 0;
+        const hasAllergies = (reg: { allergies: string[] }) => 
+            reg.allergies && reg.allergies.length > 0;
+        const hasDietaryRestrictions = (reg: { dietaryRestrictions: string[] }) => 
+            reg.dietaryRestrictions && reg.dietaryRestrictions.length > 0;
 
-        const allergyCounts: { [key: string]: number } = {};
-        const dietaryRestrictionCounts: { [key: string]: number } = {};
+        const noneCount = allRegistrations.filter(reg => 
+            !hasAllergies(reg) && !hasDietaryRestrictions(reg)
+        ).length;
 
-        allRegistrations.forEach(
-            (registration: {
-                allergies: string[];
-                dietaryRestrictions: string[];
-            }) => {
-                const hasAllergies =
-                    registration.allergies && registration.allergies.length > 0;
-                const hasDietaryRestrictions =
-                    registration.dietaryRestrictions &&
-                    registration.dietaryRestrictions.length > 0;
+        const dietaryOnlyCount = allRegistrations.filter(reg => 
+            !hasAllergies(reg) && hasDietaryRestrictions(reg)
+        ).length;
 
-                // Count categories
-                if (!hasAllergies && !hasDietaryRestrictions) {
-                    noneCount++;
-                } else if (!hasAllergies && hasDietaryRestrictions) {
-                    dietaryOnlyCount++;
-                } else if (hasAllergies && !hasDietaryRestrictions) {
-                    allergiesOnlyCount++;
-                } else if (hasAllergies && hasDietaryRestrictions) {
-                    bothCount++;
-                }
+        const allergiesOnlyCount = allRegistrations.filter(reg => 
+            hasAllergies(reg) && !hasDietaryRestrictions(reg)
+        ).length;
 
-                // Count individual allergies
-                if (hasAllergies) {
-                    registration.allergies.forEach((allergy: string) => {
-                        allergyCounts[allergy] =
-                            (allergyCounts[allergy] || 0) + 1;
-                    });
-                }
+        const bothCount = allRegistrations.filter(reg => 
+            hasAllergies(reg) && hasDietaryRestrictions(reg)
+        ).length;
 
-                // Count individual dietary restrictions
-                if (hasDietaryRestrictions) {
-                    registration.dietaryRestrictions.forEach(
-                        (restriction: string) => {
-                            dietaryRestrictionCounts[restriction] =
-                                (dietaryRestrictionCounts[restriction] || 0) +
-                                1;
-                        }
-                    );
-                }
-            }
-        );
+        const allergyCounts: Record<string, number> = allRegistrations
+            .filter(hasAllergies)
+            .flatMap(reg => reg.allergies)
+            .reduce((acc, allergy) => {
+                acc[allergy] = (acc[allergy] || 0) + 1;
+                return acc;
+            }, {} as Record<string, number>);
+
+        const dietaryRestrictionCounts: Record<string, number> = allRegistrations
+            .filter(hasDietaryRestrictions)
+            .flatMap(reg => reg.dietaryRestrictions)
+            .reduce((acc, restriction) => {
+                acc[restriction] = (acc[restriction] || 0) + 1;
+                return acc;
+            }, {} as Record<string, number>);
 
         return res.status(StatusCodes.OK).json({
             none: noneCount,
