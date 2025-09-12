@@ -148,7 +148,8 @@ statsRouter.get(
 statsRouter.get(
     "/dietary-restrictions",
     RoleChecker([Role.enum.STAFF], false),
-    async (req, res) => {``
+    async (req, res) => {
+        ``;
         const { data: allRegistrations } =
             await SupabaseDB.REGISTRATIONS.select(
                 "allergies, dietaryRestrictions"
@@ -165,42 +166,50 @@ statsRouter.get(
             });
         }
 
-        const hasAllergies = (reg: { allergies: string[] }) => 
+        const hasAllergies = (reg: { allergies: string[] }) =>
             reg.allergies && reg.allergies.length > 0;
-        const hasDietaryRestrictions = (reg: { dietaryRestrictions: string[] }) => 
-            reg.dietaryRestrictions && reg.dietaryRestrictions.length > 0;
+        const hasDietaryRestrictions = (reg: {
+            dietaryRestrictions: string[];
+        }) => reg.dietaryRestrictions && reg.dietaryRestrictions.length > 0;
 
-        const noneCount = allRegistrations.filter(reg => 
-            !hasAllergies(reg) && !hasDietaryRestrictions(reg)
+        const noneCount = allRegistrations.filter(
+            (reg) => !hasAllergies(reg) && !hasDietaryRestrictions(reg)
         ).length;
 
-        const dietaryOnlyCount = allRegistrations.filter(reg => 
-            !hasAllergies(reg) && hasDietaryRestrictions(reg)
+        const dietaryOnlyCount = allRegistrations.filter(
+            (reg) => !hasAllergies(reg) && hasDietaryRestrictions(reg)
         ).length;
 
-        const allergiesOnlyCount = allRegistrations.filter(reg => 
-            hasAllergies(reg) && !hasDietaryRestrictions(reg)
+        const allergiesOnlyCount = allRegistrations.filter(
+            (reg) => hasAllergies(reg) && !hasDietaryRestrictions(reg)
         ).length;
 
-        const bothCount = allRegistrations.filter(reg => 
-            hasAllergies(reg) && hasDietaryRestrictions(reg)
+        const bothCount = allRegistrations.filter(
+            (reg) => hasAllergies(reg) && hasDietaryRestrictions(reg)
         ).length;
 
         const allergyCounts: Record<string, number> = allRegistrations
             .filter(hasAllergies)
-            .flatMap(reg => reg.allergies)
-            .reduce((acc, allergy) => {
-                acc[allergy] = (acc[allergy] || 0) + 1;
-                return acc;
-            }, {} as Record<string, number>);
+            .flatMap((reg) => reg.allergies)
+            .reduce(
+                (acc, allergy) => {
+                    acc[allergy] = (acc[allergy] || 0) + 1;
+                    return acc;
+                },
+                {} as Record<string, number>
+            );
 
-        const dietaryRestrictionCounts: Record<string, number> = allRegistrations
-            .filter(hasDietaryRestrictions)
-            .flatMap(reg => reg.dietaryRestrictions)
-            .reduce((acc, restriction) => {
-                acc[restriction] = (acc[restriction] || 0) + 1;
-                return acc;
-            }, {} as Record<string, number>);
+        const dietaryRestrictionCounts: Record<string, number> =
+            allRegistrations
+                .filter(hasDietaryRestrictions)
+                .flatMap((reg) => reg.dietaryRestrictions)
+                .reduce(
+                    (acc, restriction) => {
+                        acc[restriction] = (acc[restriction] || 0) + 1;
+                        return acc;
+                    },
+                    {} as Record<string, number>
+                );
 
         return res.status(StatusCodes.OK).json({
             none: noneCount,
