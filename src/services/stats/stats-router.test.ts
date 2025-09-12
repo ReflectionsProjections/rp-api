@@ -936,8 +936,8 @@ describe("GET /stats/event/:EVENT_ID/attendance", () => {
 
 describe("GET /stats/tier-counts", () => {
     beforeEach(async () => {
-        await SupabaseDB.ATTENDEES.delete().neq("userId", "non-existent");
-        await SupabaseDB.AUTH_INFO.delete().neq("userId", "non-existent");
+        await SupabaseDB.ATTENDEES.delete();
+        await SupabaseDB.AUTH_INFO.delete();
 
         await SupabaseDB.AUTH_INFO.insert([
             AUTH_INFO_RITAM,
@@ -967,8 +967,8 @@ describe("GET /stats/tier-counts", () => {
 
 describe("GET /stats/tag-counts", () => {
     beforeEach(async () => {
-        await SupabaseDB.ATTENDEES.delete().neq("userId", "non-existent");
-        await SupabaseDB.AUTH_INFO.delete().neq("userId", "non-existent");
+        await SupabaseDB.ATTENDEES.delete();
+        await SupabaseDB.AUTH_INFO.delete();
 
         await SupabaseDB.AUTH_INFO.insert([AUTH_INFO_RITAM, AUTH_INFO_NATHAN]);
         // Setup attendees with overlapping tags
@@ -986,6 +986,37 @@ describe("GET /stats/tag-counts", () => {
             AI: 2,
             career_readiness: 1,
             networking: 1,
+        });
+    });
+});
+
+describe("GET /stats/merch-redemption-counts", () => {
+    beforeEach(async () => {
+        await SupabaseDB.ATTENDEES.delete();
+        await SupabaseDB.AUTH_INFO.delete();
+
+        await SupabaseDB.AUTH_INFO.insert([
+            AUTH_INFO_RITAM,
+            AUTH_INFO_NATHAN,
+            AUTH_INFO_TIMOTHY,
+        ]);
+        // Setup attendees with different merch redemption counts
+        await SupabaseDB.REDEMPTIONS.insert([
+            { userId: "a1", item: Tiers.Enum.TIER1 },
+            { userId: "a2", item: Tiers.Enum.TIER2 },
+            { userId: "a3", item: Tiers.Enum.TIER4 },
+        ]).throwOnError();
+    });
+
+    it("should return the total number of merch redemptions", async () => {
+        const response = await getAsStaff(
+            "/stats/merch-redemption-counts"
+        ).expect(StatusCodes.OK);
+        expect(response.body).toEqual({
+            TIER1: 1,
+            TIER2: 1,
+            TIER3: 0,
+            TIER4: 1,
         });
     });
 });
