@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { StatusCodes } from "http-status-codes";
-import { SupabaseDB } from "../../database";
+import { SupabaseDB, TierType } from "../../database";
 import RoleChecker from "../../middleware/role-checker";
 import { Role } from "../auth/auth-models";
 import { getCurrentDay } from "../checkin/checkin-utils";
@@ -282,8 +282,12 @@ statsRouter.get(
         }).throwOnError();
 
         // Aggregate counts for each tier
-        const tierCounts: Record<string, number> = {};
-        data?.forEach((attendee: { currentTier: string }) => {
+        const tierCounts: Record<TierType, number> = {
+            TIER1: 0,
+            TIER2: 0,
+            TIER3: 0,
+        };
+        data?.forEach((attendee: { currentTier: TierType }) => {
             if (attendee.currentTier) {
                 tierCounts[attendee.currentTier] =
                     (tierCounts[attendee.currentTier] || 0) + 1;

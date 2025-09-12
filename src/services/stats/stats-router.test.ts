@@ -959,6 +959,7 @@ describe("GET /stats/tier-counts", () => {
         expect(response.body).toEqual({
             TIER1: 2,
             TIER2: 1,
+            TIER3: 0,
         });
     });
 });
