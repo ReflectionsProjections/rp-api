@@ -113,7 +113,7 @@ const getAuthPayloadFromCode = async (
 
         return payload;
     } catch (error) {
-        console.error("AUTH ERROR:", error);
+        console.error("AUTH ISSUE:", error);
         return undefined;
     }
 };
