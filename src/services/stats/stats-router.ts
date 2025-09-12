@@ -319,4 +319,45 @@ statsRouter.get(
     }
 );
 
+// Take in paramter n, return the number of attendees who attended at least n events
+statsRouter.get(
+    "/attended-at-least/:N",
+    RoleChecker([Role.enum.STAFF], false),
+    async (req, res) => {
+        const schema = z.object({
+            N: z.coerce
+                .number()
+                .int()
+                .gte(0, { message: "N must be greater equal than 0" }),
+        });
+
+        const result = schema.safeParse(req.params);
+        if (!result.success) {
+            return res.status(StatusCodes.BAD_REQUEST).json({
+                error: result.error.errors[0].message,
+            });
+        }
+        const n = result.data.N;
+
+        const { data: attendanceRecords } =
+            await SupabaseDB.EVENT_ATTENDANCES.select(
+                "attendee"
+            ).throwOnError();
+
+        // Count occurrences of each attendee
+        const attendanceCountMap: Record<string, number> = {};
+        attendanceRecords?.forEach((record: { attendee: string }) => {
+            attendanceCountMap[record.attendee] =
+                (attendanceCountMap[record.attendee] || 0) + 1;
+        });
+
+        // Count how many attendees have attended at least n events
+        const countAtLeastN = Object.values(attendanceCountMap).filter(
+            (count) => count >= n
+        ).length;
+
+        return res.status(StatusCodes.OK).json({ count: countAtLeastN });
+    }
+);
+
 export default statsRouter;
