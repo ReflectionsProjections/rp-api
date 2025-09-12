@@ -149,7 +149,6 @@ statsRouter.get(
     "/dietary-restrictions",
     RoleChecker([Role.enum.STAFF], false),
     async (req, res) => {
-        ``;
         const { data: allRegistrations } =
             await SupabaseDB.REGISTRATIONS.select(
                 "allergies, dietaryRestrictions"
