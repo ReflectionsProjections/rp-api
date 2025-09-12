@@ -10,6 +10,14 @@ import Config from "../../config";
 
 const subscriptionRouter = Router();
 
+const sesClient = new SESv2Client({
+    region: Config.S3_REGION!,
+    credentials: {
+        accessKeyId: Config.S3_ACCESS_KEY!,
+        secretAccessKey: Config.S3_SECRET_KEY!,
+    },
+});
+
 // Create a new subscription
 subscriptionRouter.post("/", cors(), async (req, res) => {
     // Validate the incoming user subscription
@@ -78,14 +86,6 @@ subscriptionRouter.post(
             .single()
             .throwOnError();
 
-        const sesClient = new SESv2Client({
-            region: Config.S3_REGION!,
-            credentials: {
-                accessKeyId: Config.S3_ACCESS_KEY!,
-                secretAccessKey: Config.S3_SECRET_KEY!,
-            },
-        });
-
         const sendEmailCommand = new SendEmailCommand({
             FromEmailAddress: process.env.FROM_EMAIL_ADDRESS ?? "",
             Destination: {
@@ -94,6 +94,33 @@ subscriptionRouter.post(
                 // Let's send to ourselves for now, and bcc everyone else, probably the most pro way to go about it.
                 ToAddresses: [process.env.FROM_EMAIL_ADDRESS ?? ""],
                 BccAddresses: list.subscriptions,
+            },
+            Content: {
+                Simple: {
+                    Subject: { Data: subject },
+                    Body: { Html: { Data: htmlBody } },
+                },
+            },
+        });
+
+        await sesClient.send(sendEmailCommand);
+
+        return res.status(StatusCodes.OK).send({ status: "success" });
+    }
+);
+
+// Send an email to a specific person
+// API body: {String} email (the singular email to send to), {String} subject : The subject line of the email, {String} htmlBody : The HTML content of the email.
+subscriptionRouter.post(
+    "/send-email/single",
+    RoleChecker([Role.Enum.ADMIN]),
+    async (req, res) => {
+        const { email, subject, htmlBody } = req.body;
+
+        const sendEmailCommand = new SendEmailCommand({
+            FromEmailAddress: process.env.FROM_EMAIL_ADDRESS ?? "",
+            Destination: {
+                ToAddresses: [email],
             },
             Content: {
                 Simple: {
