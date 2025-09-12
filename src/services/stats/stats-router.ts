@@ -318,7 +318,7 @@ statsRouter.get(
     }
 );
 
-// Take in paramter n, return the number of attendees who attended at least n events
+// Take in parameter n, return the number of attendees who attended at least n events
 statsRouter.get(
     "/attended-at-least/:N",
     RoleChecker([Role.enum.STAFF], false),
@@ -339,21 +339,15 @@ statsRouter.get(
         const n = result.data.N;
 
         const { data: attendanceRecords } =
-            await SupabaseDB.EVENT_ATTENDANCES.select(
-                "attendee"
+            await SupabaseDB.ATTENDEE_ATTENDANCES.select(
+                "eventsAttended"
             ).throwOnError();
 
-        // Count occurrences of each attendee
-        const attendanceCountMap: Record<string, number> = {};
-        attendanceRecords?.forEach((record: { attendee: string }) => {
-            attendanceCountMap[record.attendee] =
-                (attendanceCountMap[record.attendee] || 0) + 1;
-        });
-
-        // Count how many attendees have attended at least n events
-        const countAtLeastN = Object.values(attendanceCountMap).filter(
-            (count) => count >= n
-        ).length;
+        const countAtLeastN =
+            attendanceRecords?.filter(
+                (record: { eventsAttended: string[] }) =>
+                    record.eventsAttended.length >= n
+            ).length ?? 0;
 
         return res.status(StatusCodes.OK).json({ count: countAtLeastN });
     }

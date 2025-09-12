@@ -1020,22 +1020,23 @@ describe("GET /stats/attended-at-least/:N", () => {
         const eventC = { ...EVENT_3, eventId: uuidv4() };
         await SupabaseDB.EVENTS.insert([eventA, eventB, eventC]);
 
-        // Ritam attends 2 events
-        await SupabaseDB.EVENT_ATTENDANCES.insert([
-            { eventId: eventA.eventId, attendee: ATTENDEE_RITAM.userId },
-            { eventId: eventB.eventId, attendee: ATTENDEE_RITAM.userId },
-        ]);
-
-        // Nathan attends 3 events
-        await SupabaseDB.EVENT_ATTENDANCES.insert([
-            { eventId: eventA.eventId, attendee: ATTENDEE_NATHAN.userId },
-            { eventId: eventB.eventId, attendee: ATTENDEE_NATHAN.userId },
-            { eventId: eventC.eventId, attendee: ATTENDEE_NATHAN.userId },
-        ]);
-
-        // Timothy attends 1 event
-        await SupabaseDB.EVENT_ATTENDANCES.insert([
-            { eventId: eventA.eventId, attendee: ATTENDEE_TIMOTHY.userId },
+        await SupabaseDB.ATTENDEE_ATTENDANCES.insert([
+            {
+                userId: ATTENDEE_RITAM.userId,
+                eventsAttended: [eventA.eventId, eventB.eventId],
+            },
+            {
+                userId: ATTENDEE_NATHAN.userId,
+                eventsAttended: [
+                    eventA.eventId,
+                    eventB.eventId,
+                    eventC.eventId,
+                ],
+            },
+            {
+                userId: ATTENDEE_TIMOTHY.userId,
+                eventsAttended: [eventA.eventId],
+            },
         ]);
     });
 
