@@ -150,9 +150,10 @@ statsRouter.get(
     RoleChecker([Role.enum.STAFF], false),
     async (req, res) => {
         // Fetch all registrations with allergies and dietary restrictions in a single query
-        const { data: allRegistrations } = await SupabaseDB.REGISTRATIONS
-            .select("allergies, dietaryRestrictions")
-            .throwOnError();
+        const { data: allRegistrations } =
+            await SupabaseDB.REGISTRATIONS.select(
+                "allergies, dietaryRestrictions"
+            ).throwOnError();
 
         if (!allRegistrations) {
             return res.status(StatusCodes.OK).json({
@@ -174,35 +175,48 @@ statsRouter.get(
         const allergyCounts: { [key: string]: number } = {};
         const dietaryRestrictionCounts: { [key: string]: number } = {};
 
-        allRegistrations.forEach((registration: { allergies: string[], dietaryRestrictions: string[] }) => {
-            const hasAllergies = registration.allergies && registration.allergies.length > 0;
-            const hasDietaryRestrictions = registration.dietaryRestrictions && registration.dietaryRestrictions.length > 0;
+        allRegistrations.forEach(
+            (registration: {
+                allergies: string[];
+                dietaryRestrictions: string[];
+            }) => {
+                const hasAllergies =
+                    registration.allergies && registration.allergies.length > 0;
+                const hasDietaryRestrictions =
+                    registration.dietaryRestrictions &&
+                    registration.dietaryRestrictions.length > 0;
 
-            // Count categories
-            if (!hasAllergies && !hasDietaryRestrictions) {
-                noneCount++;
-            } else if (!hasAllergies && hasDietaryRestrictions) {
-                dietaryOnlyCount++;
-            } else if (hasAllergies && !hasDietaryRestrictions) {
-                allergiesOnlyCount++;
-            } else if (hasAllergies && hasDietaryRestrictions) {
-                bothCount++;
-            }
+                // Count categories
+                if (!hasAllergies && !hasDietaryRestrictions) {
+                    noneCount++;
+                } else if (!hasAllergies && hasDietaryRestrictions) {
+                    dietaryOnlyCount++;
+                } else if (hasAllergies && !hasDietaryRestrictions) {
+                    allergiesOnlyCount++;
+                } else if (hasAllergies && hasDietaryRestrictions) {
+                    bothCount++;
+                }
 
-            // Count individual allergies
-            if (hasAllergies) {
-                registration.allergies.forEach((allergy: string) => {
-                    allergyCounts[allergy] = (allergyCounts[allergy] || 0) + 1;
-                });
-            }
+                // Count individual allergies
+                if (hasAllergies) {
+                    registration.allergies.forEach((allergy: string) => {
+                        allergyCounts[allergy] =
+                            (allergyCounts[allergy] || 0) + 1;
+                    });
+                }
 
-            // Count individual dietary restrictions
-            if (hasDietaryRestrictions) {
-                registration.dietaryRestrictions.forEach((restriction: string) => {
-                    dietaryRestrictionCounts[restriction] = (dietaryRestrictionCounts[restriction] || 0) + 1;
-                });
+                // Count individual dietary restrictions
+                if (hasDietaryRestrictions) {
+                    registration.dietaryRestrictions.forEach(
+                        (restriction: string) => {
+                            dietaryRestrictionCounts[restriction] =
+                                (dietaryRestrictionCounts[restriction] || 0) +
+                                1;
+                        }
+                    );
+                }
             }
-        });
+        );
 
         return res.status(StatusCodes.OK).json({
             none: noneCount,
