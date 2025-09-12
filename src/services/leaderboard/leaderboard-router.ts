@@ -82,7 +82,8 @@ leaderboardRouter.post(
         const leaderboard = await getDailyLeaderboard(day, n);
 
         const entriesProcessed = await promoteUsersToNextTier(
-            leaderboard.map((entry) => entry.userId)
+            leaderboard.map((entry) => entry.userId),
+            day
         );
 
         const { submissionId, submittedAt } = await recordLeaderboardSubmission(
