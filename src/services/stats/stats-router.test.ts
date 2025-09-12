@@ -960,6 +960,7 @@ describe("GET /stats/tier-counts", () => {
             TIER1: 2,
             TIER2: 1,
             TIER3: 0,
+            TIER4: 0,
         });
     });
 });

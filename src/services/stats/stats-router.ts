@@ -286,7 +286,7 @@ statsRouter.get(
             TIER1: 0,
             TIER2: 0,
             TIER3: 0,
-            TIER4: 0
+            TIER4: 0,
         };
         data?.forEach((attendee: { currentTier: TierType }) => {
             if (attendee.currentTier) {
