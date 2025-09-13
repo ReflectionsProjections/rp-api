@@ -269,10 +269,9 @@ attendeeRouter.get(
     "/emails",
     RoleChecker([Role.Enum.STAFF, Role.Enum.ADMIN]),
     async (_req, res) => {
-        const { data } =
-            await SupabaseDB.REGISTRATIONS.select(
-                "email, userId"
-            ).throwOnError();
+        const { data } = await SupabaseDB.REGISTRATIONS.select(
+            "email, userId, name"
+        ).throwOnError();
 
         return res.status(StatusCodes.OK).json(data);
     }
