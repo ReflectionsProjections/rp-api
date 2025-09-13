@@ -1029,6 +1029,12 @@ describe("GET /stats/attended-at-least/:N", () => {
         await SupabaseDB.AUTH_INFO.delete();
         await SupabaseDB.AUTH_ROLES.delete();
 
+        await SupabaseDB.AUTH_INFO.insert([
+            AUTH_INFO_RITAM,
+            AUTH_INFO_NATHAN,
+            AUTH_INFO_TIMOTHY,
+        ]);
+
         await SupabaseDB.AUTH_ROLES.insert([
             AUTH_ROLES_RITAM,
             AUTH_ROLES_NATHAN,
