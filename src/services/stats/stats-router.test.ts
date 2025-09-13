@@ -989,3 +989,92 @@ describe("GET /stats/tag-counts", () => {
         });
     });
 });
+
+describe("GET /stats/attended-at-least/:N", () => {
+    beforeEach(async () => {
+        await SupabaseDB.EVENTS.delete();
+        await SupabaseDB.EVENT_ATTENDANCES.delete();
+        await SupabaseDB.ATTENDEES.delete();
+        await SupabaseDB.AUTH_INFO.delete();
+        await SupabaseDB.AUTH_ROLES.delete();
+
+        await SupabaseDB.AUTH_INFO.insert([
+            AUTH_INFO_RITAM,
+            AUTH_INFO_NATHAN,
+            AUTH_INFO_TIMOTHY,
+        ]);
+        await SupabaseDB.AUTH_ROLES.insert([
+            AUTH_ROLES_RITAM,
+            AUTH_ROLES_NATHAN,
+            AUTH_ROLES_TIMOTHY,
+        ]);
+        await SupabaseDB.ATTENDEES.insert([
+            ATTENDEE_RITAM,
+            ATTENDEE_NATHAN,
+            ATTENDEE_TIMOTHY,
+        ]);
+
+        // Create 3 events
+        const eventA = { ...EVENT_1, eventId: uuidv4() };
+        const eventB = { ...EVENT_2, eventId: uuidv4() };
+        const eventC = { ...EVENT_3, eventId: uuidv4() };
+        await SupabaseDB.EVENTS.insert([eventA, eventB, eventC]);
+
+        await SupabaseDB.ATTENDEE_ATTENDANCES.insert([
+            {
+                userId: ATTENDEE_RITAM.userId,
+                eventsAttended: [eventA.eventId, eventB.eventId],
+            },
+            {
+                userId: ATTENDEE_NATHAN.userId,
+                eventsAttended: [
+                    eventA.eventId,
+                    eventB.eventId,
+                    eventC.eventId,
+                ],
+            },
+            {
+                userId: ATTENDEE_TIMOTHY.userId,
+                eventsAttended: [eventA.eventId],
+            },
+        ]);
+    });
+
+    it("should return the count of attendees who have attended at least N events", async () => {
+        const response = await getAsStaff("/stats/attended-at-least/2").expect(
+            StatusCodes.OK
+        );
+        // Ritam (2) and Nathan (3) have attended at least 2 events
+        expect(response.body).toEqual({ count: 2 });
+    });
+
+    it("should return 0 if no attendees have attended at least N events", async () => {
+        const response = await getAsStaff("/stats/attended-at-least/4").expect(
+            StatusCodes.OK
+        );
+        expect(response.body).toEqual({ count: 0 });
+    });
+
+    it("should return all attendees if N is 0", async () => {
+        const response = await getAsStaff("/stats/attended-at-least/0").expect(
+            StatusCodes.OK
+        );
+        // All 3 attendees have attended at least 0 events
+        expect(response.body).toEqual({ count: 3 });
+    });
+
+    it("should return 400 for invalid or missing N param", async () => {
+        await getAsStaff("/stats/attended-at-least/not-a-number").expect(
+            StatusCodes.BAD_REQUEST
+        );
+        await getAsStaff("/stats/attended-at-least/").expect(
+            StatusCodes.NOT_FOUND
+        );
+        await getAsStaff("/stats/attended-at-least/-1").expect(
+            StatusCodes.BAD_REQUEST
+        );
+        await getAsStaff("/stats/attended-at-least/2.5").expect(
+            StatusCodes.BAD_REQUEST
+        );
+    });
+});
