@@ -630,10 +630,12 @@ describe("GET /attendee/emails", () => {
                     expect.objectContaining({
                         userId: "u1",
                         email: "u1@example.com",
+                        name: "User One",
                     }),
                     expect.objectContaining({
                         userId: "u2",
                         email: "u2@example.com",
+                        name: "User Two",
                     }),
                 ])
             );
