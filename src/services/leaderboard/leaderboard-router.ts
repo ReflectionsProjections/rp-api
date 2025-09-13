@@ -103,7 +103,8 @@ leaderboardRouter.post(
         const payload = res.locals.payload;
         const submittedBy = payload.userId;
 
-        const { day, n } = SubmitLeaderboardRequestValidator.parse(req.body);
+        const { day, n, userIdsToPromote } =
+            SubmitLeaderboardRequestValidator.parse(req.body);
 
         // Check if this date has already been submitted
         const submissionStatus = await checkLeaderboardSubmissionExists(day);
@@ -115,11 +116,14 @@ leaderboardRouter.post(
             });
         }
 
-        const leaderboard = await getDailyLeaderboard(day, n);
+        const leaderboard = await getDailyLeaderboard(day);
 
-        const entriesProcessed = await promoteUsersToNextTier(
-            leaderboard.map((entry) => entry.userId)
-        );
+        // Use explicit user IDs if provided, otherwise use all users from leaderboard
+        const userIdsForPromotion =
+            userIdsToPromote || leaderboard.map((entry) => entry.userId);
+
+        const entriesProcessed =
+            await promoteUsersToNextTier(userIdsForPromotion);
 
         const { submissionId, submittedAt } = await recordLeaderboardSubmission(
             day,

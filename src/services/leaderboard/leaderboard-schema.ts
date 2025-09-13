@@ -15,6 +15,7 @@ export const DailyLeaderboardRequestValidator = z.object({
 export const SubmitLeaderboardRequestValidator = z.object({
     day: DayStringValidator,
     n: z.coerce.number().int().min(1),
+    userIdsToPromote: z.array(z.string()).optional(),
 });
 
 // Request validator for global leaderboard endpoint (n is optional)
