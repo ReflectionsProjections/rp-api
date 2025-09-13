@@ -43,6 +43,7 @@ beforeEach(async () => {
         "mailingList",
         "a_value_that_will_never_exist"
     );
+    jest.clearAllMocks();
 });
 
 afterEach(async () => {
@@ -225,6 +226,36 @@ describe("POST /subscription/send-email", () => {
                 Simple: {
                     Subject: { Data: "Test Subject" },
                     Body: { Html: { Data: "<p>Hello World</p>" } },
+                },
+            },
+        });
+
+        // Verify that the send method was actually invoked
+        expect(mockSESV2Send).toHaveBeenCalledTimes(1);
+    });
+});
+
+describe("POST /subscription/send-email/single", () => {
+    it("should send an email to a single specified email address", async () => {
+        const emailPayload = {
+            email: "ritam@test.com",
+            subject: "Single Email Test",
+            htmlBody: "<p>Single Email Body</p>",
+        };
+
+        await postAsAdmin("/subscription/send-email/single")
+            .send(emailPayload)
+            .expect(StatusCodes.OK);
+
+        expect(SendEmailCommand).toHaveBeenCalledWith({
+            FromEmailAddress: process.env.FROM_EMAIL_ADDRESS,
+            Destination: {
+                ToAddresses: [emailPayload.email],
+            },
+            Content: {
+                Simple: {
+                    Subject: { Data: "Single Email Test" },
+                    Body: { Html: { Data: "<p>Single Email Body</p>" } },
                 },
             },
         });
