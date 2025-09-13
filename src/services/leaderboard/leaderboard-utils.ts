@@ -29,7 +29,7 @@ function getDailyPointsForEventDay(
 }
 
 /**
- * Get the daily leaderboard for a specific day, including all tiers
+ * Get the daily leaderboard for a specific day, excluding TIER4
  * @param day - The day in YYYY-MM-DD format (Central Time)
  * @param n - Number of top attendees to include (optional - returns all if not specified)
  * @returns Promise<LeaderboardEntry[]> - Ranked list of attendees with ties handled
@@ -59,7 +59,8 @@ export async function getDailyLeaderboard(
             icon,
             authInfo!inner(displayName)
         `
-    ).throwOnError();
+    ).neq("currentTier", "TIER4")
+    .throwOnError();
 
     if (!attendees || attendees.length === 0) {
         return [];

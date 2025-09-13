@@ -116,7 +116,7 @@ leaderboardRouter.post(
             });
         }
 
-        const leaderboard = await getDailyLeaderboard(day);
+        const leaderboard = await getDailyLeaderboard(day, n);
 
         // Use explicit user IDs if provided, otherwise use all users from leaderboard
         const userIdsForPromotion =
