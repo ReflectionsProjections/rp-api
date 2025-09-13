@@ -5,6 +5,7 @@ import {
     AttendeeTagsUpdateValidator,
     AttendeeRedeemMerchValidator,
     EventIdValidator,
+    AttendeePointsUpdateValidator,
 } from "./attendee-validators";
 import { Tiers } from "./attendee-schema";
 import { SupabaseDB, IconColorType, TierType } from "../../database";
@@ -428,6 +429,39 @@ attendeeRouter.patch(
             .throwOnError();
 
         return res.status(StatusCodes.OK).json({ tags });
+    }
+);
+
+// Custom add points to attendee
+// Request body: { userId: string, pointsToAdd: number }
+attendeeRouter.patch(
+    "/addPoints",
+    RoleChecker([Role.Enum.ADMIN]),
+    async (req, res) => {
+        const { userId, pointsToAdd } = AttendeePointsUpdateValidator.parse(
+            req.body
+        );
+        // Check if the user exists in the database
+        const { data: user } = await SupabaseDB.ATTENDEES.select("points")
+            .eq("userId", userId)
+            .maybeSingle()
+            .throwOnError();
+
+        if (!user) {
+            return res
+                .status(StatusCodes.NOT_FOUND)
+                .json({ error: "UserNotFound" });
+        }
+
+        const newPoints = (user.points || 0) + pointsToAdd;
+
+        // Update the points
+        console.log(`Updating points for user ${userId} to ${newPoints}`);
+        await SupabaseDB.ATTENDEES.update({ points: newPoints })
+            .eq("userId", userId)
+            .throwOnError();
+
+        return res.status(StatusCodes.OK).json({ points: newPoints });
     }
 );
 
