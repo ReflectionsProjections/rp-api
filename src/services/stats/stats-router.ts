@@ -318,6 +318,31 @@ statsRouter.get(
     }
 );
 
+// Number of people who redeemed each merch item
+statsRouter.get(
+    "/merch-redemption-counts",
+    RoleChecker([Role.enum.STAFF], false),
+    async (req, res) => {
+        const { data } =
+            await SupabaseDB.REDEMPTIONS.select("item").throwOnError();
+        // Aggregate counts for each merch item
+        const itemCounts: Record<TierType, number> = {
+            TIER1: 0,
+            TIER2: 0,
+            TIER3: 0,
+            TIER4: 0,
+        };
+        data?.forEach((redemption: { item: TierType }) => {
+            if (redemption.item) {
+                itemCounts[redemption.item] =
+                    (itemCounts[redemption.item] || 0) + 1;
+            }
+        });
+
+        return res.status(StatusCodes.OK).json(itemCounts);
+    }
+);
+
 // Take in parameter n, return the number of attendees who attended at least n events
 statsRouter.get(
     "/attended-at-least/:N",
