@@ -26,10 +26,10 @@ const leaderboardRouter = Router();
  * GET /leaderboard/daily
  * Get daily leaderboard for display in mobile app and admin preview
  * Query params: day (YYYY-MM-DD), n (optional - number of winners, returns all if omitted)
- * Authorization: All authenticated users
+ * Authorization: None required
  */
 
-leaderboardRouter.get("/daily", RoleChecker([]), async (req, res) => {
+leaderboardRouter.get("/daily", async (req, res) => {
     const { day, n } = DailyLeaderboardRequestValidator.parse({
         day: req.query.day,
         n: req.query.n,
@@ -50,9 +50,9 @@ leaderboardRouter.get("/daily", RoleChecker([]), async (req, res) => {
  * GET /leaderboard/global
  * Get global leaderboard showing total accumulated points for all attendees
  * Query params: n (optional - number of winners, returns all if omitted)
- * Authorization: All authenticated users
+ * Authorization: None required
  */
-leaderboardRouter.get("/global", RoleChecker([]), async (req, res) => {
+leaderboardRouter.get("/global", async (req, res) => {
     const { n } = GlobalLeaderboardRequestValidator.parse({
         n: req.query.n,
     });
