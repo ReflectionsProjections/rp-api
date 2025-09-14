@@ -29,7 +29,7 @@ function getDailyPointsForEventDay(
 }
 
 /**
- * Get the daily leaderboard for a specific day, excluding TIER3 users
+ * Get the daily leaderboard for a specific day, excluding TIER4
  * @param day - The day in YYYY-MM-DD format (Central Time)
  * @param n - Number of top attendees to include (optional - returns all if not specified)
  * @returns Promise<LeaderboardEntry[]> - Ranked list of attendees with ties handled
@@ -79,8 +79,15 @@ export async function getDailyLeaderboard(
         })
     );
 
-    // Step 4: Sort by daily points descending
-    leaderboardEntries.sort((a, b) => b.points - a.points);
+    // Step 4: Sort by daily points descending, then by displayName ascending for ties
+    leaderboardEntries.sort((a, b) => {
+        if (b.points !== a.points) {
+            return b.points - a.points;
+        }
+        return a.displayName
+            .toLowerCase()
+            .localeCompare(b.displayName.toLowerCase());
+    });
 
     // Step 5: Assign ranks (handle ties)
     let currentRank = 1;
@@ -130,13 +137,21 @@ export async function getGlobalLeaderboard(
             icon,
             authInfo!inner(displayName)
         `
-    )
-        .order("points", { ascending: false })
-        .throwOnError();
+    ).throwOnError();
 
     if (!attendees || attendees.length === 0) {
         return [];
     }
+
+    // Sort by points descending, then by displayName ascending for ties
+    attendees.sort((a, b) => {
+        if (b.points !== a.points) {
+            return b.points - a.points;
+        }
+        return a.authInfo.displayName
+            .toLowerCase()
+            .localeCompare(b.authInfo.displayName.toLowerCase());
+    });
 
     // Create leaderboard entries with rankings
     let currentRank = 1;
@@ -191,6 +206,42 @@ export async function promoteUsersToNextTier(
     }
 
     return data || 0;
+}
+
+/**
+ * Check if a leaderboard submission already exists for a specific day
+ * @param day - The day to check (YYYY-MM-DD format)
+ * @returns Promise<{ exists: boolean; submission?: { submissionId: string; submittedAt: string; submittedBy: string; count: number } }>
+ */
+export async function checkLeaderboardSubmissionExists(day: string): Promise<{
+    exists: boolean;
+    submission?: {
+        submissionId: string;
+        submittedAt: string;
+        submittedBy: string;
+        count: number;
+    };
+}> {
+    const { data } = await SupabaseDB.LEADERBOARD_SUBMISSIONS.select(
+        "submissionId, submittedAt, submittedBy, count"
+    )
+        .eq("day", day)
+        .maybeSingle()
+        .throwOnError();
+
+    if (!data) {
+        return { exists: false };
+    }
+
+    return {
+        exists: true,
+        submission: {
+            submissionId: data.submissionId,
+            submittedAt: data.submittedAt,
+            submittedBy: data.submittedBy,
+            count: data.count,
+        },
+    };
 }
 
 /**

@@ -189,11 +189,11 @@ describe("Staff-Facing Shift Routes", () => {
         });
     });
 
-    describe("GET /shifts/:shiftId/assignments", () => {
+    describe("GET /shifts/assignments", () => {
         it("should return the roster for a given shift", async () => {
-            const response = await getAsStaff(
-                `/shifts/${testShiftId}/assignments`
-            ).expect(StatusCodes.OK);
+            const response = await getAsStaff(`/shifts/assignments`).expect(
+                StatusCodes.OK
+            );
             expect(response.body.length).toBe(1);
             expect(response.body[0].staff.email).toBe(TESTER_STAFF.email);
         });
