@@ -4,9 +4,11 @@ import {
     DailyLeaderboardRequestValidator,
     SubmitLeaderboardRequestValidator,
     GlobalLeaderboardRequestValidator,
+    CheckSubmissionRequestValidator,
     PreviewLeaderboardResponseValidator,
     GlobalLeaderboardResponseValidator,
     SubmitLeaderboardResponseValidator,
+    CheckSubmissionResponseValidator,
 } from "./leaderboard-schema";
 import RoleChecker from "../../middleware/role-checker";
 import { Role } from "../auth/auth-models";
@@ -15,6 +17,7 @@ import {
     getGlobalLeaderboard,
     recordLeaderboardSubmission,
     promoteUsersToNextTier,
+    checkLeaderboardSubmissionExists,
 } from "./leaderboard-utils";
 
 const leaderboardRouter = Router();
@@ -65,6 +68,29 @@ leaderboardRouter.get("/global", async (req, res) => {
 });
 
 /**
+ * GET /leaderboard/submission-status
+ * Check if a leaderboard submission already exists for a specific day
+ * Query params: day (YYYY-MM-DD)
+ * Authorization: All authenticated users
+ */
+leaderboardRouter.get(
+    "/submission-status",
+    RoleChecker([]),
+    async (req, res) => {
+        const { day } = CheckSubmissionRequestValidator.parse({
+            day: req.query.day,
+        });
+
+        const submissionStatus = await checkLeaderboardSubmissionExists(day);
+
+        const response =
+            CheckSubmissionResponseValidator.parse(submissionStatus);
+
+        return res.status(StatusCodes.OK).json(response);
+    }
+);
+
+/**
  * POST /leaderboard/submit
  * Submit and lock in daily leaderboard results, updating tier eligibility
  * Body: { day: string, n: number }
@@ -77,13 +103,27 @@ leaderboardRouter.post(
         const payload = res.locals.payload;
         const submittedBy = payload.userId;
 
-        const { day, n } = SubmitLeaderboardRequestValidator.parse(req.body);
+        const { day, n, userIdsToPromote } =
+            SubmitLeaderboardRequestValidator.parse(req.body);
+
+        // Check if this date has already been submitted
+        const submissionStatus = await checkLeaderboardSubmissionExists(day);
+        if (submissionStatus.exists) {
+            return res.status(StatusCodes.CONFLICT).json({
+                error: "Leaderboard already submitted",
+                message: `A leaderboard submission already exists for ${day}`,
+                existingSubmission: submissionStatus.submission,
+            });
+        }
 
         const leaderboard = await getDailyLeaderboard(day, n);
 
-        const entriesProcessed = await promoteUsersToNextTier(
-            leaderboard.map((entry) => entry.userId)
-        );
+        // Use explicit user IDs if provided, otherwise use all users from leaderboard
+        const userIdsForPromotion =
+            userIdsToPromote || leaderboard.map((entry) => entry.userId);
+
+        const entriesProcessed =
+            await promoteUsersToNextTier(userIdsForPromotion);
 
         const { submissionId, submittedAt } = await recordLeaderboardSubmission(
             day,
