@@ -138,18 +138,14 @@ shiftsRouter.delete(
     }
 );
 
-// Get a list of all staff assigned to a specific shift
-// URL params: shiftId
+// Get a list of all shifts and the staff assigned to them
 shiftsRouter.get(
-    "/:shiftId/assignments",
+    "/assignments",
     RoleChecker([Role.Enum.STAFF, Role.Enum.ADMIN]),
     async (req, res) => {
-        const { shiftId } = ShiftIdValidator.parse(req.params);
-
         const { data: roster } = await SupabaseDB.SHIFT_ASSIGNMENTS.select(
             "*, staff(name, email)"
         ) // Fetches assignment and staff details
-            .eq("shiftId", shiftId)
             .throwOnError();
 
         return res.status(StatusCodes.OK).json(roster);
