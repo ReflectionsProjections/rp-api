@@ -876,6 +876,63 @@ describe("PATCH /attendee/tags", () => {
     });
 });
 
+describe("PATCH /attendee/addPoints", () => {
+    it("should add points to the attendee's profile for ADMIN role", async () => {
+        await insertTestAttendee({
+            attendee: {
+                userId: BASE_TEST_ATTENDEE.userId,
+                points: 10,
+            },
+        });
+
+        const response = await patch("/attendee/addPoints", Role.enum.ADMIN)
+            .send({ userId: TESTER.userId, pointsToAdd: 15 })
+            .expect(StatusCodes.OK);
+
+        expect(response.body).toEqual({ points: 25 });
+
+        // Verify the database was updated
+        const updated = await SupabaseDB.ATTENDEES.select("points")
+            .eq("userId", TESTER.userId)
+            .maybeSingle()
+            .throwOnError();
+
+        expect(updated.data?.points).toBe(25);
+    });
+
+    it("should return 404 if attendee to add points to is not found", async () => {
+        await insertTestAttendee();
+
+        await patch("/attendee/addPoints", Role.enum.ADMIN)
+            .send({ userId: "unknown-id", pointsToAdd: 10 })
+            .expect(StatusCodes.NOT_FOUND);
+    });
+
+    it("should return 400 for missing userId or pointsToAdd", async () => {
+        await insertTestAttendee();
+
+        await patch("/attendee/addPoints", Role.enum.ADMIN)
+            .send({ pointsToAdd: 10 })
+            .expect(StatusCodes.BAD_REQUEST);
+
+        await patch("/attendee/addPoints", Role.enum.ADMIN)
+            .send({ userId: TESTER.userId })
+            .expect(StatusCodes.BAD_REQUEST);
+    });
+
+    it("should return 400 for negative pointsToAdd", async () => {
+        await insertTestAttendee();
+
+        await patch("/attendee/addPoints", Role.enum.ADMIN)
+            .send({ userId: TESTER.userId, pointsToAdd: -5 })
+            .expect(StatusCodes.BAD_REQUEST);
+
+        await patch("/attendee/addPoints", Role.enum.ADMIN)
+            .send({ userId: TESTER.userId, pointsToAdd: 2.5 })
+            .expect(StatusCodes.BAD_REQUEST);
+    });
+});
+
 // TODO: Uncomment and update these tests when redemption logic is moved to separate table
 
 describe("POST /attendee/redeem", () => {

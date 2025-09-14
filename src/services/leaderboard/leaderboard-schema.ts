@@ -15,11 +15,17 @@ export const DailyLeaderboardRequestValidator = z.object({
 export const SubmitLeaderboardRequestValidator = z.object({
     day: DayStringValidator,
     n: z.coerce.number().int().min(1),
+    userIdsToPromote: z.array(z.string()).optional(),
 });
 
 // Request validator for global leaderboard endpoint (n is optional)
 export const GlobalLeaderboardRequestValidator = z.object({
     n: z.coerce.number().int().min(1).optional(),
+});
+
+// Request validator for checking submission status (day is required)
+export const CheckSubmissionRequestValidator = z.object({
+    day: DayStringValidator,
 });
 
 // Leaderboard entry - represents a single user in the leaderboard; reuse for global and daily
@@ -56,6 +62,19 @@ export const SubmitLeaderboardResponseValidator = z.object({
     submittedBy: z.string(),
 });
 
+// GET /submission-status response
+export const CheckSubmissionResponseValidator = z.object({
+    exists: z.boolean(),
+    submission: z
+        .object({
+            submissionId: z.string().uuid(),
+            submittedAt: z.string(),
+            submittedBy: z.string(),
+            count: z.number().int().min(0),
+        })
+        .optional(),
+});
+
 // Type exports
 export type DailyLeaderboardRequest = z.infer<
     typeof DailyLeaderboardRequestValidator
@@ -75,4 +94,10 @@ export type GlobalLeaderboardResponse = z.infer<
 >;
 export type SubmitLeaderboardResponse = z.infer<
     typeof SubmitLeaderboardResponseValidator
+>;
+export type CheckSubmissionRequest = z.infer<
+    typeof CheckSubmissionRequestValidator
+>;
+export type CheckSubmissionResponse = z.infer<
+    typeof CheckSubmissionResponseValidator
 >;
