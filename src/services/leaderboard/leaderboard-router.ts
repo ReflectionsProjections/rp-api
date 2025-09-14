@@ -117,13 +117,15 @@ leaderboardRouter.post(
         }
 
         const leaderboard = await getDailyLeaderboard(day, n);
-      
+
         // Use explicit user IDs if provided, otherwise use all users from leaderboard
         const userIdsForPromotion =
             userIdsToPromote || leaderboard.map((entry) => entry.userId);
 
-        const entriesProcessed =
-            await promoteUsersToNextTier(userIdsForPromotion, day);
+        const entriesProcessed = await promoteUsersToNextTier(
+            userIdsForPromotion,
+            day
+        );
 
         const { submissionId, submittedAt } = await recordLeaderboardSubmission(
             day,
