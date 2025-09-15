@@ -87,12 +87,12 @@ subscriptionRouter.post(
             .throwOnError();
 
         const sendEmailCommand = new SendEmailCommand({
-            FromEmailAddress: process.env.FROM_EMAIL_ADDRESS ?? "",
+            FromEmailAddress: Config.FROM_EMAIL_ADDRESS ?? "",
             Destination: {
                 // SES can send to multiple addresses at once
                 // ToAddresses: list.subscriptions,
                 // Let's send to ourselves for now, and bcc everyone else, probably the most pro way to go about it.
-                ToAddresses: [process.env.FROM_EMAIL_ADDRESS ?? ""],
+                ToAddresses: [Config.FROM_EMAIL_ADDRESS ?? ""],
                 BccAddresses: list.subscriptions,
             },
             Content: {

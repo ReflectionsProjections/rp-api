@@ -3,6 +3,7 @@ import { StatusCodes } from "http-status-codes";
 import { Config, EnvironmentEnum } from "./config";
 import { isTest } from "./utilities";
 import "./firebase";
+import jsonwebtoken, { TokenExpiredError } from "jsonwebtoken";
 
 // import databaseMiddleware from "./middleware/database-middleware";
 // import customCors from "./middleware/cors-middleware";
@@ -27,6 +28,7 @@ import shiftsRouter from "./services/shifts/shifts-router";
 import leaderboardRouter from "./services/leaderboard/leaderboard-router";
 
 import cors from "cors";
+import { JwtPayloadValidator } from "./services/auth/auth-models";
 
 const app = express();
 app.enable("trust proxy");
@@ -41,19 +43,34 @@ app.disable("etag");
 app.use(cors());
 
 // Logs
-switch (Config.ENV) {
-    case EnvironmentEnum.TESTING:
-        break;
-    case EnvironmentEnum.DEVELOPMENT:
-        app.use(morgan("dev"));
-        break;
-    case EnvironmentEnum.PRODUCTION:
-        app.use(
-            morgan(
-                ':remote-addr - :remote-user ":method :url HTTP/:http-version" :status :res[content-length] ":referrer" ":user-agent"'
-            )
-        );
-        break;
+if (Config.ENV != EnvironmentEnum.TESTING) {
+    morgan.token("userid", (req, _res) => {
+        const jwt = req.headers.authorization;
+        if (!jwt) {
+            return "unauthorized";
+        }
+
+        try {
+            const payloadData = jsonwebtoken.verify(
+                jwt,
+                Config.JWT_SIGNING_SECRET
+            );
+            const payload = JwtPayloadValidator.parse(payloadData);
+            return payload.userId;
+        } catch (error) {
+            if (error instanceof TokenExpiredError) {
+                return "expired-token";
+            }
+
+            return "invalid-token";
+        }
+    });
+
+    app.use(
+        morgan(
+            ':remote-addr - :remote-user :userid ":method :url HTTP/:http-version" :status :res[content-length] ":referrer" ":user-agent"'
+        )
+    );
 }
 
 // Parsing

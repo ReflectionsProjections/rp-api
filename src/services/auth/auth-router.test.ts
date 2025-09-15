@@ -665,7 +665,7 @@ describe("GET /auth/team", () => {
 
     it("should return empty array when no team members exist", async () => {
         // Remove all roles to test empty case
-        await SupabaseDB.AUTH_ROLES.delete().neq("userId", "nonexistent");
+        await SupabaseDB.AUTH_ROLES.delete();
 
         const res = await getAsAdmin("/auth/team").expect(StatusCodes.OK);
         expect(res.body).toEqual([]);

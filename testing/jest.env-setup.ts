@@ -18,6 +18,8 @@ process.env.OAUTH_GOOGLE_CLIENT_SECRET = "isaidbeepbeepimasheep";
 process.env.JWT_SIGNING_SECRET = "supersecretsecret";
 process.env.QR_HASH_SECRET = "raidshadowlegends";
 
+process.env.FROM_EMAIL_ADDRESS = "fake@reflectionsprojections.org";
+
 process.env.S3_ACCESS_KEY = "2468";
 process.env.S3_SECRET_KEY = "whodeweappreciate";
 process.env.S3_BUCKET_NAME =

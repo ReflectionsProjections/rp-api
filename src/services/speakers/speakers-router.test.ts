@@ -1,4 +1,4 @@
-import { afterAll, beforeEach, describe, expect, it } from "@jest/globals";
+import { beforeEach, describe, expect, it } from "@jest/globals";
 import {
     get,
     post,
@@ -64,19 +64,7 @@ const UPDATE_SPEAKER_PAYLOAD = {
 } satisfies UpdateSpeakerType;
 
 beforeEach(async () => {
-    await SupabaseDB.SPEAKERS.delete().neq(
-        "speakerId",
-        "00000000-0000-0000-0000-000000000000"
-    );
-
-    await SupabaseDB.SPEAKERS.insert([SPEAKER_1, SPEAKER_2]);
-});
-
-afterAll(async () => {
-    await SupabaseDB.SPEAKERS.delete().in("speakerId", [
-        SPEAKER_1_ID,
-        SPEAKER_2_ID,
-    ]);
+    await SupabaseDB.SPEAKERS.insert([SPEAKER_1, SPEAKER_2]).throwOnError();
 });
 
 describe("GET /speakers/", () => {
@@ -91,10 +79,7 @@ describe("GET /speakers/", () => {
     });
 
     it("should return an empty array when no speakers exist", async () => {
-        await SupabaseDB.SPEAKERS.delete().neq(
-            "speakerId",
-            "00000000-0000-0000-0000-000000000000"
-        );
+        await SupabaseDB.SPEAKERS.delete().throwOnError();
         const response = await get("/speakers/").expect(StatusCodes.OK);
         expect(response.body).toEqual([]);
     });

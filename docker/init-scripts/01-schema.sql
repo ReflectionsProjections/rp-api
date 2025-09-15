@@ -276,8 +276,8 @@ CREATE TABLE public."shiftAssignments" (
     "staffEmail" text NOT NULL,
     "acknowledged" boolean DEFAULT false NOT NULL,
     CONSTRAINT "shiftAssignments_pkey" PRIMARY KEY ("shiftId", "staffEmail"),
-    CONSTRAINT "shiftAssignments_shiftId_fkey" FOREIGN KEY ("shiftId") REFERENCES public."shifts"("shiftId"),
-    CONSTRAINT "shiftAssignments_staffEmail_fkey" FOREIGN KEY ("staffEmail") REFERENCES public."staff"("email")
+    CONSTRAINT "shiftAssignments_shiftId_fkey" FOREIGN KEY ("shiftId") REFERENCES public."shifts"("shiftId") ON DELETE CASCADE,
+    CONSTRAINT "shiftAssignments_staffEmail_fkey" FOREIGN KEY ("staffEmail") REFERENCES public."staff"("email") ON DELETE CASCADE
 );
 
 CREATE TABLE public."subscriptions" (
@@ -288,28 +288,28 @@ CREATE TABLE public."subscriptions" (
 
 -- Add foreign key constraints
 ALTER TABLE ONLY public."attendeeAttendances"
-    ADD CONSTRAINT "attendee_attendance_user_id_fkey" FOREIGN KEY ("userId") REFERENCES public."authInfo"("userId");
+    ADD CONSTRAINT "attendee_attendance_user_id_fkey" FOREIGN KEY ("userId") REFERENCES public."authInfo"("userId") ON DELETE CASCADE;
 
 ALTER TABLE ONLY public."attendees"
-    ADD CONSTRAINT "attendees_user_id_fkey" FOREIGN KEY ("userId") REFERENCES public."authInfo"("userId");
+    ADD CONSTRAINT "attendees_user_id_fkey" FOREIGN KEY ("userId") REFERENCES public."authInfo"("userId") ON DELETE CASCADE;
 
 ALTER TABLE ONLY public."eventAttendances"
-    ADD CONSTRAINT "event_attendance_attendee_fkey" FOREIGN KEY ("attendee") REFERENCES public."attendees"("userId");
+    ADD CONSTRAINT "event_attendance_attendee_fkey" FOREIGN KEY ("attendee") REFERENCES public."attendees"("userId") ON DELETE CASCADE;
 
 ALTER TABLE ONLY public."eventAttendances"
-    ADD CONSTRAINT "event_attendance_event_id_fkey" FOREIGN KEY ("eventId") REFERENCES public."events"("eventId");
+    ADD CONSTRAINT "event_attendance_event_id_fkey" FOREIGN KEY ("eventId") REFERENCES public."events"("eventId") ON DELETE CASCADE;
 
 ALTER TABLE ONLY public."notifications"
-    ADD CONSTRAINT "notifications_user_id_fkey" FOREIGN KEY ("userId") REFERENCES public."authInfo"("userId");
+    ADD CONSTRAINT "notifications_user_id_fkey" FOREIGN KEY ("userId") REFERENCES public."authInfo"("userId") ON DELETE CASCADE;
 
 ALTER TABLE ONLY public."registrations"
-    ADD CONSTRAINT "registrations_user_id_fkey" FOREIGN KEY ("userId") REFERENCES public."authInfo"("userId");
+    ADD CONSTRAINT "registrations_user_id_fkey" FOREIGN KEY ("userId") REFERENCES public."authInfo"("userId") ON DELETE CASCADE;
 
 ALTER TABLE ONLY public."leaderboardSubmissions"
-    ADD CONSTRAINT "leaderboard_submissions_submitted_by_fkey" FOREIGN KEY ("submittedBy") REFERENCES public."authInfo"("userId");
+    ADD CONSTRAINT "leaderboard_submissions_submitted_by_fkey" FOREIGN KEY ("submittedBy") REFERENCES public."authInfo"("userId") ON DELETE CASCADE;
 
 ALTER TABLE ONLY public."redemptions"
-    ADD CONSTRAINT "redemptions_user_id_fkey" FOREIGN KEY ("userId") REFERENCES public."authInfo"("userId");
+    ADD CONSTRAINT "redemptions_user_id_fkey" FOREIGN KEY ("userId") REFERENCES public."authInfo"("userId") ON DELETE CASCADE;
 
 -- PostgreSQL function for atomic tier promotions
 CREATE OR REPLACE FUNCTION public.promote_users_batch(user_ids text[])

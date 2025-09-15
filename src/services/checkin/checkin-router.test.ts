@@ -17,7 +17,6 @@ import { Role } from "../auth/auth-models";
 const NOW_SECONDS = Math.floor(Date.now() / 1000);
 const ONE_HOUR_SECONDS = 3600;
 
-const dummyUUID = "00000000-0000-0000-0000-000000000000";
 const TEST_ATTENDEE_1 = {
     userId: "attendee001",
     points: 0,
@@ -149,16 +148,6 @@ async function insertTestAttendee(overrides: InsertTestAttendeeOverrides = {}) {
 }
 
 beforeEach(async () => {
-    await SupabaseDB.EVENT_ATTENDANCES.delete().neq(
-        "attendee",
-        "NON_EXISTENT_ATTENDEE_ID"
-    );
-    await SupabaseDB.ATTENDEE_ATTENDANCES.delete().neq("userId", dummyUUID);
-    await SupabaseDB.ATTENDEES.delete().neq("userId", dummyUUID);
-    await SupabaseDB.REGISTRATIONS.delete().neq("userId", dummyUUID);
-    await SupabaseDB.AUTH_ROLES.delete().eq("userId", dummyUUID);
-    await SupabaseDB.AUTH_INFO.delete().eq("userId", dummyUUID);
-    await SupabaseDB.EVENTS.delete().neq("eventId", dummyUUID);
     await insertTestAttendee();
     const validExpTime = NOW_SECONDS + ONE_HOUR_SECONDS;
     const expiredExpTime = NOW_SECONDS - ONE_HOUR_SECONDS;
@@ -178,33 +167,11 @@ beforeEach(async () => {
     ]);
 });
 
-afterAll(async () => {
-    await SupabaseDB.EVENT_ATTENDANCES.delete().neq("attendee", "");
-    await SupabaseDB.ATTENDEE_ATTENDANCES.delete().neq("userId", "");
-    await SupabaseDB.EVENTS.delete().eq(
-        "eventId",
-        REGULAR_EVENT_FOR_CHECKIN.eventId
-    );
-    await SupabaseDB.EVENTS.delete().eq(
-        "eventId",
-        GENERAL_CHECKIN_EVENT.eventId
-    );
-    await SupabaseDB.EVENTS.delete().eq("eventId", MEALS_EVENT.eventId);
-    await SupabaseDB.ATTENDEES.delete().neq("userId", "");
-    await SupabaseDB.REGISTRATIONS.delete().neq("userId", "");
-    await SupabaseDB.AUTH_ROLES.delete().eq("userId", "non-existent-user");
-    await SupabaseDB.AUTH_INFO.delete().eq("userId", "non-existent-user");
-});
-
 describe("POST /checkin/scan/staff", () => {
     let payload: ScanPayload;
     let currentDay: DayKey;
 
     beforeEach(async () => {
-        // Clean only the dynamic tables
-        // await SupabaseDB.EVENT_ATTENDANCES.delete().neq("attendee", "");
-        // await SupabaseDB.ATTENDEE_ATTENDANCES.delete().neq("userId", "");
-
         // Reset events attendanceCount back to 0
         for (const event of [
             REGULAR_EVENT_FOR_CHECKIN,
@@ -491,12 +458,6 @@ describe("POST /checkin/event", () => {
             userId: TEST_ATTENDEE_1.userId,
         };
         currentDay = getCurrentDay();
-    });
-
-    beforeEach(async () => {
-        // Clear junction tables
-        await SupabaseDB.EVENT_ATTENDANCES.delete().neq("attendee", "");
-        await SupabaseDB.ATTENDEE_ATTENDANCES.delete().neq("userId", "");
 
         // Reset attendance count on all static events
         for (const event of [

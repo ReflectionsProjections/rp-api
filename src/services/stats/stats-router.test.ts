@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, afterAll } from "@jest/globals";
+import { beforeEach, describe, expect, it } from "@jest/globals";
 import { StatusCodes } from "http-status-codes";
 import { SupabaseDB } from "../../database";
 import { Tiers, IconColors } from "../attendee/attendee-schema";
@@ -327,61 +327,8 @@ const ATTENDEES_DIETARY = [
     },
 ];
 
-afterAll(async () => {
-    await SupabaseDB.EVENT_ATTENDANCES.delete().neq(
-        "eventId",
-        "00000000-0000-0000-0000-000000000000"
-    );
-
-    await SupabaseDB.EVENTS.delete().neq(
-        "eventId",
-        "00000000-0000-0000-0000-000000000000"
-    );
-
-    await SupabaseDB.REGISTRATIONS.delete().neq(
-        "userId",
-        "00000000-0000-0000-0000-000000000000"
-    );
-
-    await SupabaseDB.ATTENDEES.delete().neq(
-        "userId",
-        "00000000-0000-0000-0000-000000000000"
-    );
-
-    await SupabaseDB.AUTH_ROLES.delete().neq(
-        "userId",
-        "00000000-0000-0000-0000-000000000000"
-    );
-
-    await SupabaseDB.AUTH_INFO.delete().neq(
-        "userId",
-        "00000000-0000-0000-0000-000000000000"
-    );
-});
-
 describe("GET /stats/check-in", () => {
     beforeEach(async () => {
-        await SupabaseDB.EVENT_ATTENDANCES.delete().neq(
-            "eventId",
-            "00000000-0000-0000-0000-000000000000"
-        );
-        await SupabaseDB.EVENTS.delete().neq(
-            "eventId",
-            "00000000-0000-0000-0000-000000000000"
-        );
-        await SupabaseDB.ATTENDEES.delete().neq(
-            "userId",
-            "00000000-0000-0000-0000-000000000000"
-        );
-        await SupabaseDB.AUTH_ROLES.delete().neq(
-            "userId",
-            "00000000-0000-0000-0000-000000000000"
-        );
-        await SupabaseDB.AUTH_INFO.delete().neq(
-            "userId",
-            "00000000-0000-0000-0000-000000000000"
-        );
-
         await SupabaseDB.AUTH_INFO.insert([
             AUTH_INFO_RITAM,
             AUTH_INFO_NATHAN,
@@ -416,10 +363,7 @@ describe("GET /stats/check-in", () => {
     });
 
     it("should return 0 if no attendees are checked in", async () => {
-        await SupabaseDB.EVENT_ATTENDANCES.delete().neq(
-            "eventId",
-            "00000000-0000-0000-0000-000000000000"
-        );
+        await SupabaseDB.EVENT_ATTENDANCES.delete().throwOnError();
 
         const response = await getAsStaff("/stats/check-in").expect(
             StatusCodes.OK
@@ -429,26 +373,11 @@ describe("GET /stats/check-in", () => {
     });
 
     it("should return 0 if no CHECKIN events exist", async () => {
-        await SupabaseDB.EVENT_ATTENDANCES.delete().neq(
-            "eventId",
-            "00000000-0000-0000-0000-000000000000"
-        );
-        await SupabaseDB.EVENTS.delete().neq(
-            "eventId",
-            "00000000-0000-0000-0000-000000000000"
-        );
-        await SupabaseDB.ATTENDEES.delete().neq(
-            "userId",
-            "00000000-0000-0000-0000-000000000000"
-        );
-        await SupabaseDB.AUTH_ROLES.delete().neq(
-            "userId",
-            "00000000-0000-0000-0000-000000000000"
-        );
-        await SupabaseDB.AUTH_INFO.delete().neq(
-            "userId",
-            "00000000-0000-0000-0000-000000000000"
-        );
+        await SupabaseDB.EVENT_ATTENDANCES.delete().throwOnError();
+        await SupabaseDB.EVENTS.delete().throwOnError();
+        await SupabaseDB.ATTENDEES.delete().throwOnError();
+        await SupabaseDB.AUTH_ROLES.delete().throwOnError();
+        await SupabaseDB.AUTH_INFO.delete().throwOnError();
 
         await SupabaseDB.AUTH_INFO.insert([
             AUTH_INFO_RITAM,
@@ -514,18 +443,9 @@ describe("GET /stats/check-in", () => {
 
 describe("GET /stats/merch-item/:PRICE", () => {
     beforeEach(async () => {
-        await SupabaseDB.ATTENDEES.delete().neq(
-            "userId",
-            "00000000-0000-0000-0000-000000000000"
-        );
-        await SupabaseDB.AUTH_ROLES.delete().neq(
-            "userId",
-            "00000000-0000-0000-0000-000000000000"
-        );
-        await SupabaseDB.AUTH_INFO.delete().neq(
-            "userId",
-            "00000000-0000-0000-0000-000000000000"
-        );
+        await SupabaseDB.ATTENDEES.delete().throwOnError();
+        await SupabaseDB.AUTH_ROLES.delete().throwOnError();
+        await SupabaseDB.AUTH_INFO.delete().throwOnError();
 
         await SupabaseDB.AUTH_INFO.insert([
             AUTH_INFO_RITAM,
@@ -619,19 +539,6 @@ describe("GET /stats/merch-item/:PRICE", () => {
 
 describe("GET /stats/priority-attendee", () => {
     beforeEach(async () => {
-        await SupabaseDB.ATTENDEES.delete().neq(
-            "userId",
-            "00000000-0000-0000-0000-000000000000"
-        );
-        await SupabaseDB.AUTH_ROLES.delete().neq(
-            "userId",
-            "00000000-0000-0000-0000-000000000000"
-        );
-        await SupabaseDB.AUTH_INFO.delete().neq(
-            "userId",
-            "00000000-0000-0000-0000-000000000000"
-        );
-
         await SupabaseDB.AUTH_INFO.insert([
             AUTH_INFO_RITAM,
             AUTH_INFO_NATHAN,
@@ -672,10 +579,7 @@ describe("GET /stats/priority-attendee", () => {
             Object.values(dayFieldMap).map((field) => [field, false])
         );
 
-        await SupabaseDB.ATTENDEES.update(updateData).neq(
-            "userId",
-            "00000000-0000-0000-0000-000000000000"
-        );
+        await SupabaseDB.ATTENDEES.update(updateData);
 
         const response = await getAsStaff("/stats/priority-attendee").expect(
             StatusCodes.OK
@@ -696,15 +600,9 @@ describe("GET /stats/priority-attendee", () => {
 
 describe("GET /stats/attendance/:N", () => {
     beforeEach(async () => {
-        await SupabaseDB.EVENT_ATTENDANCES.delete().neq(
-            "eventId",
-            "00000000-0000-0000-0000-000000000000"
-        );
+        await SupabaseDB.EVENT_ATTENDANCES.delete().throwOnError();
 
-        await SupabaseDB.EVENTS.delete().neq(
-            "eventId",
-            "00000000-0000-0000-0000-000000000000"
-        );
+        await SupabaseDB.EVENTS.delete().throwOnError();
     });
 
     it("should return attendance counts for the N most recent past events", async () => {
@@ -754,25 +652,6 @@ describe("GET /stats/attendance/:N", () => {
 
 describe("GET /stats/dietary-restrictions", () => {
     beforeEach(async () => {
-        await SupabaseDB.ATTENDEES.delete().neq(
-            "userId",
-            "00000000-0000-0000-0000-000000000000"
-        );
-
-        await SupabaseDB.REGISTRATIONS.delete().neq(
-            "userId",
-            "00000000-0000-0000-0000-000000000000"
-        );
-
-        await SupabaseDB.AUTH_ROLES.delete().neq(
-            "userId",
-            "00000000-0000-0000-0000-000000000000"
-        );
-        await SupabaseDB.AUTH_INFO.delete().neq(
-            "userId",
-            "00000000-0000-0000-0000-000000000000"
-        );
-
         const requiredAuthInfo = ATTENDEES_DIETARY.map((attendee, index) => ({
             userId: attendee.userId,
             displayName: attendee.name,
@@ -814,11 +693,7 @@ describe("GET /stats/dietary-restrictions", () => {
     });
 
     it("should return all zeros and empty maps if no attendees exist", async () => {
-        await SupabaseDB.REGISTRATIONS.delete().neq(
-            "userId",
-            "00000000-0000-0000-0000-000000000000"
-        );
-
+        await SupabaseDB.REGISTRATIONS.delete().throwOnError();
         const response = await get(
             "/stats/dietary-restrictions",
             Role.enum.STAFF
@@ -848,9 +723,6 @@ describe("GET /stats/dietary-restrictions", () => {
 
 describe("GET /stats/registrations", () => {
     beforeEach(async () => {
-        await SupabaseDB.REGISTRATIONS.delete().neq("userId", "non-existent");
-        await SupabaseDB.AUTH_INFO.delete().neq("userId", "non-existent");
-
         await SupabaseDB.AUTH_INFO.insert([AUTH_INFO_RITAM, AUTH_INFO_NATHAN]);
         await SupabaseDB.REGISTRATIONS.insert([
             {
@@ -900,7 +772,7 @@ describe("GET /stats/registrations", () => {
     });
 
     it("should return 0 when no registrations exist", async () => {
-        await SupabaseDB.REGISTRATIONS.delete().neq("userId", "non-existent");
+        await SupabaseDB.REGISTRATIONS.delete().throwOnError();
         const response = await getAsStaff("/stats/registrations").expect(
             StatusCodes.OK
         );
@@ -910,7 +782,7 @@ describe("GET /stats/registrations", () => {
 
 describe("GET /stats/event/:EVENT_ID/attendance", () => {
     beforeEach(async () => {
-        await SupabaseDB.EVENTS.delete().neq("eventId", uuidv4());
+        await SupabaseDB.EVENTS.delete().throwOnError();
         await SupabaseDB.EVENTS.insert(EVENT_1);
     });
 

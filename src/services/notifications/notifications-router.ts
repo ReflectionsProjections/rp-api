@@ -154,9 +154,8 @@ notificationsRouter.get(
         const staticTopics = ["allUsers", currentDayTopic]; // add any other static topics to this array in future
 
         const { data: events } =
-            await SupabaseDB.EVENTS.select("eventId").throwOnError();
-        const eventTopics =
-            events.map((event) => `event_${event.eventId}`) ?? [];
+            await SupabaseDB.EVENTS.select("name").throwOnError();
+        const eventTopics = events.map((event) => `event_${event.name}`) ?? [];
         const { data: customTopicsData } =
             await SupabaseDB.CUSTOM_TOPICS.select("topicName").throwOnError();
         const customTopics =

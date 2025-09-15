@@ -1,4 +1,4 @@
-import { afterAll, beforeEach, describe, expect, it } from "@jest/globals";
+import { beforeEach, describe, expect, it } from "@jest/globals";
 import {
     get,
     post,
@@ -151,13 +151,6 @@ function toDbFormat(events: InternalEvent[]) {
     }));
 }
 
-async function clearAllTestEvents() {
-    await SupabaseDB.EVENTS.delete().neq(
-        "eventId",
-        "00000000-0000-0000-0000-000000000000"
-    );
-}
-
 function createExternalEventObject(
     eventData: InternalEvent
 ): ExternalEventApiResponse {
@@ -187,8 +180,6 @@ function createInternalEventObject(
 }
 
 beforeEach(async () => {
-    await clearAllTestEvents();
-
     await SupabaseDB.EVENTS.insert(
         toDbFormat([
             PAST_EVENT_VISIBLE,
@@ -196,10 +187,6 @@ beforeEach(async () => {
             UPCOMING_EVENT_HIDDEN_EARLIER,
         ])
     );
-});
-
-afterAll(async () => {
-    await clearAllTestEvents();
 });
 
 describe("GET /events/currentOrNext", () => {
@@ -238,7 +225,7 @@ describe("GET /events/currentOrNext", () => {
     });
 
     it("should return status 204 NO CONTENT if the only events in the future are hidden events for a regular, non-staff or non-admin user", async () => {
-        await clearAllTestEvents();
+        await SupabaseDB.EVENTS.delete().throwOnError();
         await SupabaseDB.EVENTS.insert(
             toDbFormat([UPCOMING_EVENT_HIDDEN_EARLIER, PAST_EVENT_VISIBLE])
         );
@@ -247,20 +234,20 @@ describe("GET /events/currentOrNext", () => {
     });
 
     it("should return status 204 NO CONTENT if only past events exist", async () => {
-        await clearAllTestEvents();
+        await SupabaseDB.EVENTS.delete().throwOnError();
         await SupabaseDB.EVENTS.insert(toDbFormat([PAST_EVENT_VISIBLE]));
 
         await get("/events/currentOrNext").expect(StatusCodes.NO_CONTENT);
     });
 
     it("should return 204 NO CONTENT if NO events exist", async () => {
-        await clearAllTestEvents();
+        await SupabaseDB.EVENTS.delete().throwOnError();
 
         await get("/events/currentOrNext").expect(StatusCodes.NO_CONTENT);
     });
 
     it("should return an event starting now if it's visible", async () => {
-        await clearAllTestEvents();
+        await SupabaseDB.EVENTS.delete().throwOnError();
 
         const testCaseStartTime = new Date();
 
@@ -314,7 +301,7 @@ describe("GET /events/currentOrNext", () => {
     ])(
         "should return the soonest future VISIBLE event if it's earlier than any hidden one for $description",
         async ({ role }) => {
-            await clearAllTestEvents();
+            await SupabaseDB.EVENTS.delete().throwOnError();
             await SupabaseDB.EVENTS.insert(
                 toDbFormat([
                     UPCOMING_EVENT_VISIBLE_SOONEST,
@@ -364,7 +351,7 @@ describe("GET /events/", () => {
     });
 
     it("should return an empty array if only hidden events exist for a regular, non-staff or non-admin user", async () => {
-        await clearAllTestEvents();
+        await SupabaseDB.EVENTS.delete().throwOnError();
         await SupabaseDB.EVENTS.insert(
             toDbFormat([UPCOMING_EVENT_HIDDEN_EARLIER])
         );
@@ -374,7 +361,7 @@ describe("GET /events/", () => {
     });
 
     it("should return an empty array if no events exist", async () => {
-        await clearAllTestEvents();
+        await SupabaseDB.EVENTS.delete().throwOnError();
 
         const response = await get("/events/").expect(StatusCodes.OK);
         expect(response.body).toEqual([]);
@@ -415,7 +402,7 @@ describe("GET /events/", () => {
     ])(
         "should correctly sort all events by startTime (ascending order) then endTime (descending order) for $description",
         async ({ role }) => {
-            await clearAllTestEvents();
+            await SupabaseDB.EVENTS.delete().throwOnError();
 
             const eventA = {
                 ...UPCOMING_EVENT_VISIBLE_SOONEST,
