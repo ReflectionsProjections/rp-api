@@ -1,9 +1,10 @@
-import { beforeEach, describe, expect, it } from "@jest/globals";
+import { describe, expect, it } from "@jest/globals";
 import { post, getAsAdmin, postAsAdmin } from "../../../testing/testingTools";
 import { StatusCodes } from "http-status-codes";
 import { SupabaseDB } from "../../database";
 import { IncomingSubscription } from "./subscription-schema";
 import { SendEmailCommand } from "@aws-sdk/client-sesv2";
+import Config from "../../config";
 
 const EMAIL_1 = "testuser@example.com";
 const EMAIL_2 = "otheruser@example.com";
@@ -39,18 +40,7 @@ jest.mock("@aws-sdk/client-sesv2", () => {
 });
 
 beforeEach(async () => {
-    await SupabaseDB.SUBSCRIPTIONS.delete().neq(
-        "mailingList",
-        "a_value_that_will_never_exist"
-    );
     jest.clearAllMocks();
-});
-
-afterEach(async () => {
-    await SupabaseDB.SUBSCRIPTIONS.delete().neq(
-        "mailingList",
-        "a_value_that_will_never_exist"
-    );
 });
 
 describe("POST /subscription/", () => {
@@ -217,9 +207,9 @@ describe("POST /subscription/send-email", () => {
             .expect(StatusCodes.OK);
 
         expect(SendEmailCommand).toHaveBeenCalledWith({
-            FromEmailAddress: process.env.FROM_EMAIL_ADDRESS,
+            FromEmailAddress: Config.FROM_EMAIL_ADDRESS,
             Destination: {
-                ToAddresses: [process.env.FROM_EMAIL_ADDRESS],
+                ToAddresses: [Config.FROM_EMAIL_ADDRESS],
                 BccAddresses: subscribers,
             },
             Content: {
@@ -248,7 +238,7 @@ describe("POST /subscription/send-email/single", () => {
             .expect(StatusCodes.OK);
 
         expect(SendEmailCommand).toHaveBeenCalledWith({
-            FromEmailAddress: process.env.FROM_EMAIL_ADDRESS,
+            FromEmailAddress: Config.FROM_EMAIL_ADDRESS,
             Destination: {
                 ToAddresses: [emailPayload.email],
             },

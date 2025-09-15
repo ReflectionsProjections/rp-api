@@ -48,11 +48,6 @@ const EXPECTED_TEST_MEETING_2_RESPONSE = {
 const UNREAL_MEETING_ID = uuidv4();
 
 beforeEach(async () => {
-    await SupabaseDB.MEETINGS.delete().neq(
-        "meetingId",
-        "00000000-0000-0000-0000-000000000000"
-    );
-
     await SupabaseDB.MEETINGS.insert([TEST_MEETING_1, TEST_MEETING_2]);
 });
 
@@ -82,10 +77,7 @@ describe("GET /meetings/", () => {
     });
 
     it("should return empty array if no meetings exist", async () => {
-        await SupabaseDB.MEETINGS.delete().neq(
-            "meetingId",
-            "00000000-0000-0000-0000-000000000000"
-        );
+        await SupabaseDB.MEETINGS.delete().throwOnError();
         const response = await getAsAdmin("/meetings").expect(StatusCodes.OK);
         expect(response.body).toEqual([]);
     });

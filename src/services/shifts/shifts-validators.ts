@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { ShiftRoleType } from "../../database";
+import { Tables } from "../../database.types";
 
 const ShiftRoleTypeEnumValues: [ShiftRoleType, ...ShiftRoleType[]] = [
     "CLEAN_UP",
@@ -84,3 +85,5 @@ export type ShiftCreateRequest = z.infer<typeof ShiftCreateValidator>;
 export type ShiftUpdateRequest = z.infer<typeof ShiftUpdateValidator>;
 export type ShiftIdParams = z.infer<typeof ShiftIdValidator>;
 export type ShiftAssignmentRequest = z.infer<typeof StaffEmailValidator>;
+export type Shift = Tables<"shifts">;
+export type ShiftAssignment = Tables<"shiftAssignments">;
