@@ -217,9 +217,9 @@ describe("POST /subscription/send-email", () => {
             .expect(StatusCodes.OK);
 
         expect(SendEmailCommand).toHaveBeenCalledWith({
-            FromEmailAddress: process.env.FROM_EMAIL_ADDRESS,
+            FromEmailAddress: Config.FROM_EMAIL_ADDRESS,
             Destination: {
-                ToAddresses: [process.env.FROM_EMAIL_ADDRESS],
+                ToAddresses: [Config.FROM_EMAIL_ADDRESS],
                 BccAddresses: subscribers,
             },
             Content: {
@@ -248,7 +248,7 @@ describe("POST /subscription/send-email/single", () => {
             .expect(StatusCodes.OK);
 
         expect(SendEmailCommand).toHaveBeenCalledWith({
-            FromEmailAddress: process.env.FROM_EMAIL_ADDRESS,
+            FromEmailAddress: Config.FROM_EMAIL_ADDRESS,
             Destination: {
                 ToAddresses: [emailPayload.email],
             },

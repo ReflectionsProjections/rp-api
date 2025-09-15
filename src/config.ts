@@ -83,6 +83,9 @@ export const Config = {
         "abahl3@illinois.edu",    // Aryan Bahl
     ]),
 
+    // For sending emails
+    FROM_EMAIL_ADDRESS: process.env.FROM_EMAIL_ADDRESS,
+
     // Development admin email - allows developer email to be admin in development
     DEV_ADMIN_EMAIL: process.env.DEV_ADMIN_EMAIL,
 
