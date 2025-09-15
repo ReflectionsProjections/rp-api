@@ -38,11 +38,6 @@ const OTHER_STAFF = {
 } satisfies Staff;
 
 beforeEach(async () => {
-    await SupabaseDB.SHIFT_ASSIGNMENTS.delete().neq("shiftId", uuidv4());
-    await SupabaseDB.SHIFTS.delete().neq("shiftId", uuidv4());
-    await SupabaseDB.STAFF.delete().eq("email", TESTER_STAFF.email);
-    await SupabaseDB.STAFF.delete().eq("email", OTHER_STAFF.email);
-
     await SupabaseDB.STAFF.insert(TESTER_STAFF);
     await SupabaseDB.STAFF.insert(OTHER_STAFF);
 });

@@ -86,19 +86,6 @@ const VALID_REGISTRATION_NO_RESUME = {
 beforeEach(async () => {
     jest.clearAllMocks();
 
-    await SupabaseDB.ATTENDEES.delete()
-        .neq("userId", "00000000-0000-0000-0000-000000000000")
-        .throwOnError();
-    await SupabaseDB.DRAFT_REGISTRATIONS.delete()
-        .neq("userId", "00000000-0000-0000-0000-000000000000")
-        .throwOnError();
-    await SupabaseDB.REGISTRATIONS.delete()
-        .neq("userId", "00000000-0000-0000-0000-000000000000")
-        .throwOnError();
-    await SupabaseDB.AUTH_ROLES.delete()
-        .neq("userId", "00000000-0000-0000-0000-000000000000")
-        .throwOnError();
-
     await SupabaseDB.AUTH_INFO.insert({
         ...TESTER,
         roles: undefined,

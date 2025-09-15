@@ -165,11 +165,13 @@ export async function clearSupabaseTables(supabase: SupabaseClient) {
         "authCodes",
         "events",
         "corporate",
+        "meetings",
         "staff",
         "shifts",
         "subscriptions",
         "customTopics",
         "authInfo",
+        "speakers",
     ]; // TODO: Get this from the database
 
     for (const table of tables) {

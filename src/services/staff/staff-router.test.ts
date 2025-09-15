@@ -63,8 +63,6 @@ const SHIFT_ASSIGNMENT = {
 const NON_EXISTENT_EMAIL = "nonExistentEmail@test.com";
 
 beforeEach(async () => {
-    await SupabaseDB.STAFF.delete().throwOnError();
-    await SupabaseDB.MEETINGS.delete().throwOnError();
     await SupabaseDB.MEETINGS.insert(MEETING).throwOnError();
     await SupabaseDB.STAFF.insert(
         StaffValidator.parse(TESTER_STAFF)
@@ -74,14 +72,6 @@ beforeEach(async () => {
     ).throwOnError();
     await SupabaseDB.SHIFTS.insert(SHIFT).throwOnError();
     await SupabaseDB.SHIFT_ASSIGNMENTS.insert(SHIFT_ASSIGNMENT).throwOnError();
-});
-
-afterAll(async () => {
-    await SupabaseDB.STAFF.delete().neq(
-        "email",
-        "a_non_existent_email_to_delete_all"
-    );
-    await SupabaseDB.MEETINGS.delete().eq("meetingId", MEETING.meetingId);
 });
 
 describe("GET /staff/", () => {
@@ -109,7 +99,7 @@ describe("GET /staff/", () => {
     });
 
     it("should return an empty array if no staff records exist", async () => {
-        await SupabaseDB.STAFF.delete().neq("email", "");
+        await SupabaseDB.STAFF.delete().throwOnError();
         const response = await getAsAdmin("/staff/").expect(StatusCodes.OK);
         expect(response.body).toEqual([]);
     });
