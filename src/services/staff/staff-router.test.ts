@@ -17,6 +17,7 @@ import Config from "../../config";
 import { CommitteeNames } from "../meetings/meetings-schema";
 import { Staff, StaffAttendanceTypeEnum, StaffValidator } from "./staff-schema";
 import { v4 as uuidv4 } from "uuid";
+import { Shift, ShiftAssignment } from "../shifts/shifts-validators";
 
 const TESTER_STAFF = {
     email: TESTER.email,
@@ -45,20 +46,34 @@ const NEW_STAFF_VALID = {
     attendances: {},
 } satisfies Staff;
 
+const SHIFT = {
+    shiftId: uuidv4(),
+    startTime: new Date().toISOString(),
+    endTime: new Date(Date.now() + 5000).toISOString(),
+    location: "location",
+    name: "shift name",
+    role: "CHECK_IN",
+} satisfies Shift;
+const SHIFT_ASSIGNMENT = {
+    shiftId: SHIFT.shiftId,
+    acknowledged: false,
+    staffEmail: TESTER_STAFF.email,
+} satisfies ShiftAssignment;
+
 const NON_EXISTENT_EMAIL = "nonExistentEmail@test.com";
 
 beforeEach(async () => {
-    await SupabaseDB.STAFF.delete().neq(
-        "email",
-        "a_non_existent_email_to_delete_all"
-    );
-    await SupabaseDB.MEETINGS.delete().neq(
-        "meetingId",
-        "a_non_existent_id_to_delete_all"
-    );
-    await SupabaseDB.MEETINGS.insert(MEETING);
-    await SupabaseDB.STAFF.insert(StaffValidator.parse(TESTER_STAFF));
-    await SupabaseDB.STAFF.insert(StaffValidator.parse(OTHER_STAFF));
+    await SupabaseDB.STAFF.delete().throwOnError();
+    await SupabaseDB.MEETINGS.delete().throwOnError();
+    await SupabaseDB.MEETINGS.insert(MEETING).throwOnError();
+    await SupabaseDB.STAFF.insert(
+        StaffValidator.parse(TESTER_STAFF)
+    ).throwOnError();
+    await SupabaseDB.STAFF.insert(
+        StaffValidator.parse(OTHER_STAFF)
+    ).throwOnError();
+    await SupabaseDB.SHIFTS.insert(SHIFT).throwOnError();
+    await SupabaseDB.SHIFT_ASSIGNMENTS.insert(SHIFT_ASSIGNMENT).throwOnError();
 });
 
 afterAll(async () => {
@@ -212,8 +227,16 @@ describe("DELETE /staff/:EMAIL", () => {
         );
         const deletedStaff = await SupabaseDB.STAFF.select()
             .eq("email", TESTER_STAFF.email)
-            .single();
+            .maybeSingle()
+            .throwOnError();
         expect(deletedStaff.data).toBeNull();
+
+        // Make sure associated assignments are deleted as well
+        const deletedStaffAssignments = await SupabaseDB.STAFF.select()
+            .eq("email", TESTER_STAFF.email)
+            .maybeSingle()
+            .throwOnError();
+        expect(deletedStaffAssignments.data).toBeNull();
     });
 
     // auth tests
