@@ -4,7 +4,7 @@ import { z } from "zod";
 
 import { SES } from "@aws-sdk/client-ses";
 
-dotenv.config();
+dotenv.config({ quiet: true });
 
 export enum EnvironmentEnum {
     PRODUCTION = "PRODUCTION",
