@@ -122,8 +122,10 @@ leaderboardRouter.post(
         const userIdsForPromotion =
             userIdsToPromote || leaderboard.map((entry) => entry.userId);
 
-        const entriesProcessed =
-            await promoteUsersToNextTier(userIdsForPromotion);
+        const entriesProcessed = await promoteUsersToNextTier(
+            userIdsForPromotion,
+            day
+        );
 
         const { submissionId, submittedAt } = await recordLeaderboardSubmission(
             day,

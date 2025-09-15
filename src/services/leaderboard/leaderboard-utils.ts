@@ -1,6 +1,7 @@
 import { SupabaseDB, TierType, IconColorType, supabase } from "../../database";
 import { LeaderboardEntry } from "./leaderboard-schema";
 import { getEventDayForDate } from "../attendee/attendee-utils";
+import { getFirebaseAdmin } from "../../firebase";
 
 function getDailyPointsForEventDay(
     attendee: {
@@ -190,7 +191,8 @@ export async function getGlobalLeaderboard(
  * @returns Promise<number> - Number of users actually promoted
  */
 export async function promoteUsersToNextTier(
-    userIds: string[]
+    userIds: string[],
+    day: string
 ): Promise<number> {
     if (!userIds || userIds.length === 0) {
         return 0;
@@ -203,6 +205,22 @@ export async function promoteUsersToNextTier(
 
     if (error) {
         throw error;
+    }
+
+    // Enroll every userId into a Firebase topic if they got promoted today
+
+    const { data: userDevices } = await SupabaseDB.NOTIFICATIONS.select(
+        "deviceId"
+    )
+        .in("userId", userIds)
+        .throwOnError();
+
+    if (userDevices && userDevices.length > 0) {
+        const deviceTokens = userDevices.map((device) => device.deviceId);
+        const topicName = `tier-promotion-${day.toLowerCase()}`;
+        await getFirebaseAdmin()
+            .messaging()
+            .subscribeToTopic(deviceTokens, topicName);
     }
 
     return data || 0;
