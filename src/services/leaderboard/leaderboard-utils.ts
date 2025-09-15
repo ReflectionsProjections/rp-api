@@ -208,20 +208,19 @@ export async function promoteUsersToNextTier(
     }
 
     // Enroll every userId into a Firebase topic if they got promoted today
-    for (const userId of userIds) {
-        const { data: userDevice } = await SupabaseDB.NOTIFICATIONS.select(
-            "deviceId"
-        )
-            .eq("userId", userId)
-            .maybeSingle()
-            .throwOnError();
-        if (!userDevice?.deviceId) {
-            continue; // we can just be done here if they don't have a deviceId
-        }
+
+    const { data: userDevices } = await SupabaseDB.NOTIFICATIONS.select(
+        "deviceId"
+    )
+        .in("userId", userIds)
+        .throwOnError();
+
+    if (userDevices && userDevices.length > 0) {
+        const deviceTokens = userDevices.map((device) => device.deviceId);
         const topicName = `tier-promotion-${day.toLowerCase()}`;
         await getFirebaseAdmin()
             .messaging()
-            .subscribeToTopic(userDevice.deviceId, topicName);
+            .subscribeToTopic(deviceTokens, topicName);
     }
 
     return data || 0;
