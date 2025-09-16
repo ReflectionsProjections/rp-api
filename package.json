@@ -5,6 +5,7 @@
     "scripts": {
         "dev": "nodemon -w src/ -x tsx src/app.ts",
         "start": "tsx src/app.ts",
+        "subscribe:staff": "tsx scr/subscribe-staff-to-topic.ts",
         "lint": "eslint . --fix",
         "lint:check": "eslint .",
         "format": "prettier . --write",
