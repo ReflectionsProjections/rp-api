@@ -222,7 +222,8 @@ export async function promoteUsersToNextTier(
             .messaging()
             .subscribeToTopic(deviceTokens, topicName);
         // Add today's tier promotion day
-        await SupabaseDB.CUSTOM_TOPICS.upsert({
+        await SupabaseDB.CUSTOM_TOPICS.upsert(
+            {
                 topicName: topicName,
             },
             { onConflict: "topicName", ignoreDuplicates: true }
