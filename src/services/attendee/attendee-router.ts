@@ -63,8 +63,20 @@ attendeeRouter.post(
             .maybeSingle()
             .throwOnError();
 
+        const { data: event } = await SupabaseDB.EVENTS.select()
+            .eq("eventId", eventId)
+            .maybeSingle()
+            .throwOnError();
+
+        if (!event) {
+            return res
+                .status(StatusCodes.NOT_FOUND)
+                .json({ error: "EventNotFound" });
+        }
+
+        const topicName = `event_${event.name.replace(/[^a-zA-Z0-9-_.~%]/g, "_")}`;
+
         if (device?.deviceId) {
-            const topicName = `event_${eventId}`;
             await getFirebaseAdmin()
                 .messaging()
                 .subscribeToTopic(device?.deviceId, topicName);
@@ -113,8 +125,20 @@ attendeeRouter.delete(
             .maybeSingle()
             .throwOnError();
 
+        const { data: event } = await SupabaseDB.EVENTS.select()
+            .eq("eventId", eventId)
+            .maybeSingle()
+            .throwOnError();
+
+        if (!event) {
+            return res
+                .status(StatusCodes.NOT_FOUND)
+                .json({ error: "EventNotFound" });
+        }
+
+        const topicName = `event_${event.name.replace(/[^a-zA-Z0-9-_.~%]/g, "_")}`;
+
         if (device?.deviceId) {
-            const topicName = `event_${eventId}`;
             await getFirebaseAdmin()
                 .messaging()
                 .unsubscribeFromTopic(device?.deviceId, topicName);
