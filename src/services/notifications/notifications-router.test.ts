@@ -218,7 +218,7 @@ describe("/notifications", () => {
 
             const expectedTopics = [
                 "allUsers",
-                `event_Test Event`,
+                `event_Test_Event`,
                 currentDayTopic,
                 "food_wave_1",
             ].sort();
@@ -252,7 +252,7 @@ describe("Attendee Favorite/Unfavorite Logic", () => {
         // Setup: Create the user and the specific event for this test
         await insertTestUser();
         await SupabaseDB.EVENTS.insert({
-            id: testEventId,
+            eventId: testEventId,
             name: "Test Event",
             description: "Test event description",
             startTime: new Date().toISOString(),
@@ -272,7 +272,7 @@ describe("Attendee Favorite/Unfavorite Logic", () => {
         // Verify
         expect(mockSubscribe).toHaveBeenCalledWith(
             TEST_DEVICE_ID,
-            `event_${testEventId}`
+            `event_${"Test Event".replace(/[^a-zA-Z0-9-_.~%]/g, "_")}`
         );
 
         // Cleanup
@@ -284,7 +284,7 @@ describe("Attendee Favorite/Unfavorite Logic", () => {
         // Setup: Create the user who has *already* favorited the event
         await insertTestUser({ favoriteEvents: [testEventId] });
         await SupabaseDB.EVENTS.insert({
-            id: testEventId,
+            eventId: testEventId,
             name: "Test Event",
             description: "Test event description",
             startTime: new Date().toISOString(),
@@ -304,7 +304,7 @@ describe("Attendee Favorite/Unfavorite Logic", () => {
         // Verify
         expect(mockUnsubscribe).toHaveBeenCalledWith(
             TEST_DEVICE_ID,
-            `event_${testEventId}`
+            `event_${"Test Event".replace(/[^a-zA-Z0-9-_.~%]/g, "_")}`
         );
 
         // Cleanup
