@@ -2,15 +2,7 @@ import { SupabaseDB } from "../database";
 import { getFirebaseAdmin } from "../firebase";
 
 async function main() {
-    const [, , topicArg] = process.argv;
-    const topicName = topicArg?.trim();
-    if (!topicName) {
-        console.error(
-            "Usage: tsx scripts/subscribe-staff-to-topic.ts <topicName>"
-        );
-        process.exit(1);
-    }
-
+    const topicName = "allStaff";
     // Ensure topic exists in Supabase customTopics
     const { data: existing } = await SupabaseDB.CUSTOM_TOPICS.select(
         "topicName"
@@ -21,10 +13,6 @@ async function main() {
     if (!existing) {
         await SupabaseDB.CUSTOM_TOPICS.insert({ topicName }).throwOnError();
         console.log(`Created custom topic in Supabase: ${topicName}`);
-    } else {
-        await SupabaseDB.CUSTOM_TOPICS.update({ topicName })
-            .eq("topicName", topicName)
-            .throwOnError();
     }
 
     // Find all staff userIds from authRoles
