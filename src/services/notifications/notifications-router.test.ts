@@ -218,7 +218,7 @@ describe("/notifications", () => {
 
             const expectedTopics = [
                 "allUsers",
-                `event_Test Event`,
+                `event_Test_Event`,
                 currentDayTopic,
                 "food_wave_1",
             ].sort();

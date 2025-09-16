@@ -155,7 +155,11 @@ notificationsRouter.get(
 
         const { data: events } =
             await SupabaseDB.EVENTS.select("name").throwOnError();
-        const eventTopics = events.map((event) => `event_${event.name}`) ?? [];
+        const eventTopics =
+            events?.map(
+                (event) =>
+                    `event_${event.name.replace(/[^a-zA-Z0-9-_.~%]/g, "_")}`
+            ) ?? [];
         const { data: customTopicsData } =
             await SupabaseDB.CUSTOM_TOPICS.select("topicName").throwOnError();
         const customTopics =
