@@ -254,3 +254,42 @@ describe("POST /subscription/send-email/single", () => {
         expect(mockSESV2Send).toHaveBeenCalledTimes(1);
     });
 });
+
+describe("GET /subscription/:mailingList", () => {
+    it("should return the list of subscribers for an existing mailing list", async () => {
+        const subscribers = [EMAIL_1, EMAIL_2];
+        await SupabaseDB.SUBSCRIPTIONS.insert({
+            mailingList: VALID_mailingList,
+            subscriptions: subscribers,
+        });
+
+        const response = await getAsAdmin(
+            `/subscription/${VALID_mailingList}`
+        ).expect(StatusCodes.OK);
+
+        expect(response.body).toEqual(expect.arrayContaining(subscribers));
+        expect(response.body.length).toBe(2);
+    });
+
+    it("should return a 404 Not Found for a non-existent mailing list", async () => {
+        const response = await getAsAdmin(
+            "/subscription/non-existent-list"
+        ).expect(StatusCodes.NOT_FOUND);
+
+        expect(response.body).toEqual({ error: "Mailing list not found." });
+    });
+
+    it("should return an empty array for a list that has no subscribers", async () => {
+        // Setup: Create a list with an empty subscriptions array
+        await SupabaseDB.SUBSCRIPTIONS.insert({
+            mailingList: VALID_mailingList,
+            subscriptions: [],
+        });
+
+        const response = await getAsAdmin(
+            `/subscription/${VALID_mailingList}`
+        ).expect(StatusCodes.OK);
+
+        expect(response.body).toEqual([]);
+    });
+});

@@ -136,4 +136,28 @@ subscriptionRouter.post(
     }
 );
 
+// Get all the emails in a specific mailing list
+// Param: mailingList - the name of the mailing list to retrieve
+subscriptionRouter.get(
+    "/:mailingList",
+    RoleChecker([Role.Enum.ADMIN]),
+    async (req, res) => {
+        const { mailingList } = req.params;
+        const { data: list } = await SupabaseDB.SUBSCRIPTIONS.select(
+            "subscriptions"
+        )
+            .eq("mailingList", mailingList)
+            .maybeSingle()
+            .throwOnError();
+
+        if (!list) {
+            return res
+                .status(StatusCodes.NOT_FOUND)
+                .json({ error: "Mailing list not found." });
+        }
+
+        return res.status(StatusCodes.OK).json(list.subscriptions || []);
+    }
+);
+
 export default subscriptionRouter;
