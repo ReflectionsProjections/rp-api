@@ -34,6 +34,27 @@ notificationsRouter.post(
             .messaging()
             .subscribeToTopic(notificationEnrollmentData.deviceId, "allUsers");
 
+        // Get their tags
+        const { data: attendee } = await SupabaseDB.ATTENDEES.select("tags")
+            .eq("userId", userId)
+            .maybeSingle()
+            .throwOnError();
+
+        // enroll them in a topic for the tags
+        if (attendee?.tags && attendee.tags.length > 0) {
+            const userTags = attendee.tags;
+            const subscriptionPromises = userTags.map((tag) => {
+                const topicName = `tag_${tag.replace(/[^a-zA-Z0-9-_.~%]/g, "_")}`;
+                return getFirebaseAdmin()
+                    .messaging()
+                    .subscribeToTopic(
+                        notificationEnrollmentData.deviceId,
+                        topicName
+                    );
+            });
+            await Promise.all(subscriptionPromises);
+        }
+
         return res.status(StatusCodes.CREATED).json(notificationEnrollmentData);
     }
 );
