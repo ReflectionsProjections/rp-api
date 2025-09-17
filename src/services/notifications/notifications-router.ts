@@ -185,8 +185,32 @@ notificationsRouter.get(
             await SupabaseDB.CUSTOM_TOPICS.select("topicName").throwOnError();
         const customTopics =
             customTopicsData.map((topic) => topic.topicName) ?? [];
+
+        const hardcodedTags = [
+            "Career Readiness",
+            "AI",
+            "Research",
+            "Interactive Events",
+            "HCI",
+            "Ethics",
+            "Art/Media",
+            "Autonomous Vehicles",
+            "Networking",
+            "Company Talk",
+            "Cybersecurity",
+        ];
+
+        const tagTopics = hardcodedTags.map(
+            (tag) => `tag_${tag.replace(/[^a-zA-Z0-9-_.~%]/g, "_")}`
+        );
+
         const allTopics = [
-            ...new Set([...staticTopics, ...eventTopics, ...customTopics]),
+            ...new Set([
+                ...staticTopics,
+                ...eventTopics,
+                ...customTopics,
+                ...tagTopics,
+            ]),
         ];
         return res.status(StatusCodes.OK).send({ topics: allTopics.sort() });
     }
