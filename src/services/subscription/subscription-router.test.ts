@@ -43,7 +43,6 @@ const SUBSCRIPTION_INVALID_LIST = {
     mailingList: INVALID_mailingList,
 };
 
-
 beforeEach(async () => {
     jest.clearAllMocks();
 
