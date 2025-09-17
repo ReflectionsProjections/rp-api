@@ -128,6 +128,11 @@ export async function checkInUserToEvent(eventId: string, userId: string) {
         await updateAttendeePriority(userId);
     }
 
+    await SupabaseDB.SUBSCRIPTIONS.insert({
+        userId: userId,
+        mailingList: eventId,
+    }).throwOnError();
+
     await updateAttendanceRecords(eventId, userId);
     await assignPixelsToUser(userId, event.points);
 }
