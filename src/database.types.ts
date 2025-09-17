@@ -684,7 +684,7 @@ export type Database = {
             get_tier_counts: {
                 Args: Record<string, never>;
                 Returns: {
-                    currentTier: Database["public"]["Enums"]["tierType"]; // Change this line
+                    currentTier: Database["public"]["Enums"]["tierType"];
                     count: number;
                 }[];
             };
