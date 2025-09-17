@@ -75,7 +75,8 @@ describe("POST /subscription/", () => {
         expect(response.body).toEqual(SUBSCRIPTION_1);
         const { data } = await SupabaseDB.SUBSCRIPTIONS.select()
             .eq("userId", USER_ID_1)
-            .eq("mailingList", VALID_mailingList);
+            .eq("mailingList", VALID_mailingList)
+            .throwOnError();
         const dbEntry = data?.[0];
         expect(dbEntry).toMatchObject({
             userId: USER_ID_1,
@@ -90,7 +91,8 @@ describe("POST /subscription/", () => {
         expect(response.body).toEqual(SUBSCRIPTION_2);
         const { data } = await SupabaseDB.SUBSCRIPTIONS.select()
             .eq("userId", USER_ID_2)
-            .eq("mailingList", VALID_mailingList);
+            .eq("mailingList", VALID_mailingList)
+            .throwOnError();
         const dbEntry = data?.[0];
         expect(dbEntry).toMatchObject({
             userId: USER_ID_2,
@@ -102,14 +104,15 @@ describe("POST /subscription/", () => {
         await SupabaseDB.SUBSCRIPTIONS.insert({
             userId: USER_ID_1,
             mailingList: VALID_mailingList,
-        });
+        }).throwOnError();
         const response = await post("/subscription/")
             .send(SUBSCRIPTION_1)
             .expect(StatusCodes.CREATED);
         expect(response.body).toEqual(SUBSCRIPTION_1);
         const { data } = await SupabaseDB.SUBSCRIPTIONS.select()
             .eq("userId", USER_ID_1)
-            .eq("mailingList", VALID_mailingList);
+            .eq("mailingList", VALID_mailingList)
+            .throwOnError();
         expect(data?.length).toBe(1);
     });
 
@@ -148,7 +151,8 @@ describe("POST /subscription/", () => {
         expect(response.body).toEqual(SUBSCRIPTION_1);
         const { data } = await SupabaseDB.SUBSCRIPTIONS.select()
             .eq("userId", USER_ID_1)
-            .eq("mailingList", VALID_mailingList);
+            .eq("mailingList", VALID_mailingList)
+            .throwOnError();
         const dbEntry = data?.[0];
         expect(dbEntry?.mailingList).toEqual(VALID_mailingList);
     });
@@ -166,7 +170,7 @@ describe("GET /subscription/", () => {
         await SupabaseDB.SUBSCRIPTIONS.insert([
             { userId: USER_ID_1, mailingList: VALID_mailingList },
             { userId: USER_ID_2, mailingList: VALID_mailingList },
-        ]);
+        ]).throwOnError();
         const response = await getAsAdmin("/subscription/").expect(
             StatusCodes.OK
         );
@@ -191,7 +195,7 @@ describe("POST /subscription/send-email", () => {
         await SupabaseDB.SUBSCRIPTIONS.insert([
             { userId: USER_ID_1, mailingList: mailingList },
             { userId: USER_ID_2, mailingList: mailingList },
-        ]);
+        ]).throwOnError();
 
         const emailPayload = {
             mailingList: mailingList,
@@ -260,7 +264,7 @@ describe("GET /subscription/:mailingList", () => {
         await SupabaseDB.SUBSCRIPTIONS.insert([
             { userId: USER_ID_1, mailingList: VALID_mailingList },
             { userId: USER_ID_2, mailingList: VALID_mailingList },
-        ]);
+        ]).throwOnError();
 
         const response = await getAsAdmin(
             `/subscription/${VALID_mailingList}`
@@ -296,7 +300,7 @@ describe("GET /subscription/user/:userId", () => {
     it("should return a user's subscriptions", async () => {
         await SupabaseDB.SUBSCRIPTIONS.insert([
             { userId: USER_ID_1, mailingList: VALID_mailingList },
-        ]);
+        ]).throwOnError();
 
         const response = await getAsAdmin(
             `/subscription/user/${USER_ID_1}`
@@ -319,7 +323,7 @@ describe("DELETE /subscription/", () => {
     it("should unsubscribe a user from a mailing list", async () => {
         await SupabaseDB.SUBSCRIPTIONS.insert([
             { userId: USER_ID_1, mailingList: VALID_mailingList },
-        ]);
+        ]).throwOnError();
 
         const response = await delAsAdmin("/subscription/")
             .send({
@@ -331,8 +335,9 @@ describe("DELETE /subscription/", () => {
         expect(response.body).toEqual({ status: "success" });
 
         // Verify the subscription was removed
-        const { data: remainingSubs } =
-            await SupabaseDB.SUBSCRIPTIONS.select().eq("userId", USER_ID_1);
+        const { data: remainingSubs } = await SupabaseDB.SUBSCRIPTIONS.select()
+            .eq("userId", USER_ID_1)
+            .throwOnError();
         expect(remainingSubs?.length).toBe(0);
     });
 
@@ -340,7 +345,7 @@ describe("DELETE /subscription/", () => {
         await SupabaseDB.SUBSCRIPTIONS.insert({
             userId: USER_ID_1,
             mailingList: VALID_mailingList,
-        });
+        }).throwOnError();
 
         const response = await delAsAdmin("/subscription/")
             .send({
@@ -355,7 +360,8 @@ describe("DELETE /subscription/", () => {
         const { data } = await SupabaseDB.SUBSCRIPTIONS.select()
             .eq("userId", USER_ID_1)
             .eq("mailingList", VALID_mailingList)
-            .maybeSingle();
+            .maybeSingle()
+            .throwOnError();
         expect(data).toBeNull();
     });
 
