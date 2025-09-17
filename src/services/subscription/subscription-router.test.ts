@@ -1,5 +1,10 @@
 import { describe, expect, it } from "@jest/globals";
-import { post, getAsAdmin, postAsAdmin, delAsAdmin } from "../../../testing/testingTools";
+import {
+    post,
+    getAsAdmin,
+    postAsAdmin,
+    delAsAdmin,
+} from "../../../testing/testingTools";
 import { StatusCodes } from "http-status-codes";
 import { SupabaseDB } from "../../database";
 import { IncomingSubscription } from "./subscription-schema";
@@ -40,12 +45,22 @@ jest.mock("@aws-sdk/client-sesv2", () => {
 
 beforeEach(async () => {
     jest.clearAllMocks();
-    
+
     // Set up authInfo data for test users
     try {
         await SupabaseDB.AUTH_INFO.insert([
-            { userId: USER_ID_1, email: "user1@test.com", authId: "auth1", displayName: "User 1" },
-            { userId: USER_ID_2, email: "user2@test.com", authId: "auth2", displayName: "User 2" },
+            {
+                userId: USER_ID_1,
+                email: "user1@test.com",
+                authId: "auth1",
+                displayName: "User 1",
+            },
+            {
+                userId: USER_ID_2,
+                email: "user2@test.com",
+                authId: "auth2",
+                displayName: "User 2",
+            },
         ]);
     } catch (error) {
         // Ignore errors if data already exists
@@ -137,7 +152,6 @@ describe("POST /subscription/", () => {
         const dbEntry = data?.[0];
         expect(dbEntry?.mailingList).toEqual(VALID_mailingList);
     });
-
 });
 
 describe("GET /subscription/", () => {
@@ -172,7 +186,7 @@ describe("POST /subscription/send-email", () => {
     it("should send an email to all subscribers of a list", async () => {
         const mailingList = VALID_mailingList;
         const emails = ["user1@test.com", "user2@test.com"];
-        
+
         // Set up subscription data
         await SupabaseDB.SUBSCRIPTIONS.insert([
             { userId: USER_ID_1, mailingList: mailingList },
@@ -189,7 +203,9 @@ describe("POST /subscription/send-email", () => {
             .send(emailPayload)
             .expect(StatusCodes.OK);
 
-        expect(require("@aws-sdk/client-sesv2").SendEmailCommand).toHaveBeenCalledWith({
+        expect(
+            require("@aws-sdk/client-sesv2").SendEmailCommand
+        ).toHaveBeenCalledWith({
             FromEmailAddress: Config.FROM_EMAIL_ADDRESS,
             Destination: {
                 ToAddresses: [Config.FROM_EMAIL_ADDRESS],
@@ -220,7 +236,9 @@ describe("POST /subscription/send-email/single", () => {
             .send(emailPayload)
             .expect(StatusCodes.OK);
 
-        expect(require("@aws-sdk/client-sesv2").SendEmailCommand).toHaveBeenCalledWith({
+        expect(
+            require("@aws-sdk/client-sesv2").SendEmailCommand
+        ).toHaveBeenCalledWith({
             FromEmailAddress: Config.FROM_EMAIL_ADDRESS,
             Destination: {
                 ToAddresses: [emailPayload.email],
@@ -241,7 +259,7 @@ describe("POST /subscription/send-email/single", () => {
 describe("GET /subscription/:mailingList", () => {
     it("should return the list of subscribers for an existing mailing list", async () => {
         const emails = ["user1@test.com", "user2@test.com"];
-        
+
         // Set up subscription data
         await SupabaseDB.SUBSCRIPTIONS.insert([
             { userId: USER_ID_1, mailingList: VALID_mailingList },
@@ -261,7 +279,9 @@ describe("GET /subscription/:mailingList", () => {
             "/subscription/non-existent-list"
         ).expect(StatusCodes.NOT_FOUND);
 
-        expect(response.body).toEqual({ error: "No subscribers found for this mailing list." });
+        expect(response.body).toEqual({
+            error: "No subscribers found for this mailing list.",
+        });
     });
 
     it("should return an empty array for a list that has no subscribers", async () => {
@@ -270,7 +290,9 @@ describe("GET /subscription/:mailingList", () => {
             `/subscription/${VALID_mailingList}`
         ).expect(StatusCodes.NOT_FOUND);
 
-        expect(response.body).toEqual({ error: "No subscribers found for this mailing list." });
+        expect(response.body).toEqual({
+            error: "No subscribers found for this mailing list.",
+        });
     });
 });
 
@@ -313,8 +335,8 @@ describe("DELETE /subscription/", () => {
         expect(response.body).toEqual({ status: "success" });
 
         // Verify the subscription was removed
-        const { data: remainingSubs } = await SupabaseDB.SUBSCRIPTIONS.select()
-            .eq("userId", USER_ID_1);
+        const { data: remainingSubs } =
+            await SupabaseDB.SUBSCRIPTIONS.select().eq("userId", USER_ID_1);
         expect(remainingSubs?.length).toBe(0);
     });
 
@@ -352,4 +374,3 @@ describe("DELETE /subscription/", () => {
         expect(response.body).toEqual({ error: "Subscription not found." });
     });
 });
-

@@ -654,7 +654,7 @@ export type Database = {
                         isOneToOne: false;
                         referencedRelation: "authInfo";
                         referencedColumns: ["userId"];
-                    }
+                    },
                 ];
             };
             redemptions: {

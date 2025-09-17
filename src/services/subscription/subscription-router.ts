@@ -38,13 +38,12 @@ subscriptionRouter.post("/", cors(), async (req, res) => {
     }
 
     // Check if this specific subscription already exists
-    const { data: existingSubscription } = await SupabaseDB.SUBSCRIPTIONS.select(
-        "userId, mailingList"
-    )
-        .eq("userId", userId)
-        .eq("mailingList", mailingList)
-        .maybeSingle()
-        .throwOnError();
+    const { data: existingSubscription } =
+        await SupabaseDB.SUBSCRIPTIONS.select("userId, mailingList")
+            .eq("userId", userId)
+            .eq("mailingList", mailingList)
+            .maybeSingle()
+            .throwOnError();
 
     if (!existingSubscription) {
         // Create the subscription if it doesn't exist
@@ -76,7 +75,7 @@ subscriptionRouter.post(
     RoleChecker([Role.Enum.ADMIN]),
     async (req, res) => {
         const { mailingList, subject, htmlBody } = req.body;
-        
+
         // Get all users subscribed to this mailing list
         const { data: subscriptions } = await SupabaseDB.SUBSCRIPTIONS.select(
             "userId"
@@ -85,18 +84,18 @@ subscriptionRouter.post(
             .throwOnError();
 
         if (!subscriptions || subscriptions.length === 0) {
-            return res.status(StatusCodes.NOT_FOUND).json({ 
-                error: "No subscribers found for this mailing list." 
+            return res.status(StatusCodes.NOT_FOUND).json({
+                error: "No subscribers found for this mailing list.",
             });
         }
 
         // Get email addresses for all subscribed users
-        const userIds = subscriptions.map(sub => sub.userId);
+        const userIds = subscriptions.map((sub) => sub.userId);
         const { data: users } = await SupabaseDB.AUTH_INFO.select("email")
             .in("userId", userIds)
             .throwOnError();
 
-        const emailAddresses = users?.map(user => user.email) || [];
+        const emailAddresses = users?.map((user) => user.email) || [];
 
         const sendEmailCommand = new SendEmailCommand({
             FromEmailAddress: Config.FROM_EMAIL_ADDRESS ?? "",
@@ -155,7 +154,7 @@ subscriptionRouter.get(
     RoleChecker([Role.Enum.ADMIN]),
     async (req, res) => {
         const { mailingList } = req.params;
-        
+
         // Get all users subscribed to this mailing list
         const { data: subscriptions } = await SupabaseDB.SUBSCRIPTIONS.select(
             "userId"
@@ -170,12 +169,12 @@ subscriptionRouter.get(
         }
 
         // Get email addresses for all subscribed users
-        const userIds = subscriptions.map(sub => sub.userId);
+        const userIds = subscriptions.map((sub) => sub.userId);
         const { data: users } = await SupabaseDB.AUTH_INFO.select("email")
             .in("userId", userIds)
             .throwOnError();
 
-        const emailAddresses = users?.map(user => user.email) || [];
+        const emailAddresses = users?.map((user) => user.email) || [];
 
         return res.status(StatusCodes.OK).json(emailAddresses);
     }
@@ -187,22 +186,25 @@ subscriptionRouter.get(
     RoleChecker([Role.Enum.USER, Role.Enum.ADMIN]),
     async (req, res) => {
         const { userId } = req.params;
-        
+
         // Check if the user is requesting their own data or is an admin
         const payload = res.locals.payload;
-        if (!payload.roles.includes(Role.Enum.ADMIN) && payload.userId !== userId) {
+        if (
+            !payload.roles.includes(Role.Enum.ADMIN) &&
+            payload.userId !== userId
+        ) {
             return res
                 .status(StatusCodes.FORBIDDEN)
                 .json({ error: "Access denied." });
         }
 
-        const { data: userSubscriptions } = await SupabaseDB.SUBSCRIPTIONS.select(
-            "mailingList"
-        )
-            .eq("userId", userId)
-            .throwOnError();
+        const { data: userSubscriptions } =
+            await SupabaseDB.SUBSCRIPTIONS.select("mailingList")
+                .eq("userId", userId)
+                .throwOnError();
 
-        const mailingLists = userSubscriptions?.map(sub => sub.mailingList) || [];
+        const mailingLists =
+            userSubscriptions?.map((sub) => sub.mailingList) || [];
 
         return res.status(StatusCodes.OK).json(mailingLists);
     }
@@ -214,23 +216,25 @@ subscriptionRouter.delete(
     RoleChecker([Role.Enum.USER, Role.Enum.ADMIN]),
     async (req, res) => {
         const { userId, mailingList } = req.body;
-        
+
         // Check if the user is unsubscribing themselves or is an admin
         const payload = res.locals.payload;
-        if (!payload.roles.includes(Role.Enum.ADMIN) && payload.userId !== userId) {
+        if (
+            !payload.roles.includes(Role.Enum.ADMIN) &&
+            payload.userId !== userId
+        ) {
             return res
                 .status(StatusCodes.FORBIDDEN)
                 .json({ error: "Access denied." });
         }
 
         // Check if the subscription exists
-        const { data: existingSubscription } = await SupabaseDB.SUBSCRIPTIONS.select(
-            "userId, mailingList"
-        )
-            .eq("userId", userId)
-            .eq("mailingList", mailingList)
-            .maybeSingle()
-            .throwOnError();
+        const { data: existingSubscription } =
+            await SupabaseDB.SUBSCRIPTIONS.select("userId, mailingList")
+                .eq("userId", userId)
+                .eq("mailingList", mailingList)
+                .maybeSingle()
+                .throwOnError();
 
         if (!existingSubscription) {
             return res
