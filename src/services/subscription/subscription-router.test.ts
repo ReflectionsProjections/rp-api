@@ -10,6 +10,16 @@ import { SupabaseDB } from "../../database";
 import { IncomingSubscription } from "./subscription-schema";
 import Config from "../../config";
 
+// Mock the AWS SDK
+const mockSESV2Send = jest.fn();
+const mockSendEmailCommand = jest.fn((input) => input);
+jest.mock("@aws-sdk/client-sesv2", () => ({
+    SESv2Client: jest.fn(() => ({
+        send: mockSESV2Send,
+    })),
+    SendEmailCommand: mockSendEmailCommand,
+}));
+
 const USER_ID_1 = "test-er-user-id";
 const USER_ID_2 = "test-user-2";
 const INVALID_USER_ID = "invalid-user-id";
@@ -33,15 +43,6 @@ const SUBSCRIPTION_INVALID_LIST = {
     mailingList: INVALID_mailingList,
 };
 
-const mockSESV2Send = jest.fn();
-jest.mock("@aws-sdk/client-sesv2", () => {
-    return {
-        SESv2Client: jest.fn(() => ({
-            send: mockSESV2Send,
-        })),
-        SendEmailCommand: jest.fn((input) => input), // Mocks the command to return its input
-    };
-});
 
 beforeEach(async () => {
     jest.clearAllMocks();
@@ -62,7 +63,7 @@ beforeEach(async () => {
                 displayName: "User 2",
             },
         ]);
-    } catch (error) {
+    } catch {
         // Ignore errors if data already exists
     }
 });
@@ -203,9 +204,7 @@ describe("POST /subscription/send-email", () => {
             .send(emailPayload)
             .expect(StatusCodes.OK);
 
-        expect(
-            require("@aws-sdk/client-sesv2").SendEmailCommand
-        ).toHaveBeenCalledWith({
+        expect(mockSendEmailCommand).toHaveBeenCalledWith({
             FromEmailAddress: Config.FROM_EMAIL_ADDRESS,
             Destination: {
                 ToAddresses: [Config.FROM_EMAIL_ADDRESS],
@@ -236,9 +235,7 @@ describe("POST /subscription/send-email/single", () => {
             .send(emailPayload)
             .expect(StatusCodes.OK);
 
-        expect(
-            require("@aws-sdk/client-sesv2").SendEmailCommand
-        ).toHaveBeenCalledWith({
+        expect(mockSendEmailCommand).toHaveBeenCalledWith({
             FromEmailAddress: Config.FROM_EMAIL_ADDRESS,
             Destination: {
                 ToAddresses: [emailPayload.email],
