@@ -221,6 +221,17 @@ describe("/notifications", () => {
                 `event_Test_Event`,
                 currentDayTopic,
                 "food_wave_1",
+                "tag_AI",
+                "tag_Art_Media",
+                "tag_Autonomous_Vehicles",
+                "tag_Career_Readiness",
+                "tag_Company_Talk",
+                "tag_Cybersecurity",
+                "tag_Ethics",
+                "tag_HCI",
+                "tag_Interactive_Events",
+                "tag_Networking",
+                "tag_Research",
             ].sort();
 
             expect(response.body.topics).toEqual(expectedTopics);
