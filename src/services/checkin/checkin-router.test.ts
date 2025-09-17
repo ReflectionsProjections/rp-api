@@ -765,7 +765,7 @@ describe("POST /checkin/event", () => {
         payload.eventId = REGULAR_EVENT_FOR_CHECKIN.eventId;
         payload.userId = TEST_ATTENDEE_1.userId;
 
-        const firstResponse = await postAsAdmin("/checkin/event")
+        await postAsAdmin("/checkin/event")
             .send(payload)
             .expect(StatusCodes.OK);
 
@@ -792,7 +792,7 @@ describe("POST /checkin/event", () => {
         // Second check-in - should get priority
         payload.eventId = SPECIAL_EVENT_FOR_CHECKIN.eventId;
 
-        const secondResponse = await postAsAdmin("/checkin/event")
+        await postAsAdmin("/checkin/event")
             .send(payload)
             .expect(StatusCodes.OK);
 
