@@ -57,6 +57,21 @@ const REGULAR_EVENT_FOR_CHECKIN = {
     attendanceCount: 0,
 };
 
+const SPECIAL_EVENT_FOR_CHECKIN = {
+    eventId: uuidv4(),
+    name: "Second Regular Event",
+    startTime: new Date((NOW_SECONDS - 600) * 1000).toISOString(),
+    endTime: new Date((NOW_SECONDS + ONE_HOUR_SECONDS) * 1000).toISOString(),
+    points: 50,
+    description: "A second regular event.",
+    isVirtual: false,
+    imageUrl: null,
+    location: "Siebel 2405",
+    eventType: EventType.enum.SPECIAL,
+    isVisible: true,
+    attendanceCount: 0,
+};
+
 const MEALS_EVENT = {
     eventId: uuidv4(),
     name: "Lunch Time",
@@ -338,7 +353,7 @@ describe("POST /checkin/scan/staff", () => {
         expect(attendeeError).toBeNull();
         expect(updatedAttendee).toMatchObject({
             points: TEST_ATTENDEE_1.points + REGULAR_EVENT_FOR_CHECKIN.points,
-            [`hasPriority${currentDay}`]: true,
+            [`hasPriority${currentDay}`]: false, // No priority on first check-in
         });
     }, 100000);
 
@@ -573,7 +588,7 @@ describe("POST /checkin/event", () => {
             .single();
         expect(updatedAttendee).toMatchObject({
             points: TEST_ATTENDEE_1.points + REGULAR_EVENT_FOR_CHECKIN.points,
-            [`hasPriority${currentDay}`]: true,
+            [`hasPriority${currentDay}`]: false, // No priority on first check-in
         });
     });
 
@@ -743,6 +758,71 @@ describe("POST /checkin/event", () => {
 
         expect(attendeeAfter).toEqual(attendeeBefore);
         expect(attendanceCountAfter).toBe(attendanceCountBefore);
+    });
+
+    it("should give priority after second check-in to regular event", async () => {
+        // First check-in - should not get priority
+        payload.eventId = REGULAR_EVENT_FOR_CHECKIN.eventId;
+        payload.userId = TEST_ATTENDEE_1.userId;
+
+        const firstResponse = await postAsAdmin("/checkin/event")
+            .send(payload)
+            .expect(StatusCodes.OK);
+
+        // Verify no priority after first check-in
+        const { data: attendeeAfterFirst } = await SupabaseDB.ATTENDEES.select()
+            .eq("userId", payload.userId)
+            .single();
+        expect(attendeeAfterFirst).toMatchObject({
+            [`hasPriority${currentDay}`]: false,
+        });
+
+        // Verify first event is in attendance record
+        const { data: attendeeAttendanceAfterFirst } =
+            await SupabaseDB.ATTENDEE_ATTENDANCES.select("eventsAttended")
+                .eq("userId", payload.userId)
+                .single();
+        expect(attendeeAttendanceAfterFirst?.eventsAttended).toContain(
+            REGULAR_EVENT_FOR_CHECKIN.eventId
+        );
+        expect(attendeeAttendanceAfterFirst?.eventsAttended).toHaveLength(1);
+
+        await SupabaseDB.EVENTS.insert([SPECIAL_EVENT_FOR_CHECKIN]);
+
+        // Second check-in - should get priority
+        payload.eventId = SPECIAL_EVENT_FOR_CHECKIN.eventId;
+
+        const secondResponse = await postAsAdmin("/checkin/event")
+            .send(payload)
+            .expect(StatusCodes.OK);
+
+        // Verify priority is given after second check-in
+        const { data: attendeeAfterSecond } =
+            await SupabaseDB.ATTENDEES.select()
+                .eq("userId", payload.userId)
+                .single();
+        expect(attendeeAfterSecond).toMatchObject({
+            [`hasPriority${currentDay}`]: true,
+        });
+
+        // Verify both events are in the eventsAttended array
+        const { data: attendeeAttendance } =
+            await SupabaseDB.ATTENDEE_ATTENDANCES.select("eventsAttended")
+                .eq("userId", payload.userId)
+                .single();
+        expect(attendeeAttendance?.eventsAttended).toContain(
+            SPECIAL_EVENT_FOR_CHECKIN.eventId
+        );
+        expect(attendeeAttendance?.eventsAttended).toContain(
+            SPECIAL_EVENT_FOR_CHECKIN.eventId
+        );
+        expect(attendeeAttendance?.eventsAttended).toHaveLength(2);
+
+        // Clean up
+        await SupabaseDB.EVENTS.delete().eq(
+            "eventId",
+            SPECIAL_EVENT_FOR_CHECKIN.eventId
+        );
     });
 });
 

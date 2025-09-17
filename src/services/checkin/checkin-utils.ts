@@ -121,14 +121,29 @@ export async function checkInUserToEvent(eventId: string, userId: string) {
         .single()
         .throwOnError();
 
+    // Update attendance records first
+    await updateAttendanceRecords(eventId, userId);
+
+    // Check if user should get priority (only for non-meal/checkin events and if they have attended >1 event)
     if (
         event.eventType !== EventType.Enum.MEALS &&
         event.eventType !== EventType.Enum.CHECKIN
     ) {
-        await updateAttendeePriority(userId);
+        // Check how many events the user has attended (including the current one)
+        const { data: attendeeAttendance } =
+            await SupabaseDB.ATTENDEE_ATTENDANCES.select("eventsAttended")
+                .eq("userId", userId)
+                .maybeSingle()
+                .throwOnError();
+
+        const eventsAttended = attendeeAttendance?.eventsAttended || [];
+
+        // Only give priority if they have attended more than 1 event
+        if (eventsAttended.length > 1) {
+            await updateAttendeePriority(userId);
+        }
     }
 
-    await updateAttendanceRecords(eventId, userId);
     await assignPixelsToUser(userId, event.points);
 }
 
