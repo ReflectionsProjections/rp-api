@@ -370,3 +370,21 @@ BEGIN
     RETURN promoted_count;
 END;
 $$ LANGUAGE plpgsql;
+
+-- Function for counting tiers
+CREATE OR REPLACE FUNCTION get_tier_counts()
+RETURNS TABLE (
+  "currentTier" public."tierType",
+  count bigint
+) AS $$
+BEGIN
+  RETURN QUERY
+    SELECT
+      a."currentTier",
+      COUNT(a."userId")
+    FROM
+      public.attendees AS a
+    GROUP BY
+      a."currentTier";
+END;
+$$ LANGUAGE plpgsql;

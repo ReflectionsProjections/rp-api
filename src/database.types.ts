@@ -681,6 +681,13 @@ export type Database = {
                 Args: { user_ids: string[] };
                 Returns: number;
             };
+            get_tier_counts: {
+                Args: Record<string, never>;
+                Returns: {
+                    currentTier: Database["public"]["Enums"]["tierType"];
+                    count: number;
+                }[];
+            };
         };
         Enums: {
             shiftRoleType:
