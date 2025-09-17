@@ -34,6 +34,27 @@ notificationsRouter.post(
             .messaging()
             .subscribeToTopic(notificationEnrollmentData.deviceId, "allUsers");
 
+        // Get their tags
+        const { data: attendee } = await SupabaseDB.ATTENDEES.select("tags")
+            .eq("userId", userId)
+            .maybeSingle()
+            .throwOnError();
+
+        // enroll them in a topic for the tags
+        if (attendee?.tags && attendee.tags.length > 0) {
+            const userTags = attendee.tags;
+            const subscriptionPromises = userTags.map((tag) => {
+                const topicName = `tag_${tag.replace(/[^a-zA-Z0-9-_.~%]/g, "_")}`;
+                return getFirebaseAdmin()
+                    .messaging()
+                    .subscribeToTopic(
+                        notificationEnrollmentData.deviceId,
+                        topicName
+                    );
+            });
+            await Promise.all(subscriptionPromises);
+        }
+
         return res.status(StatusCodes.CREATED).json(notificationEnrollmentData);
     }
 );
@@ -164,8 +185,32 @@ notificationsRouter.get(
             await SupabaseDB.CUSTOM_TOPICS.select("topicName").throwOnError();
         const customTopics =
             customTopicsData.map((topic) => topic.topicName) ?? [];
+
+        const hardcodedTags = [
+            "Career Readiness",
+            "AI",
+            "Research",
+            "Interactive Events",
+            "HCI",
+            "Ethics",
+            "Art/Media",
+            "Autonomous Vehicles",
+            "Networking",
+            "Company Talk",
+            "Cybersecurity",
+        ];
+
+        const tagTopics = hardcodedTags.map(
+            (tag) => `tag_${tag.replace(/[^a-zA-Z0-9-_.~%]/g, "_")}`
+        );
+
         const allTopics = [
-            ...new Set([...staticTopics, ...eventTopics, ...customTopics]),
+            ...new Set([
+                ...staticTopics,
+                ...eventTopics,
+                ...customTopics,
+                ...tagTopics,
+            ]),
         ];
         return res.status(StatusCodes.OK).send({ topics: allTopics.sort() });
     }
