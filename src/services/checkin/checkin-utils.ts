@@ -121,19 +121,55 @@ export async function checkInUserToEvent(eventId: string, userId: string) {
         .single()
         .throwOnError();
 
+    // Update attendance records first
+    await updateAttendanceRecords(eventId, userId);
+
+    // Check if user should get priority (only for non-meal/checkin events and if they have attended >1 event)
     if (
         event.eventType !== EventType.Enum.MEALS &&
         event.eventType !== EventType.Enum.CHECKIN
     ) {
-        await updateAttendeePriority(userId);
+        // Check how many events the user has attended (including the current one)
+        const { data: attendeeAttendance } =
+            await SupabaseDB.ATTENDEE_ATTENDANCES.select("eventsAttended")
+                .eq("userId", userId)
+                .maybeSingle()
+                .throwOnError();
+
+        const eventsAttended = attendeeAttendance?.eventsAttended || [];
+
+        if (eventsAttended.length > 0) {
+            // Get details of all attended events to filter by type and day
+            const { data: attendedEvents } = await SupabaseDB.EVENTS.select(
+                "eventId, eventType, startTime"
+            )
+                .in("eventId", eventsAttended)
+                .throwOnError();
+
+            const currentDay = getCurrentDay();
+
+            // Filter events: exclude MEALS and CHECKIN, and only count events from current day
+            const filteredEvents =
+                attendedEvents?.filter((eventData) => {
+                    const eventDate = new Date(eventData.startTime);
+                    const eventDay = new Intl.DateTimeFormat("en-US", {
+                        timeZone: "America/Chicago",
+                        weekday: "short",
+                    }).format(eventDate) as DayKey;
+
+                    return (
+                        eventData.eventType !== EventType.Enum.MEALS &&
+                        eventData.eventType !== EventType.Enum.CHECKIN &&
+                        eventDay === currentDay
+                    );
+                }) || [];
+
+            // Only give priority if they have attended 2 or more qualifying events today
+            if (filteredEvents.length >= 2) {
+                await updateAttendeePriority(userId);
+            }
+        }
     }
-
-    await SupabaseDB.SUBSCRIPTIONS.insert({
-        userId: userId,
-        mailingList: eventId,
-    }).throwOnError();
-
-    await updateAttendanceRecords(eventId, userId);
     await assignPixelsToUser(userId, event.points);
 }
 
