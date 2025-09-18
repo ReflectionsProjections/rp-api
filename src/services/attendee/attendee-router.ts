@@ -63,8 +63,20 @@ attendeeRouter.post(
             .maybeSingle()
             .throwOnError();
 
+        const { data: event } = await SupabaseDB.EVENTS.select()
+            .eq("eventId", eventId)
+            .maybeSingle()
+            .throwOnError();
+
+        if (!event) {
+            return res
+                .status(StatusCodes.NOT_FOUND)
+                .json({ error: "EventNotFound" });
+        }
+
+        const topicName = `event_${event.name.replace(/[^a-zA-Z0-9-_.~%]/g, "_")}`;
+
         if (device?.deviceId) {
-            const topicName = `event_${eventId}`;
             await getFirebaseAdmin()
                 .messaging()
                 .subscribeToTopic(device?.deviceId, topicName);
@@ -113,8 +125,20 @@ attendeeRouter.delete(
             .maybeSingle()
             .throwOnError();
 
+        const { data: event } = await SupabaseDB.EVENTS.select()
+            .eq("eventId", eventId)
+            .maybeSingle()
+            .throwOnError();
+
+        if (!event) {
+            return res
+                .status(StatusCodes.NOT_FOUND)
+                .json({ error: "EventNotFound" });
+        }
+
+        const topicName = `event_${event.name.replace(/[^a-zA-Z0-9-_.~%]/g, "_")}`;
+
         if (device?.deviceId) {
-            const topicName = `event_${eventId}`;
             await getFirebaseAdmin()
                 .messaging()
                 .unsubscribeFromTopic(device?.deviceId, topicName);
@@ -409,13 +433,23 @@ attendeeRouter.patch(
         const payload = res.locals.payload;
         const userId = payload.userId;
 
-        const { tags } = AttendeeTagsUpdateValidator.parse(req.body);
+        const { tags: newTags } = AttendeeTagsUpdateValidator.parse(req.body);
 
         // Check if the user exists in the database
-        const { data: user } = await SupabaseDB.ATTENDEES.select("tags")
-            .eq("userId", userId)
-            .maybeSingle()
-            .throwOnError();
+
+        const [userData, notificationData] = await Promise.all([
+            SupabaseDB.ATTENDEES.select("tags")
+                .eq("userId", userId)
+                .maybeSingle()
+                .throwOnError(),
+            SupabaseDB.NOTIFICATIONS.select("deviceId")
+                .eq("userId", userId)
+                .maybeSingle()
+                .throwOnError(),
+        ]);
+
+        const user = userData.data;
+        const deviceId = notificationData.data?.deviceId;
 
         if (!user) {
             return res
@@ -423,12 +457,45 @@ attendeeRouter.patch(
                 .json({ error: "UserNotFound" });
         }
 
+        const oldTags = user.tags || [];
+
+        if (deviceId) {
+            const tagsToSubscribe = newTags.filter(
+                (tag) => !oldTags.includes(tag)
+            );
+            const tagsToUnsubscribe = oldTags.filter(
+                (tag) => !newTags.includes(tag)
+            );
+            const subscribePromises = tagsToSubscribe.map((tag) => {
+                const topicName = `tag_${tag.replace(/[^a-zA-Z0-9-_.~%]/g, "_")}`;
+                return getFirebaseAdmin()
+                    .messaging()
+                    .subscribeToTopic(deviceId, topicName);
+            });
+
+            const unsubscribePromises = tagsToUnsubscribe.map((tag) => {
+                const topicName = `tag_${tag.replace(/[^a-zA-Z0-9-_.~%]/g, "_")}`;
+                return getFirebaseAdmin()
+                    .messaging()
+                    .unsubscribeFromTopic(deviceId, topicName);
+            });
+
+            Promise.all([...subscribePromises, ...unsubscribePromises]).catch(
+                (error) => {
+                    console.error(
+                        `Failed to sync FCM topics for user ${userId}:`,
+                        error
+                    );
+                }
+            );
+        }
+
         // Update the tags
-        await SupabaseDB.ATTENDEES.update({ tags })
+        await SupabaseDB.ATTENDEES.update({ tags: newTags })
             .eq("userId", userId)
             .throwOnError();
 
-        return res.status(StatusCodes.OK).json({ tags });
+        return res.status(StatusCodes.OK).json({ tags: newTags });
     }
 );
 

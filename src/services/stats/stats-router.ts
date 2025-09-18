@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { StatusCodes } from "http-status-codes";
-import { SupabaseDB, TierType } from "../../database";
+import { supabase, SupabaseDB, TierType } from "../../database";
 import RoleChecker from "../../middleware/role-checker";
 import { Role } from "../auth/auth-models";
 import { getCurrentDay } from "../checkin/checkin-utils";
@@ -276,21 +276,18 @@ statsRouter.get(
     "/tier-counts",
     RoleChecker([Role.enum.STAFF], false),
     async (req, res) => {
-        const { data } = await SupabaseDB.ATTENDEES.select("currentTier", {
-            count: "exact",
-        }).throwOnError();
+        const { data } = await supabase.rpc("get_tier_counts").throwOnError();
 
-        // Aggregate counts for each tier
         const tierCounts: Record<TierType, number> = {
             TIER1: 0,
             TIER2: 0,
             TIER3: 0,
             TIER4: 0,
         };
-        data?.forEach((attendee: { currentTier: TierType }) => {
-            if (attendee.currentTier) {
-                tierCounts[attendee.currentTier] =
-                    (tierCounts[attendee.currentTier] || 0) + 1;
+
+        data?.forEach((row: { currentTier: TierType; count: number }) => {
+            if (row.currentTier && typeof row.count === "number") {
+                tierCounts[row.currentTier] = row.count;
             }
         });
 

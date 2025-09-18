@@ -636,18 +636,26 @@ export type Database = {
             };
             subscriptions: {
                 Row: {
+                    userId: string;
                     mailingList: string;
-                    subscriptions: string[];
                 };
                 Insert: {
+                    userId: string;
                     mailingList: string;
-                    subscriptions?: string[];
                 };
                 Update: {
+                    userId?: string;
                     mailingList?: string;
-                    subscriptions?: string[];
                 };
-                Relationships: [];
+                Relationships: [
+                    {
+                        foreignKeyName: "subscriptions_user_id_fkey";
+                        columns: ["userId"];
+                        isOneToOne: false;
+                        referencedRelation: "authInfo";
+                        referencedColumns: ["userId"];
+                    },
+                ];
             };
             redemptions: {
                 Row: {
@@ -680,6 +688,13 @@ export type Database = {
             promote_users_batch: {
                 Args: { user_ids: string[] };
                 Returns: number;
+            };
+            get_tier_counts: {
+                Args: Record<string, never>;
+                Returns: {
+                    currentTier: Database["public"]["Enums"]["tierType"];
+                    count: number;
+                }[];
             };
         };
         Enums: {
