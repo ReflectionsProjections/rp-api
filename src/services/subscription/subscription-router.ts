@@ -89,17 +89,17 @@ subscriptionRouter.post(
             });
         }
 
-        // Get email addresses for all subscribed users (batch to avoid URL length limits)
+        // need to batch to avoid URL length limits
         const userIds = subscriptions.map((sub) => sub.userId);
-        const BATCH_SIZE = 100; // Process in smaller batches
+        const BATCH_SIZE = 100;
         const emailAddresses: string[] = [];
-        
+
         for (let i = 0; i < userIds.length; i += BATCH_SIZE) {
             const batch = userIds.slice(i, i + BATCH_SIZE);
             const { data: users } = await SupabaseDB.AUTH_INFO.select("email")
                 .in("userId", batch)
                 .throwOnError();
-            
+
             const batchEmails = users?.map((user) => user.email) || [];
             emailAddresses.push(...batchEmails);
         }
@@ -179,13 +179,13 @@ subscriptionRouter.get(
         const userIds = subscriptions.map((sub) => sub.userId);
         const BATCH_SIZE = 100; // Process in smaller batches
         const emailAddresses: string[] = [];
-        
+
         for (let i = 0; i < userIds.length; i += BATCH_SIZE) {
             const batch = userIds.slice(i, i + BATCH_SIZE);
             const { data: users } = await SupabaseDB.AUTH_INFO.select("email")
                 .in("userId", batch)
                 .throwOnError();
-            
+
             const batchEmails = users?.map((user) => user.email) || [];
             emailAddresses.push(...batchEmails);
         }
