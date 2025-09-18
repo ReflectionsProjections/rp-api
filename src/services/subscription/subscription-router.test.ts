@@ -4,6 +4,7 @@ import {
     getAsAdmin,
     postAsAdmin,
     delAsAdmin,
+    postAsSuperAdmin,
 } from "../../../testing/testingTools";
 import { StatusCodes } from "http-status-codes";
 import { SupabaseDB } from "../../database";
@@ -187,23 +188,24 @@ describe("GET /subscription/", () => {
 });
 
 describe("POST /subscription/send-email", () => {
-    it("should send an email to all subscribers of a list", async () => {
-        const mailingList = VALID_mailingList;
-        const emails = ["user1@test.com", "user2@test.com"];
+    const mailingList = VALID_mailingList;
+    const emails = ["user1@test.com", "user2@test.com"];
+    const emailPayload = {
+        mailingList: mailingList,
+        subject: "Test Subject",
+        htmlBody: "<p>Hello World</p>",
+    };
 
+    beforeEach(async () => {
         // Set up subscription data
         await SupabaseDB.SUBSCRIPTIONS.insert([
             { userId: USER_ID_1, mailingList: mailingList },
             { userId: USER_ID_2, mailingList: mailingList },
         ]).throwOnError();
+    });
 
-        const emailPayload = {
-            mailingList: mailingList,
-            subject: "Test Subject",
-            htmlBody: "<p>Hello World</p>",
-        };
-
-        await postAsAdmin("/subscription/send-email")
+    it("should send an email to all subscribers of a list", async () => {
+        const res = await postAsSuperAdmin("/subscription/send-email")
             .send(emailPayload)
             .expect(StatusCodes.OK);
 
@@ -223,18 +225,32 @@ describe("POST /subscription/send-email", () => {
 
         // Verify that the send method was actually invoked
         expect(mockSESV2Send).toHaveBeenCalledTimes(1);
+
+        expect(res.body).toEqual({ status: "success" });
+    });
+
+    it("fails to send an email for non super-admins", async () => {
+        const res = await postAsAdmin("/subscription/send-email")
+            .send(emailPayload)
+            .expect(StatusCodes.FORBIDDEN);
+
+        expect(mockSendEmailCommand).not.toHaveBeenCalled();
+
+        // Verify that the send method was actually invoked
+        expect(mockSESV2Send).not.toHaveBeenCalled();
+
+        expect(res.body).toMatchObject({ error: "Forbidden" });
     });
 });
 
 describe("POST /subscription/send-email/single", () => {
+    const emailPayload = {
+        email: "ritam@test.com",
+        subject: "Single Email Test",
+        htmlBody: "<p>Single Email Body</p>",
+    };
     it("should send an email to a single specified email address", async () => {
-        const emailPayload = {
-            email: "ritam@test.com",
-            subject: "Single Email Test",
-            htmlBody: "<p>Single Email Body</p>",
-        };
-
-        await postAsAdmin("/subscription/send-email/single")
+        const res = await postAsSuperAdmin("/subscription/send-email/single")
             .send(emailPayload)
             .expect(StatusCodes.OK);
 
@@ -253,6 +269,19 @@ describe("POST /subscription/send-email/single", () => {
 
         // Verify that the send method was actually invoked
         expect(mockSESV2Send).toHaveBeenCalledTimes(1);
+
+        expect(res.body).toEqual({ status: "success" });
+    });
+
+    it("fails to send for non super-admin", async () => {
+        const res = await postAsAdmin("/subscription/send-email/single")
+            .send(emailPayload)
+            .expect(StatusCodes.FORBIDDEN);
+
+        expect(mockSendEmailCommand).not.toHaveBeenCalled();
+        expect(mockSESV2Send).not.toHaveBeenCalled();
+
+        expect(res.body).toMatchObject({ error: "Forbidden" });
     });
 });
 

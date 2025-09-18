@@ -35,34 +35,38 @@ const oauthClients = {
 
 authRouter.use("/sponsor", authSponsorRouter);
 
-// Remove role from userId (admin only endpoint)
-authRouter.delete("/", RoleChecker([Role.Enum.ADMIN]), async (req, res) => {
-    // Validate request body using Zod schema
-    const { userId, role } = AuthRoleChangeRequest.parse(req.body);
+// Remove role from userId (super admin only endpoint)
+authRouter.delete(
+    "/",
+    RoleChecker([Role.Enum.SUPER_ADMIN]),
+    async (req, res) => {
+        // Validate request body using Zod schema
+        const { userId, role } = AuthRoleChangeRequest.parse(req.body);
 
-    const { data } = await SupabaseDB.AUTH_INFO.select("userId")
-        .eq("userId", userId)
-        .maybeSingle()
-        .throwOnError();
+        const { data } = await SupabaseDB.AUTH_INFO.select("userId")
+            .eq("userId", userId)
+            .maybeSingle()
+            .throwOnError();
 
-    if (!data) {
-        return res.status(StatusCodes.NOT_FOUND).json({
-            error: "UserNotFound",
-        });
+        if (!data) {
+            return res.status(StatusCodes.NOT_FOUND).json({
+                error: "UserNotFound",
+            });
+        }
+
+        const { data: deleted } = await SupabaseDB.AUTH_ROLES.delete()
+            .eq("userId", userId)
+            .eq("role", role)
+            .select()
+            .single()
+            .throwOnError();
+
+        return res.status(StatusCodes.OK).json(deleted);
     }
+);
 
-    const { data: deleted } = await SupabaseDB.AUTH_ROLES.delete()
-        .eq("userId", userId)
-        .eq("role", role)
-        .select()
-        .single()
-        .throwOnError();
-
-    return res.status(StatusCodes.OK).json(deleted);
-});
-
-// Add role to userId (admin only endpoint)
-authRouter.put("/", RoleChecker([Role.Enum.ADMIN]), async (req, res) => {
+// Add role to userId (super admin only endpoint)
+authRouter.put("/", RoleChecker([Role.Enum.SUPER_ADMIN]), async (req, res) => {
     const { userId, role } = AuthRoleChangeRequest.parse(req.body);
 
     const { data } = await SupabaseDB.AUTH_INFO.select("userId")

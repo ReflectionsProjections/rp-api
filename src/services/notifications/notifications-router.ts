@@ -59,13 +59,13 @@ notificationsRouter.post(
     }
 );
 
-// Admins can send notifications to a specific topic
+// Super admins can send notifications to a specific topic
 // parameter: the topicName that the admin is sending to
 // ^ Can get this from dropdown (will have a route to get all topics)
 // Request body: title, body. (title and body of the notification)
 notificationsRouter.post(
     "/topics/:topicName",
-    RoleChecker([Role.enum.ADMIN]), // for now thinking that only admins get to use this
+    RoleChecker([Role.enum.SUPER_ADMIN]),
     async (req, res) => {
         sendToTopicSchema.parse(req.body); // make sure it fits the validator
 
