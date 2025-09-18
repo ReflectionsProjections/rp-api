@@ -92,6 +92,10 @@ registrationRouter.post("/submit", RoleChecker([]), async (req, res) => {
         SupabaseDB.ATTENDEES.upsert(attendee, {
             onConflict: "userId",
         }).throwOnError(),
+        SupabaseDB.SUBSCRIPTIONS.upsert({
+            userId: payload.userId,
+            mailingList: "attendees",
+        }).throwOnError(),
     ]);
 
     const substitution = {
