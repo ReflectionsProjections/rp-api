@@ -89,13 +89,20 @@ subscriptionRouter.post(
             });
         }
 
-        // Get email addresses for all subscribed users
+        // need to batch to avoid URL length limits
         const userIds = subscriptions.map((sub) => sub.userId);
-        const { data: users } = await SupabaseDB.AUTH_INFO.select("email")
-            .in("userId", userIds)
-            .throwOnError();
+        const BATCH_SIZE = 100;
+        const emailAddresses: string[] = [];
 
-        const emailAddresses = users?.map((user) => user.email) || [];
+        for (let i = 0; i < userIds.length; i += BATCH_SIZE) {
+            const batch = userIds.slice(i, i + BATCH_SIZE);
+            const { data: users } = await SupabaseDB.AUTH_INFO.select("email")
+                .in("userId", batch)
+                .throwOnError();
+
+            const batchEmails = users?.map((user) => user.email) || [];
+            emailAddresses.push(...batchEmails);
+        }
 
         const sendEmailCommand = new SendEmailCommand({
             FromEmailAddress: Config.FROM_EMAIL_ADDRESS ?? "",
@@ -168,13 +175,20 @@ subscriptionRouter.get(
                 .json({ error: "No subscribers found for this mailing list." });
         }
 
-        // Get email addresses for all subscribed users
+        // Get email addresses for all subscribed users (batch to avoid URL length limits)
         const userIds = subscriptions.map((sub) => sub.userId);
-        const { data: users } = await SupabaseDB.AUTH_INFO.select("email")
-            .in("userId", userIds)
-            .throwOnError();
+        const BATCH_SIZE = 100; // Process in smaller batches
+        const emailAddresses: string[] = [];
 
-        const emailAddresses = users?.map((user) => user.email) || [];
+        for (let i = 0; i < userIds.length; i += BATCH_SIZE) {
+            const batch = userIds.slice(i, i + BATCH_SIZE);
+            const { data: users } = await SupabaseDB.AUTH_INFO.select("email")
+                .in("userId", batch)
+                .throwOnError();
+
+            const batchEmails = users?.map((user) => user.email) || [];
+            emailAddresses.push(...batchEmails);
+        }
 
         return res.status(StatusCodes.OK).json(emailAddresses);
     }
