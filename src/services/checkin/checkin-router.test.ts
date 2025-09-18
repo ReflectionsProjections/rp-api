@@ -814,7 +814,7 @@ describe("POST /checkin/event", () => {
             SPECIAL_EVENT_FOR_CHECKIN.eventId
         );
         expect(attendeeAttendance?.eventsAttended).toContain(
-            SPECIAL_EVENT_FOR_CHECKIN.eventId
+            REGULAR_EVENT_FOR_CHECKIN.eventId
         );
         expect(attendeeAttendance?.eventsAttended).toHaveLength(2);
 
