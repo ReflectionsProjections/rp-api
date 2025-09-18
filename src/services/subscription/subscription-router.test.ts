@@ -166,7 +166,7 @@ describe("GET /subscription/", () => {
         expect(response.body).toEqual([]);
     });
 
-    it("should return all subscriptions", async () => {
+    it("should return aggregated subscriptions by mailing list", async () => {
         await SupabaseDB.SUBSCRIPTIONS.insert([
             { userId: USER_ID_1, mailingList: VALID_mailingList },
             { userId: USER_ID_2, mailingList: VALID_mailingList },
@@ -175,14 +175,47 @@ describe("GET /subscription/", () => {
             StatusCodes.OK
         );
 
+        expect(response.body.length).toBe(1);
+        expect(response.body[0]).toEqual({
+            mailingList: VALID_mailingList,
+            userIds: expect.arrayContaining([USER_ID_1, USER_ID_2]),
+        });
+        expect(response.body[0].userIds.length).toBe(2);
+    });
+
+    it("should aggregate multiple mailing lists correctly", async () => {
+        const mailingList2 = "newsletter";
+        await SupabaseDB.SUBSCRIPTIONS.insert([
+            { userId: USER_ID_1, mailingList: VALID_mailingList },
+            { userId: USER_ID_2, mailingList: VALID_mailingList },
+            { userId: USER_ID_1, mailingList: mailingList2 },
+        ]).throwOnError();
+
+        const response = await getAsAdmin("/subscription/").expect(
+            StatusCodes.OK
+        );
+
         expect(response.body.length).toBe(2);
 
-        expect(response.body).toEqual(
-            expect.arrayContaining([
-                { userId: USER_ID_1, mailingList: VALID_mailingList },
-                { userId: USER_ID_2, mailingList: VALID_mailingList },
-            ])
+        const validMailingListEntry = response.body.find(
+            (item: { mailingList: string; userIds: string[] }) =>
+                item.mailingList === VALID_mailingList
         );
+        const newsletterEntry = response.body.find(
+            (item: { mailingList: string; userIds: string[] }) =>
+                item.mailingList === mailingList2
+        );
+
+        expect(validMailingListEntry).toEqual({
+            mailingList: VALID_mailingList,
+            userIds: expect.arrayContaining([USER_ID_1, USER_ID_2]),
+        });
+        expect(validMailingListEntry.userIds.length).toBe(2);
+
+        expect(newsletterEntry).toEqual({
+            mailingList: mailingList2,
+            userIds: [USER_ID_1],
+        });
     });
 });
 

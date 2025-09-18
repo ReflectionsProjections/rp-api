@@ -64,7 +64,26 @@ subscriptionRouter.get(
         const { data: subscriptions } =
             await SupabaseDB.SUBSCRIPTIONS.select("*").throwOnError();
 
-        return res.status(StatusCodes.OK).json(subscriptions);
+        const aggregated =
+            subscriptions?.reduce(
+                (acc, subscription) => {
+                    const existing = acc.find(
+                        (item) => item.mailingList === subscription.mailingList
+                    );
+                    if (existing) {
+                        existing.userIds.push(subscription.userId);
+                    } else {
+                        acc.push({
+                            mailingList: subscription.mailingList,
+                            userIds: [subscription.userId],
+                        });
+                    }
+                    return acc;
+                },
+                [] as { mailingList: string; userIds: string[] }[]
+            ) || [];
+
+        return res.status(StatusCodes.OK).json(aggregated);
     }
 );
 
