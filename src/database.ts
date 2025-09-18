@@ -78,13 +78,6 @@ export type EventType = Enums<"eventType">;
 export type StaffAttendanceType = Enums<"staffAttendanceType">;
 export type ShiftRoleType = Enums<"shiftRoleType">;
 
-export const RoleTypes: Record<RoleType, RoleType> = {
-    USER: "USER",
-    STAFF: "STAFF",
-    ADMIN: "ADMIN",
-    CORPORATE: "CORPORATE",
-};
-
 export const CommitteeTypes: Record<string, CommitteeType> = {
     CONTENT: "CONTENT",
     CORPORATE: "CORPORATE",
