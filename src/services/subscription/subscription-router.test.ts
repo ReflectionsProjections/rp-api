@@ -73,11 +73,11 @@ describe("POST /subscription/", () => {
             .send(SUBSCRIPTION_1)
             .expect(StatusCodes.CREATED);
         expect(response.body).toEqual(SUBSCRIPTION_1);
-        const { data } = await SupabaseDB.SUBSCRIPTIONS.select()
+        const { data: dbEntry } = await SupabaseDB.SUBSCRIPTIONS.select()
             .eq("userId", USER_ID_1)
             .eq("mailingList", VALID_mailingList)
+            .maybeSingle()
             .throwOnError();
-        const dbEntry = data?.[0];
         expect(dbEntry).toMatchObject({
             userId: USER_ID_1,
             mailingList: VALID_mailingList,
@@ -89,11 +89,11 @@ describe("POST /subscription/", () => {
             .send(SUBSCRIPTION_2)
             .expect(StatusCodes.CREATED);
         expect(response.body).toEqual(SUBSCRIPTION_2);
-        const { data } = await SupabaseDB.SUBSCRIPTIONS.select()
+        const { data: dbEntry } = await SupabaseDB.SUBSCRIPTIONS.select()
             .eq("userId", USER_ID_2)
             .eq("mailingList", VALID_mailingList)
+            .maybeSingle()
             .throwOnError();
-        const dbEntry = data?.[0];
         expect(dbEntry).toMatchObject({
             userId: USER_ID_2,
             mailingList: VALID_mailingList,
@@ -149,11 +149,11 @@ describe("POST /subscription/", () => {
             .send(SUBSCRIPTION_EXTRA)
             .expect(StatusCodes.CREATED);
         expect(response.body).toEqual(SUBSCRIPTION_1);
-        const { data } = await SupabaseDB.SUBSCRIPTIONS.select()
+        const { data: dbEntry } = await SupabaseDB.SUBSCRIPTIONS.select()
             .eq("userId", USER_ID_1)
             .eq("mailingList", VALID_mailingList)
+            .maybeSingle()
             .throwOnError();
-        const dbEntry = data?.[0];
         expect(dbEntry?.mailingList).toEqual(VALID_mailingList);
     });
 });
