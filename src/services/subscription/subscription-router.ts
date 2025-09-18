@@ -68,6 +68,21 @@ subscriptionRouter.get(
     }
 );
 
+subscriptionRouter.get(
+    "/lists",
+    RoleChecker([Role.Enum.ADMIN]),
+    async (req, res) => {
+        const { data: subscriptions } =
+            await SupabaseDB.SUBSCRIPTIONS.select("mailingList").throwOnError();
+
+        const uniqueMailingLists = [
+            ...new Set(subscriptions?.map((sub) => sub.mailingList) || []),
+        ];
+
+        return res.status(StatusCodes.OK).json(uniqueMailingLists);
+    }
+);
+
 // Send an email to a mailing list
 // API body: {String} mailingList The list to send the email to, {String} subject The subject line of the email, {String} htmlBody The HTML content of the email.
 subscriptionRouter.post(

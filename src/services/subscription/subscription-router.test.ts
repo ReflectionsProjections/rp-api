@@ -285,6 +285,45 @@ describe("POST /subscription/send-email/single", () => {
     });
 });
 
+describe("GET /subscription/lists", () => {
+    it("should return an empty array when no subscriptions exist", async () => {
+        const response = await getAsAdmin("/subscription/lists").expect(
+            StatusCodes.OK
+        );
+        expect(response.body).toEqual([]);
+    });
+
+    it("should return unique mailing lists", async () => {
+        await SupabaseDB.SUBSCRIPTIONS.insert([
+            { userId: USER_ID_1, mailingList: VALID_mailingList },
+            { userId: USER_ID_2, mailingList: VALID_mailingList }, // duplicate mailing list
+            { userId: USER_ID_1, mailingList: "newsletter" },
+        ]).throwOnError();
+
+        const response = await getAsAdmin("/subscription/lists").expect(
+            StatusCodes.OK
+        );
+
+        expect(response.body).toHaveLength(2);
+        expect(response.body).toEqual(
+            expect.arrayContaining([VALID_mailingList, "newsletter"])
+        );
+    });
+
+    it("should return a single unique mailing list when all subscriptions are for the same list", async () => {
+        await SupabaseDB.SUBSCRIPTIONS.insert([
+            { userId: USER_ID_1, mailingList: VALID_mailingList },
+            { userId: USER_ID_2, mailingList: VALID_mailingList },
+        ]).throwOnError();
+
+        const response = await getAsAdmin("/subscription/lists").expect(
+            StatusCodes.OK
+        );
+
+        expect(response.body).toEqual([VALID_mailingList]);
+    });
+});
+
 describe("GET /subscription/:mailingList", () => {
     it("should return the list of subscribers for an existing mailing list", async () => {
         const emails = ["user1@test.com", "user2@test.com"];
