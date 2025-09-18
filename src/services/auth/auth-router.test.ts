@@ -10,8 +10,9 @@ import {
     postAsAdmin,
     postAsStaff,
     putAsAdmin,
-    putAsStaff,
     TESTER,
+    delAsSuperAdmin,
+    putAsSuperAdmin,
 } from "../../../testing/testingTools";
 import { AuthInfo, AuthRole } from "./auth-schema";
 import { Platform, Role } from "./auth-models";
@@ -81,7 +82,7 @@ beforeEach(async () => {
 
 describe("DELETE /auth/", () => {
     it("should remove the requested role", async () => {
-        const res = await delAsAdmin("/auth/")
+        const res = await delAsSuperAdmin("/auth/")
             .send({
                 userId: OTHER_USER.userId,
                 role: Role.Enum.STAFF,
@@ -101,7 +102,7 @@ describe("DELETE /auth/", () => {
     });
 
     it("should give the not found error when the user doesn't exist", async () => {
-        const res = await delAsAdmin("/auth/")
+        const res = await delAsSuperAdmin("/auth/")
             .send({
                 userId: "nonexistent",
                 role: Role.Enum.STAFF,
@@ -111,8 +112,8 @@ describe("DELETE /auth/", () => {
         expect(res.body).toHaveProperty("error", "UserNotFound");
     });
 
-    it("should require admin permissions", async () => {
-        const res = await delAsStaff("/auth/")
+    it("should require super admin permissions", async () => {
+        const res = await delAsAdmin("/auth/")
             .send({
                 userId: OTHER_USER.userId,
                 role: Role.Enum.STAFF,
@@ -125,7 +126,7 @@ describe("DELETE /auth/", () => {
 
 describe("PUT /auth/", () => {
     it("should add the requested role", async () => {
-        const res = await putAsAdmin("/auth/")
+        const res = await putAsSuperAdmin("/auth/")
             .send({
                 userId: OTHER_USER.userId,
                 role: Role.Enum.ADMIN,
@@ -146,7 +147,7 @@ describe("PUT /auth/", () => {
     });
 
     it("should give the not found error if the user doesn't exist", async () => {
-        const res = await putAsAdmin("/auth/")
+        const res = await putAsSuperAdmin("/auth/")
             .send({
                 userId: "nonexistent",
                 role: Role.Enum.ADMIN,
@@ -156,8 +157,8 @@ describe("PUT /auth/", () => {
         expect(res.body).toHaveProperty("error", "UserNotFound");
     });
 
-    it("should require admin permissions", async () => {
-        const res = await putAsStaff("/auth/")
+    it("should require super admin permissions", async () => {
+        const res = await putAsAdmin("/auth/")
             .send({
                 userId: OTHER_USER.userId,
                 role: Role.Enum.STAFF,

@@ -55,6 +55,10 @@ export function getAsAdmin(url: string): request.Test {
     return get(url, Role.enum.ADMIN);
 }
 
+export function getAsSuperAdmin(url: string): request.Test {
+    return get(url, Role.enum.SUPER_ADMIN);
+}
+
 export function getAsCorporate(url: string): request.Test {
     return get(url, Role.enum.CORPORATE);
 }
@@ -86,6 +90,10 @@ export function postAsAdmin(url: string): request.Test {
     return post(url, Role.enum.ADMIN);
 }
 
+export function postAsSuperAdmin(url: string): request.Test {
+    return post(url, Role.enum.SUPER_ADMIN);
+}
+
 export function postAsCorporate(url: string): request.Test {
     return post(url, Role.enum.CORPORATE);
 }
@@ -104,6 +112,10 @@ export function putAsStaff(url: string): request.Test {
 
 export function putAsAdmin(url: string): request.Test {
     return put(url, Role.enum.ADMIN);
+}
+
+export function putAsSuperAdmin(url: string): request.Test {
+    return put(url, Role.enum.SUPER_ADMIN);
 }
 
 export function putAsCorporate(url: string): request.Test {
@@ -126,6 +138,10 @@ export function patchAsAdmin(url: string): request.Test {
     return patch(url, Role.enum.ADMIN);
 }
 
+export function patchAsSuperAdmin(url: string): request.Test {
+    return patch(url, Role.enum.SUPER_ADMIN);
+}
+
 export function patchAsCorporate(url: string): request.Test {
     return patch(url, Role.enum.CORPORATE);
 }
@@ -144,6 +160,10 @@ export function delAsStaff(url: string): request.Test {
 
 export function delAsAdmin(url: string): request.Test {
     return del(url, Role.enum.ADMIN);
+}
+
+export function delAsSuperAdmin(url: string): request.Test {
+    return del(url, Role.enum.SUPER_ADMIN);
 }
 
 export function delAsCorporate(url: string): request.Test {

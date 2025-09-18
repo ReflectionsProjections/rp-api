@@ -87,7 +87,7 @@ subscriptionRouter.get(
 // API body: {String} mailingList The list to send the email to, {String} subject The subject line of the email, {String} htmlBody The HTML content of the email.
 subscriptionRouter.post(
     "/send-email",
-    RoleChecker([Role.Enum.ADMIN]),
+    RoleChecker([Role.Enum.SUPER_ADMIN]),
     async (req, res) => {
         const { mailingList, subject, htmlBody } = req.body;
 
@@ -146,7 +146,7 @@ subscriptionRouter.post(
 // API body: {String} email (the singular email to send to), {String} subject : The subject line of the email, {String} htmlBody : The HTML content of the email.
 subscriptionRouter.post(
     "/send-email/single",
-    RoleChecker([Role.Enum.ADMIN]),
+    RoleChecker([Role.Enum.SUPER_ADMIN]),
     async (req, res) => {
         const { email, subject, htmlBody } = req.body;
 

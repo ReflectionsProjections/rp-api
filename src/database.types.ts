@@ -345,6 +345,7 @@ export type Database = {
                     name: string;
                     points: number;
                     startTime: string;
+                    tags: string[];
                 };
                 Insert: {
                     attendanceCount?: number;
@@ -359,6 +360,7 @@ export type Database = {
                     name: string;
                     points: number;
                     startTime: string;
+                    tags?: string[];
                 };
                 Update: {
                     attendanceCount?: number;
@@ -373,6 +375,7 @@ export type Database = {
                     name?: string;
                     points?: number;
                     startTime?: string;
+                    tags?: string[];
                 };
                 Relationships: [];
             };
@@ -444,6 +447,29 @@ export type Database = {
                         foreignKeyName: "notifications_user_id_fkey";
                         columns: ["userId"];
                         isOneToOne: true;
+                        referencedRelation: "authInfo";
+                        referencedColumns: ["userId"];
+                    },
+                ];
+            };
+            redemptions: {
+                Row: {
+                    item: Database["public"]["Enums"]["tierType"];
+                    userId: string;
+                };
+                Insert: {
+                    item: Database["public"]["Enums"]["tierType"];
+                    userId: string;
+                };
+                Update: {
+                    item?: Database["public"]["Enums"]["tierType"];
+                    userId?: string;
+                };
+                Relationships: [
+                    {
+                        foreignKeyName: "redemptions_user_id_fkey";
+                        columns: ["userId"];
+                        isOneToOne: false;
                         referencedRelation: "authInfo";
                         referencedColumns: ["userId"];
                     },
@@ -523,6 +549,66 @@ export type Database = {
                     },
                 ];
             };
+            shiftAssignments: {
+                Row: {
+                    acknowledged: boolean;
+                    shiftId: string;
+                    staffEmail: string;
+                };
+                Insert: {
+                    acknowledged?: boolean;
+                    shiftId: string;
+                    staffEmail: string;
+                };
+                Update: {
+                    acknowledged?: boolean;
+                    shiftId?: string;
+                    staffEmail?: string;
+                };
+                Relationships: [
+                    {
+                        foreignKeyName: "shiftAssignments_shiftId_fkey";
+                        columns: ["shiftId"];
+                        isOneToOne: false;
+                        referencedRelation: "shifts";
+                        referencedColumns: ["shiftId"];
+                    },
+                    {
+                        foreignKeyName: "shiftAssignments_staffEmail_fkey";
+                        columns: ["staffEmail"];
+                        isOneToOne: false;
+                        referencedRelation: "staff";
+                        referencedColumns: ["email"];
+                    },
+                ];
+            };
+            shifts: {
+                Row: {
+                    endTime: string;
+                    location: string;
+                    name: string;
+                    role: Database["public"]["Enums"]["shiftRoleType"];
+                    shiftId: string;
+                    startTime: string;
+                };
+                Insert: {
+                    endTime: string;
+                    location: string;
+                    name: string;
+                    role: Database["public"]["Enums"]["shiftRoleType"];
+                    shiftId?: string;
+                    startTime: string;
+                };
+                Update: {
+                    endTime?: string;
+                    location?: string;
+                    name?: string;
+                    role?: Database["public"]["Enums"]["shiftRoleType"];
+                    shiftId?: string;
+                    startTime?: string;
+                };
+                Relationships: [];
+            };
             speakers: {
                 Row: {
                     bio: string;
@@ -574,66 +660,6 @@ export type Database = {
                 };
                 Relationships: [];
             };
-            shifts: {
-                Row: {
-                    shiftId: string;
-                    name: string;
-                    role: Database["public"]["Enums"]["shiftRoleType"];
-                    startTime: string;
-                    endTime: string;
-                    location: string;
-                };
-                Insert: {
-                    shiftId?: string;
-                    name: string;
-                    role: Database["public"]["Enums"]["shiftRoleType"];
-                    startTime: string;
-                    endTime: string;
-                    location: string;
-                };
-                Update: {
-                    shiftId?: string;
-                    name?: string;
-                    role?: Database["public"]["Enums"]["shiftRoleType"];
-                    startTime?: string;
-                    endTime?: string;
-                    location?: string;
-                };
-                Relationships: [];
-            };
-            shiftAssignments: {
-                Row: {
-                    shiftId: string;
-                    staffEmail: string;
-                    acknowledged: boolean;
-                };
-                Insert: {
-                    shiftId: string;
-                    staffEmail: string;
-                    acknowledged?: boolean;
-                };
-                Update: {
-                    shiftId?: string;
-                    staffEmail?: string;
-                    acknowledged?: boolean;
-                };
-                Relationships: [
-                    {
-                        foreignKeyName: "shiftAssignments_shiftId_fkey";
-                        columns: ["shiftId"];
-                        isOneToOne: false;
-                        referencedRelation: "shifts";
-                        referencedColumns: ["shiftId"];
-                    },
-                    {
-                        foreignKeyName: "shiftAssignments_staffEmail_fkey";
-                        columns: ["staffEmail"];
-                        isOneToOne: false;
-                        referencedRelation: "staff";
-                        referencedColumns: ["email"];
-                    },
-                ];
-            };
             subscriptions: {
                 Row: {
                     userId: string;
@@ -650,29 +676,6 @@ export type Database = {
                 Relationships: [
                     {
                         foreignKeyName: "subscriptions_user_id_fkey";
-                        columns: ["userId"];
-                        isOneToOne: false;
-                        referencedRelation: "authInfo";
-                        referencedColumns: ["userId"];
-                    },
-                ];
-            };
-            redemptions: {
-                Row: {
-                    userId: string;
-                    item: Database["public"]["Enums"]["tierType"];
-                };
-                Insert: {
-                    userId: string;
-                    item: Database["public"]["Enums"]["tierType"];
-                };
-                Update: {
-                    userId?: string;
-                    item?: Database["public"]["Enums"]["tierType"];
-                };
-                Relationships: [
-                    {
-                        foreignKeyName: "redemptions_user_id_fkey";
                         columns: ["userId"];
                         isOneToOne: false;
                         referencedRelation: "authInfo";
@@ -698,14 +701,6 @@ export type Database = {
             };
         };
         Enums: {
-            shiftRoleType:
-                | "CLEAN_UP"
-                | "DINNER"
-                | "CHECK_IN"
-                | "SPEAKER_BUDDY"
-                | "SPONSOR_BUDDY"
-                | "DEV_ON_CALL"
-                | "CHAIR_ON_CALL";
             committeeNames:
                 | "CONTENT"
                 | "CORPORATE"
@@ -728,7 +723,15 @@ export type Database = {
                 | "PINK"
                 | "PURPLE"
                 | "ORANGE";
-            roleType: "USER" | "STAFF" | "ADMIN" | "CORPORATE";
+            roleType: "USER" | "STAFF" | "ADMIN" | "CORPORATE" | "SUPER_ADMIN";
+            shiftRoleType:
+                | "CLEAN_UP"
+                | "DINNER"
+                | "CHECK_IN"
+                | "SPEAKER_BUDDY"
+                | "SPONSOR_BUDDY"
+                | "DEV_ON_CALL"
+                | "CHAIR_ON_CALL";
             staffAttendanceType: "PRESENT" | "EXCUSED" | "ABSENT";
             tierType: "TIER1" | "TIER2" | "TIER3" | "TIER4";
         };
@@ -881,6 +884,8 @@ export const Constants = {
                 "MEALS",
                 "CHECKIN",
             ],
+            iconColorType: ["BLUE", "RED", "GREEN", "PINK", "PURPLE", "ORANGE"],
+            roleType: ["USER", "STAFF", "ADMIN", "CORPORATE", "SUPER_ADMIN"],
             shiftRoleType: [
                 "CLEAN_UP",
                 "DINNER",
@@ -890,8 +895,6 @@ export const Constants = {
                 "DEV_ON_CALL",
                 "CHAIR_ON_CALL",
             ],
-            iconColorType: ["BLUE", "RED", "GREEN", "PINK", "PURPLE", "ORANGE"],
-            roleType: ["USER", "STAFF", "ADMIN", "CORPORATE"],
             staffAttendanceType: ["PRESENT", "EXCUSED", "ABSENT"],
             tierType: ["TIER1", "TIER2", "TIER3", "TIER4"],
         },

@@ -22,8 +22,6 @@ jest.mock("../../firebase", () => ({
     }),
 }));
 
-jest.setTimeout(100000);
-
 function makeTestAttendee(overrides = {}) {
     return {
         userId: TESTER.userId,
@@ -97,6 +95,10 @@ async function insertTestUser(overrides: InsertTestAttendeeOverrides = {}) {
     ]).throwOnError();
 }
 
+beforeEach(() => {
+    mockSend.mockReset();
+});
+
 describe("/notifications", () => {
     describe("POST /notifications/register", () => {
         it("should create a notification entry and subscribe to the allUsers topic", async () => {
@@ -141,8 +143,11 @@ describe("/notifications", () => {
     });
 
     describe("POST /notifications/topics/:topicName", () => {
-        it("should send a notification as an admin", async () => {
-            await post("/notifications/topics/event_123", Role.enum.ADMIN)
+        it("should send a notification as an super admin", async () => {
+            const res = await post(
+                "/notifications/topics/event_123",
+                Role.enum.SUPER_ADMIN
+            )
                 .send({ title: "Admin Test", body: "Admin Message" })
                 .expect(StatusCodes.OK);
 
@@ -154,6 +159,23 @@ describe("/notifications", () => {
                     body: "Admin Message",
                 },
             });
+
+            expect(res.body).toMatchObject({
+                status: "success",
+            });
+        });
+        it("fails if the user is not a super admin", async () => {
+            const res = await post(
+                "/notifications/topics/event_123",
+                Role.enum.ADMIN
+            )
+                .send({ title: "Admin Test", body: "Admin Message" })
+                .expect(StatusCodes.FORBIDDEN);
+
+            // Verify Firebase mock was not called
+            expect(mockSend).not.toHaveBeenCalled();
+
+            expect(res.body).toHaveProperty("error", "Forbidden");
         });
     });
 
