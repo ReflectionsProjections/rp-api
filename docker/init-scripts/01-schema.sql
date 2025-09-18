@@ -281,9 +281,9 @@ CREATE TABLE public."shiftAssignments" (
 );
 
 CREATE TABLE public."subscriptions" (
+    "userId" character varying NOT NULL,
     "mailingList" text NOT NULL,
-    "subscriptions" text[] DEFAULT '{}'::text[] NOT NULL,
-    CONSTRAINT "subscriptions_pkey" PRIMARY KEY ("mailingList")
+    CONSTRAINT "subscriptions_pkey" PRIMARY KEY ("userId", "mailingList")
 );
 
 -- Add foreign key constraints
@@ -310,6 +310,9 @@ ALTER TABLE ONLY public."leaderboardSubmissions"
 
 ALTER TABLE ONLY public."redemptions"
     ADD CONSTRAINT "redemptions_user_id_fkey" FOREIGN KEY ("userId") REFERENCES public."authInfo"("userId") ON DELETE CASCADE;
+
+ALTER TABLE ONLY public."subscriptions"
+    ADD CONSTRAINT "subscriptions_user_id_fkey" FOREIGN KEY ("userId") REFERENCES public."authInfo"("userId") ON DELETE CASCADE;
 
 -- PostgreSQL function for atomic tier promotions
 CREATE OR REPLACE FUNCTION public.promote_users_batch(user_ids text[])

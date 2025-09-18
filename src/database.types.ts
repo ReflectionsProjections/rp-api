@@ -636,18 +636,26 @@ export type Database = {
             };
             subscriptions: {
                 Row: {
+                    userId: string;
                     mailingList: string;
-                    subscriptions: string[];
                 };
                 Insert: {
+                    userId: string;
                     mailingList: string;
-                    subscriptions?: string[];
                 };
                 Update: {
+                    userId?: string;
                     mailingList?: string;
-                    subscriptions?: string[];
                 };
-                Relationships: [];
+                Relationships: [
+                    {
+                        foreignKeyName: "subscriptions_user_id_fkey";
+                        columns: ["userId"];
+                        isOneToOne: false;
+                        referencedRelation: "authInfo";
+                        referencedColumns: ["userId"];
+                    },
+                ];
             };
             redemptions: {
                 Row: {

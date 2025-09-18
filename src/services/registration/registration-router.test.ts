@@ -297,6 +297,24 @@ describe("POST /registration/submit", () => {
         );
     });
 
+    it("should create a subscription to the attendees mailing list when registering", async () => {
+        await post("/registration/submit", Role.enum.USER)
+            .send(VALID_REGISTRATION)
+            .expect(StatusCodes.OK);
+
+        const { data: subscription } = await SupabaseDB.SUBSCRIPTIONS.select(
+            "*"
+        )
+            .eq("userId", TESTER.userId)
+            .eq("mailingList", "attendees")
+            .single()
+            .throwOnError();
+
+        expect(subscription).toBeDefined();
+        expect(subscription.userId).toBe(TESTER.userId);
+        expect(subscription.mailingList).toBe("attendees");
+    });
+
     it("updates existing registration", async () => {
         await SupabaseDB.REGISTRATIONS.insert({
             ...VALID_REGISTRATION,

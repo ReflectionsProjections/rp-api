@@ -355,6 +355,17 @@ describe("POST /checkin/scan/staff", () => {
             points: TEST_ATTENDEE_1.points + REGULAR_EVENT_FOR_CHECKIN.points,
             [`hasPriority${currentDay}`]: false, // No priority on first check-in
         });
+
+        const { data: subscription } = await SupabaseDB.SUBSCRIPTIONS.select(
+            "*"
+        )
+            .eq("userId", TEST_ATTENDEE_1.userId)
+            .eq("mailingList", payload.eventId)
+            .single()
+            .throwOnError();
+        expect(subscription).not.toBeNull();
+        expect(subscription!.userId).toBe(TEST_ATTENDEE_1.userId);
+        expect(subscription!.mailingList).toBe(payload.eventId);
     }, 100000);
 
     it("should successfully check-in user to a CHECKIN type event and update records", async () => {
@@ -590,6 +601,17 @@ describe("POST /checkin/event", () => {
             points: TEST_ATTENDEE_1.points + REGULAR_EVENT_FOR_CHECKIN.points,
             [`hasPriority${currentDay}`]: false, // No priority on first check-in
         });
+
+        const { data: subscription } = await SupabaseDB.SUBSCRIPTIONS.select(
+            "*"
+        )
+            .eq("userId", TEST_ATTENDEE_1.userId)
+            .eq("mailingList", payload.eventId)
+            .single()
+            .throwOnError();
+        expect(subscription).not.toBeNull();
+        expect(subscription.userId!).toBe(TEST_ATTENDEE_1.userId);
+        expect(subscription.mailingList!).toBe(payload.eventId);
     });
 
     it("should successfully check-in to a check in event and update records", async () => {
