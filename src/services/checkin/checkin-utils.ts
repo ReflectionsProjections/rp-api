@@ -164,7 +164,7 @@ export async function checkInUserToEvent(eventId: string, userId: string) {
                     );
                 }) || [];
 
-            // Only give priority if they have attended 2 more than 1 qualifying event today
+            // Only give priority if they have attended 2 or more qualifying events today
             if (filteredEvents.length >= 2) {
                 await updateAttendeePriority(userId);
             }
