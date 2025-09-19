@@ -65,6 +65,10 @@ export async function updateDatabaseWithAuthPayload(
     ) {
         await SupabaseDB.AUTH_ROLES.upsert({
             userId,
+            role: Role.Enum.SUPER_ADMIN,
+        });
+        await SupabaseDB.AUTH_ROLES.upsert({
+            userId,
             role: Role.Enum.ADMIN,
         });
 
