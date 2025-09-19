@@ -53,6 +53,7 @@
         "typescript": "^5.4.5",
         "uuid": "^11.1.0",
         "webidl-conversions": "^7.0.0",
+        "ws": "^8.18.3",
         "zod": "^3.22.4"
     },
     "devDependencies": {
