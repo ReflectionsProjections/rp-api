@@ -17,7 +17,7 @@ export const TESTER = {
 function app() {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const appExports = require("../src/app");
-    return appExports.default;
+    return appExports.app;
 }
 
 function setRole(request: request.Test, role?: RoleType) {

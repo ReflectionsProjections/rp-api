@@ -14,6 +14,9 @@ import errorHandler from "./middleware/error-handler";
 import attendeeRouter from "./services/attendee/attendee-router";
 import staffRouter from "./services/staff/staff-router";
 import checkinRouter from "./services/checkin/checkin-router";
+import dashboardRouter, {
+    handleWs as handleWsDashboard,
+} from "./services/dashboard/dashboard-router";
 import authRouter from "./services/auth/auth-router";
 import eventsRouter from "./services/events/events-router";
 import notificationsRouter from "./services/notifications/notifications-router";
@@ -29,8 +32,13 @@ import leaderboardRouter from "./services/leaderboard/leaderboard-router";
 
 import cors from "cors";
 import { JwtPayloadValidator } from "./services/auth/auth-models";
+import { createServer } from "http";
+import { WebSocketServer } from "ws";
 
 const app = express();
+const server = createServer(app);
+const wss = new WebSocketServer({ server });
+
 app.enable("trust proxy");
 
 // to prevent server-side caching/returning status code 200
@@ -84,6 +92,7 @@ app.use("/attendee", attendeeRouter);
 app.use("/staff", staffRouter);
 app.use("/auth", authRouter);
 app.use("/checkin", checkinRouter);
+app.use("/dashboard", dashboardRouter);
 app.use("/events", eventsRouter);
 app.use("/leaderboard", leaderboardRouter);
 app.use("/notifications", notificationsRouter);
@@ -115,10 +124,30 @@ app.use((req, res) =>
 
 app.use(errorHandler);
 
+// Websocket handling
+wss.on("connection", (ws, request) => {
+    try {
+        if (request.url === "/dashboard") {
+            handleWsDashboard(ws);
+        } else {
+            ws.send("Unknown url");
+            ws.close(1008); // 1008 = policy violation
+        }
+    } catch (err) {
+        console.error("WebSocket connection handle issue:", err);
+        ws.close(1008); // 1008 = policy violation
+    }
+});
+
+wss.on("error", (err) => {
+    console.error("WebSocket server issue:", err);
+});
+
+// Start the server
 if (!isTest()) {
-    app.listen(Config.DEFAULT_APP_PORT, async () => {
+    server.listen(Config.DEFAULT_APP_PORT, async () => {
         process.send?.("ready");
         console.log("Server is listening on port 3000...");
     });
 }
-export default app;
+export { app, server };

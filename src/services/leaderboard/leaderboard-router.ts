@@ -94,11 +94,11 @@ leaderboardRouter.get(
  * POST /leaderboard/submit
  * Submit and lock in daily leaderboard results, updating tier eligibility
  * Body: { day: string, n: number }
- * Authorization: ADMIN only (higher privilege than preview)
+ * Authorization: SUPER ADMIN only (higher privilege than preview)
  */
 leaderboardRouter.post(
     "/submit",
-    RoleChecker([Role.Enum.ADMIN]),
+    RoleChecker([Role.Enum.SUPER_ADMIN]),
     async (req, res) => {
         const payload = res.locals.payload;
         const submittedBy = payload.userId;
