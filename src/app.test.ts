@@ -4,7 +4,13 @@ import { get } from "../testing/testingTools";
 
 describe("general app test", () => {
     it("app should be running", async () => {
-        const response = await get("/status", undefined).expect(StatusCodes.OK);
+        let response = await get("/", undefined).expect(StatusCodes.OK);
+        expect(response.body).toMatchObject({
+            ok: true,
+            message: "API is alive!",
+        });
+
+        response = await get("/status", undefined).expect(StatusCodes.OK);
         expect(response.body).toMatchObject({
             ok: true,
             message: "API is alive!",
