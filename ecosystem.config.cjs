@@ -6,7 +6,7 @@ module.exports = {
             script: "build/src/app.js",
             node_args: "--enable-source-maps",
             wait_ready: true,
-            instances: 2,
+            instances: 1,
             listen_timeout: 10 * 1000,
             out_file: "/home/ubuntu/.pm2/logs/api_out.log",
             err_file: "/home/ubuntu/.pm2/logs/api_err.log",
