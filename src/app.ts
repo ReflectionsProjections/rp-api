@@ -1,4 +1,4 @@
-import express from "express";
+import express, { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import { Config, EnvironmentEnum } from "./config";
 import { isTest } from "./utilities";
@@ -96,16 +96,18 @@ app.use("/speakers", speakersRouter);
 app.use("/meetings", meetingsRouter);
 app.use("/shifts", shiftsRouter);
 
-app.get("/status", (req, res) => {
+const status = (req: Request, res: Response) => {
     return res.status(StatusCodes.OK).send({
         ok: true,
         message: "API is alive!",
         timestamp: new Date().toISOString(),
         environment: Config.ENV,
     });
-});
+};
+app.get("/status", status);
+app.get("/", status);
 
-app.use("/", (req, res) =>
+app.use((req, res) =>
     res.status(StatusCodes.NOT_FOUND).send({
         error: "EndpointNotFound",
     })
