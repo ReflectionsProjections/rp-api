@@ -3,7 +3,7 @@ version: "3.8"
 services:
   api:
     build: .
-    container_name: rp-api
+    container_name: ${RP_API_CONTAINER_NAME:-rp-api}
     ports:
       - "3000:3000" # API
     volumes:

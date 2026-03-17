@@ -1,10 +1,9 @@
-version: "3.8"
-
 services:
   db:
     extends:
       file: docker-compose.db.yml
       service: db
+    container_name: ${RP_DB_CONTAINER_NAME:-rp-test-db}
     networks:
       - rp-network
 
@@ -12,6 +11,7 @@ services:
     extends:
       file: docker-compose.db.yml
       service: kong
+    container_name: ${RP_KONG_CONTAINER_NAME:-rp-test-kong}
     networks:
       - rp-network
 
@@ -19,16 +19,18 @@ services:
     extends:
       file: docker-compose.db.yml
       service: rest
+    container_name: ${RP_REST_CONTAINER_NAME:-rp-test-rest}
     networks:
       - rp-network
 
   test:
     build: .
-    container_name: rp-test
+    container_name: ${RP_TEST_CONTAINER_NAME:-rp-test}
     tty: true
     stdin_open: true
     volumes:
       - .:/app
+      - /app/node_modules
     environment:
       - NODE_ENV=TESTING
       - POSTGRES_HOST=db

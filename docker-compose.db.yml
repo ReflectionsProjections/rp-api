@@ -1,6 +1,6 @@
 services:
   db:
-    container_name: rp-db
+    container_name: ${RP_DB_CONTAINER_NAME:-rp-db}
     image: supabase/postgres:15.8.1.060
     restart: unless-stopped
     volumes:
@@ -29,7 +29,7 @@ services:
       ]
 
   meta:
-    container_name: rp-meta
+    container_name: ${RP_META_CONTAINER_NAME:-rp-meta}
     image: supabase/postgres-meta:v0.89.0
     restart: unless-stopped
     depends_on:
@@ -44,7 +44,7 @@ services:
       PG_META_DB_PASSWORD: ${POSTGRES_PASSWORD}
 
   studio:
-    container_name: rp-studio
+    container_name: ${RP_STUDIO_CONTAINER_NAME:-rp-studio}
     image: supabase/studio:2025.05.19-sha-3487831
     restart: unless-stopped
     ports:
@@ -75,7 +75,7 @@ services:
       AUTH_JWT_SECRET: ${JWT_SECRET}
 
   rest:
-    container_name: rp-rest
+    container_name: ${RP_REST_CONTAINER_NAME:-rp-rest}
     image: postgrest/postgrest:v12.2.12
     restart: unless-stopped
     depends_on:
@@ -92,7 +92,7 @@ services:
     command: ["postgrest"]
 
   kong:
-    container_name: rp-kong
+    container_name: ${RP_KONG_CONTAINER_NAME:-rp-kong}
     image: kong:2.8.1
     restart: unless-stopped
     ports:

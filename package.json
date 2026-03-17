@@ -14,7 +14,7 @@
         "verify": "yarn build && yarn lint:check && yarn format:check",
         "test": "jest --config=testing/jest.config.ts",
         "test:watch": "jest --config=testing/jest.config.ts --watch",
-        "test:docker": "docker compose -f docker-compose.test.yml run --rm test yarn test",
+        "test:docker": "sh -c 'trap \"docker compose -p rp-api-test -f docker-compose.test.yml down -v --remove-orphans\" EXIT; docker compose -p rp-api-test -f docker-compose.test.yml run --rm test yarn test'",
         "logs": "docker compose logs -f api",
         "shell": "docker compose exec api sh",
         "restart": "docker compose restart api"
