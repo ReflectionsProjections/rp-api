@@ -1,4 +1,4 @@
-import express, { Request, Response } from "express";
+import express, { Request, Response, RequestHandler } from "express";
 import { StatusCodes } from "http-status-codes";
 import { Config, EnvironmentEnum } from "./config";
 import { isTest } from "./utilities";
@@ -32,10 +32,56 @@ import leaderboardRouter from "./services/leaderboard/leaderboard-router";
 
 import cors from "cors";
 import { JwtPayloadValidator } from "./services/auth/auth-models";
+import swaggerJsdoc from "swagger-jsdoc";
+import swaggerUi from "swagger-ui-express";
 import { createServer } from "http";
 import { WebSocketServer } from "ws";
 
 const app = express();
+
+const swaggerOptions: swaggerJsdoc.Options = {
+    definition: {
+        openapi: "3.0.0",
+        info: {
+            title: "R|P API",
+            version: "1.0.0",
+            description: "Documentation for the Reflections|Projections API",
+        },
+        // This configures the "Authorize" button for your JWTs
+        components: {
+            securitySchemes: {
+                bearerAuth: {
+                    type: "http",
+                    scheme: "bearer",
+                    bearerFormat: "JWT",
+                },
+            },
+        },
+        security: [
+            {
+                bearerAuth: [],
+            },
+        ],
+    },
+    // Tells Swagger to look for JSDoc comments in all TypeScript files inside your services folder
+    apis: ["./services/*/.ts"], // **/*-router.ts ?
+};
+
+const swaggerSpec = swaggerJsdoc(swaggerOptions);
+app.use(
+    "/docs",
+    swaggerUi.serve as unknown as RequestHandler,
+    swaggerUi.setup(swaggerSpec) as unknown as RequestHandler
+);
+
+// if (Config.ENV !== EnvironmentEnum.PRODUCTION) {
+//     app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+//     app.get("/docs.json", (req, res) => {
+//         res.setHeader("Content-Type", "application/json");
+//         res.send(swaggerSpec);
+//     });
+// }
+
 const server = createServer(app);
 const wss = new WebSocketServer({ server });
 
