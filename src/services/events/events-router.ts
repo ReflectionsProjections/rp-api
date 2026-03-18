@@ -41,6 +41,27 @@ eventsRouter.get("/currentOrNext", RoleChecker([], true), async (req, res) => {
     }
 });
 
+//  *  security:
+//  *    - bearerAuth: []
+
+/**
+ * @swagger
+ * /events:
+ *   get:
+ *     summary: Get all events
+ *     tags: [Events]
+ *     responses:
+ *       200:
+ *         description: A list of all events
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/externalEventView'
+ *       401:
+ *         description: Unauthorized
+ */
 eventsRouter.get("/", RoleChecker([], true), async (req, res) => {
     const payload = res.locals.payload;
 

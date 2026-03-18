@@ -33,12 +33,20 @@ import leaderboardRouter from "./services/leaderboard/leaderboard-router";
 import cors from "cors";
 import { JwtPayloadValidator } from "./services/auth/auth-models";
 import swaggerJsdoc from "swagger-jsdoc";
+import { registry } from "./middleware/openapi-registry";
+import { OpenApiGeneratorV3 } from "@asteasolutions/zod-to-openapi";
 import swaggerUi from "swagger-ui-express";
 import { createServer } from "http";
 import { WebSocketServer } from "ws";
+import path from "path";
 
 const app = express();
 
+// generate openapi schemas from zod
+const generator = new OpenApiGeneratorV3(registry.definitions);
+const openApiComponents = generator.generateComponents();
+
+// set up swagger-ui docs
 const swaggerOptions: swaggerJsdoc.Options = {
     definition: {
         openapi: "3.0.0",
@@ -47,8 +55,9 @@ const swaggerOptions: swaggerJsdoc.Options = {
             version: "1.0.0",
             description: "Documentation for the Reflections|Projections API",
         },
-        // This configures the "Authorize" button for your JWTs
+        // configures the "Authorize" button for JWTs
         components: {
+            ...openApiComponents.components,
             securitySchemes: {
                 bearerAuth: {
                     type: "http",
@@ -57,6 +66,7 @@ const swaggerOptions: swaggerJsdoc.Options = {
                 },
             },
         },
+        // sets default needed authorization for endpoints (in docs)
         security: [
             {
                 bearerAuth: [],
@@ -64,16 +74,20 @@ const swaggerOptions: swaggerJsdoc.Options = {
         ],
     },
     // Tells Swagger to look for JSDoc comments in all TypeScript files inside your services folder
-    apis: ["./services/*/.ts"], // **/*-router.ts ?
+    apis: [path.join(__dirname, "./services/**/*-router.ts")],
 };
 
+// console.log("Swagger scanned APIs:", swaggerOptions.apis);
+
 const swaggerSpec = swaggerJsdoc(swaggerOptions);
+
 app.use(
     "/docs",
     swaggerUi.serve as unknown as RequestHandler,
     swaggerUi.setup(swaggerSpec) as unknown as RequestHandler
 );
 
+// do we only want to serve docs in development (in that case wrap the whole thing to avoid generating schemas etc)
 // if (Config.ENV !== EnvironmentEnum.PRODUCTION) {
 //     app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 //     app.get("/docs.json", (req, res) => {
