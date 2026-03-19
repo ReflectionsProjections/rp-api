@@ -59,10 +59,22 @@ const swaggerOptions: swaggerJsdoc.Options = {
         components: {
             ...openApiComponents.components,
             securitySchemes: {
-                bearerAuth: {
+                USER: {
                     type: "http",
                     scheme: "bearer",
                     bearerFormat: "JWT",
+                },
+                STAFF: {
+                    type: "http",
+                    scheme: "bearer",
+                    bearerFormat: "JWT",
+                    description: "Requires the 'staff' role in the JWT payload",
+                },
+                ADMIN: {
+                    type: "http",
+                    scheme: "bearer",
+                    bearerFormat: "JWT",
+                    description: "Requires the 'admin' role in the JWT payload",
                 },
             },
         },

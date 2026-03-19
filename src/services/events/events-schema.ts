@@ -15,30 +15,34 @@ export const EventType = z.enum([
 export type InternalEvent = z.infer<typeof internalEventView>;
 export type EventInputPayload = z.infer<typeof eventInfoValidator>;
 
-export const externalEventView = z
-    .object({
-        eventId: z.coerce.string().default(() => uuidv4()),
-        name: z.string(),
-        startTime: z.coerce.date(),
-        endTime: z.coerce.date(),
-        points: z.number().min(0),
-        description: z.string(),
-        isVirtual: z.boolean(),
-        imageUrl: z.string().nullable(),
-        location: z.string().nullable(),
-        eventType: EventType,
-        tags: z.array(z.string()).default([]),
-    })
-    .openapi("externalEventView");
+export const externalEventView = registry.register(
+    "ExternalEventView",
+    z
+        .object({
+            eventId: z.coerce.string().default(() => uuidv4()),
+            name: z.string(),
+            startTime: z.coerce.date(),
+            endTime: z.coerce.date(),
+            points: z.number().min(0),
+            description: z.string(),
+            isVirtual: z.boolean(),
+            imageUrl: z.string().nullable(),
+            location: z.string().nullable(),
+            eventType: EventType,
+            tags: z.array(z.string()).default([]),
+        })
+        .openapi("ExternalEventView")
+);
 
-registry.register("externalEventView", externalEventView);
-
-export const internalEventView = externalEventView
-    .extend({
-        attendanceCount: z.number(),
-        isVisible: z.boolean(),
-    })
-    .openapi("internalEventView");
+export const internalEventView = registry.register(
+    "InternalEventView",
+    externalEventView
+        .extend({
+            attendanceCount: z.number(),
+            isVisible: z.boolean(),
+        })
+        .openapi("InternalEventView")
+);
 
 // ApiResponseSchema objects used to create expected internal and external event objects
 const eventTimeExtension = {
@@ -58,9 +62,13 @@ export type InternalEventApiResponse = z.infer<
     typeof internalEventApiResponseSchema
 >;
 
-export const eventInfoValidator = internalEventView
-    .omit({ eventId: true })
-    .strict();
+export const eventInfoValidator = registry.register(
+    "EventInfoValidator",
+    internalEventView
+        .omit({ eventId: true })
+        .strict()
+        .openapi("EventInfoValidator")
+);
 
 export const EventSchema = new Schema({
     eventId: {

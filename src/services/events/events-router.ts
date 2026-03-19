@@ -14,6 +14,33 @@ import { isAdmin, isStaff } from "../auth/auth-utils";
 
 const eventsRouter = Router();
 
+/**
+ * @swagger
+ * /events/currentOrNext/:
+ *   get:
+ *     summary: Get next event
+ *     description: |
+ *       The events checked are filtered based on what the current user can access.
+ *       If the user is not Staff or Admin, non-visible events are skipped and
+ *       it will return an externalEventView instead of an internalEventView.
+ *
+ *       **Required roles: none**
+ *
+ *       **Optional roles: STAFF | ADMIN**
+ *     tags: [Events]
+ *     responses:
+ *       200:
+ *         description: The next event
+ *         content:
+ *           application/json:
+ *             schema:
+ *               oneOf:
+ *                 - $ref: '#/components/schemas/InternalEventView'
+ *                 - $ref: '#/components/schemas/ExternalEventView'
+ *       204:
+ *         description: No upcoming events exist
+ *     security: []
+ */
 eventsRouter.get("/currentOrNext", RoleChecker([], true), async (req, res) => {
     const currentTime = new Date();
     const payload = res.locals.payload;
@@ -41,14 +68,19 @@ eventsRouter.get("/currentOrNext", RoleChecker([], true), async (req, res) => {
     }
 });
 
-//  *  security:
-//  *    - bearerAuth: []
-
 /**
  * @swagger
- * /events:
+ * /events/:
  *   get:
  *     summary: Get all events
+ *     description: |
+ *       The events returned are filtered based on what the current user can access.
+ *       If the user is not Staff or Admin, only visible events will be shown and
+ *       it will return externalEventViews instead of internalEventViews.
+ *
+ *       **Required roles: none**
+ *
+ *       **Optional roles: STAFF | ADMIN**
  *     tags: [Events]
  *     responses:
  *       200:
@@ -58,9 +90,10 @@ eventsRouter.get("/currentOrNext", RoleChecker([], true), async (req, res) => {
  *             schema:
  *               type: array
  *               items:
- *                 $ref: '#/components/schemas/externalEventView'
- *       401:
- *         description: Unauthorized
+ *                 oneOf:
+ *                   - $ref: '#/components/schemas/InternalEventView'
+ *                   - $ref: '#/components/schemas/ExternalEventView'
+ *     security: []
  */
 eventsRouter.get("/", RoleChecker([], true), async (req, res) => {
     const payload = res.locals.payload;
@@ -85,6 +118,44 @@ eventsRouter.get("/", RoleChecker([], true), async (req, res) => {
     return res.status(StatusCodes.OK).json(filtered_events);
 });
 
+/**
+ * @swagger
+ * /events/{EVENTID}:
+ *   get:
+ *     summary: Get event by id
+ *     description: |
+ *       If the user is not Staff or Admin, only visible events can be accessed and
+ *       it will return an externalEventView instead of an internalEventView.
+ *
+ *       **Required roles: none**
+ *
+ *       **Optional roles: STAFF | ADMIN**
+ *     tags: [Events]
+ *     parameters:
+ *       - name: EVENTID
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: The event requested
+ *         content:
+ *           application/json:
+ *             schema:
+ *               oneOf:
+ *                 - $ref: '#/components/schemas/InternalEventView'
+ *                 - $ref: '#/components/schemas/ExternalEventView'
+ *       404:
+ *         description: Couldn't find the requested event
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               error: "EventNotFound"
+ *     security: []
+ */
 eventsRouter.get("/:EVENTID", RoleChecker([], true), async (req, res) => {
     const eventId = req.params.EVENTID;
     const payload = res.locals.payload;
@@ -116,6 +187,33 @@ eventsRouter.get("/:EVENTID", RoleChecker([], true), async (req, res) => {
     return res.status(StatusCodes.OK).json(validatedData);
 });
 
+/**
+ * @swagger
+ * /events/:
+ *   post:
+ *     summary: Create an event
+ *     description: |
+ *       Creates a new event and adds it to the database
+ *
+ *       **Required roles: STAFF | ADMIN**
+ *     tags: [Events]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/EventInfoValidator'
+ *     responses:
+ *       201:
+ *         description: The new event (added to the database)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/InternalEventView'
+ *     security:
+ *       - STAFF: []
+ *       - ADMIN: []
+ */
 eventsRouter.post(
     "/",
     RoleChecker([Role.Enum.STAFF, Role.Enum.ADMIN]),
@@ -148,6 +246,47 @@ eventsRouter.post(
     }
 );
 
+/**
+ * @swagger
+ * /events/{EVENTID}:
+ *   put:
+ *     summary: Update an event
+ *     description: |
+ *       Updates the data for a preexisting event
+ *
+ *       **Required roles: STAFF | ADMIN**
+ *     tags: [Events]
+ *     parameters:
+ *       - name: EVENTID
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/EventInfoValidator'
+ *     responses:
+ *       200:
+ *         description: The updated event data
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/InternalEventView'
+ *       404:
+ *         description: Couldn't find the requested event
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               error: "EventNotFound"
+ *     security:
+ *       - STAFF: []
+ *       - ADMIN: []
+ */
 eventsRouter.put(
     "/:EVENTID",
     RoleChecker([Role.Enum.STAFF, Role.Enum.ADMIN]),
@@ -189,6 +328,36 @@ eventsRouter.put(
     }
 );
 
+/**
+ * @swagger
+ * /events/{EVENTID}:
+ *   delete:
+ *     summary: Delete an event
+ *     description: |
+ *       Deletes an event entry from the database
+ *
+ *       **Required roles: ADMIN**
+ *     tags: [Events]
+ *     parameters:
+ *       - name: EVENTID
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       204:
+ *         description: The event was successfully deleted
+ *       404:
+ *         description: Couldn't find the requested event
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               error: "EventNotFound"
+ *     security:
+ *       - ADMIN: []
+ */
 eventsRouter.delete(
     "/:EVENTID",
     RoleChecker([Role.Enum.ADMIN]),
