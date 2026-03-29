@@ -153,7 +153,7 @@ eventsRouter.get("/", RoleChecker([], true), async (req, res) => {
  *             schema:
  *               $ref: '#/components/schemas/Error'
  *             example:
- *               error: "EventNotFound"
+ *               error: "DoesNotExist"
  *     security: []
  */
 eventsRouter.get("/:EVENTID", RoleChecker([], true), async (req, res) => {
@@ -211,8 +211,7 @@ eventsRouter.get("/:EVENTID", RoleChecker([], true), async (req, res) => {
  *             schema:
  *               $ref: '#/components/schemas/InternalEventView'
  *     security:
- *       - STAFF: []
- *       - ADMIN: []
+ *       - bearerAuth: []
  */
 eventsRouter.post(
     "/",
@@ -282,10 +281,9 @@ eventsRouter.post(
  *             schema:
  *               $ref: '#/components/schemas/Error'
  *             example:
- *               error: "EventNotFound"
+ *               error: "DoesNotExist"
  *     security:
- *       - STAFF: []
- *       - ADMIN: []
+ *       - bearerAuth: []
  */
 eventsRouter.put(
     "/:EVENTID",
@@ -354,9 +352,9 @@ eventsRouter.put(
  *             schema:
  *               $ref: '#/components/schemas/Error'
  *             example:
- *               error: "EventNotFound"
+ *               error: "DoesNotExist"
  *     security:
- *       - ADMIN: []
+ *       - bearerAuth: []
  */
 eventsRouter.delete(
     "/:EVENTID",

@@ -21,8 +21,8 @@ export const externalEventView = registry.register(
         .object({
             eventId: z.coerce.string().default(() => uuidv4()),
             name: z.string(),
-            startTime: z.coerce.date(),
-            endTime: z.coerce.date(),
+            startTime: z.coerce.date().openapi({ format: "date-time" }),
+            endTime: z.coerce.date().openapi({ format: "date-time" }),
             points: z.number().min(0),
             description: z.string(),
             isVirtual: z.boolean(),

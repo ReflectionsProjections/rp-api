@@ -11,6 +11,49 @@ import { validateQrHash, checkInUserToEvent } from "./checkin-utils";
 
 const checkinRouter = Router();
 
+/**
+ * @swagger
+ * /checkin/scan/staff:
+ *   post:
+ *     summary: Check in an attendee via QR code
+ *     description: |
+ *       Validates a time-limited QR code and checks the attendee into the
+ *       specified event. Rejects expired codes and duplicate check-ins.
+ *
+ *       **Required roles: ADMIN | STAFF**
+ *     tags: [Checkin]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/ScanValidator'
+ *     responses:
+ *       200:
+ *         description: The checked-in user's ID
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/CheckinUserIdResponse'
+ *       401:
+ *         description: QR code has expired
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *                 example:
+ *                   error: "QR code has expired"
+ *       403:
+ *         description: Attendee already checked in to this event
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *                 example:
+ *                   error: "IsDuplicate"
+ *     security:
+ *       - bearerAuth: []
+ */
 checkinRouter.post(
     "/scan/staff",
     RoleChecker([Role.Enum.ADMIN, Role.Enum.STAFF]),
@@ -41,6 +84,41 @@ checkinRouter.post(
     }
 );
 
+/**
+ * @swagger
+ * /checkin/event:
+ *   post:
+ *     summary: Manually check in an attendee by user ID
+ *     description: |
+ *       Checks an attendee into an event using their user ID directly,
+ *       without requiring a QR code. Rejects duplicate check-ins.
+ *
+ *       **Required roles: ADMIN | STAFF**
+ *     tags: [Checkin]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/EventValidator'
+ *     responses:
+ *       200:
+ *         description: The checked-in user's ID
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/CheckinUserIdResponse'
+ *       403:
+ *         description: Attendee already checked in to this event
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *                 example:
+ *                   error: "IsDuplicate"
+ *     security:
+ *       - bearerAuth: []
+ */
 checkinRouter.post(
     "/event",
     RoleChecker([Role.Enum.ADMIN, Role.Enum.STAFF]),
@@ -61,6 +139,41 @@ checkinRouter.post(
     }
 );
 
+/**
+ * @swagger
+ * /checkin/scan/merch:
+ *   post:
+ *     summary: Validate a QR code for merchandise pickup
+ *     description: |
+ *       Validates a time-limited QR code and returns the attendee's user ID
+ *       for use in merchandise redemption flows.
+ *
+ *       **Required roles: ADMIN | STAFF**
+ *     tags: [Checkin]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/MerchScanValidator'
+ *     responses:
+ *       200:
+ *         description: The attendee's user ID
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/CheckinUserIdResponse'
+ *       401:
+ *         description: QR code has expired
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *                 example:
+ *                   error: "QR code has expired"
+ *     security:
+ *       - bearerAuth: []
+ */
 checkinRouter.post(
     "/scan/merch",
     RoleChecker([Role.Enum.ADMIN, Role.Enum.STAFF]),

@@ -5,9 +5,31 @@ import RoleChecker from "../../middleware/role-checker";
 import { Role } from "../auth/auth-models";
 import { getCurrentDay } from "../checkin/checkin-utils";
 import { z } from "zod";
+import "./stats-schema"; // registers OpenAPI schemas
 
 const statsRouter = Router();
 
+/**
+ * @swagger
+ * /stats/check-in:
+ *   get:
+ *     summary: Get unique check-in count
+ *     description: |
+ *       Returns the number of unique attendees who have checked in to any
+ *       CHECKIN-type event.
+ *
+ *       **Required roles: STAFF**
+ *     tags: [Stats]
+ *     responses:
+ *       200:
+ *         description: Number of unique check-ins
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/StatsCountResponse'
+ *     security:
+ *       - bearerAuth: []
+ */
 // Get the number of people checked in (staff only)
 statsRouter.get(
     "/check-in",
@@ -44,6 +66,42 @@ statsRouter.get(
     }
 );
 
+/**
+ * @swagger
+ * /stats/merch-item/{PRICE}:
+ *   get:
+ *     summary: Get count of attendees eligible for a merch item
+ *     description: |
+ *       Returns the number of attendees who have accumulated at least PRICE points
+ *       and are therefore eligible to redeem the corresponding merch item.
+ *
+ *       **Required roles: STAFF**
+ *     tags: [Stats]
+ *     parameters:
+ *       - name: PRICE
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           minimum: 0
+ *     responses:
+ *       200:
+ *         description: Number of eligible attendees
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/StatsCountResponse'
+ *       400:
+ *         description: PRICE is negative
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *                 example:
+ *                   error: "PRICE must be non-negative"
+ *     security:
+ *       - bearerAuth: []
+ */
 // Get the number of people eligible for merch item (staff only)
 statsRouter.get(
     "/merch-item/:PRICE",
@@ -76,6 +134,27 @@ statsRouter.get(
     }
 );
 
+/**
+ * @swagger
+ * /stats/priority-attendee:
+ *   get:
+ *     summary: Get count of priority attendees for today
+ *     description: |
+ *       Returns the number of attendees who have priority access on the
+ *       current day of the week.
+ *
+ *       **Required roles: STAFF**
+ *     tags: [Stats]
+ *     responses:
+ *       200:
+ *         description: Number of priority attendees for today
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/StatsCountResponse'
+ *     security:
+ *       - bearerAuth: []
+ */
 // Get the number of priority attendees (staff only)
 statsRouter.get(
     "/priority-attendee",
@@ -106,6 +185,42 @@ statsRouter.get(
     }
 );
 
+/**
+ * @swagger
+ * /stats/attendance/{N}:
+ *   get:
+ *     summary: Get attendance counts for the past N events
+ *     description: |
+ *       Returns the `attendanceCount` for the N most recently ended events,
+ *       ordered newest-first.
+ *
+ *       **Required roles: STAFF**
+ *     tags: [Stats]
+ *     parameters:
+ *       - name: N
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *     responses:
+ *       200:
+ *         description: Attendance counts for the past N events
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/StatsAttendanceCountsResponse'
+ *       400:
+ *         description: N is not a positive integer
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *                 example:
+ *                   error: "N must be greater than 0"
+ *     security:
+ *       - bearerAuth: []
+ */
 // Get the attendance of the past n events (staff only)
 statsRouter.get(
     "/attendance/:N",
@@ -144,6 +259,27 @@ statsRouter.get(
     }
 );
 
+/**
+ * @swagger
+ * /stats/dietary-restrictions:
+ *   get:
+ *     summary: Get dietary restriction breakdown
+ *     description: |
+ *       Returns counts of registrations grouped by whether they have allergies,
+ *       dietary restrictions, both, or neither, plus per-item breakdowns.
+ *
+ *       **Required roles: STAFF**
+ *     tags: [Stats]
+ *     responses:
+ *       200:
+ *         description: Dietary restriction and allergy breakdown
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/StatsDietaryRestrictionsResponse'
+ *     security:
+ *       - bearerAuth: []
+ */
 // Get the dietary restriction breakdown/counts (staff only)
 statsRouter.get(
     "/dietary-restrictions",
@@ -221,6 +357,26 @@ statsRouter.get(
     }
 );
 
+/**
+ * @swagger
+ * /stats/registrations:
+ *   get:
+ *     summary: Get total registration count
+ *     description: |
+ *       Returns the total number of submitted registrations.
+ *
+ *       **Required roles: STAFF**
+ *     tags: [Stats]
+ *     responses:
+ *       200:
+ *         description: Total registration count
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/StatsCountResponse'
+ *     security:
+ *       - bearerAuth: []
+ */
 // get the number of registrations
 statsRouter.get(
     "/registrations",
@@ -235,6 +391,49 @@ statsRouter.get(
     }
 );
 
+/**
+ * @swagger
+ * /stats/event/{EVENT_ID}/attendance:
+ *   get:
+ *     summary: Get attendance count for a specific event
+ *     description: |
+ *       Returns the `attendanceCount` recorded for the given event.
+ *
+ *       **Required roles: STAFF**
+ *     tags: [Stats]
+ *     parameters:
+ *       - name: EVENT_ID
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     responses:
+ *       200:
+ *         description: Attendance count for the event
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/StatsEventAttendanceResponse'
+ *       400:
+ *         description: EVENT_ID is not a valid UUID
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *                 example:
+ *                   error: "Invalid uuid"
+ *       404:
+ *         description: Event not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *                 example:
+ *                   error: "Event not found"
+ *     security:
+ *       - bearerAuth: []
+ */
 // event attendance at a specific event
 statsRouter.get(
     "/event/:EVENT_ID/attendance",
@@ -271,6 +470,26 @@ statsRouter.get(
     }
 );
 
+/**
+ * @swagger
+ * /stats/tier-counts:
+ *   get:
+ *     summary: Get attendee count per tier
+ *     description: |
+ *       Returns the number of attendees currently at each tier level.
+ *
+ *       **Required roles: STAFF**
+ *     tags: [Stats]
+ *     responses:
+ *       200:
+ *         description: Attendee counts broken down by tier
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/StatsTierCountsResponse'
+ *     security:
+ *       - bearerAuth: []
+ */
 // Number of people at each tier
 statsRouter.get(
     "/tier-counts",
@@ -295,6 +514,27 @@ statsRouter.get(
     }
 );
 
+/**
+ * @swagger
+ * /stats/tag-counts:
+ *   get:
+ *     summary: Get attendee count per interest tag
+ *     description: |
+ *       Returns a map of each interest tag to the number of attendees who
+ *       selected it during registration.
+ *
+ *       **Required roles: STAFF**
+ *     tags: [Stats]
+ *     responses:
+ *       200:
+ *         description: Tag selection counts
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/StatsTagCountsResponse'
+ *     security:
+ *       - bearerAuth: []
+ */
 // Number of people who marked each tag
 statsRouter.get(
     "/tag-counts",
@@ -315,6 +555,26 @@ statsRouter.get(
     }
 );
 
+/**
+ * @swagger
+ * /stats/merch-redemption-counts:
+ *   get:
+ *     summary: Get merch redemption counts per tier
+ *     description: |
+ *       Returns the number of times each tier's merch item has been redeemed.
+ *
+ *       **Required roles: STAFF**
+ *     tags: [Stats]
+ *     responses:
+ *       200:
+ *         description: Merch redemption counts broken down by tier item
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/StatsTierCountsResponse'
+ *     security:
+ *       - bearerAuth: []
+ */
 // Number of people who redeemed each merch item
 statsRouter.get(
     "/merch-redemption-counts",
@@ -340,6 +600,42 @@ statsRouter.get(
     }
 );
 
+/**
+ * @swagger
+ * /stats/attended-at-least/{N}:
+ *   get:
+ *     summary: Get count of attendees who attended at least N events
+ *     description: |
+ *       Returns the number of attendees whose `eventsAttended` list has at
+ *       least N entries.
+ *
+ *       **Required roles: STAFF**
+ *     tags: [Stats]
+ *     parameters:
+ *       - name: N
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           minimum: 0
+ *     responses:
+ *       200:
+ *         description: Number of qualifying attendees
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/StatsCountResponse'
+ *       400:
+ *         description: N is negative
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *                 example:
+ *                   error: "N must be greater equal than 0"
+ *     security:
+ *       - bearerAuth: []
+ */
 // Take in parameter n, return the number of attendees who attended at least n events
 statsRouter.get(
     "/attended-at-least/:N",

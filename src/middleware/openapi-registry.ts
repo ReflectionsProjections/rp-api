@@ -18,9 +18,21 @@ export const ErrorSchema = registry.register(
         .openapi("Error")
 );
 
-// const makeError = (code: string) =>
+// const makeError = (code: string, example?: string) =>
 //     ErrorSchema.extend({
 //         error: z.literal(code),
+//     }).openapi({
+//         example: { error: example ?? code },
 //     });
 
 // registry.register("DoesNotExistError", makeError("DoesNotExist"));
+// registry.register("UserNotFoundError", makeError("UserNotFound"));
+// registry.register("EventNotFoundError", makeError("EventNotFound"));
+// registry.register(
+//     "TierAlreadyRedeemedError",
+//     makeError("Tier already redeemed")
+// );
+// registry.register(
+//     "UserTierTooLowError",
+//     makeError("User tier too low for redemption")
+// );

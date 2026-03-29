@@ -10,6 +10,52 @@ const puzzlebangRouter = Router();
 
 puzzlebangRouter.use(PuzzlebangChecker);
 
+/**
+ * @swagger
+ * /puzzlebang/:
+ *   post:
+ *     summary: Record a completed puzzle for a user
+ *     description: |
+ *       Marks a puzzle as completed for the attendee identified by email,
+ *       awards the appropriate points, and returns the user's updated puzzle
+ *       completion list.
+ *
+ *       Authentication is via a shared API key passed in the `Authorization`
+ *       header (not a bearer JWT).
+ *
+ *       **Required roles: none (API key required)**
+ *     tags: [Puzzlebang]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/PuzzlebangCompleteRequestValidator'
+ *     responses:
+ *       200:
+ *         description: Puzzle recorded and points awarded
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/PuzzlebangCompleteResponse'
+ *       404:
+ *         description: No registration or attendee found for the given email
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *                 example:
+ *                   error: "NotFound"
+ *       409:
+ *         description: Puzzle already completed by this user
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *                 example:
+ *                   error: "AlreadyCompleted"
+ *     security: []
+ */
 puzzlebangRouter.post("/", async (req, res) => {
     const { email, puzzleId } = PuzzlebangCompleteRequestValidator.parse(
         req.body

@@ -12,6 +12,28 @@ import {
 
 const shiftsRouter = Router();
 
+/**
+ * @swagger
+ * /shifts/:
+ *   get:
+ *     summary: Get all shifts
+ *     description: |
+ *       Returns all defined shifts, ordered by start time.
+ *
+ *       **Required roles: STAFF | ADMIN**
+ *     tags: [Shifts]
+ *     responses:
+ *       200:
+ *         description: List of all shifts
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/ShiftView'
+ *     security:
+ *       - bearerAuth: []
+ */
 // Get a list of all defined shifts
 shiftsRouter.get(
     "/",
@@ -25,6 +47,29 @@ shiftsRouter.get(
     }
 );
 
+/**
+ * @swagger
+ * /shifts/my-shifts:
+ *   get:
+ *     summary: Get shifts assigned to the current staff member
+ *     description: |
+ *       Returns all shift assignments for the authenticated staff member,
+ *       including the full shift details for each assignment.
+ *
+ *       **Required roles: STAFF**
+ *     tags: [Shifts]
+ *     responses:
+ *       200:
+ *         description: List of the caller's shift assignments with embedded shift details
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/ShiftAssignmentView'
+ *     security:
+ *       - bearerAuth: []
+ */
 // Get all shifts for the logged-in staff member
 shiftsRouter.get(
     "/my-shifts",
@@ -42,6 +87,32 @@ shiftsRouter.get(
     }
 );
 
+/**
+ * @swagger
+ * /shifts/:
+ *   post:
+ *     summary: Create a shift
+ *     description: |
+ *       Creates a new staff shift.
+ *
+ *       **Required roles: ADMIN**
+ *     tags: [Shifts]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/ShiftCreateValidator'
+ *     responses:
+ *       201:
+ *         description: The newly created shift
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ShiftView'
+ *     security:
+ *       - bearerAuth: []
+ */
 // Create a new shift
 // API body: {String} role, {String} startTime {String} endTime, {String} location
 shiftsRouter.post("/", RoleChecker([Role.Enum.ADMIN]), async (req, res) => {
@@ -55,6 +126,39 @@ shiftsRouter.post("/", RoleChecker([Role.Enum.ADMIN]), async (req, res) => {
     return res.status(StatusCodes.CREATED).json(newShift);
 });
 
+/**
+ * @swagger
+ * /shifts/{shiftId}:
+ *   patch:
+ *     summary: Update a shift
+ *     description: |
+ *       Updates one or more fields of an existing shift.
+ *
+ *       **Required roles: ADMIN**
+ *     tags: [Shifts]
+ *     parameters:
+ *       - name: shiftId
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/ShiftUpdateValidator'
+ *     responses:
+ *       200:
+ *         description: The updated shift
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ShiftView'
+ *     security:
+ *       - bearerAuth: []
+ */
 // Update a shift's details
 // URL params: shiftId
 // API body: { role?, startTime?, endTime?, location? }
@@ -75,6 +179,30 @@ shiftsRouter.patch(
     }
 );
 
+/**
+ * @swagger
+ * /shifts/{shiftId}:
+ *   delete:
+ *     summary: Delete a shift
+ *     description: |
+ *       Deletes a shift and all its assignments (due to foreign key constraint,
+ *       assignments are removed first).
+ *
+ *       **Required roles: ADMIN**
+ *     tags: [Shifts]
+ *     parameters:
+ *       - name: shiftId
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     responses:
+ *       204:
+ *         description: Shift successfully deleted
+ *     security:
+ *       - bearerAuth: []
+ */
 // Delete a shift
 // URL params: shiftId
 shiftsRouter.delete(
@@ -94,6 +222,39 @@ shiftsRouter.delete(
     }
 );
 
+/**
+ * @swagger
+ * /shifts/{shiftId}/assignments:
+ *   post:
+ *     summary: Assign a staff member to a shift
+ *     description: |
+ *       Creates an assignment linking a staff member (by email) to the given shift.
+ *
+ *       **Required roles: ADMIN**
+ *     tags: [Shifts]
+ *     parameters:
+ *       - name: shiftId
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/StaffEmailValidator'
+ *     responses:
+ *       201:
+ *         description: The newly created assignment
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ShiftAssignmentView'
+ *     security:
+ *       - bearerAuth: []
+ */
 // Assign a staff member to a shift
 // URL params: shiftId
 // API body: { staffEmail }
@@ -117,6 +278,35 @@ shiftsRouter.post(
     }
 );
 
+/**
+ * @swagger
+ * /shifts/{shiftId}/assignments:
+ *   delete:
+ *     summary: Remove a staff member from a shift
+ *     description: |
+ *       Deletes the assignment for the specified staff member and shift.
+ *
+ *       **Required roles: ADMIN**
+ *     tags: [Shifts]
+ *     parameters:
+ *       - name: shiftId
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/StaffEmailValidator'
+ *     responses:
+ *       204:
+ *         description: Assignment successfully removed
+ *     security:
+ *       - bearerAuth: []
+ */
 // Remove a staff member from a shift
 // URL params: shiftId
 // API body: { staffEmail }
@@ -138,6 +328,29 @@ shiftsRouter.delete(
     }
 );
 
+/**
+ * @swagger
+ * /shifts/assignments:
+ *   get:
+ *     summary: Get all shift assignments with staff details
+ *     description: |
+ *       Returns all shift assignments, each including the assigned staff
+ *       member's name and email.
+ *
+ *       **Required roles: STAFF | ADMIN**
+ *     tags: [Shifts]
+ *     responses:
+ *       200:
+ *         description: List of all shift assignments with embedded staff details
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/ShiftAssignmentView'
+ *     security:
+ *       - bearerAuth: []
+ */
 // Get a list of all shifts and the staff assigned to them
 shiftsRouter.get(
     "/assignments",
@@ -152,6 +365,42 @@ shiftsRouter.get(
     }
 );
 
+/**
+ * @swagger
+ * /shifts/{shiftId}/acknowledge:
+ *   post:
+ *     summary: Toggle shift acknowledgment
+ *     description: |
+ *       Toggles the acknowledgment status of the caller's own assignment
+ *       for the given shift.
+ *
+ *       **Required roles: STAFF**
+ *     tags: [Shifts]
+ *     parameters:
+ *       - name: shiftId
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     responses:
+ *       200:
+ *         description: The updated assignment with new acknowledgment status
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ShiftAssignmentView'
+ *       404:
+ *         description: No assignment found for this staff member and shift
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *                 example:
+ *                   error: "Shift assignment not found"
+ *     security:
+ *       - bearerAuth: []
+ */
 // Toggle shift assignment acknowledgment status
 // URL params: shiftId
 // Requires STAFF role - staff can only toggle their own shifts
