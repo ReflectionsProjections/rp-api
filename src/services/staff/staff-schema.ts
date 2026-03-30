@@ -9,11 +9,9 @@ export enum StaffAttendanceTypeEnum {
 }
 export const StaffAttendanceType = registry.register(
     "StaffAttendanceType",
-    z
-        .nativeEnum(StaffAttendanceTypeEnum)
-        .openapi("StaffAttendanceType", {
-            description: "Attendance status for a staff meeting",
-        })
+    z.nativeEnum(StaffAttendanceTypeEnum).openapi("StaffAttendanceType", {
+        description: "Attendance status for a staff meeting",
+    })
 );
 export type AttendancesMap = Record<string, StaffAttendanceTypeEnum>;
 
@@ -53,11 +51,9 @@ export type Staff = z.infer<typeof StaffValidator>;
 
 export const CheckInValidator = registry.register(
     "CheckInValidator",
-    z
-        .object({ meetingId: z.string() })
-        .openapi("CheckInValidator", {
-            example: { meetingId: "3a72d491-c2f9-4baf-af5a-55713621d978" },
-        })
+    z.object({ meetingId: z.string() }).openapi("CheckInValidator", {
+        example: { meetingId: "3a72d491-c2f9-4baf-af5a-55713621d978" },
+    })
 );
 
 export const UpdateStaffAttendanceValidator = registry.register(
@@ -70,7 +66,7 @@ export const UpdateStaffAttendanceValidator = registry.register(
         .openapi("UpdateStaffAttendanceValidator", {
             example: {
                 meetingId: "3a72d491-c2f9-4baf-af5a-55713621d978",
-                attendanceType: "PRESENT",
+                attendanceType: StaffAttendanceTypeEnum.PRESENT,
             },
         })
 );
