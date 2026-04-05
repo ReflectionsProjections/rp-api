@@ -14,6 +14,49 @@ import Config from "../../config";
 
 const staffRouter = Router();
 
+/**
+ * @swagger
+ * /staff/check-in:
+ *   post:
+ *     summary: Check a staff member into a meeting
+ *     description: |
+ *       Records the authenticated staff member as PRESENT for the given meeting.
+ *       Fails if the meeting window has passed or they are already checked in.
+ *
+ *       **Required roles: STAFF | ADMIN**
+ *     tags: [Staff]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CheckInValidator'
+ *     responses:
+ *       200:
+ *         description: Updated staff record reflecting the check-in
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/StaffView'
+ *       400:
+ *         description: Already checked in or meeting window has expired
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *                 example:
+ *                   error: "AlreadyCheckedIn"
+ *       404:
+ *         description: Meeting not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *                 example:
+ *                   error: "NotFound"
+ *     security:
+ *       - bearerAuth: []
+ */
 // Check in to a meeting
 staffRouter.post(
     "/check-in",
@@ -88,6 +131,47 @@ staffRouter.post(
     }
 );
 
+/**
+ * @swagger
+ * /staff/{EMAIL}/attendance:
+ *   post:
+ *     summary: Manually update a staff member's meeting attendance
+ *     description: |
+ *       Sets the attendance status for a specific staff member and meeting.
+ *
+ *       **Required roles: ADMIN**
+ *     tags: [Staff]
+ *     parameters:
+ *       - name: EMAIL
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: email
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/UpdateStaffAttendanceValidator'
+ *     responses:
+ *       200:
+ *         description: Updated staff record with new attendance
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/StaffView'
+ *       404:
+ *         description: Meeting or staff member not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *                 example:
+ *                   error: "NotFound"
+ *     security:
+ *       - bearerAuth: []
+ */
 // Update a staff's attendance
 staffRouter.post(
     "/:EMAIL/attendance",
@@ -145,6 +229,28 @@ staffRouter.post(
     }
 );
 
+/**
+ * @swagger
+ * /staff/:
+ *   get:
+ *     summary: Get all staff members
+ *     description: |
+ *       Returns all staff records.
+ *
+ *       **Required roles: STAFF | ADMIN**
+ *     tags: [Staff]
+ *     responses:
+ *       200:
+ *         description: List of all staff members
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/StaffView'
+ *     security:
+ *       - bearerAuth: []
+ */
 // Get all staff
 staffRouter.get(
     "/",
@@ -157,6 +263,41 @@ staffRouter.get(
     }
 );
 
+/**
+ * @swagger
+ * /staff/{EMAIL}:
+ *   get:
+ *     summary: Get a staff member by email
+ *     description: |
+ *       Returns a single staff record identified by email address.
+ *
+ *       **Required roles: STAFF | ADMIN**
+ *     tags: [Staff]
+ *     parameters:
+ *       - name: EMAIL
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: email
+ *     responses:
+ *       200:
+ *         description: The requested staff member
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/StaffView'
+ *       404:
+ *         description: Staff member not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *                 example:
+ *                   error: "UserNotFound"
+ *     security:
+ *       - bearerAuth: []
+ */
 // Get staff member by ID
 staffRouter.get(
     "/:EMAIL",
@@ -181,6 +322,41 @@ staffRouter.get(
     }
 );
 
+/**
+ * @swagger
+ * /staff/:
+ *   post:
+ *     summary: Create a staff member
+ *     description: |
+ *       Creates a new staff record. Fails if a staff member with the same email
+ *       already exists.
+ *
+ *       **Required roles: ADMIN**
+ *     tags: [Staff]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/StaffView'
+ *     responses:
+ *       201:
+ *         description: The newly created staff record
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/StaffView'
+ *       400:
+ *         description: Validation error or staff member already exists
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *                 example:
+ *                   error: "UserAlreadyExists"
+ *     security:
+ *       - bearerAuth: []
+ */
 // Create new staff member
 staffRouter.post("/", RoleChecker([Role.Enum.ADMIN]), async (req, res) => {
     // validate input using StaffValidator
@@ -217,6 +393,37 @@ staffRouter.post("/", RoleChecker([Role.Enum.ADMIN]), async (req, res) => {
     return res.status(StatusCodes.CREATED).json(savedStaff);
 });
 
+/**
+ * @swagger
+ * /staff/{EMAIL}:
+ *   delete:
+ *     summary: Delete a staff member
+ *     description: |
+ *       Deletes the staff record for the given email address.
+ *
+ *       **Required roles: ADMIN**
+ *     tags: [Staff]
+ *     parameters:
+ *       - name: EMAIL
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: email
+ *     responses:
+ *       204:
+ *         description: Staff member successfully deleted
+ *       404:
+ *         description: Staff member not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *                 example:
+ *                   error: "UserNotFound"
+ *     security:
+ *       - bearerAuth: []
+ */
 // Delete staff member by ID
 staffRouter.delete(
     "/:EMAIL",

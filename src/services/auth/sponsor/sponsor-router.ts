@@ -17,6 +17,30 @@ import { SupabaseDB } from "../../../database";
 
 const authSponsorRouter = Router();
 
+/**
+ * @swagger
+ * /auth/sponsor/login:
+ *   post:
+ *     summary: Request a sponsor verification code
+ *     description: |
+ *       Sends a 6-digit email verification code to the given corporate sponsor
+ *       email address. The email must already exist in the corporate sponsors list.
+ *
+ *       **Required roles: none**
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/AuthSponsorLoginValidator'
+ *     responses:
+ *       201:
+ *         description: Verification code sent successfully
+ *       401:
+ *         description: Email not found in corporate sponsors list
+ *     security: []
+ */
 authSponsorRouter.post("/login", async (req, res) => {
     const { email } = AuthSponsorLoginValidator.parse(req.body);
     const { data: existing } = await SupabaseDB.CORPORATE.select()
@@ -51,6 +75,40 @@ authSponsorRouter.post("/login", async (req, res) => {
     return res.sendStatus(StatusCodes.CREATED);
 });
 
+/**
+ * @swagger
+ * /auth/sponsor/verify:
+ *   post:
+ *     summary: Verify a sponsor code and receive a JWT
+ *     description: |
+ *       Verifies the 6-digit code sent to the sponsor's email. Returns a signed
+ *       JWT with the CORPORATE role on success.
+ *
+ *       **Required roles: none**
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/AuthSponsorVerifyValidator'
+ *     responses:
+ *       200:
+ *         description: A signed JWT with the CORPORATE role
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/AuthJwtResponse'
+ *       401:
+ *         description: Invalid or expired verification code
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *                 example:
+ *                   error: "InvalidCode"
+ *     security: []
+ */
 authSponsorRouter.post("/verify", async (req, res) => {
     const { email, sixDigitCode } = AuthSponsorVerifyValidator.parse(req.body);
     const { data: sponsorData } = await SupabaseDB.AUTH_CODES.delete()

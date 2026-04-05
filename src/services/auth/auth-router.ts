@@ -35,6 +35,40 @@ const oauthClients = {
 
 authRouter.use("/sponsor", authSponsorRouter);
 
+/**
+ * @swagger
+ * /auth/:
+ *   delete:
+ *     summary: Remove a role from a user
+ *     description: |
+ *       Removes a specific role from the specified user.
+ *
+ *       **Required roles: SUPER_ADMIN**
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/AuthRoleChangeRequest'
+ *     responses:
+ *       200:
+ *         description: The deleted role record
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/AuthRoleView'
+ *       404:
+ *         description: User not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *                 example:
+ *                   error: "UserNotFound"
+ *     security:
+ *       - bearerAuth: []
+ */
 // Remove role from userId (super admin only endpoint)
 authRouter.delete(
     "/",
@@ -65,7 +99,40 @@ authRouter.delete(
     }
 );
 
-// Add role to userId (super admin only endpoint)
+/**
+ * @swagger
+ * /auth/:
+ *   put:
+ *     summary: Add a role to a user
+ *     description: |
+ *       Adds (or upserts) a specific role for the specified user.
+ *
+ *       **Required roles: SUPER_ADMIN**
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/AuthRoleChangeRequest'
+ *     responses:
+ *       200:
+ *         description: The upserted role record
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/AuthRoleView'
+ *       404:
+ *         description: User not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *                 example:
+ *                   error: "UserNotFound"
+ *     security:
+ *       - bearerAuth: []
+ */
 authRouter.put("/", RoleChecker([Role.Enum.SUPER_ADMIN]), async (req, res) => {
     const { userId, role } = AuthRoleChangeRequest.parse(req.body);
 
@@ -122,6 +189,48 @@ const getAuthPayloadFromCode = async (
     }
 };
 
+/**
+ * @swagger
+ * /auth/login/{PLATFORM}:
+ *   post:
+ *     summary: Log in with Google OAuth
+ *     description: |
+ *       Exchanges a Google OAuth authorization code for a signed JWT.
+ *       The request body shape varies by platform: web omits `codeVerifier`,
+ *       iOS and Android require it.
+ *
+ *       **Required roles: none**
+ *     tags: [Auth]
+ *     parameters:
+ *       - name: PLATFORM
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *           enum: [WEB, IOS, ANDROID]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/AuthLoginValidator'
+ *     responses:
+ *       200:
+ *         description: A signed JWT for the authenticated user
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/AuthJwtResponse'
+ *       400:
+ *         description: Login failed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *                 example:
+ *                   error: "InvalidToken"
+ *     security: []
+ */
 authRouter.post("/login/:PLATFORM", async (req, res) => {
     try {
         const validatedData = AuthLoginValidator.parse({
@@ -170,6 +279,28 @@ authRouter.post("/login/:PLATFORM", async (req, res) => {
     }
 });
 
+/**
+ * @swagger
+ * /auth/corporate:
+ *   get:
+ *     summary: Get all corporate sponsors
+ *     description: |
+ *       Returns all registered corporate sponsor records.
+ *
+ *       **Required roles: ADMIN**
+ *     tags: [Auth]
+ *     responses:
+ *       200:
+ *         description: List of corporate sponsor records
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/CorporateValidator'
+ *     security:
+ *       - bearerAuth: []
+ */
 authRouter.get(
     "/corporate",
     RoleChecker([Role.Enum.ADMIN]),
@@ -180,6 +311,40 @@ authRouter.get(
     }
 );
 
+/**
+ * @swagger
+ * /auth/corporate:
+ *   post:
+ *     summary: Add a corporate sponsor
+ *     description: |
+ *       Creates a new corporate sponsor record.
+ *
+ *       **Required roles: ADMIN**
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CorporateValidator'
+ *     responses:
+ *       201:
+ *         description: The newly created corporate sponsor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/CorporateValidator'
+ *       400:
+ *         description: Sponsor already exists
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *                 example:
+ *                   error: "AlreadyExists"
+ *     security:
+ *       - bearerAuth: []
+ */
 authRouter.post(
     "/corporate",
     RoleChecker([Role.Enum.ADMIN]),
@@ -202,6 +367,36 @@ authRouter.post(
     }
 );
 
+/**
+ * @swagger
+ * /auth/corporate:
+ *   delete:
+ *     summary: Remove a corporate sponsor
+ *     description: |
+ *       Deletes a corporate sponsor record by email.
+ *
+ *       **Required roles: ADMIN**
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CorporateDeleteRequest'
+ *     responses:
+ *       204:
+ *         description: Sponsor successfully deleted
+ *       400:
+ *         description: Sponsor not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *                 example:
+ *                   error: "NotFound"
+ *     security:
+ *       - bearerAuth: []
+ */
 authRouter.delete(
     "/corporate",
     RoleChecker([Role.Enum.ADMIN]),
@@ -222,6 +417,26 @@ authRouter.delete(
     }
 );
 
+/**
+ * @swagger
+ * /auth/info:
+ *   get:
+ *     summary: Get current user info
+ *     description: |
+ *       Returns the authenticated user's profile and assigned roles.
+ *
+ *       **Required roles: none**
+ *     tags: [Auth]
+ *     responses:
+ *       200:
+ *         description: The authenticated user's profile with roles
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/RoleValidator'
+ *     security:
+ *       - bearerAuth: []
+ */
 authRouter.get("/info", RoleChecker([]), async (req, res) => {
     const userId = res.locals.payload.userId;
     const { data: info } = await SupabaseDB.AUTH_INFO.select()
@@ -238,6 +453,37 @@ authRouter.get("/info", RoleChecker([]), async (req, res) => {
     return res.status(StatusCodes.OK).json(user);
 });
 
+/**
+ * @swagger
+ * /auth/team:
+ *   get:
+ *     summary: Get all staff and admin team members
+ *     description: |
+ *       Returns all users who have been assigned the STAFF or ADMIN role,
+ *       including their full profile and roles list.
+ *
+ *       **Required roles: ADMIN**
+ *     tags: [Auth]
+ *     responses:
+ *       200:
+ *         description: List of team members with roles
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/RoleValidator'
+ *       500:
+ *         description: Failed to fetch team members
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *                 example:
+ *                   error: "Failed to fetch team members"
+ *     security:
+ *       - bearerAuth: []
+ */
 // Get team members (users with STAFF or ADMIN roles)
 authRouter.get("/team", RoleChecker([Role.Enum.ADMIN]), async (req, res) => {
     try {
@@ -282,6 +528,27 @@ authRouter.get("/team", RoleChecker([Role.Enum.ADMIN]), async (req, res) => {
     }
 });
 
+/**
+ * @swagger
+ * /auth/staff:
+ *   get:
+ *     summary: Get all staff user IDs
+ *     description: |
+ *       Returns a list of user IDs for all users with the STAFF role.
+ *       Intended for resume book access by corporate sponsors.
+ *
+ *       **Required roles: CORPORATE | STAFF**
+ *     tags: [Auth]
+ *     responses:
+ *       200:
+ *         description: List of staff user IDs
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UserIdsResponse'
+ *     security:
+ *       - bearerAuth: []
+ */
 // Get staff user ids for resume book
 authRouter.get(
     "/staff",
@@ -295,6 +562,32 @@ authRouter.get(
     }
 );
 
+/**
+ * @swagger
+ * /auth/{ROLE}:
+ *   get:
+ *     summary: Get user IDs by role
+ *     description: |
+ *       Returns a list of user IDs for all users assigned the specified role.
+ *
+ *       **Required roles: STAFF**
+ *     tags: [Auth]
+ *     parameters:
+ *       - name: ROLE
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: List of user IDs with the given role
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UserIdsResponse'
+ *     security:
+ *       - bearerAuth: []
+ */
 // Get a list of user ids by role (staff only endpoint)
 authRouter.get("/:ROLE", RoleChecker([Role.Enum.STAFF]), async (req, res) => {
     // Validate the role using Zod schema

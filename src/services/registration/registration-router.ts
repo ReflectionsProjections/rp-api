@@ -16,6 +16,41 @@ import { Role } from "../auth/auth-models";
 const registrationRouter = Router();
 registrationRouter.use(cors());
 
+/**
+ * @swagger
+ * /registration/draft:
+ *   post:
+ *     summary: Save a registration draft
+ *     description: |
+ *       Upserts an in-progress registration draft for the authenticated user.
+ *       Allows partial form data to be saved before final submission.
+ *
+ *       **Required roles: (any authenticated user)**
+ *     tags: [Registration]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/RegistrationDraftValidator'
+ *     responses:
+ *       200:
+ *         description: The saved draft (with userId attached)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/RegistrationDraftValidator'
+ *       400:
+ *         description: Validation error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *                 example:
+ *                   error: {}
+ *     security:
+ *       - bearerAuth: []
+ */
 registrationRouter.post("/draft", RoleChecker([]), async (req, res) => {
     const payload = res.locals.payload;
 
@@ -38,6 +73,34 @@ registrationRouter.post("/draft", RoleChecker([]), async (req, res) => {
     return res.status(StatusCodes.OK).json(registrationDraft);
 });
 
+/**
+ * @swagger
+ * /registration/draft:
+ *   get:
+ *     summary: Get the current user's registration draft
+ *     description: |
+ *       Returns the saved draft for the authenticated user, if one exists.
+ *
+ *       **Required roles: (any authenticated user)**
+ *     tags: [Registration]
+ *     responses:
+ *       200:
+ *         description: The user's saved draft
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/RegistrationDraftValidator'
+ *       404:
+ *         description: No draft found for this user
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *                 example:
+ *                   error: "DoesNotExist"
+ *     security:
+ *       - bearerAuth: []
+ */
 registrationRouter.get("/draft", RoleChecker([]), async (req, res) => {
     const { data: draftRegistration } =
         await SupabaseDB.DRAFT_REGISTRATIONS.select("*")
@@ -53,6 +116,42 @@ registrationRouter.get("/draft", RoleChecker([]), async (req, res) => {
     return res.status(StatusCodes.OK).json(draftRegistration);
 });
 
+/**
+ * @swagger
+ * /registration/submit:
+ *   post:
+ *     summary: Submit a completed registration
+ *     description: |
+ *       Finalises the user's registration: upserts the registration record,
+ *       assigns the USER role, creates/updates the attendee profile, subscribes
+ *       the user to the attendees mailing list, and sends a confirmation email.
+ *
+ *       **Required roles: (any authenticated user)**
+ *     tags: [Registration]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/RegistrationValidator'
+ *     responses:
+ *       200:
+ *         description: The submitted registration (with userId attached)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/RegistrationValidator'
+ *       400:
+ *         description: Validation error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *                 example:
+ *                   error: {}
+ *     security:
+ *       - bearerAuth: []
+ */
 registrationRouter.post("/submit", RoleChecker([]), async (req, res) => {
     const payload = res.locals.payload;
 
@@ -162,6 +261,29 @@ registrationRouter.post("/submit", RoleChecker([]), async (req, res) => {
     return res.status(StatusCodes.OK).json(registration);
 });
 
+/**
+ * @swagger
+ * /registration/all:
+ *   get:
+ *     summary: Get all registrations with resumes
+ *     description: |
+ *       Returns a summary of all registrations where the attendee has indicated
+ *       they have a resume. Used by corporate partners and admins for recruiting.
+ *
+ *       **Required roles: ADMIN | CORPORATE**
+ *     tags: [Registration]
+ *     responses:
+ *       200:
+ *         description: List of registration summaries
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/RegistrationSummaryView'
+ *     security:
+ *       - bearerAuth: []
+ */
 registrationRouter.get(
     "/all",
     RoleChecker([Role.Enum.ADMIN, Role.Enum.CORPORATE]),

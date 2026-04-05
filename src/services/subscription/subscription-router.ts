@@ -18,6 +18,40 @@ const sesClient = new SESv2Client({
     },
 });
 
+/**
+ * @swagger
+ * /subscription/:
+ *   post:
+ *     summary: Subscribe to a mailing list
+ *     description: |
+ *       Creates a subscription for the given user and mailing list.
+ *       Idempotent — if the subscription already exists it is not duplicated.
+ *
+ *       **Required roles: none**
+ *     tags: [Subscription]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/SubscriptionValidator'
+ *     responses:
+ *       201:
+ *         description: Subscription created (or already existed)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/SubscriptionValidator'
+ *       400:
+ *         description: User not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *                 example:
+ *                   error: "User not found."
+ *     security: []
+ */
 // Create a new subscription
 subscriptionRouter.post("/", cors(), async (req, res) => {
     // Validate the incoming user subscription
@@ -56,6 +90,28 @@ subscriptionRouter.post("/", cors(), async (req, res) => {
     return res.status(StatusCodes.CREATED).json(subscriptionData);
 });
 
+/**
+ * @swagger
+ * /subscription/:
+ *   get:
+ *     summary: Get all subscriptions
+ *     description: |
+ *       Returns every subscription record in the database.
+ *
+ *       **Required roles: ADMIN**
+ *     tags: [Subscription]
+ *     responses:
+ *       200:
+ *         description: List of all subscriptions
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/SubscriptionValidator'
+ *     security:
+ *       - bearerAuth: []
+ */
 // Get a list of all subscriptions - envisioning that admins can use this as dropdown to choose who to send emails to
 subscriptionRouter.get(
     "/",
@@ -68,6 +124,30 @@ subscriptionRouter.get(
     }
 );
 
+/**
+ * @swagger
+ * /subscription/lists:
+ *   get:
+ *     summary: Get all unique mailing list names
+ *     description: |
+ *       Returns a deduplicated list of every mailing list that has at least
+ *       one subscriber.
+ *
+ *       **Required roles: ADMIN**
+ *     tags: [Subscription]
+ *     responses:
+ *       200:
+ *         description: List of unique mailing list names
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: string
+ *               example: ["rp_interest", "attendees"]
+ *     security:
+ *       - bearerAuth: []
+ */
 subscriptionRouter.get(
     "/lists",
     RoleChecker([Role.Enum.ADMIN]),
@@ -83,6 +163,41 @@ subscriptionRouter.get(
     }
 );
 
+/**
+ * @swagger
+ * /subscription/send-email:
+ *   post:
+ *     summary: Send an email to a mailing list
+ *     description: |
+ *       Sends an HTML email to all subscribers of the given mailing list via
+ *       AWS SES. BCC is used so recipients cannot see each other's addresses.
+ *
+ *       **Required roles: SUPER_ADMIN**
+ *     tags: [Subscription]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/SendEmailValidator'
+ *     responses:
+ *       200:
+ *         description: Email sent successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/SubscriptionSuccessResponse'
+ *       404:
+ *         description: No subscribers found for this mailing list
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *                 example:
+ *                   error: "No subscribers found for this mailing list."
+ *     security:
+ *       - bearerAuth: []
+ */
 // Send an email to a mailing list
 // API body: {String} mailingList The list to send the email to, {String} subject The subject line of the email, {String} htmlBody The HTML content of the email.
 subscriptionRouter.post(
@@ -142,6 +257,32 @@ subscriptionRouter.post(
     }
 );
 
+/**
+ * @swagger
+ * /subscription/send-email/single:
+ *   post:
+ *     summary: Send an email to a single address
+ *     description: |
+ *       Sends an HTML email to one specific email address via AWS SES.
+ *
+ *       **Required roles: SUPER_ADMIN**
+ *     tags: [Subscription]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/SendEmailSingleValidator'
+ *     responses:
+ *       200:
+ *         description: Email sent successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/SubscriptionSuccessResponse'
+ *     security:
+ *       - bearerAuth: []
+ */
 // Send an email to a specific person
 // API body: {String} email (the singular email to send to), {String} subject : The subject line of the email, {String} htmlBody : The HTML content of the email.
 subscriptionRouter.post(
@@ -169,6 +310,46 @@ subscriptionRouter.post(
     }
 );
 
+/**
+ * @swagger
+ * /subscription/{mailingList}:
+ *   get:
+ *     summary: Get email addresses for a mailing list
+ *     description: |
+ *       Returns the email addresses of all users subscribed to the given
+ *       mailing list.
+ *
+ *       **Required roles: ADMIN**
+ *     tags: [Subscription]
+ *     parameters:
+ *       - name: mailingList
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *         example: rp_interest
+ *     responses:
+ *       200:
+ *         description: List of subscriber email addresses
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: string
+ *                 format: email
+ *               example: ["hacker@example.com", "volunteer@illinois.edu"]
+ *       404:
+ *         description: No subscribers found for this mailing list
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *                 example:
+ *                   error: "No subscribers found for this mailing list."
+ *     security:
+ *       - bearerAuth: []
+ */
 // Get all the emails in a specific mailing list
 // Param: mailingList - the name of the mailing list to retrieve
 subscriptionRouter.get(
@@ -209,6 +390,44 @@ subscriptionRouter.get(
     }
 );
 
+/**
+ * @swagger
+ * /subscription/user/{userId}:
+ *   get:
+ *     summary: Get a user's mailing list subscriptions
+ *     description: |
+ *       Returns the names of all mailing lists the given user is subscribed to.
+ *       Non-admin users may only query their own subscriptions.
+ *
+ *       **Required roles: USER | ADMIN**
+ *     tags: [Subscription]
+ *     parameters:
+ *       - name: userId
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: List of mailing list names the user is subscribed to
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: string
+ *               example: ["rp_interest", "attendees"]
+ *       403:
+ *         description: Non-admin user attempting to query another user's subscriptions
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *                 example:
+ *                   error: "Access denied."
+ *     security:
+ *       - bearerAuth: []
+ */
 // Get a user's subscriptions
 subscriptionRouter.get(
     "/user/:userId",
@@ -239,6 +458,49 @@ subscriptionRouter.get(
     }
 );
 
+/**
+ * @swagger
+ * /subscription/:
+ *   delete:
+ *     summary: Unsubscribe from a mailing list
+ *     description: |
+ *       Removes the given user's subscription from the specified mailing list.
+ *       Non-admin users may only unsubscribe themselves.
+ *
+ *       **Required roles: USER | ADMIN**
+ *     tags: [Subscription]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/UnsubscribeValidator'
+ *     responses:
+ *       200:
+ *         description: Successfully unsubscribed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/SubscriptionSuccessResponse'
+ *       403:
+ *         description: Non-admin user attempting to unsubscribe another user
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *                 example:
+ *                   error: "Access denied."
+ *       404:
+ *         description: Subscription not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *                 example:
+ *                   error: "Subscription not found."
+ *     security:
+ *       - bearerAuth: []
+ */
 // Unsubscribe from a mailing list
 subscriptionRouter.delete(
     "/",

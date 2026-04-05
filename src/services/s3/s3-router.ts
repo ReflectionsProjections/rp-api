@@ -10,6 +10,28 @@ import BatchResumeDownloadValidator from "./s3-schema";
 
 const s3Router: Router = Router();
 
+/**
+ * @swagger
+ * /s3/upload/:
+ *   get:
+ *     summary: Get a presigned URL for resume upload
+ *     description: |
+ *       Returns an S3 presigned POST URL and the required form fields so the
+ *       client can upload a PDF resume directly to S3 without routing through
+ *       the API server.
+ *
+ *       **Required roles: (any authenticated user)**
+ *     tags: [S3]
+ *     responses:
+ *       200:
+ *         description: Presigned POST URL and form fields
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/S3UploadUrlResponse'
+ *     security:
+ *       - bearerAuth: []
+ */
 s3Router.get(
     "/upload/",
     RoleChecker([], false),
@@ -25,6 +47,26 @@ s3Router.get(
     }
 );
 
+/**
+ * @swagger
+ * /s3/download/:
+ *   get:
+ *     summary: Get a presigned URL to download own resume
+ *     description: |
+ *       Returns a presigned GET URL for the authenticated user's own resume.
+ *
+ *       **Required roles: USER**
+ *     tags: [S3]
+ *     responses:
+ *       200:
+ *         description: Presigned download URL
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/S3DownloadUrlResponse'
+ *     security:
+ *       - bearerAuth: []
+ */
 s3Router.get(
     "/download/",
     RoleChecker([Role.Enum.USER], false),
@@ -40,6 +82,32 @@ s3Router.get(
     }
 );
 
+/**
+ * @swagger
+ * /s3/download/user/{USERID}:
+ *   get:
+ *     summary: Get a presigned URL to download another user's resume
+ *     description: |
+ *       Returns a presigned GET URL for the specified user's resume.
+ *
+ *       **Required roles: STAFF | CORPORATE**
+ *     tags: [S3]
+ *     parameters:
+ *       - name: USERID
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Presigned download URL
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/S3DownloadUrlResponse'
+ *     security:
+ *       - bearerAuth: []
+ */
 s3Router.get(
     "/download/user/:USERID",
     RoleChecker([Role.Enum.STAFF, Role.Enum.CORPORATE], false),
@@ -53,6 +121,33 @@ s3Router.get(
     }
 );
 
+/**
+ * @swagger
+ * /s3/download/batch/:
+ *   post:
+ *     summary: Get presigned download URLs for multiple users
+ *     description: |
+ *       Returns presigned GET URLs for a list of user IDs. Entries are `null`
+ *       when no resume exists for a given user.
+ *
+ *       **Required roles: STAFF | CORPORATE**
+ *     tags: [S3]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/BatchResumeDownloadValidator'
+ *     responses:
+ *       200:
+ *         description: Batch of presigned download URLs
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/S3BatchDownloadResponse'
+ *     security:
+ *       - bearerAuth: []
+ */
 s3Router.post(
     "/download/batch/",
     RoleChecker([Role.Enum.STAFF, Role.Enum.CORPORATE], false),

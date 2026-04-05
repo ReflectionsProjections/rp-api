@@ -71,6 +71,28 @@ export function handleWs(ws: WebSocket) {
     pingForUpdate();
 }
 
+/**
+ * @swagger
+ * /dashboard/:
+ *   get:
+ *     summary: Get all connected displays
+ *     description: |
+ *       Returns metadata for all currently connected dashboard displays.
+ *
+ *       **Required roles: ADMIN**
+ *     tags: [Dashboard]
+ *     responses:
+ *       200:
+ *         description: List of connected displays
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/DisplaySchema'
+ *     security:
+ *       - bearerAuth: []
+ */
 dashboardRouter.get("/", RoleChecker([Role.Enum.ADMIN]), (req, res) => {
     // Displays can contain gaps - this endpoint just returns each display
     const displaysWithoutSpaces = displays.filter((display) => display);
@@ -108,6 +130,26 @@ function send(message: object | ((id: number) => object)) {
     };
 }
 
+/**
+ * @swagger
+ * /dashboard/identify:
+ *   post:
+ *     summary: Broadcast identify message to all displays
+ *     description: |
+ *       Sends each display its own numeric ID so it can render it on screen.
+ *
+ *       **Required roles: ADMIN**
+ *     tags: [Dashboard]
+ *     responses:
+ *       200:
+ *         description: IDs of all displays the message was sent to
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/DashboardSentToResponse'
+ *     security:
+ *       - bearerAuth: []
+ */
 dashboardRouter.post(
     "/identify",
     RoleChecker([Role.Enum.ADMIN]),
@@ -116,6 +158,40 @@ dashboardRouter.post(
         message: id.toString(),
     }))
 );
+/**
+ * @swagger
+ * /dashboard/identify/{id}:
+ *   post:
+ *     summary: Send identify message to a specific display
+ *     description: |
+ *       Sends the specified display its numeric ID so it can render it on screen.
+ *
+ *       **Required roles: ADMIN**
+ *     tags: [Dashboard]
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: ID of the display the message was sent to
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/DashboardSentToResponse'
+ *       404:
+ *         description: No display found with the given ID
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *                 example:
+ *                   error: "NotFound"
+ *     security:
+ *       - bearerAuth: []
+ */
 dashboardRouter.post(
     "/identify/:id",
     RoleChecker([Role.Enum.ADMIN]),
@@ -125,17 +201,97 @@ dashboardRouter.post(
     }))
 );
 
+/**
+ * @swagger
+ * /dashboard/reload:
+ *   post:
+ *     summary: Broadcast reload to all displays
+ *     description: |
+ *       Instructs all connected displays to reload.
+ *
+ *       **Required roles: ADMIN**
+ *     tags: [Dashboard]
+ *     responses:
+ *       200:
+ *         description: IDs of all displays that were reloaded
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/DashboardSentToResponse'
+ *     security:
+ *       - bearerAuth: []
+ */
 dashboardRouter.post(
     "/reload",
     RoleChecker([Role.Enum.ADMIN]),
     send({ type: "reload" })
 );
+/**
+ * @swagger
+ * /dashboard/reload/{id}:
+ *   post:
+ *     summary: Reload a specific display
+ *     description: |
+ *       Instructs the specified display to reload.
+ *
+ *       **Required roles: ADMIN**
+ *     tags: [Dashboard]
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: ID of the display that was reloaded
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/DashboardSentToResponse'
+ *       404:
+ *         description: No display found with the given ID
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *                 example:
+ *                   error: "NotFound"
+ *     security:
+ *       - bearerAuth: []
+ */
 dashboardRouter.post(
     "/reload/:id",
     RoleChecker([Role.Enum.ADMIN]),
     send({ type: "reload" })
 );
 
+/**
+ * @swagger
+ * /dashboard/message:
+ *   post:
+ *     summary: Broadcast a message to all displays
+ *     description: |
+ *       Sends a text message or URL to all connected displays.
+ *
+ *       **Required roles: ADMIN**
+ *     tags: [Dashboard]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/DashboardMessageValidator'
+ *     responses:
+ *       200:
+ *         description: IDs of all displays the message was sent to
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/DashboardSentToResponse'
+ *     security:
+ *       - bearerAuth: []
+ */
 dashboardRouter.post("/message", RoleChecker([Role.Enum.ADMIN]), (req, res) => {
     const message = DashboardMessageValidator.parse(req.body);
     return send({
@@ -143,6 +299,46 @@ dashboardRouter.post("/message", RoleChecker([Role.Enum.ADMIN]), (req, res) => {
         ...message,
     })(req, res);
 });
+/**
+ * @swagger
+ * /dashboard/message/{id}:
+ *   post:
+ *     summary: Send a message to a specific display
+ *     description: |
+ *       Sends a text message or URL to the specified display.
+ *
+ *       **Required roles: ADMIN**
+ *     tags: [Dashboard]
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/DashboardMessageValidator'
+ *     responses:
+ *       200:
+ *         description: ID of the display the message was sent to
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/DashboardSentToResponse'
+ *       404:
+ *         description: No display found with the given ID
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *                 example:
+ *                   error: "NotFound"
+ *     security:
+ *       - bearerAuth: []
+ */
 dashboardRouter.post(
     "/message/:id",
     RoleChecker([Role.Enum.ADMIN]),

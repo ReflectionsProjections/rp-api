@@ -1,6 +1,7 @@
 import { Schema } from "mongoose";
 import { z } from "zod";
 import { v4 as uuidv4 } from "uuid";
+import { registry } from "../../middleware/openapi-registry";
 
 export const EventType = z.enum([
     "SPEAKER",
@@ -14,24 +15,64 @@ export const EventType = z.enum([
 export type InternalEvent = z.infer<typeof internalEventView>;
 export type EventInputPayload = z.infer<typeof eventInfoValidator>;
 
-export const externalEventView = z.object({
-    eventId: z.coerce.string().default(() => uuidv4()),
-    name: z.string(),
-    startTime: z.coerce.date(),
-    endTime: z.coerce.date(),
-    points: z.number().min(0),
-    description: z.string(),
-    isVirtual: z.boolean(),
-    imageUrl: z.string().nullable(),
-    location: z.string().nullable(),
-    eventType: EventType,
-    tags: z.array(z.string()).default([]),
-});
+export const externalEventView = registry.register(
+    "ExternalEventView",
+    z
+        .object({
+            eventId: z.coerce.string().default(() => uuidv4()),
+            name: z.string(),
+            startTime: z.coerce.date().openapi({ format: "date-time" }),
+            endTime: z.coerce.date().openapi({ format: "date-time" }),
+            points: z.number().min(0),
+            description: z.string(),
+            isVirtual: z.boolean(),
+            imageUrl: z.string().nullable(),
+            location: z.string().nullable(),
+            eventType: EventType,
+            tags: z.array(z.string()).default([]),
+        })
+        .openapi("ExternalEventView", {
+            example: {
+                eventId: "3a72d491-c2f9-4baf-af5a-55713621d978",
+                name: "Test Event",
+                startTime: new Date("2025-03-31T19:30:00Z"),
+                endTime: new Date("2025-03-31T23:30:00Z"),
+                points: 0,
+                description: "Awesome test event",
+                isVirtual: false,
+                imageUrl: "example.com/image.png",
+                location: "Siebel Center for CS",
+                eventType: "SPEAKER",
+                tags: [],
+            },
+        })
+);
 
-export const internalEventView = externalEventView.extend({
-    attendanceCount: z.number(),
-    isVisible: z.boolean(),
-});
+export const internalEventView = registry.register(
+    "InternalEventView",
+    externalEventView
+        .extend({
+            attendanceCount: z.number(),
+            isVisible: z.boolean(),
+        })
+        .openapi("InternalEventView", {
+            example: {
+                eventId: "3a72d491-c2f9-4baf-af5a-55713621d978",
+                name: "Test Event",
+                startTime: new Date("2025-03-31T19:30:00Z"),
+                endTime: new Date("2025-03-31T23:30:00Z"),
+                points: 0,
+                description: "Awesome test event",
+                isVirtual: false,
+                imageUrl: "example.com/image.png",
+                location: "Siebel Center for CS",
+                eventType: "SPEAKER",
+                tags: [],
+                attendanceCount: 0,
+                isVisible: true,
+            },
+        })
+);
 
 // ApiResponseSchema objects used to create expected internal and external event objects
 const eventTimeExtension = {
@@ -51,9 +92,28 @@ export type InternalEventApiResponse = z.infer<
     typeof internalEventApiResponseSchema
 >;
 
-export const eventInfoValidator = internalEventView
-    .omit({ eventId: true })
-    .strict();
+export const eventInfoValidator = registry.register(
+    "EventInfoValidator",
+    internalEventView
+        .omit({ eventId: true })
+        .strict()
+        .openapi("EventInfoValidator", {
+            example: {
+                name: "Test Event",
+                startTime: new Date("2025-03-31T19:30:00Z"),
+                endTime: new Date("2025-03-31T23:30:00Z"),
+                points: 0,
+                description: "Awesome test event",
+                isVirtual: false,
+                imageUrl: "example.com/image.png",
+                location: "Siebel Center for CS",
+                eventType: "SPEAKER",
+                tags: [],
+                attendanceCount: 0,
+                isVisible: true,
+            },
+        })
+);
 
 export const EventSchema = new Schema({
     eventId: {

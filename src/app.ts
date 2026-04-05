@@ -1,4 +1,4 @@
-import express, { Request, Response } from "express";
+import express, { Request, Response, RequestHandler } from "express";
 import { StatusCodes } from "http-status-codes";
 import { Config, EnvironmentEnum } from "./config";
 import { isTest } from "./utilities";
@@ -32,10 +32,82 @@ import leaderboardRouter from "./services/leaderboard/leaderboard-router";
 
 import cors from "cors";
 import { JwtPayloadValidator } from "./services/auth/auth-models";
+import swaggerJsdoc from "swagger-jsdoc";
+import { registry } from "./middleware/openapi-registry";
+import { OpenApiGeneratorV3 } from "@asteasolutions/zod-to-openapi";
+import swaggerUi from "swagger-ui-express";
 import { createServer } from "http";
 import { WebSocketServer } from "ws";
+import path from "path";
 
 const app = express();
+
+// generate openapi schemas from zod
+const generator = new OpenApiGeneratorV3(registry.definitions);
+const openApiComponents = generator.generateComponents();
+
+// set up swagger-ui docs
+const swaggerOptions: swaggerJsdoc.Options = {
+    definition: {
+        openapi: "3.0.0",
+        info: {
+            title: "R|P API",
+            version: "1.0.0",
+            description: "Documentation for the Reflections|Projections API",
+        },
+        // configures the "Authorize" button for JWTs
+        components: {
+            ...openApiComponents.components,
+            securitySchemes: {
+                USER: {
+                    type: "http",
+                    scheme: "bearer",
+                    bearerFormat: "JWT",
+                },
+                STAFF: {
+                    type: "http",
+                    scheme: "bearer",
+                    bearerFormat: "JWT",
+                    description: "Requires the 'staff' role in the JWT payload",
+                },
+                ADMIN: {
+                    type: "http",
+                    scheme: "bearer",
+                    bearerFormat: "JWT",
+                    description: "Requires the 'admin' role in the JWT payload",
+                },
+            },
+        },
+        // sets default needed authorization for endpoints (in docs)
+        security: [
+            {
+                bearerAuth: [],
+            },
+        ],
+    },
+    // Tells Swagger to look for JSDoc comments in all TypeScript files inside your services folder
+    apis: [path.join(__dirname, "./services/**/*-router.ts")],
+};
+
+// console.log("Swagger scanned APIs:", swaggerOptions.apis);
+
+const swaggerSpec = swaggerJsdoc(swaggerOptions);
+
+app.use(
+    "/docs",
+    swaggerUi.serve as unknown as RequestHandler,
+    swaggerUi.setup(swaggerSpec) as unknown as RequestHandler
+);
+
+// do we only want to serve docs in development (in that case wrap the whole thing to avoid generating schemas etc)
+// if (Config.ENV !== EnvironmentEnum.PRODUCTION) {
+//     app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+//     app.get("/docs.json", (req, res) => {
+//         res.setHeader("Content-Type", "application/json");
+//         res.send(swaggerSpec);
+//     });
+// }
+
 const server = createServer(app);
 const wss = new WebSocketServer({ server });
 

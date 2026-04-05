@@ -7,7 +7,27 @@ import { SupabaseDB } from "../../database";
 
 const speakersRouter = Router();
 
-// Get all speakers
+/**
+ * @swagger
+ * /speakers/:
+ *   get:
+ *     summary: Get all speakers
+ *     description: |
+ *       Returns a list of all speakers.
+ *
+ *       **Required roles: none**
+ *     tags: [Speakers]
+ *     responses:
+ *       200:
+ *         description: A list of all speakers
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/SpeakerValidator'
+ *     security: []
+ */
 speakersRouter.get("/", RoleChecker([], true), async (req, res) => {
     const { data: speakers } =
         await SupabaseDB.SPEAKERS.select("*").throwOnError();
@@ -15,7 +35,37 @@ speakersRouter.get("/", RoleChecker([], true), async (req, res) => {
     return res.status(StatusCodes.OK).json(speakers);
 });
 
-// Get a specific speaker
+/**
+ * @swagger
+ * /speakers/{SPEAKERID}:
+ *   get:
+ *     summary: Get a speaker by id
+ *     description: |
+ *       Returns a single speaker by their id.
+ *
+ *       **Required roles: none**
+ *     tags: [Speakers]
+ *     parameters:
+ *       - name: SPEAKERID
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: The requested speaker
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/SpeakerValidator'
+ *       404:
+ *         description: Couldn't find the requested speaker
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/DoesNotExistError'
+ *     security: []
+ */
 speakersRouter.get("/:SPEAKERID", RoleChecker([], true), async (req, res) => {
     const speakerId = req.params.SPEAKERID;
 
@@ -33,6 +83,32 @@ speakersRouter.get("/:SPEAKERID", RoleChecker([], true), async (req, res) => {
     return res.status(StatusCodes.OK).json(speaker);
 });
 
+/**
+ * @swagger
+ * /speakers/:
+ *   post:
+ *     summary: Create a speaker
+ *     description: |
+ *       Creates a new speaker and adds them to the database.
+ *
+ *       **Required roles: ADMIN | STAFF**
+ *     tags: [Speakers]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/SpeakerValidator'
+ *     responses:
+ *       201:
+ *         description: The newly created speaker
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/SpeakerValidator'
+ *     security:
+ *       - bearerAuth: []
+ */
 // Create a new speaker
 speakersRouter.post(
     "/",
@@ -51,6 +127,44 @@ speakersRouter.post(
     }
 );
 
+/**
+ * @swagger
+ * /speakers/{SPEAKERID}:
+ *   put:
+ *     summary: Update a speaker
+ *     description: |
+ *       Updates the data for a pre-existing speaker.
+ *
+ *       **Required roles: ADMIN | STAFF**
+ *     tags: [Speakers]
+ *     parameters:
+ *       - name: SPEAKERID
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/UpdateSpeakerValidator'
+ *     responses:
+ *       200:
+ *         description: The updated speaker
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/SpeakerValidator'
+ *       404:
+ *         description: Couldn't find the requested speaker
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/DoesNotExistError'
+ *     security:
+ *       - bearerAuth: []
+ */
 // Update a speaker
 speakersRouter.put(
     "/:SPEAKERID",
@@ -77,6 +191,34 @@ speakersRouter.put(
     }
 );
 
+/**
+ * @swagger
+ * /speakers/{SPEAKERID}:
+ *   delete:
+ *     summary: Delete a speaker
+ *     description: |
+ *       Deletes a speaker entry from the database.
+ *
+ *       **Required roles: ADMIN | STAFF**
+ *     tags: [Speakers]
+ *     parameters:
+ *       - name: SPEAKERID
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       204:
+ *         description: The speaker was successfully deleted
+ *       404:
+ *         description: Couldn't find the requested speaker
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/DoesNotExistError'
+ *     security:
+ *       - bearerAuth: []
+ */
 // Delete a speaker
 speakersRouter.delete(
     "/:SPEAKERID",

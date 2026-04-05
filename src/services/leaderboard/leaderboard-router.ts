@@ -23,12 +23,40 @@ import {
 const leaderboardRouter = Router();
 
 /**
- * GET /leaderboard/daily
- * Get daily leaderboard for display in mobile app and admin preview
- * Query params: day (YYYY-MM-DD), n (optional - number of winners, returns all if omitted)
- * Authorization: None required
+ * @swagger
+ * /leaderboard/daily:
+ *   get:
+ *     summary: Get the daily leaderboard
+ *     description: |
+ *       Returns the leaderboard rankings for a specific day, optionally limited
+ *       to the top N entries.
+ *
+ *       **Required roles: none**
+ *     tags: [Leaderboard]
+ *     parameters:
+ *       - name: day
+ *         in: query
+ *         required: true
+ *         schema:
+ *           type: string
+ *           example: "2025-04-01"
+ *         description: Date in YYYY-MM-DD format
+ *       - name: n
+ *         in: query
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *         description: Number of top entries to return (returns all if omitted)
+ *     responses:
+ *       200:
+ *         description: Daily leaderboard results
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/PreviewLeaderboardResponseValidator'
+ *     security: []
  */
-
 leaderboardRouter.get("/daily", async (req, res) => {
     const { day, n } = DailyLeaderboardRequestValidator.parse({
         day: req.query.day,
@@ -47,10 +75,32 @@ leaderboardRouter.get("/daily", async (req, res) => {
 });
 
 /**
- * GET /leaderboard/global
- * Get global leaderboard showing total accumulated points for all attendees
- * Query params: n (optional - number of winners, returns all if omitted)
- * Authorization: None required
+ * @swagger
+ * /leaderboard/global:
+ *   get:
+ *     summary: Get the global leaderboard
+ *     description: |
+ *       Returns overall leaderboard rankings based on total accumulated points
+ *       across all days, optionally limited to the top N entries.
+ *
+ *       **Required roles: none**
+ *     tags: [Leaderboard]
+ *     parameters:
+ *       - name: n
+ *         in: query
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *         description: Number of top entries to return (returns all if omitted)
+ *     responses:
+ *       200:
+ *         description: Global leaderboard results
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/GlobalLeaderboardResponseValidator'
+ *     security: []
  */
 leaderboardRouter.get("/global", async (req, res) => {
     const { n } = GlobalLeaderboardRequestValidator.parse({
@@ -68,10 +118,33 @@ leaderboardRouter.get("/global", async (req, res) => {
 });
 
 /**
- * GET /leaderboard/submission-status
- * Check if a leaderboard submission already exists for a specific day
- * Query params: day (YYYY-MM-DD)
- * Authorization: All authenticated users
+ * @swagger
+ * /leaderboard/submission-status:
+ *   get:
+ *     summary: Check if a daily leaderboard has been submitted
+ *     description: |
+ *       Returns whether a leaderboard submission already exists for the given day,
+ *       and its metadata if it does.
+ *
+ *       **Required roles: none**
+ *     tags: [Leaderboard]
+ *     parameters:
+ *       - name: day
+ *         in: query
+ *         required: true
+ *         schema:
+ *           type: string
+ *           example: "2025-04-01"
+ *         description: Date in YYYY-MM-DD format
+ *     responses:
+ *       200:
+ *         description: Submission status for the given day
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/CheckSubmissionResponseValidator'
+ *     security:
+ *       - bearerAuth: []
  */
 leaderboardRouter.get(
     "/submission-status",
@@ -91,10 +164,40 @@ leaderboardRouter.get(
 );
 
 /**
- * POST /leaderboard/submit
- * Submit and lock in daily leaderboard results, updating tier eligibility
- * Body: { day: string, n: number }
- * Authorization: SUPER ADMIN only (higher privilege than preview)
+ * @swagger
+ * /leaderboard/submit:
+ *   post:
+ *     summary: Submit and lock daily leaderboard results
+ *     description: |
+ *       Finalises the leaderboard for a given day, promotes qualifying users to
+ *       the next tier, and records the submission. Fails if a submission already
+ *       exists for that day.
+ *
+ *       **Required roles: SUPER_ADMIN**
+ *     tags: [Leaderboard]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/SubmitLeaderboardRequestValidator'
+ *     responses:
+ *       200:
+ *         description: Submission recorded and tier promotions applied
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/SubmitLeaderboardResponseValidator'
+ *       409:
+ *         description: A submission already exists for the given day
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *                 example:
+ *                   error: "Leaderboard already submitted"
+ *     security:
+ *       - bearerAuth: []
  */
 leaderboardRouter.post(
     "/submit",

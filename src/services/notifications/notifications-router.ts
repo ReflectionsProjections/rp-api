@@ -13,6 +13,34 @@ import { getCurrentDay } from "../checkin/checkin-utils";
 
 const notificationsRouter = Router();
 
+/**
+ * @swagger
+ * /notifications/register:
+ *   post:
+ *     summary: Register a device for push notifications
+ *     description: |
+ *       Registers the caller’s FCM device token under their userId and
+ *       subscribes them to the `allUsers` topic plus any tag-based topics
+ *       derived from their attendee profile.
+ *
+ *       **Required roles: USER**
+ *     tags: [Notifications]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: ‘#/components/schemas/RegisterDeviceValidator’
+ *     responses:
+ *       201:
+ *         description: Device registered; returns the validated registration data
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: ‘#/components/schemas/RegisterDeviceValidator’
+ *     security:
+ *       - bearerAuth: []
+ */
 // Register user’s device identifier under their userId
 // Request body: deviceId: The FCM device token from the client app.
 notificationsRouter.post(
@@ -59,6 +87,39 @@ notificationsRouter.post(
     }
 );
 
+/**
+ * @swagger
+ * /notifications/topics/{topicName}:
+ *   post:
+ *     summary: Send a push notification to a topic
+ *     description: |
+ *       Sends an FCM notification to all devices subscribed to the given topic.
+ *
+ *       **Required roles: SUPER_ADMIN**
+ *     tags: [Notifications]
+ *     parameters:
+ *       - name: topicName
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *         example: allUsers
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/SendToTopicValidator'
+ *     responses:
+ *       200:
+ *         description: Notification successfully sent
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/NotificationSuccessResponse'
+ *     security:
+ *       - bearerAuth: []
+ */
 // Super admins can send notifications to a specific topic
 // parameter: the topicName that the admin is sending to
 // ^ Can get this from dropdown (will have a route to get all topics)
@@ -89,6 +150,33 @@ notificationsRouter.post(
     }
 );
 
+/**
+ * @swagger
+ * /notifications/custom-topic:
+ *   post:
+ *     summary: Create a custom notification topic
+ *     description: |
+ *       Persists a custom topic name to the database so it appears in
+ *       the topics list and can be targeted by future notifications.
+ *
+ *       **Required roles: ADMIN**
+ *     tags: [Notifications]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CustomTopicValidator'
+ *     responses:
+ *       201:
+ *         description: Custom topic created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/NotificationSuccessResponse'
+ *     security:
+ *       - bearerAuth: []
+ */
 // Admins can create a custom topic
 // Request body: topicName
 notificationsRouter.post(
@@ -107,6 +195,33 @@ notificationsRouter.post(
     }
 );
 
+/**
+ * @swagger
+ * /notifications/manual-users-topic:
+ *   post:
+ *     summary: Manually subscribe a user to a topic
+ *     description: |
+ *       Looks up the user's registered device token and subscribes it to
+ *       the specified FCM topic.
+ *
+ *       **Required roles: ADMIN**
+ *     tags: [Notifications]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/ManualTopicValidator'
+ *     responses:
+ *       200:
+ *         description: User successfully subscribed to topic
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/NotificationSuccessResponse'
+ *     security:
+ *       - bearerAuth: []
+ */
 // Admins can manually subscribe a user to a topic
 // Request body: userId, topicName
 notificationsRouter.post(
@@ -134,6 +249,33 @@ notificationsRouter.post(
     }
 );
 
+/**
+ * @swagger
+ * /notifications/manual-users-topic:
+ *   delete:
+ *     summary: Manually unsubscribe a user from a topic
+ *     description: |
+ *       Looks up the user's registered device token and unsubscribes it from
+ *       the specified FCM topic.
+ *
+ *       **Required roles: ADMIN**
+ *     tags: [Notifications]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/ManualTopicValidator'
+ *     responses:
+ *       200:
+ *         description: User successfully unsubscribed from topic
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/NotificationSuccessResponse'
+ *     security:
+ *       - bearerAuth: []
+ */
 // Admins can manually unsubscribe a user from a topic
 // Request body: userId, topicName
 notificationsRouter.delete(
@@ -161,6 +303,28 @@ notificationsRouter.delete(
     }
 );
 
+/**
+ * @swagger
+ * /notifications/topics:
+ *   get:
+ *     summary: Get all available notification topics
+ *     description: |
+ *       Returns a sorted, deduplicated list of all subscribable FCM topics,
+ *       including static topics (`allUsers`, daily food-wave), event-derived
+ *       topics, custom topics from the database, and tag-based topics.
+ *
+ *       **Required roles: ADMIN**
+ *     tags: [Notifications]
+ *     responses:
+ *       200:
+ *         description: All available notification topics
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/TopicsListResponse'
+ *     security:
+ *       - bearerAuth: []
+ */
 // Get all available notification topics
 // Firebase doesn't have an actual way to get this.
 // one topic is allUsers, defined earlier in this file
