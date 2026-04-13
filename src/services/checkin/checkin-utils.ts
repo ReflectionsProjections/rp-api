@@ -108,6 +108,46 @@ async function updateAttendanceRecords(eventId: string, userId: string) {
         .throwOnError();
 }
 
+async function undoAttendanceRecords(eventId: string, userId: string) {
+    // 1. Remove from attendee attendances array
+    const { data: attendeeAttendance } =
+        await SupabaseDB.ATTENDEE_ATTENDANCES.select("eventsAttended")
+            .eq("userId", userId)
+            .maybeSingle()
+            .throwOnError();
+
+    const eventsAttended = attendeeAttendance?.eventsAttended || [];
+
+    if (eventsAttended.includes(eventId)) {
+        const newEventsAttended = eventsAttended.filter((id) => id !== eventId);
+        await SupabaseDB.ATTENDEE_ATTENDANCES.upsert({
+            userId: userId,
+            eventsAttended: newEventsAttended,
+        }).throwOnError();
+    }
+
+    // 2. Delete the row from EVENT_ATTENDANCES
+    await SupabaseDB.EVENT_ATTENDANCES.delete()
+        .eq("eventId", eventId)
+        .eq("attendee", userId)
+        .throwOnError();
+
+    // 3. Decrement attendanceCount on EVENTS
+    const { data: eventData } = await SupabaseDB.EVENTS.select(
+        "attendanceCount"
+    )
+        .eq("eventId", eventId)
+        .single()
+        .throwOnError();
+
+    const currentCount = eventData?.attendanceCount || 0;
+    if (currentCount > 0) {
+        await SupabaseDB.EVENTS.update({ attendanceCount: currentCount - 1 })
+            .eq("eventId", eventId)
+            .throwOnError();
+    }
+}
+
 async function assignPixelsToUser(userId: string, pixels: number) {
     await addPoints(userId, pixels);
 }
@@ -171,6 +211,32 @@ export async function checkInUserToEvent(eventId: string, userId: string) {
         }
     }
     await assignPixelsToUser(userId, event.points);
+}
+
+export async function undoCheckInUserToEvent(eventId: string, userId: string) {
+    await checkEventAndAttendeeExist(eventId, userId);
+
+    const { data: event } = await SupabaseDB.EVENTS.select("eventType, points")
+        .eq("eventId", eventId)
+        .single()
+        .throwOnError();
+
+    // Check if the attendance record exists, else throw
+    const isAttended = await SupabaseDB.EVENT_ATTENDANCES.select()
+        .eq("eventId", eventId)
+        .eq("attendee", userId)
+        .maybeSingle()
+        .throwOnError();
+
+    if (!isAttended.data) {
+        throw new Error("AttendanceNotFound");
+    }
+
+    // Updates attendance records first
+    await undoAttendanceRecords(eventId, userId);
+
+    // Take back pixels
+    await assignPixelsToUser(userId, -event.points);
 }
 
 export function generateQrHash(userId: string, expTime: number) {
