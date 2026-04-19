@@ -51,15 +51,7 @@ checkinRouter.post(
     async (req, res) => {
         const { eventId, qrCode } = ScanValidator.parse(req.body);
 
-        const { userId, expTime } = validateQrHash(qrCode);
-
-        // Even if QR is expired, we might want to let them undo?
-        // Let's check expiration just like the scan endpoint.
-        if (Date.now() / 1000 > expTime) {
-            return res
-                .status(StatusCodes.UNAUTHORIZED)
-                .json({ error: "QR code has expired" });
-        }
+        const { userId } = validateQrHash(qrCode);
 
         try {
             await undoCheckInUserToEvent(eventId, userId);
