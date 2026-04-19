@@ -1,5 +1,10 @@
 import { beforeEach, describe, expect, it } from "@jest/globals";
-import { post, postAsStaff, postAsAdmin } from "../../../testing/testingTools";
+import {
+    post,
+    postAsStaff,
+    postAsAdmin,
+    postAsUser,
+} from "../../../testing/testingTools";
 import { StatusCodes } from "http-status-codes";
 import { SupabaseDB } from "../../database";
 import { Tiers, IconColors } from "../attendee/attendee-schema";
@@ -819,6 +824,173 @@ describe("POST /checkin/event", () => {
         expect(attendeeAttendance?.eventsAttended).toHaveLength(2);
 
         // Clean up
+        await SupabaseDB.EVENTS.delete().eq(
+            "eventId",
+            SPECIAL_EVENT_FOR_CHECKIN.eventId
+        );
+    });
+});
+
+describe("POST /checkin/scan/staff/undo", () => {
+    let payload: ScanPayload;
+
+    beforeEach(async () => {
+        payload = {
+            eventId: REGULAR_EVENT_FOR_CHECKIN.eventId,
+            qrCode: VALID_QR_CODE_TEST_ATTENDEE_1,
+        };
+
+        await SupabaseDB.EVENTS.update({ attendanceCount: 0 }).eq(
+            "eventId",
+            REGULAR_EVENT_FOR_CHECKIN.eventId
+        );
+        await SupabaseDB.ATTENDEES.update({
+            points: 0,
+            hasPriorityMon: false,
+            hasPriorityTue: false,
+            hasPriorityWed: false,
+            hasPriorityThu: false,
+            hasPriorityFri: false,
+            hasPrioritySat: false,
+            hasPrioritySun: false,
+        }).eq("userId", TEST_ATTENDEE_1.userId);
+        await SupabaseDB.ATTENDEE_ATTENDANCES.delete().eq(
+            "userId",
+            TEST_ATTENDEE_1.userId
+        );
+        await SupabaseDB.EVENT_ATTENDANCES.delete()
+            .eq("eventId", REGULAR_EVENT_FOR_CHECKIN.eventId)
+            .eq("attendee", TEST_ATTENDEE_1.userId);
+    });
+
+    it("should return UNAUTHORIZED for an unauthenticated user", async () => {
+        await post("/checkin/scan/staff/undo")
+            .send(payload)
+            .expect(StatusCodes.UNAUTHORIZED);
+    });
+
+    it("should return FORBIDDEN for non-staff/non-admin users", async () => {
+        await postAsUser("/checkin/scan/staff/undo")
+            .send(payload)
+            .expect(StatusCodes.FORBIDDEN);
+    });
+
+    it("should return NOT_FOUND when attendance does not exist", async () => {
+        const response = await postAsAdmin("/checkin/scan/staff/undo")
+            .send(payload)
+            .expect(StatusCodes.NOT_FOUND);
+
+        expect(response.body).toEqual({ error: "AttendanceNotFound" });
+    });
+
+    it("should allow undo even if QR code is expired", async () => {
+        await postAsAdmin("/checkin/scan/staff")
+            .send(payload)
+            .expect(StatusCodes.OK);
+
+        payload.qrCode = EXPIRED_QR_CODE_TEST_ATTENDEE_1;
+
+        const response = await postAsAdmin("/checkin/scan/staff/undo")
+            .send(payload)
+            .expect(StatusCodes.OK);
+
+        expect(response.body).toBe(TEST_ATTENDEE_1.userId);
+    });
+});
+
+describe("POST /checkin/event/undo", () => {
+    let payload: CheckinEventPayload;
+    let currentDay: DayKey;
+
+    beforeEach(async () => {
+        payload = {
+            eventId: REGULAR_EVENT_FOR_CHECKIN.eventId,
+            userId: TEST_ATTENDEE_1.userId,
+        };
+        currentDay = getCurrentDay();
+
+        await SupabaseDB.EVENTS.update({ attendanceCount: 0 }).eq(
+            "eventId",
+            REGULAR_EVENT_FOR_CHECKIN.eventId
+        );
+        await SupabaseDB.ATTENDEES.update({
+            points: 0,
+            hasPriorityMon: false,
+            hasPriorityTue: false,
+            hasPriorityWed: false,
+            hasPriorityThu: false,
+            hasPriorityFri: false,
+            hasPrioritySat: false,
+            hasPrioritySun: false,
+        }).eq("userId", TEST_ATTENDEE_1.userId);
+        await SupabaseDB.ATTENDEE_ATTENDANCES.delete().eq(
+            "userId",
+            TEST_ATTENDEE_1.userId
+        );
+        await SupabaseDB.EVENT_ATTENDANCES.delete().eq(
+            "attendee",
+            TEST_ATTENDEE_1.userId
+        );
+    });
+
+    it("should return UNAUTHORIZED for an unauthenticated user", async () => {
+        await post("/checkin/event/undo")
+            .send(payload)
+            .expect(StatusCodes.UNAUTHORIZED);
+    });
+
+    it("should return FORBIDDEN for non-staff/non-admin users", async () => {
+        await postAsUser("/checkin/event/undo")
+            .send(payload)
+            .expect(StatusCodes.FORBIDDEN);
+    });
+
+    it("should return NOT_FOUND if attendance does not exist", async () => {
+        const response = await postAsAdmin("/checkin/event/undo")
+            .send(payload)
+            .expect(StatusCodes.NOT_FOUND);
+
+        expect(response.body).toEqual({ error: "AttendanceNotFound" });
+    });
+
+    it("should revoke priority if undo drops qualifying events below two", async () => {
+        await SupabaseDB.EVENTS.insert([SPECIAL_EVENT_FOR_CHECKIN]);
+
+        await postAsAdmin("/checkin/event")
+            .send({
+                eventId: REGULAR_EVENT_FOR_CHECKIN.eventId,
+                userId: TEST_ATTENDEE_1.userId,
+            })
+            .expect(StatusCodes.OK);
+        await postAsAdmin("/checkin/event")
+            .send({
+                eventId: SPECIAL_EVENT_FOR_CHECKIN.eventId,
+                userId: TEST_ATTENDEE_1.userId,
+            })
+            .expect(StatusCodes.OK);
+
+        const { data: attendeeAfterSecondCheckin } =
+            await SupabaseDB.ATTENDEES.select()
+                .eq("userId", TEST_ATTENDEE_1.userId)
+                .single();
+        expect(attendeeAfterSecondCheckin).toMatchObject({
+            [`hasPriority${currentDay}`]: true,
+        });
+
+        await postAsAdmin("/checkin/event/undo")
+            .send({
+                eventId: SPECIAL_EVENT_FOR_CHECKIN.eventId,
+                userId: TEST_ATTENDEE_1.userId,
+            })
+            .expect(StatusCodes.OK);
+
+        const { data: attendeeAfterUndo } = await SupabaseDB.ATTENDEES.select()
+            .eq("userId", TEST_ATTENDEE_1.userId)
+            .single();
+        expect(attendeeAfterUndo).toMatchObject({
+            [`hasPriority${currentDay}`]: false,
+        });
+
         await SupabaseDB.EVENTS.delete().eq(
             "eventId",
             SPECIAL_EVENT_FOR_CHECKIN.eventId

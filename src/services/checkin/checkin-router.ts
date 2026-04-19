@@ -7,7 +7,11 @@ import {
 } from "./checkin-schema";
 import RoleChecker from "../../middleware/role-checker";
 import { Role } from "../auth/auth-models";
-import { validateQrHash, checkInUserToEvent } from "./checkin-utils";
+import {
+    validateQrHash,
+    checkInUserToEvent,
+    undoCheckInUserToEvent,
+} from "./checkin-utils";
 
 const checkinRouter = Router();
 
@@ -42,6 +46,33 @@ checkinRouter.post(
 );
 
 checkinRouter.post(
+    "/scan/staff/undo",
+    RoleChecker([Role.Enum.ADMIN, Role.Enum.STAFF]),
+    async (req, res) => {
+        const { eventId, qrCode } = ScanValidator.parse(req.body);
+
+        const { userId } = validateQrHash(qrCode);
+
+        try {
+            await undoCheckInUserToEvent(eventId, userId);
+        } catch (error: unknown) {
+            console.error("Undo check-in failed:", error);
+            if (
+                error instanceof Error &&
+                error.message === "AttendanceNotFound"
+            ) {
+                return res
+                    .status(StatusCodes.NOT_FOUND)
+                    .json({ error: "AttendanceNotFound" });
+            }
+            return res.sendStatus(StatusCodes.INTERNAL_SERVER_ERROR);
+        }
+
+        return res.status(StatusCodes.OK).json(userId);
+    }
+);
+
+checkinRouter.post(
     "/event",
     RoleChecker([Role.Enum.ADMIN, Role.Enum.STAFF]),
     async (req, res) => {
@@ -54,6 +85,29 @@ checkinRouter.post(
                 return res
                     .status(StatusCodes.FORBIDDEN)
                     .json({ error: "IsDuplicate" });
+            }
+            return res.sendStatus(StatusCodes.INTERNAL_SERVER_ERROR);
+        }
+        return res.status(StatusCodes.OK).json(userId);
+    }
+);
+
+checkinRouter.post(
+    "/event/undo",
+    RoleChecker([Role.Enum.ADMIN, Role.Enum.STAFF]),
+    async (req, res) => {
+        const { eventId, userId } = EventValidator.parse(req.body);
+
+        try {
+            await undoCheckInUserToEvent(eventId, userId);
+        } catch (error: unknown) {
+            if (
+                error instanceof Error &&
+                error.message === "AttendanceNotFound"
+            ) {
+                return res
+                    .status(StatusCodes.NOT_FOUND)
+                    .json({ error: "AttendanceNotFound" });
             }
             return res.sendStatus(StatusCodes.INTERNAL_SERVER_ERROR);
         }

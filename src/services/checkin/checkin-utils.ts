@@ -73,6 +73,57 @@ async function updateAttendeePriority(userId: string) {
         .subscribeToTopic(userDevice.deviceId, topicName);
 }
 
+async function setAttendeePriorityForCurrentDay(
+    userId: string,
+    hasPriority: boolean
+) {
+    const day = getCurrentDay();
+    await SupabaseDB.ATTENDEES.update({
+        [`hasPriority${day}`]: hasPriority,
+    })
+        .eq("userId", userId)
+        .throwOnError();
+}
+
+async function getQualifyingAttendanceCountForCurrentDay(userId: string) {
+    const { data: attendeeAttendance } =
+        await SupabaseDB.ATTENDEE_ATTENDANCES.select("eventsAttended")
+            .eq("userId", userId)
+            .maybeSingle()
+            .throwOnError();
+
+    const eventsAttended = attendeeAttendance?.eventsAttended || [];
+
+    if (eventsAttended.length === 0) {
+        return 0;
+    }
+
+    const { data: attendedEvents } = await SupabaseDB.EVENTS.select(
+        "eventId, eventType, startTime"
+    )
+        .in("eventId", eventsAttended)
+        .throwOnError();
+
+    const currentDay = getCurrentDay();
+
+    const filteredEvents =
+        attendedEvents?.filter((eventData) => {
+            const eventDate = new Date(eventData.startTime);
+            const eventDay = new Intl.DateTimeFormat("en-US", {
+                timeZone: "America/Chicago",
+                weekday: "short",
+            }).format(eventDate) as DayKey;
+
+            return (
+                eventData.eventType !== EventType.Enum.MEALS &&
+                eventData.eventType !== EventType.Enum.CHECKIN &&
+                eventDay === currentDay
+            );
+        }) || [];
+
+    return filteredEvents.length;
+}
+
 async function updateAttendanceRecords(eventId: string, userId: string) {
     const { data: attendeeAttendance } =
         await SupabaseDB.ATTENDEE_ATTENDANCES.select("eventsAttended")
@@ -108,6 +159,46 @@ async function updateAttendanceRecords(eventId: string, userId: string) {
         .throwOnError();
 }
 
+async function undoAttendanceRecords(eventId: string, userId: string) {
+    // 1. Remove from attendee attendances array
+    const { data: attendeeAttendance } =
+        await SupabaseDB.ATTENDEE_ATTENDANCES.select("eventsAttended")
+            .eq("userId", userId)
+            .maybeSingle()
+            .throwOnError();
+
+    const eventsAttended = attendeeAttendance?.eventsAttended || [];
+
+    if (eventsAttended.includes(eventId)) {
+        const newEventsAttended = eventsAttended.filter((id) => id !== eventId);
+        await SupabaseDB.ATTENDEE_ATTENDANCES.upsert({
+            userId: userId,
+            eventsAttended: newEventsAttended,
+        }).throwOnError();
+    }
+
+    // 2. Delete the row from EVENT_ATTENDANCES
+    await SupabaseDB.EVENT_ATTENDANCES.delete()
+        .eq("eventId", eventId)
+        .eq("attendee", userId)
+        .throwOnError();
+
+    // 3. Decrement attendanceCount on EVENTS
+    const { data: eventData } = await SupabaseDB.EVENTS.select(
+        "attendanceCount"
+    )
+        .eq("eventId", eventId)
+        .single()
+        .throwOnError();
+
+    const currentCount = eventData?.attendanceCount || 0;
+    if (currentCount > 0) {
+        await SupabaseDB.EVENTS.update({ attendanceCount: currentCount - 1 })
+            .eq("eventId", eventId)
+            .throwOnError();
+    }
+}
+
 async function assignPixelsToUser(userId: string, pixels: number) {
     await addPoints(userId, pixels);
 }
@@ -129,48 +220,46 @@ export async function checkInUserToEvent(eventId: string, userId: string) {
         event.eventType !== EventType.Enum.MEALS &&
         event.eventType !== EventType.Enum.CHECKIN
     ) {
-        // Check how many events the user has attended (including the current one)
-        const { data: attendeeAttendance } =
-            await SupabaseDB.ATTENDEE_ATTENDANCES.select("eventsAttended")
-                .eq("userId", userId)
-                .maybeSingle()
-                .throwOnError();
+        const qualifyingEventCount =
+            await getQualifyingAttendanceCountForCurrentDay(userId);
 
-        const eventsAttended = attendeeAttendance?.eventsAttended || [];
-
-        if (eventsAttended.length > 0) {
-            // Get details of all attended events to filter by type and day
-            const { data: attendedEvents } = await SupabaseDB.EVENTS.select(
-                "eventId, eventType, startTime"
-            )
-                .in("eventId", eventsAttended)
-                .throwOnError();
-
-            const currentDay = getCurrentDay();
-
-            // Filter events: exclude MEALS and CHECKIN, and only count events from current day
-            const filteredEvents =
-                attendedEvents?.filter((eventData) => {
-                    const eventDate = new Date(eventData.startTime);
-                    const eventDay = new Intl.DateTimeFormat("en-US", {
-                        timeZone: "America/Chicago",
-                        weekday: "short",
-                    }).format(eventDate) as DayKey;
-
-                    return (
-                        eventData.eventType !== EventType.Enum.MEALS &&
-                        eventData.eventType !== EventType.Enum.CHECKIN &&
-                        eventDay === currentDay
-                    );
-                }) || [];
-
-            // Only give priority if they have attended 2 or more qualifying events today
-            if (filteredEvents.length >= 2) {
-                await updateAttendeePriority(userId);
-            }
+        // Only give priority if they have attended 2 or more qualifying events today
+        if (qualifyingEventCount >= 2) {
+            await updateAttendeePriority(userId);
         }
     }
     await assignPixelsToUser(userId, event.points);
+}
+
+export async function undoCheckInUserToEvent(eventId: string, userId: string) {
+    await checkEventAndAttendeeExist(eventId, userId);
+
+    const { data: event } = await SupabaseDB.EVENTS.select("eventType, points")
+        .eq("eventId", eventId)
+        .single()
+        .throwOnError();
+
+    // Check if the attendance record exists, else throw
+    const isAttended = await SupabaseDB.EVENT_ATTENDANCES.select()
+        .eq("eventId", eventId)
+        .eq("attendee", userId)
+        .maybeSingle()
+        .throwOnError();
+
+    if (!isAttended.data) {
+        throw new Error("AttendanceNotFound");
+    }
+
+    // Updates attendance records first
+    await undoAttendanceRecords(eventId, userId);
+
+    // Revalidate priority status after removing the attendance.
+    const qualifyingEventCount =
+        await getQualifyingAttendanceCountForCurrentDay(userId);
+    await setAttendeePriorityForCurrentDay(userId, qualifyingEventCount >= 2);
+
+    // Take back pixels
+    await assignPixelsToUser(userId, -event.points);
 }
 
 export function generateQrHash(userId: string, expTime: number) {
